@@ -815,9 +815,20 @@ function checkGameOver(state) {
 
 export function run(state) {
   let guard = 0;
+  const recent = [];
   while (state.queue.length && !state.pending && !state.gameOver) {
-    if (++guard > 20000) throw new Error('Resolution loop exceeded 20000 steps (infinite trigger loop?)');
+    // Safety net: effects that keep triggering each other forever are stopped
+    // (the rest of the chain is dropped) instead of freezing the game.
+    if (++guard > 20000) {
+      const kinds = [...new Set(recent.slice(-50))].join(', ');
+      log(state, `⚠ An endless chain of effects was stopped (${kinds}).`);
+      state.queue = [];
+      state.buffer = [];
+      break;
+    }
     const step = state.queue.shift();
+    recent.push(step.kind + (step.cardId ? `:${step.cardId}` : '') + (step.event?.type ? `:${step.event.type}` : ''));
+    if (recent.length > 200) recent.splice(0, 100);
     STEPS[step.kind](state, step);
     if (state.buffer.length) {
       const buffered = state.buffer;
