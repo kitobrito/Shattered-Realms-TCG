@@ -33,16 +33,19 @@ jobs:
           npx cap add android
           npx capacitor-assets generate --android --iconBackgroundColor '#0d0a1a' --iconBackgroundColorDark '#0d0a1a'
           npx cap sync android
-      - name: Use the project's fixed test signing key
-        run: mkdir -p ~/.android && cp tools/android/debug.keystore ~/.android/debug.keystore
       - name: Build the APK
         working-directory: build/android
         run: ./gradlew assembleDebug --no-daemon
+      - name: Sign with the project's fixed test key (so updates install over old builds)
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/zipalign" -f -p 4 build/android/app/build/outputs/apk/debug/app-debug.apk shattered-realms.apk
+          "$BT/apksigner" sign --ks tools/android/debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey shattered-realms.apk
+          "$BT/apksigner" verify --print-certs shattered-realms.apk | head -3
       - name: Publish to the android-latest release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/android/app/build/outputs/apk/debug/app-debug.apk shattered-realms.apk
           gh release delete android-latest --yes --cleanup-tag || true
           gh release create android-latest shattered-realms.apk \
             --title "Android APK (latest, for testing)" \
