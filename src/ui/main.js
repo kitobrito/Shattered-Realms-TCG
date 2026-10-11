@@ -2,7 +2,7 @@
 // battle screen. The UI only reads state and submits actions from
 // getLegalActions(), so every rule lives in the engine.
 
-import { chooseAction } from '../ai/smart.js';
+import { applyAdvantage, chooseAction } from '../ai/smart.js';
 import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts, standardDuplicates } from '../cards/index.js';
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
 import { ART } from '../cards/art-manifest.js';
@@ -173,8 +173,8 @@ function startGame(mode, factions = picked, rivalFactions = randomPick()) {
     players: human === 0 ? [you, rival] : [rival, you],
   });
   const difficulty = mode === 'ai' ? getSettings().difficulty ?? 'medium' : null;
-  // Impossible: the AI's Hero also starts with 40 Health.
-  if (difficulty === 'impossible') Object.assign(state.players[1 - human].hero, { health: 40, maxHealth: 40 });
+  // Hard and up: the AI gets a head start (extra Health, extra cards).
+  if (difficulty) applyAdvantage(state, 1 - human, difficulty);
   game = { state, mode, factions, rivalFactions, human, format, difficulty, stats: freshStats() };
   // Phones in full-screen can lock to landscape; elsewhere this quietly does nothing.
   enterGame(true);

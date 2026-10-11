@@ -7,7 +7,7 @@
 // every simulated branch gets a fresh random seed, so random outcomes (draws,
 // random targets, Discover options) can't be known in advance.
 
-import { allKeywords, effectiveAttack, hasKeyword, mushroomsIn } from '../engine/core.js';
+import { allKeywords, drawCards, effectiveAttack, hasKeyword, mushroomsIn } from '../engine/core.js';
 import { actingPlayer, applyAction, getLegalActions } from '../engine/engine.js';
 import { getCard } from '../engine/registry.js';
 import { LEARNED_WEIGHTS } from './weights.js';
@@ -29,11 +29,12 @@ export const BASE_WEIGHTS = {
 export const DIFFICULTIES = {
   easy: { beam: 2, depth: 3, maxNodes: 60, blunder: 0.25, weights: BASE_WEIGHTS, noReact: true, keepHand: true },
   medium: { weights: BASE_WEIGHTS },
-  hard: { weights: LEARNED_WEIGHTS },
-  // Measured: predicting the opponent's attacks without seeing their hand didn't help
-  // (it lost 44% vs no prediction), so Very Hard just searches deeper.
-  veryHard: { beam: 8, depth: 9, maxNodes: 1600, weights: LEARNED_WEIGHTS },
-  impossible: { beam: 9, depth: 10, maxNodes: 2400, reply: 6, peek: true, weights: LEARNED_WEIGHTS },
+  // Measured (AI vs AI, 150-300 games): trained weights beat Medium ~55%, but deeper
+  // search stopped helping (Very Hard ≈ Hard). So the top levels also get
+  // advantages: extra Hero Health and extra starting cards (see applyAdvantage).
+  hard: { weights: LEARNED_WEIGHTS, advantage: { health: 5 } },
+  veryHard: { beam: 8, depth: 9, maxNodes: 1600, weights: LEARNED_WEIGHTS, advantage: { health: 10, cards: 1 } },
+  impossible: { beam: 9, depth: 10, maxNodes: 2400, reply: 6, peek: true, weights: LEARNED_WEIGHTS, advantage: { health: 15, cards: 2 } },
 };
 
 // ---- Simulation helpers ------------------------------------------------------
@@ -258,6 +259,16 @@ function plan(state, me, opts) {
     if (top?.first) best = top;
   }
   return best.first ?? getLegalActions(state)[0];
+}
+
+// Give the AI player its difficulty's head start, right after the game is created
+// (before the mulligan): more Hero Health and extra cards in its starting hand.
+export function applyAdvantage(state, seat, level) {
+  const a = DIFFICULTIES[level]?.advantage;
+  if (!a) return;
+  const hero = state.players[seat].hero;
+  if (a.health) { hero.health += a.health; hero.maxHealth += a.health; }
+  if (a.cards) { drawCards(state, seat, a.cards); state.buffer = []; }
 }
 
 // opts: a difficulty name ('easy' … 'impossible') or search settings.

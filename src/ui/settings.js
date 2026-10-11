@@ -12,11 +12,11 @@ const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false,
 // AI difficulty, easiest first (keys match DIFFICULTIES in ai/smart.js).
 export const DIFFICULTY_LEVELS = [
   ['easy', 'Easy', 'Makes mistakes. Good for learning.'],
-  ['medium', 'Medium', 'Plans its turn sensibly.'],
-  ['hard', 'Hard', 'Trained by machine learning on thousands of games.'],
-  ['veryHard', 'Very Hard', 'Trained, and plans much further ahead.'],
-  ['impossible', 'Impossible', '⚠ This AI has advantages: it can see your hand, and its Hero starts with 40 Health (yours has 30). It also uses the strongest search.'],
-];
+  ['medium', 'Medium', 'Plans its turn sensibly. A fair fight.'],
+  ['hard', 'Hard', 'Trained by machine learning. Its Hero starts with 35 Health (yours has 30).'],
+  ['veryHard', 'Very Hard', 'Trained, plans further ahead. Its Hero starts with 40 Health and it gets 1 extra starting card.'],
+  ['impossible', 'Impossible', '⚠ This AI has big advantages: it can see your hand, its Hero starts with 45 Health (yours has 30), and it gets 2 extra starting cards.'],
+]
 const levelIndex = (key) => Math.max(0, DIFFICULTY_LEVELS.findIndex(([k]) => k === key));
 
 // The difficulty slider (main menu and Settings share it).
