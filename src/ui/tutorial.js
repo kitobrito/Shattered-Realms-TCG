@@ -48,6 +48,7 @@ export function howToPlayHTML(keywordText) {
   return `
     <div class="menu tavern howto">
       <div class="tavern-sign"><h1>How to Play</h1></div>
+      <img class="ui-divider" src="art/ui/divider.png" alt="">
       <p class="sub howto-lead">New to card games? Everything you need for your first match, in a few minutes.</p>
       <div class="howto-grid">
         ${SECTIONS.map(([icon, title, body]) => `<section class="howto-card"><h3><span>${icon}</span> ${title}</h3><div>${body}</div></section>`).join('')}

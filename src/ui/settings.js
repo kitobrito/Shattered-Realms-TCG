@@ -24,7 +24,7 @@ export function difficultySliderHTML(key = getSettings().difficulty) {
   const i = levelIndex(key);
   const [, name, about] = DIFFICULTY_LEVELS[i];
   return `<div class="difficulty-slider lvl-${i}">
-    <div class="diff-top"><span>AI difficulty</span><b class="diff-name">${name}</b></div>
+    <div class="diff-top"><span><img class="h-icon" src="art/ui/icon-ai.png" alt=""> AI difficulty</span><b class="diff-name">${name}</b></div>
     <input type="range" min="0" max="${DIFFICULTY_LEVELS.length - 1}" step="1" value="${i}" data-difficulty aria-label="AI difficulty">
     <div class="diff-ticks">${DIFFICULTY_LEVELS.map(([, n], j) => `<span class="${j === i ? 'on' : ''}">${n}</span>`).join('')}</div>
     <small class="diff-about">${about}</small>
