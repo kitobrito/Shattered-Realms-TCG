@@ -13,9 +13,9 @@ const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false,
 export const DIFFICULTY_LEVELS = [
   ['easy', 'Easy', 'Makes mistakes. Good for learning.'],
   ['medium', 'Medium', 'Plans its turn sensibly. A fair fight.'],
-  ['hard', 'Hard', 'Trained by machine learning. Its Hero starts with 38 Health (yours has 30).'],
-  ['veryHard', 'Very Hard', 'Trained, plans further ahead. Its Hero starts with 42 Health and it gets 1 extra starting card.'],
-  ['impossible', 'Impossible', '⚠ This AI has big advantages: it can see your hand, its Hero starts with 50 Health (yours has 30), and it gets 2 extra starting cards.'],
+  ['hard', 'Hard', 'Trained by machine learning. Its Hero starts with 38 Health (yours has 30) and it gets 1 extra starting card.'],
+  ['veryHard', 'Very Hard', 'Trained, plans further ahead. Its Hero starts with 42 Health and it gets 2 extra starting cards.'],
+  ['impossible', 'Impossible', '⚠ This AI has big advantages: it can see your hand, its Hero starts with 50 Health (yours has 30), and it gets 3 extra starting cards.'],
 ]
 const levelIndex = (key) => Math.max(0, DIFFICULTY_LEVELS.findIndex(([k]) => k === key));
 
