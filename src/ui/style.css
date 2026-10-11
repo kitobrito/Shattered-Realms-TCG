@@ -2764,3 +2764,4 @@ body:not(.in-game):has(#menu-bg.show) { background: #05070f; }
 .set-row.set-difficulty { display: block; }
 .set-row.set-difficulty .difficulty-slider { width: 100%; background: none; border: 0; padding: 0; }
 @media (max-width: 420px) { .diff-ticks { font-size: 9.5px; } }
+.difficulty-slider.lvl-4 .diff-about { color: #e6c8ff; background: #b05cff22; border: 1px solid #b05cff66; border-radius: 8px; padding: 5px 8px; }

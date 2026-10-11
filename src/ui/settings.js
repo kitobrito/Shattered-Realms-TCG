@@ -15,7 +15,7 @@ export const DIFFICULTY_LEVELS = [
   ['medium', 'Medium', 'Plans its turn sensibly.'],
   ['hard', 'Hard', 'Trained by machine learning on thousands of games.'],
   ['veryHard', 'Very Hard', 'Trained, searches deeper, and predicts your attacks back.'],
-  ['impossible', 'Impossible', 'Strongest search, sees your hand, starts with 40 Health.'],
+  ['impossible', 'Impossible', '⚠ This AI has advantages: it can see your hand, and its Hero starts with 40 Health (yours has 30). It also uses the strongest search.'],
 ];
 const levelIndex = (key) => Math.max(0, DIFFICULTY_LEVELS.findIndex(([k]) => k === key));
 
