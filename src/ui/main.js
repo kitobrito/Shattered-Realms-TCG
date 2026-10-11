@@ -3,7 +3,7 @@
 // getLegalActions(), so every rule lives in the engine.
 
 import { chooseAction } from '../ai/smart.js';
-import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, PLAYABLE_FACTIONS, standardCuts, standardDuplicates } from '../cards/index.js';
+import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts, standardDuplicates } from '../cards/index.js';
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
 import { ART } from '../cards/art-manifest.js';
 import { BOARD_ART, boardArtFor } from '../cards/board-art.js';
@@ -63,6 +63,23 @@ function loadSaved() {
   } catch { return null; }
 }
 
+// ---- Card swaps (factions with expansion cards) -------------------------------
+// A faction with more than 30 cards (e.g. Radioactive, Vampires: 45) lets the
+// player choose which 30 they bring. Saved per faction; otherwise the standard 30.
+
+const LINEUP_KEY = 'faction-ccg-lineups';
+function savedLineups() {
+  try { return JSON.parse(localStorage.getItem(LINEUP_KEY) ?? '{}'); } catch { return {}; }
+}
+const customLineupFor = (f) => (lineupOf(f, savedLineups()) === FACTION_DECKS[f] ? null : savedLineups()[f]);
+function storeLineup(f, ids) {
+  const all = savedLineups();
+  if (ids) all[f] = ids; else delete all[f];
+  try { localStorage.setItem(LINEUP_KEY, JSON.stringify(all)); } catch { flash('Could not save your cards.'); }
+}
+let swapFaction = null;   // card swap screen: which faction
+let draftLineup = null;   // card swap screen: the 30 chosen
+
 // ---- Deck cuts --------------------------------------------------------------
 // Each faction pair can have a saved custom cut; otherwise the standard cut is used.
 
@@ -74,15 +91,22 @@ function savedCuts() {
 function customCutsFor(factions) {
   return savedCuts()[pairKey(factions)] ?? null;
 }
+// A saved cut only counts if every cut card is still in the player's chosen cards.
+function validCustomCuts(factions) {
+  const c = customCutsFor(factions);
+  if (!c) return null;
+  const pool = new Set(factions.flatMap((f) => lineupOf(f, savedLineups())));
+  return c.length === DEFAULT_RULES.cardsCut && c.every((id) => pool.has(id)) ? c : null;
+}
 function cutsFor(factions) {
-  return customCutsFor(factions) ?? standardCuts(factions);
+  return validCustomCuts(factions) ?? standardCuts(factions, savedLineups());
 }
 function storeCuts(factions, cuts) {
   const all = savedCuts();
   if (cuts) all[pairKey(factions)] = cuts; else delete all[pairKey(factions)];
   try { localStorage.setItem(CUTS_KEY, JSON.stringify(all)); } catch { flash('Could not save your cut.'); }
 }
-const cutCount = (cuts, f) => cuts.filter((id) => FACTION_LISTS[f].includes(id)).length;
+const cutCount = (cuts, f) => cuts.filter((id) => FACTION_POOLS[f].includes(id)).length;
 
 // ---- One-faction format: duplicates ------------------------------------------
 // Each faction can have a saved set of 10 duplicates; otherwise the standard set.
@@ -91,8 +115,12 @@ const DUPES_KEY = 'faction-ccg-dupes';
 function savedDupes() {
   try { return JSON.parse(localStorage.getItem(DUPES_KEY) ?? '{}'); } catch { return {}; }
 }
-const customDupesFor = (f) => savedDupes()[f] ?? null;
-const dupesFor = (f) => customDupesFor(f) ?? standardDuplicates(f);
+const customDupesFor = (f) => {
+  const d = savedDupes()[f];
+  const lineup = lineupOf(f, savedLineups());
+  return d && d.every((id) => lineup.includes(id)) ? d : null;
+};
+const dupesFor = (f) => customDupesFor(f) ?? standardDuplicates(f, savedLineups());
 function storeDupes(f, ids) {
   const all = savedDupes();
   if (ids) all[f] = ids; else delete all[f];
@@ -119,8 +147,8 @@ function setFormat(next) {
   try { localStorage.setItem(FORMAT_KEY, format); } catch { /* storage unavailable */ }
 }
 const deckFor = (factions, mine) => (format === 'single'
-  ? buildSingleDeck(factions[0], mine ? dupesFor(factions[0]) : undefined)
-  : buildDeck(factions, mine ? cutsFor(factions) : undefined));
+  ? buildSingleDeck(factions[0], mine ? dupesFor(factions[0]) : undefined, mine ? savedLineups() : {})
+  : buildDeck(factions, mine ? cutsFor(factions) : undefined, mine ? savedLineups() : {}));
 
 // The opponent gets a random pair of playable factions.
 function randomPick() {
@@ -1373,6 +1401,16 @@ function onDesync() {
 
 // ---- Screens --------------------------------------------------------------
 
+// "Swap cards" buttons for picked factions that have expansion cards.
+function swapButtonsHTML() {
+  return picked.filter(hasExtras).map((f) => {
+    const n = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
+    const mine = customLineupFor(f);
+    const swapped = mine ? mine.filter((id) => !FACTION_LISTS[f].includes(id)).length : 0;
+    return `<button data-swap="${esc(f)}" class="ghost swap-btn">🔁 ${esc(f)} cards <small>${swapped ? `${swapped} new in` : `${n} new to swap in`}</small></button>`;
+  }).join('');
+}
+
 function deckLineHTML() {
   if (picked.length !== pickNeeded()) return `<p class="deck-line sub">Pick ${pickNeeded() === 1 ? 'a faction' : `${pickNeeded()} factions`} to build your deck.</p>`;
   if (format === 'single') {
@@ -1380,20 +1418,22 @@ function deckLineHTML() {
     const custom = customDupesFor(f);
     return `
     <div class="deck-line">
-      <div><b>Your deck: ${buildSingleDeck(f, dupesFor(f)).length} cards</b> <span class="sub">${esc(f)} · 30 + 10 duplicates (${custom ? 'yours' : 'standard'})</span></div>
+      <div><b>Your deck: ${buildSingleDeck(f, dupesFor(f), savedLineups()).length} cards</b> <span class="sub">${esc(f)} · 30 + 10 duplicates (${custom ? 'yours' : 'standard'})</span></div>
       <button data-act="editDupes">${custom ? 'Edit my duplicates' : 'Choose duplicates'}</button>
       ${custom ? '<button data-act="resetDupes" class="ghost">Use standard duplicates</button>' : ''}
+      ${swapButtonsHTML()}
     </div>`;
   }
-  const custom = customCutsFor(picked);
-  const cuts = custom ?? standardCuts(picked);
+  const custom = validCustomCuts(picked);
+  const cuts = custom ?? standardCuts(picked, savedLineups());
   const split = picked.map((f) => `${cutCount(cuts, f)} ${f}`).join(' · ');
-  const size = buildDeck(picked, cuts).length;
+  const size = buildDeck(picked, cuts, savedLineups()).length;
   return `
     <div class="deck-line">
       <div><b>Your deck: ${size} cards</b> <span class="sub">${esc(picked.join(' + '))} · ${custom ? 'your cut' : 'standard cut'} (${esc(split)})</span></div>
       <button data-act="editCuts">${custom ? 'Edit my cut' : 'Customize cuts'}</button>
       ${custom ? '<button data-act="resetCuts" class="ghost">Use standard cut</button>' : ''}
+      ${swapButtonsHTML()}
     </div>`;
 }
 
@@ -1519,7 +1559,8 @@ function renderDupeBuilder() {
   const f = picked[0];
   const need = DEFAULT_RULES.singleFactionDuplicates;
   const n = draftDupes.length;
-  const cards = galleryCards(f).filter((c) => !c.token && !c.heroSpell);
+  const lineup = lineupOf(f, savedLineups());
+  const cards = galleryCards(f).filter((c) => lineup.includes(c.id));
   galleryOrder = cards.map((c) => c.id);
   const heroSpells = galleryCards(f).filter((c) => c.heroSpell);
   const scrollY = window.scrollY;
@@ -1546,14 +1587,49 @@ function renderDupeBuilder() {
   window.scrollTo(0, scrollY);
 }
 
+// Choose which 30 of a faction's cards you bring (expansion factions).
+function renderSwapBuilder() {
+  const f = swapFaction;
+  const need = FACTION_DECKS[f].length;
+  const n = draftLineup.length;
+  const cards = galleryCards(f).filter((c) => FACTION_POOLS[f].includes(c.id));
+  galleryOrder = cards.map((c) => c.id);
+  const extras = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
+  const scrollY = window.scrollY;
+  const grid = (list) => `<div class="gallery-grid builder-grid">${list.map((c) => cardHTML(c, { cuttable: true, isCut: !draftLineup.includes(c.id), cutLabel: 'OUT' })).join('')}</div>`;
+  app.innerHTML = `
+    <div class="gallery builder swap-builder">
+      <div class="builder-bar">
+        <div>
+          <h2>Choose your ${esc(f)} cards</h2>
+          <div class="sub">${esc(f)} has ${FACTION_POOLS[f].length} cards (${extras} new). Your deck uses ${need}: tap a card to take it out or put it in.</div>
+        </div>
+        <div class="builder-count ${n === need ? 'done' : ''}">In <b>${n}</b> / ${need}<span class="sub">${n > need ? `take out ${n - need}` : n < need ? `add ${need - n}` : 'ready'}</span></div>
+        <div class="builder-buttons">
+          <button data-act="swapStandard" class="ghost">Standard ${need}</button>
+          <button data-act="menu" class="ghost">Cancel</button>
+          <button data-act="swapSave" ${n === need ? '' : 'disabled'}>Save cards</button>
+        </div>
+      </div>
+      <h3>✨ New cards <span class="pick-count">${cards.filter((c) => c.extra && draftLineup.includes(c.id)).length} of ${extras} in</span></h3>
+      ${grid(cards.filter((c) => c.extra))}
+      <h3>${FACTION_ICONS[f] ?? ''} Original cards <span class="pick-count">${cards.filter((c) => !c.extra && draftLineup.includes(c.id)).length} of ${FACTION_LISTS[f].length} in</span></h3>
+      ${grid(cards.filter((c) => !c.extra))}
+    </div>
+    ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
+  window.scrollTo(0, scrollY);
+}
+
 function renderBuilder() {
   if (builderMode === 'dupe') return renderDupeBuilder();
+  if (builderMode === 'swap') return renderSwapBuilder();
   const need = DEFAULT_RULES.cardsCut;
   const n = draftCuts.length;
-  galleryOrder = picked.flatMap((f) => galleryCards(f).filter((c) => !c.token && !c.heroSpell).map((c) => c.id));
+  const inDeck = (f) => { const l = lineupOf(f, savedLineups()); return galleryCards(f).filter((c) => l.includes(c.id)); };
+  galleryOrder = picked.flatMap((f) => inDeck(f).map((c) => c.id));
   const heroSpells = picked.flatMap((f) => galleryCards(f).filter((c) => c.heroSpell));
   const section = (f) => {
-    const cards = galleryCards(f).filter((c) => !c.token && !c.heroSpell);
+    const cards = inDeck(f);
     const cut = cutCount(draftCuts, f);
     return `<h3>${FACTION_ICONS[f] ?? ''} ${esc(f)} <span class="pick-count">${cards.length - cut} in deck · ${cut} cut</span></h3>
       <div class="gallery-grid builder-grid">${cards.map((c) => cardHTML(c, { cuttable: true, isCut: draftCuts.includes(c.id) })).join('')}</div>`;
@@ -1567,7 +1643,7 @@ function renderBuilder() {
           <div class="sub">${esc(picked.join(' + '))} · click cards to cut them · Hero Spells always included:
             ${heroSpells.map((c) => esc(c.name)).join(', ')}</div>
         </div>
-        <div class="builder-count ${n === need ? 'done' : ''}">Cut <b>${n}</b> / ${need}<span class="sub">Deck ${picked.reduce((t, f) => t + FACTION_LISTS[f].length, 0) - n} cards</span></div>
+        <div class="builder-count ${n === need ? 'done' : ''}">Cut <b>${n}</b> / ${need}<span class="sub">Deck ${picked.reduce((t, f) => t + lineupOf(f, savedLineups()).length, 0) - n} cards</span></div>
         <div class="builder-buttons">
           <button data-act="cutStandard" class="ghost">Standard cut</button>
           <button data-act="cutClear" class="ghost">Clear cuts</button>
@@ -1614,7 +1690,7 @@ function renderGallery() {
           <header class="page-title">${art ? `<img src="${art}" alt="">` : ''}<div><h3>${esc(f)}</h3>
             <span class="sub">${f === 'Fusion'
     ? `${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells · one per faction pair · charges as you use your Hero Spells (3 uses) · click a card to see it full size`
-    : `${FACTION_DECKS[f].length}/${FACTION_LISTS[f].length} cards · Hero Spell first, tokens last · click a card to see it full size`}</span></div></header>
+    : `${hasExtras(f) ? `${FACTION_POOLS[f].length} cards (${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new) · a deck uses ${FACTION_DECKS[f].length}` : `${FACTION_DECKS[f].length}/${FACTION_LISTS[f].length} cards`} · Hero Spell first, tokens last · click a card to see it full size`}</span></div></header>
           <div class="gallery-grid">${galleryCards(f).map((c) => cardHTML(c, { zoom: true })).join('')}</div>
         </section>
       </div>
@@ -2039,7 +2115,17 @@ app.addEventListener('click', (e) => {
   if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   const zoom = e.target.closest('[data-zoom]');
   if (zoom && (screen === 'gallery' || screen === 'builder' || screen === 'menu')) { zoomId = zoom.dataset.zoom; return render(); }
+  const swapBtn = e.target.closest('[data-swap]');
+  if (swapBtn && screen === 'menu') {
+    builderMode = 'swap'; swapFaction = swapBtn.dataset.swap; draftLineup = [...lineupOf(swapFaction, savedLineups())];
+    zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
+  }
   const cutCard = e.target.closest('[data-cut]');
+  if (cutCard && screen === 'builder' && builderMode === 'swap') {
+    const id = cutCard.dataset.cut;
+    draftLineup = draftLineup.includes(id) ? draftLineup.filter((x) => x !== id) : [...draftLineup, id];
+    return render();
+  }
   if (cutCard && screen === 'builder' && builderMode === 'dupe') {
     const id = cutCard.dataset.cut;
     const need = DEFAULT_RULES.singleFactionDuplicates;
@@ -2102,10 +2188,10 @@ function onButton(name) {
     case 'editCuts': builderMode = 'cut'; draftCuts = [...cutsFor(picked)]; zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
     case 'editDupes': builderMode = 'dupe'; draftDupes = [...dupesFor(picked[0])]; zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
     case 'resetDupes': storeDupes(picked[0], null); flash('Using the standard duplicates.'); return render();
-    case 'dupeStandard': draftDupes = [...standardDuplicates(picked[0])]; return render();
+    case 'dupeStandard': draftDupes = [...standardDuplicates(picked[0], savedLineups())]; return render();
     case 'dupeClear': draftDupes = []; return render();
     case 'dupeSave': {
-      const std = standardDuplicates(picked[0]);
+      const std = standardDuplicates(picked[0], savedLineups());
       const same = draftDupes.length === std.length && draftDupes.every((id) => std.includes(id));
       storeDupes(picked[0], same ? null : draftDupes);
       flash(same ? 'Saved: standard duplicates.' : 'Deck saved.');
@@ -2115,10 +2201,19 @@ function onButton(name) {
     case 'formatPair': setFormat('pair'); return render();
     case 'formatSingle': setFormat('single'); return render();
     case 'resetCuts': storeCuts(picked, null); flash('Using the standard cut.'); return render();
-    case 'cutStandard': draftCuts = standardCuts(picked); return render();
+    case 'cutStandard': draftCuts = standardCuts(picked, savedLineups()); return render();
+    case 'swapStandard': draftLineup = [...FACTION_DECKS[swapFaction]]; return render();
+    case 'swapSave': {
+      const std = FACTION_DECKS[swapFaction];
+      const same = draftLineup.length === std.length && draftLineup.every((id) => std.includes(id));
+      storeLineup(swapFaction, same ? null : draftLineup);
+      flash(same ? `Saved: standard ${swapFaction} cards.` : `Saved your ${swapFaction} cards.`);
+      screen = 'menu';
+      return render();
+    }
     case 'cutClear': draftCuts = []; return render();
     case 'cutSave': {
-      const std = standardCuts(picked);
+      const std = standardCuts(picked, savedLineups());
       const same = draftCuts.length === std.length && draftCuts.every((id) => std.includes(id));
       storeCuts(picked, same ? null : draftCuts);
       flash(same ? 'Saved: standard cut.' : 'Deck saved.');

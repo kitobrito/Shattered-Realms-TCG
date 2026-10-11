@@ -284,7 +284,7 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     const lost = amount - absorbed;
     t.health -= lost;
     t.healthLost += lost;
-    if (lost > 0) emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount: lost, source: sourceId });
+    if (lost > 0) { state.players[t.owner].lostHealthTurn = state.turn; emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount: lost, source: sourceId }); }
   } else {
     reduceHealth(t, amount);
     t.lastDamagedBy = sourceId;
@@ -311,8 +311,9 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
 export function heal(state, targetId, amount, opts = {}) {
   const t = findCharacter(state, targetId);
   if (!t || amount <= 0) return 0;
-  // Radiation: a character whose Health a Radiation aura is lowering can't be healed.
-  if ((t.radReduction ?? 0) > 0) { log(state, `☢ ${nameOf(state, t)} can't be healed while irradiated.`); return 0; }
+  // Radiation: a character whose Health a Radiation aura is lowering can't be healed
+  // (ignoreRadiation: Irradiated Behemoth's heal still works).
+  if ((t.radReduction ?? 0) > 0 && !opts.ignoreRadiation) { log(state, `☢ ${nameOf(state, t)} can't be healed while irradiated.`); return 0; }
   let healed = 0;
   if (t.health >= t.maxHealth) {
     if (!opts.overheal) return 0;
@@ -343,6 +344,7 @@ export function loseHealth(state, targetId, amount, opts = {}) {
   log(state, `${nameOf(state, t)} loses ${amount} Health.`);
   if (t.kind === 'hero') {
     t.healthLost += amount;
+    state.players[t.owner].lostHealthTurn = state.turn;
     emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount, source: null, paid: opts.paid !== false, forSummon: !!opts.forSummon });
   } else {
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: null });

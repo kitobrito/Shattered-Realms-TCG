@@ -215,6 +215,94 @@ export const RADIOACTIVE_CARDS = [
     trap: { on: 'heroLethal', effects: [reduce(ALL_MINIONS, 3, { obliterateKilled: true })] },
   },
 
+  // ---- Expansion: 15 extra cards (designer's second set) ----
+  // `extra`: not in the standard 30; players can swap them in (deck builder, "Swap cards").
+  // Costs for this set are our proposals (the designer gave stats, not costs).
+  {
+    ...RM, id: 'fallout_scavenger', name: 'Fallout Scavenger', art: '🦴', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: If your opponent controls a character with Radiation, gain +1/+1.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: 'self', attack: 1, health: 1, if: { enemyIrradiated: true } }] }],
+  },
+  {
+    ...RM, id: 'isotope_rat', name: 'Isotope Rat', art: '🐀', extra: true, cost: 2, attack: 2, health: 2,
+    text: 'Exit: Give a random enemy minion Radiation 1 permanently.',
+    triggers: [{ on: 'deathrattle', effects: [rad(RANDOM_ENEMY_MINION)] }],
+  },
+  {
+    ...RM, id: 'containment_officer', name: 'Containment Officer', art: '👮', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Whenever another friendly minion gains Radiation, this gains +1 Health.',
+    triggers: [{ on: 'radiationApplied', filter: { target: { side: 'friendly', notSelf: true } }, effects: [{ op: 'buff', target: 'self', health: 1 }] }],
+  },
+  {
+    ...RM, id: 'gamma_hound', name: 'Gamma Hound', art: '🐕', extra: true, cost: 3, attack: 3, health: 3,
+    text: 'Arrival: Deal 1 damage to each enemy minion with Radiation.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: { minions: { side: 'enemy', irradiated: true } }, amount: 1 }] }],
+  },
+  {
+    ...RM, id: 'irradiated_behemoth', name: 'Irradiated Behemoth', art: '🦏', extra: true, cost: 5, attack: 3, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Whenever this gains Radiation, restore 2 Health to your Hero (even while Radiation blocks healing).',
+    triggers: [{ on: 'radiationApplied', filter: { target: 'self' }, effects: [{ op: 'heal', target: 'friendlyHero', amount: 2, ignoreRadiation: true }] }],
+  },
+  {
+    ...RM, id: 'isotope_engineer', name: 'Isotope Engineer', art: '🔧', extra: true, cost: 4, attack: 3, health: 4,
+    text: 'Arrival: Give a friendly minion Radiation 1 permanently. Discover a spell from your deck.',
+    target: { type: 'minion', side: 'friendly' },
+    triggers: [{ on: 'battlecry', effects: [rad('chosen'), { op: 'discover', from: 'deck', filter: { type: 'spell' } }] }],
+  },
+  {
+    ...RM, id: 'critical_mass_mutant', name: 'Critical Mass Mutant', art: '🧌', extra: true, cost: 6, attack: 5, health: 5,
+    text: 'Arrival: Gain +1/+1 for each enemy character with Radiation.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'gainStatsPerCount', count: { characters: { side: 'enemy', irradiated: true } }, attack: 1, health: 1 }] }],
+  },
+  {
+    ...RM, id: 'meltdown_colossus', name: 'Meltdown Colossus', art: '🏭', extra: true, cost: 8, attack: 7, health: 8,
+    text: 'At the end of your turn, give a random enemy minion Radiation 1 permanently.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [rad(RANDOM_ENEMY_MINION)] }],
+  },
+  {
+    ...S, id: 'controlled_exposure', name: 'Controlled Exposure', art: '🎯', extra: true, cost: 1,
+    text: 'Give a friendly minion Radiation 1 permanently. Draw a card.',
+    target: { type: 'minion', side: 'friendly' },
+    effects: [rad('chosen'), { op: 'draw' }],
+  },
+  {
+    ...S, id: 'reactor_overload', name: 'Reactor Overload', art: '⚡', extra: true, cost: 3,
+    text: 'Remove all Radiation from your minions. For each Radiation removed, deal 1 damage to a random enemy minion.',
+    effects: [{ op: 'overload', target: { minions: { side: 'friendly' } }, damageTo: { minions: { side: 'enemy', alive: true } } }],
+  },
+  {
+    ...S, id: 'radioactive_fallout', name: 'Radioactive Fallout', art: '🌧️', extra: true, cost: 4,
+    text: 'Deal 2 damage to all minions. Minions that survive gain Radiation 1 permanently.',
+    effects: [
+      { op: 'damage', target: ALL_MINIONS, amount: 2 },
+      rad({ minions: { side: 'any', alive: true } }),
+    ],
+  },
+  {
+    ...S, id: 'emergency_decontamination', name: 'Emergency Decontamination', art: '🚿', extra: true, cost: 2,
+    text: 'Remove all Radiation from a friendly character. Restore 3 Health to it.',
+    quickPlay: {},
+    target: { type: 'character', side: 'friendly' },
+    effects: [{ op: 'clearRadiation', target: 'chosen' }, { op: 'heal', target: 'chosen', amount: 3 }],
+  },
+  {
+    ...S, id: 'gamma_reversal', name: 'Gamma Reversal', art: '🌀', extra: true, cost: 2,
+    text: 'When an enemy minion gains Radiation: Give it Radiation 2 more permanently.',
+    // Ruling: it can answer Radiation from either player's effects, on either turn.
+    quickPlay: { windows: ['enemyIrradiated'], filter: { target: 'enemyMinion' } },
+    effects: [rad('eventTarget', 2)],
+  },
+  {
+    ...T, id: 'breach_protocol', name: 'Breach Protocol', art: '🚪', extra: true, cost: 1,
+    text: 'When your opponent summons a minion: Give it Radiation 1 permanently.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [rad('eventSource')] },
+  },
+  {
+    ...T, id: 'critical_failure', name: 'Critical Failure', art: '🚨', extra: true, cost: 3,
+    text: 'When an enemy minion attacks: Give it Radiation 2 permanently and deal 2 damage to it.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [rad('eventSource', 2), { op: 'damage', target: 'eventSource', amount: 2 }] },
+  },
+
   // ---- Token ----
   { ...RM, id: 'feral_ghoul', name: 'Feral Ghoul', art: '🧟', token: true, cost: 2, attack: 3, health: 2, keywords: ['Rush'], text: 'Rush.' },
 ];

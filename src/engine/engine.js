@@ -524,6 +524,10 @@ const STEPS = {
     if (event.type === 'heroLostHealth') {
       steps.push({ kind: 'window', name: 'heroLostHealth', priority: event.player, ctx: { event } });
     }
+    // Radioactive: Quick Plays for an enemy character gaining Radiation (on either turn).
+    if (event.type === 'radiationApplied') {
+      steps.push({ kind: 'window', name: 'enemyIrradiated', priority: opponentOf(event.player), ctx: { event } });
+    }
     pushFront(state, steps);
   },
 
