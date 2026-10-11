@@ -32,9 +32,9 @@ export const DIFFICULTIES = {
   // Measured (AI vs AI, 150-300 games): trained weights beat Medium ~55%, but deeper
   // search stopped helping (Very Hard ≈ Hard). So the top levels also get
   // advantages: extra Hero Health and extra starting cards (see applyAdvantage).
-  hard: { weights: LEARNED_WEIGHTS, advantage: { health: 5 } },
-  veryHard: { beam: 8, depth: 9, maxNodes: 1600, weights: LEARNED_WEIGHTS, advantage: { health: 10, cards: 1 } },
-  impossible: { beam: 9, depth: 10, maxNodes: 2400, reply: 6, peek: true, weights: LEARNED_WEIGHTS, advantage: { health: 15, cards: 2 } },
+  hard: { weights: LEARNED_WEIGHTS, advantage: { health: 8 } },
+  veryHard: { beam: 8, depth: 9, maxNodes: 1600, weights: LEARNED_WEIGHTS, advantage: { health: 12, cards: 1 } },
+  impossible: { beam: 9, depth: 10, maxNodes: 2400, reply: 6, peek: true, weights: LEARNED_WEIGHTS, advantage: { health: 20, cards: 2 } },
 };
 
 // ---- Simulation helpers ------------------------------------------------------
