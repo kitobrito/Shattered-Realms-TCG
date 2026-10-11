@@ -1,4 +1,4 @@
-// Evaluation weights learned by self-play (tools/train-ai.mjs): 1 generations
+// Evaluation weights learned by self-play (tools/train-ai.mjs): 3 generations
 // of mutated weights playing the reigning champion; only clear winners were kept.
 export const LEARNED_WEIGHTS = {
   hp: 1,
