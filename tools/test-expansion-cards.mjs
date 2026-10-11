@@ -186,7 +186,7 @@ test('Crimson Duelist: +2 Attack when attacking a minion', () => {
 });
 test('Blood Alchemist: Hero loses Health on your turn -> a Vampire gets +1 Attack', () => {
   const al = put(0, 'blood_alchemist');
-  play(0, give(0, 'vampire_blood_price'));
+  play(0, give(0, 'blood_tithe'));
   if (al.attack !== 3) return `Attack ${al.attack} (want 3)`;
 });
 test('Crypt Executioner: destroys a damaged enemy with 2 or less Attack', () => {
@@ -200,7 +200,7 @@ test('Crypt Executioner: destroys a damaged enemy with 2 or less Attack', () => 
 });
 test('Crimson Oracle: draws at end of turn if your Hero lost Health', () => {
   put(0, 'crimson_oracle');
-  play(0, give(0, 'vampire_blood_price'));
+  play(0, give(0, 'blood_tithe'));
   const before = pl(0).hand.length;
   endTurn();
   if (pl(0).hand.length !== before + 1) return `hand ${before} -> ${pl(0).hand.length}`;
@@ -235,9 +235,9 @@ test('Queen of the Red Veil: small Vampires become 3/3 and keep abilities', () =
   if (!hasKeyword(thrall, 'Lifesteal')) return 'lost Lifesteal';
   if (king.attack === 3) return 'big Vampire changed';
 });
-test('Blood Price (Vampire): lose 2 Health, draw a card', () => {
+test('Blood Tithe: lose 2 Health, draw a card', () => {
   const hp = pl(0).hero.health;
-  const inst = give(0, 'vampire_blood_price');
+  const inst = give(0, 'blood_tithe');
   const before = pl(0).hand.length;
   play(0, inst);
   if (pl(0).hero.health !== hp - 2) return `Health ${hp} -> ${pl(0).hero.health}`;
@@ -378,7 +378,7 @@ dtest('Brood Architect: Eggs get +1 Health; first Egg each turn costs 1 less', (
 dtest('Colossal Brood Egg: 0/6, Exit summons two Babies', () => {
   const e = put(0, 'colossal_brood_egg');
   e.destroyed = true;
-  play(0, give(0, 'vampire_blood_price')); // any action processes deaths
+  play(0, give(0, 'blood_tithe')); // any action processes deaths
   const babies = pl(0).board.filter((m) => m.cardId !== 'colossal_brood_egg');
   if (babies.length !== 2) return `${babies.length} babies`;
 });
