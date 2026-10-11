@@ -23,15 +23,17 @@ export const BASE_WEIGHTS = {
   burnHero: 1.6, burnMinion: 0.8, lethalRisk: 60, threat: 0.35, myLethal: 25, myThreat: 0,
 };
 
-// Difficulty levels. reply: also predict the opponent's attacks back before
-// judging a plan; peek: that prediction may use the opponent's real hand
-// (Impossible only); blunder: chance of a random move (Easy).
+// Difficulty levels. reply: also predict the opponent's next turn before judging
+// a plan; peek: that prediction uses the opponent's real hand (Impossible only);
+// blunder: chance of a random move (Easy).
 export const DIFFICULTIES = {
   easy: { beam: 2, depth: 3, maxNodes: 60, blunder: 0.25, weights: BASE_WEIGHTS, noReact: true, keepHand: true },
   medium: { weights: BASE_WEIGHTS },
   hard: { weights: LEARNED_WEIGHTS },
-  veryHard: { beam: 7, depth: 8, maxNodes: 1200, reply: 4, weights: LEARNED_WEIGHTS },
-  impossible: { beam: 9, depth: 9, maxNodes: 2000, reply: 6, peek: true, weights: LEARNED_WEIGHTS },
+  // Measured: predicting the opponent's attacks without seeing their hand didn't help
+  // (it lost 44% vs no prediction), so Very Hard just searches deeper.
+  veryHard: { beam: 8, depth: 9, maxNodes: 1600, weights: LEARNED_WEIGHTS },
+  impossible: { beam: 9, depth: 10, maxNodes: 2400, reply: 6, peek: true, weights: LEARNED_WEIGHTS },
 };
 
 // ---- Simulation helpers ------------------------------------------------------

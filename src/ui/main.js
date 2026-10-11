@@ -25,6 +25,7 @@ import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
+import { awardUnlocks, isLocked, lockedCount, unlockPopupHTML } from './unlocks.js';
 
 const SAVE_KEY = 'faction-ccg-save';
 const SAVE_VERSION = 2;
@@ -69,7 +70,10 @@ function loadSaved() {
 
 const LINEUP_KEY = 'faction-ccg-lineups';
 function savedLineups() {
-  try { return JSON.parse(localStorage.getItem(LINEUP_KEY) ?? '{}'); } catch { return {}; }
+  let all;
+  try { all = JSON.parse(localStorage.getItem(LINEUP_KEY) ?? '{}'); } catch { return {}; }
+  // A lineup can only use unlocked cards.
+  return Object.fromEntries(Object.entries(all).filter(([, ids]) => Array.isArray(ids) && !ids.some(isLocked)));
 }
 const customLineupFor = (f) => (lineupOf(f, savedLineups()) === FACTION_DECKS[f] ? null : savedLineups()[f]);
 function storeLineup(f, ids) {
@@ -1405,9 +1409,11 @@ function onDesync() {
 function swapButtonsHTML() {
   return picked.filter(hasExtras).map((f) => {
     const n = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
+    const open = n - lockedCount(f);
     const mine = customLineupFor(f);
     const swapped = mine ? mine.filter((id) => !FACTION_LISTS[f].includes(id)).length : 0;
-    return `<button data-swap="${esc(f)}" class="ghost swap-btn">🔁 ${esc(f)} cards <small>${swapped ? `${swapped} new in` : `${n} new to swap in`}</small></button>`;
+    const note = swapped ? `${swapped} new in · ${open}/${n} unlocked` : open ? `${open}/${n} new unlocked` : `🔒 win matches to unlock ${n} new`;
+    return `<button data-swap="${esc(f)}" class="ghost swap-btn">🔁 ${esc(f)} cards <small>${note}</small></button>`;
   }).join('');
 }
 
@@ -1596,13 +1602,15 @@ function renderSwapBuilder() {
   galleryOrder = cards.map((c) => c.id);
   const extras = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
   const scrollY = window.scrollY;
-  const grid = (list) => `<div class="gallery-grid builder-grid">${list.map((c) => cardHTML(c, { cuttable: true, isCut: !draftLineup.includes(c.id), cutLabel: 'OUT' })).join('')}</div>`;
+  const grid = (list) => `<div class="gallery-grid builder-grid">${list.map((c) => (isLocked(c.id)
+    ? cardHTML(c, { cuttable: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
+    : cardHTML(c, { cuttable: true, isCut: !draftLineup.includes(c.id), cutLabel: 'OUT' }))).join('')}</div>`;
   app.innerHTML = `
     <div class="gallery builder swap-builder">
       <div class="builder-bar">
         <div>
           <h2>Choose your ${esc(f)} cards</h2>
-          <div class="sub">${esc(f)} has ${FACTION_POOLS[f].length} cards (${extras} new). Your deck uses ${need}: tap a card to take it out or put it in.</div>
+          <div class="sub">${esc(f)} has ${FACTION_POOLS[f].length} cards (${extras} new, ${extras - lockedCount(f)} unlocked). Your deck uses ${need}: tap a card to take it out or put it in. Win matches vs the AI to unlock more (${'2'} per win).</div>
         </div>
         <div class="builder-count ${n === need ? 'done' : ''}">In <b>${n}</b> / ${need}<span class="sub">${n > need ? `take out ${n - need}` : n < need ? `add ${need - n}` : 'ready'}</span></div>
         <div class="builder-buttons">
@@ -1691,7 +1699,9 @@ function renderGallery() {
             <span class="sub">${f === 'Fusion'
     ? `${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells · one per faction pair · charges as you use your Hero Spells (3 uses) · click a card to see it full size`
     : `${hasExtras(f) ? `${FACTION_POOLS[f].length} cards (${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new) · a deck uses ${FACTION_DECKS[f].length}` : `${FACTION_DECKS[f].length}/${FACTION_LISTS[f].length} cards`} · Hero Spell first, tokens last · click a card to see it full size`}</span></div></header>
-          <div class="gallery-grid">${galleryCards(f).map((c) => cardHTML(c, { zoom: true })).join('')}</div>
+          <div class="gallery-grid">${galleryCards(f).map((c) => (isLocked(c.id)
+            ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
+            : cardHTML(c, { zoom: true }))).join('')}</div>
         </section>
       </div>
     </div>
@@ -1769,6 +1779,11 @@ function pokeProp(el) {
 
 function renderGame() {
   const s = game.state;
+  // A win (vs the AI or online) unlocks expansion cards, once per match.
+  if (s.gameOver && heroesShattered && !game.unlockChecked) {
+    game.unlockChecked = true;
+    if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks();
+  }
   app.innerHTML = boardHTML({
     s, me: viewer, legal: legalForView(), mode: game.mode, handoff, isAI, history, logOpen, mullMarked, shattered: heroesShattered, rope: ropeState(),
     endArmed: endArmed === s.turn, concedeAsk, stats: game.stats, online: game.online, result: game.result,
@@ -1777,6 +1792,10 @@ function renderGame() {
   if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0]); else hideBoard();
   layoutPortraitBoard(app);
   layoutHands(app);
+  if (game.unlocked?.length && !game.unlockSeen) {
+    app.insertAdjacentHTML('beforeend', unlockPopupHTML(game.unlocked));
+    fitAllText(app.querySelector('.unlock-overlay'));
+  }
   markFreshTraps();
   coachTips();
   const logEl = app.querySelector('.log');
@@ -2123,6 +2142,7 @@ app.addEventListener('click', (e) => {
   const cutCard = e.target.closest('[data-cut]');
   if (cutCard && screen === 'builder' && builderMode === 'swap') {
     const id = cutCard.dataset.cut;
+    if (isLocked(id)) return flash('Locked. Win matches to unlock new cards (2 per win).');
     draftLineup = draftLineup.includes(id) ? draftLineup.filter((x) => x !== id) : [...draftLineup, id];
     return render();
   }
@@ -2185,6 +2205,7 @@ function onButton(name) {
     case 'gallery': screen = 'gallery'; zoomId = null; window.scrollTo(0, 0); return render();
     case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; window.scrollTo(0, 0); return render();
     case 'closeZoom': zoomId = null; return render();
+    case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
     case 'editCuts': builderMode = 'cut'; draftCuts = [...cutsFor(picked)]; zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
     case 'editDupes': builderMode = 'dupe'; draftDupes = [...dupesFor(picked[0])]; zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
     case 'resetDupes': storeDupes(picked[0], null); flash('Using the standard duplicates.'); return render();
