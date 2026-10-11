@@ -141,7 +141,7 @@ function extinctionHTML(pl, s) {
   if (!ext) return '';
   const left = Math.max(0, ext.nextAt - ext.turns);
   const mode = ext.mode === 'bothBoards' ? 'Both boards!' : ext.mode === 'meteorShower' ? 'Meteor Shower' : '';
-  const tip = `Extinction ${left ? `in ${left} turn${left === 1 ? '' : 's'}` : 'at the end of this turn'}${mode ? ` · ${mode}` : ''}${ext.shower ? ` · ${ext.shower} meteors left` : ''}`;
+  const tip = `Extinction ${left ? `in ${left} turn${left === 1 ? '' : 's'}` : 'at the end of this turn'}${mode ? ` · ${mode}` : ''}${ext.shower ? ` · ${ext.shower} meteors left · no Primal Mana` : ''}`;
   return `<div class="extinction-badge ${left <= 1 && s.activePlayer === pl.index ? 'soon' : ''}" title="${esc(tip)}" data-preview="extinction_cycle">
     <span>☄</span><b>${left}</b></div>`;
 }

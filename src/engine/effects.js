@@ -579,6 +579,10 @@ export const EFFECT_OPS = {
   // ---- Fusions ----
   // { amount } — Dinosaurs: extra Primal Mana this turn (Dinosaur cards only).
   gainPrimal(state, e, ctx) {
+    if (state.players[ctx.controller].extinction?.shower) {
+      log(state, 'The Meteor Shower blocks Primal Mana.');
+      return;
+    }
     const m = state.players[ctx.controller].mana;
     m.current += e.amount;
     m.primal = (m.primal ?? 0) + e.amount;
