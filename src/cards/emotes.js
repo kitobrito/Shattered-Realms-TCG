@@ -1,0 +1,100 @@
+// Emote lines per faction (a hero speaks with its first faction's voice).
+// Designer: these are starter lines — rewrite freely. Keep each one short.
+
+export const EMOTE_KINDS = ['greetings', 'wellPlayed', 'thanks', 'wow', 'oops', 'threaten'];
+export const EMOTE_LABELS = { greetings: 'Greetings', wellPlayed: 'Well played', thanks: 'Thanks', wow: 'Wow', oops: 'Oops', threaten: 'Threaten' };
+
+export const EMOTES = {
+  Vampires: {
+    greetings: "Good evening… and welcome.",
+    wellPlayed: "Your blood is quite tasty.",
+    thanks: "Delicious.",
+    wow: "Oh! Ah ah ah!",
+    oops: "Oof! Ah ah ah!",
+    threaten: "I want to suck your blood!",
+  },
+  Dinosaurs: {
+    greetings: "Rawr!",
+    wellPlayed: "You survived. Impressive.",
+    thanks: "Rawrrrrr.",
+    wow: "HISSSS!",
+    oops: "RAWR!",
+    threaten: "ROAAAAR!",
+  },
+  Plants: {
+    greetings: "Hello there.",
+    wellPlayed: "You have grown strong.",
+    thanks: "Thank you.",
+    wow: "Wow!",
+    oops: "Woah!",
+    threaten: "I'm going to kick your grass!",
+  },
+  Aliens: {
+    greetings: "I come in peace.",
+    wellPlayed: "We appreciate your contribution.",
+    thanks: "Zoop be boom?",
+    wow: "Zim bop!",
+    oops: "Recalculating…",
+    threaten: "Take me to your leader.",
+  },
+  Fungus: {
+    greetings: "Nice to meet shroom.",
+    wellPlayed: "You resist the rot. Well played.",
+    thanks: "Thank shroom.",
+    wow: "Oh! Shiitake mushrooms!",
+    oops: "Whoops!",
+    threaten: "Shroom over!",
+  },
+  Radioactive: {
+    greetings: "Welcome to the wasteland.",
+    wellPlayed: "You've got some glow in you. Well played.",
+    thanks: "Much appreciated, mutant.",
+    wow: "Now that's a mutation!",
+    oops: "Uh oh… that's a leak.",
+    threaten: "You'll glow in the dark when I'm done!",
+  },
+  Robots: {
+    greetings: "Greetings. Initiating combat protocol.",
+    wellPlayed: "Performance: optimal. Well played.",
+    thanks: "Gratitude subroutine engaged.",
+    wow: "Error: outcome not predicted.",
+    oops: "Recalibrating…",
+    threaten: "Target acquired. Commencing termination.",
+  },
+  Divine: {
+    greetings: "May the light guide you.",
+    wellPlayed: "A noble effort. Well played.",
+    thanks: "Bless you.",
+    wow: "By the light!",
+    oops: "Forgive me.",
+    threaten: "Your darkness ends here!",
+  },
+  Demons: {
+    greetings: "Shall we make a deal?",
+    wellPlayed: "Impressive. Your soul would fetch a fine price.",
+    thanks: "A pleasure doing business.",
+    wow: "Even the Abyss didn't see that coming.",
+    oops: "Every bargain has its price.",
+    threaten: "Your soul is already mine!",
+  },
+  Dragons: {
+    greetings: "Kneel before the flame.",
+    wellPlayed: "You burn brightly. Well played.",
+    thanks: "My gratitude… and my fire.",
+    wow: "Even dragons are impressed!",
+    oops: "A spark gone astray.",
+    threaten: "I will reduce you to ash!",
+  },
+  Zombies: {
+    greetings: "Braaaaaains.",
+    wellPlayed: "Uhhhhh… braaains?",
+    thanks: "Awww, brains.",
+    wow: "Argh! Braains!",
+    oops: "My arm fell off.",
+    threaten: "Braaaaaaaaaaaaaaaaaaaaains!",
+  },
+};
+
+export function emoteLine(faction, kind) {
+  return EMOTES[faction]?.[kind] ?? EMOTE_LABELS[kind];
+}

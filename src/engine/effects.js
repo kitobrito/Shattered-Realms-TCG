@@ -1,0 +1,1013 @@
+// Effect operations. Cards reference these by `op` name with parameters, so
+// new cards are data, and only genuinely new mechanics need a new op here.
+//
+// Every op receives (state, effect, ctx) where ctx = { self, controller, chosen, chosen2, event }.
+// Any effect may carry `if: <condition>` (and optional `else: [effects]`).
+
+import {
+  addToHand, allKeywords, dealDamage, drawCards, effectiveAttack, emit, findCharacter, hasKeyword, heal, heroOf,
+  hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
+  applyBurn, burnCards, isBurning, isDarkOrUndead,
+  applyRadiation, clearRadiation, radiationOf, reduceHealthStat,
+} from './core.js';
+import { collectibleMinions, getCard, registerCustom } from './registry.js';
+import { pickRandom, randomInt, shuffle } from './rng.js';
+import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL } from './rules.js';
+import { resolveSelector, targetCandidates } from './targeting.js';
+import { enterBattlefield } from './triggers.js';
+
+const each = (state, sel, ctx, fn) => {
+  for (const id of resolveSelector(state, sel, ctx)) {
+    const c = findCharacter(state, id);
+    if (c) fn(c);
+  }
+};
+
+const cardMatches = (card, f = {}) =>
+  (!f.type || card.type === f.type) &&
+  (!f.upgrade || !!card.upgrade) &&
+  (f.maxCost == null || card.cost <= f.maxCost) &&
+  (!f.tribe || (card.tribes ?? []).includes(f.tribe)) &&
+  (!f.faction || card.faction === f.faction);
+
+// ---- Conditions -----------------------------------------------------------
+// { controls: { tribe?, cardId?, excludeSelf? } }  — you control a matching minion
+// { subject: selector, attackAtMost?, healthAtMost?, dead?, alive?, tribe?, attackLessThanSelf? }
+export function checkCondition(state, cond, ctx) {
+  if (!cond) return true;
+  // { eventDeadFaction } — the minion that just died was from this faction (Graceful Return).
+  if (cond.eventDeadFaction) return !!ctx.event?.dead?.cardId && getCard(ctx.event.dead.cardId).faction === cond.eventDeadFaction;
+  // { enemyHandEmpty: true } — Ashen Curse.
+  if (cond.enemyHandEmpty != null) return (state.players[opponentOf(ctx.controller)].hand.length === 0) === cond.enemyHandEmpty;
+  if (cond.controls) {
+    const f = cond.controls;
+    // min: how many such minions (Omega Assembly); minUpgrades / hasWeapon: Robots.
+    const n = state.players[ctx.controller].board.filter((m) =>
+      (!f.tribe || m.tribes.includes(f.tribe)) && (!f.cardId || m.cardId === f.cardId) &&
+      (!f.excludeSelf || m.uid !== ctx.self) &&
+      (f.minUpgrades == null || (m.upgrades ?? 0) >= f.minUpgrades) && (!f.hasWeapon || !!m.weapon)).length;
+    return n >= (f.min ?? 1);
+  }
+  // { eventDeadUpgrades: N } — the minion that just died had at least N Upgrades (Final Assembly).
+  if (cond.eventDeadUpgrades != null) return (ctx.event?.dead?.upgrades ?? 0) >= cond.eventDeadUpgrades;
+  if (cond.subject) {
+    const c = findCharacter(state, resolveSelector(state, cond.subject, ctx)[0]);
+    if (!c) return false;
+    const dead = c.health <= 0 || c.destroyed;
+    if (cond.dead && !dead) return false;
+    if (cond.alive && dead) return false;
+    if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
+    if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
+    if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
+    if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
+    if (cond.burning != null && isBurning(c) !== cond.burning) return false;
+    if (cond.darkOrUndead != null && isDarkOrUndead(c) !== cond.darkOrUndead) return false;
+    if (cond.irradiated != null && (radiationOf(c) > 0) !== cond.irradiated) return false;
+    if (cond.side === 'friendly' && (c.controller ?? c.owner) !== ctx.controller) return false;
+    if (cond.side === 'enemy' && (c.controller ?? c.owner) === ctx.controller) return false;
+    if (cond.hasUpgrade != null && (c.upgrades > 0) !== cond.hasUpgrade) return false;
+    if (cond.minUpgrades != null && (c.upgrades ?? 0) < cond.minUpgrades) return false;
+    if (cond.hasWeapon != null && !!c.weapon !== cond.hasWeapon) return false;
+    // Divine Intervention: only a minion without Reborn that hasn't already come back through it.
+    if (cond.canGainReborn && (hasKeyword(c, 'Reborn') || c.rebornUsed)) return false;
+    if (cond.attackLessThanSelf) {
+      const self = findCharacter(state, ctx.self);
+      if (!self || effectiveAttack(c) >= effectiveAttack(self)) return false;
+    }
+    return true;
+  }
+  throw new Error(`Unknown condition: ${JSON.stringify(cond)}`);
+}
+
+// Silenced removes every other keyword the character has.
+// Frozen lasts until the minion has missed its controller's next turn: frozen
+// during its controller's own turn, it thaws at the end of their following turn.
+// lingerUntil = a player index: the keyword lasts until that player's next turn.
+// With `state`, gaining a new keyword raises keywordGained (Probe Drone).
+export function addKeyword(c, k, temporary = false, state = null, lingerUntil = null) {
+  if (k === 'Silenced') {
+    for (const old of allKeywords(c)) state ? loseKeyword(state, c, old) : null;
+    c.keywords = []; c.tempKeywords = []; c.lingerKeywords = [];
+  }
+  const isNew = !hasKeyword(c, k);
+  if (lingerUntil != null) {
+    c.lingerKeywords ??= [];
+    c.lingerKeywords.push({ k, until: lingerUntil });
+  } else {
+    if (k === 'Frozen' && state && !temporary) c.thawAfter = state.activePlayer === c.controller ? 2 : 1;
+    const list = temporary ? c.tempKeywords : c.keywords;
+    if (!list.includes(k)) list.push(k);
+  }
+  if (isNew && state) emit(state, { type: 'keywordGained', target: c.uid, player: c.controller, keyword: k });
+}
+
+function randomKeywords(state, pool, have, n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const k = pickRandom(state, pool.filter((x) => !have.includes(x) && !out.includes(x)));
+    if (k) out.push(k);
+  }
+  return out;
+}
+
+// Gene Splicing: enemy minion + your minion → one Hybrid card.
+function makeHybrid(state, enemyId, mineId) {
+  const a = getCard(enemyId);
+  const b = getCard(mineId);
+  const keywords = [...new Set([...(a.keywords ?? []), ...(b.keywords ?? [])])];
+  return {
+    id: `hybrid_${state.nextUid++}`, custom: true, hybrid: true,
+    name: `${a.name.split(' ').at(-1)}-${b.name.split(' ').at(-1)} Hybrid`,
+    faction: b.faction, type: 'minion',
+    tribes: [...new Set([...(a.tribes ?? []), ...(b.tribes ?? [])])],
+    cost: Math.min(10, a.cost + b.cost),
+    attack: (a.attack ?? 0) + (b.attack ?? 0),
+    health: (a.health ?? 0) + (b.health ?? 0),
+    keywords,
+    triggers: [...(a.triggers ?? []), ...(b.triggers ?? [])],
+    target: b.target ?? a.target,
+    aura: a.aura ?? b.aura, costAura: a.costAura ?? b.costAura,
+    text: [a.text, b.text].filter(Boolean).join(' '),
+    art: a.art, artFrom: a.artFrom ?? a.id,
+  };
+}
+
+function applyBuff(state, c, e) {
+  const parts = [];
+  // Radioactive passive: their minions ignore Attack / Health reductions their enemies cause.
+  if (e.byController != null && c.kind === 'minion' && c.controller !== e.byController && getCard(c.cardId).faction === 'Radioactive'
+    && ((e.attack ?? 0) < 0 || (e.health ?? 0) < 0)) {
+    e = { ...e, attack: Math.max(0, e.attack ?? 0), health: Math.max(0, e.health ?? 0) };
+    log(state, `${nameOf(state, c)} shrugs off the reduction.`);
+  }
+  if (e.attack) {
+    if (e.temporary) c.tempAttack += e.attack;
+    else if (e.lingerUntil != null) c.lingerAttack.push({ amount: e.attack, until: e.lingerUntil });
+    else c.attack = Math.max(0, c.attack + e.attack);
+    parts.push(`${e.attack > 0 ? '+' : ''}${e.attack} Attack`);
+    if (e.attack > 0) emit(state, { type: 'attackGained', target: c.uid, player: c.controller, amount: e.attack });
+  }
+  if (e.health) {
+    c.maxHealth += e.health;
+    c.health += e.health;
+    // Temporary Health until the caster's next turn (Sanctuary); otherwise this turn.
+    if (e.temporaryHealth && e.lingerUntil != null) (c.lingerHealth ??= []).push({ amount: e.health, until: e.lingerUntil });
+    else if (e.temporaryHealth) c.tempHealth += e.health;
+    // Permanent Health raises are Bonus Health (Reliquary Keeper). silentBonus: its own growth doesn't count.
+    if (e.health > 0 && !e.temporaryHealth && !e.silentBonus) emit(state, { type: 'bonusHealth', target: c.uid, player: c.controller ?? c.owner, amount: e.health });
+    parts.push(`${e.health > 0 ? '+' : ''}${e.health} Health`);
+    if (e.health > 0) emit(state, { type: 'healthGained', target: c.uid, player: c.controller, amount: e.health });
+  }
+  if (c.kind === 'minion' && ((e.attack ?? 0) < 0 || (e.health ?? 0) < 0)) {
+    emit(state, { type: 'minionLostStats', target: c.uid, player: c.controller, source: null });
+  }
+  for (const k of e.keywords ?? []) addKeyword(c, k, false, state);
+  for (const k of e.temporaryKeywords ?? []) addKeyword(c, k, true, state);
+  for (const k of e.lingerKeywords ?? []) addKeyword(c, k, false, state, e.lingerUntil);
+  const kws = [...(e.keywords ?? []), ...(e.temporaryKeywords ?? []), ...(e.lingerKeywords ?? [])];
+  if (kws.length) parts.push(kws.join(', '));
+  const temp = e.temporary || e.temporaryHealth || e.temporaryKeywords;
+  if (parts.length) log(state, `${nameOf(state, c)} gets ${parts.join(' / ')}${temp ? ' this turn' : e.lingerUntil != null ? ' until its caster\'s next turn' : ''}.`);
+}
+
+export const EFFECT_OPS = {
+  // Run several effects as one (useful with `if` / `else`).
+  sequence(state, e, ctx) {
+    for (const sub of e.effects) resolveEffect(state, sub, ctx);
+  },
+
+  // { target, attack?, health?, temporary? (Attack this turn), untilYourNextTurn?,
+  //   temporaryHealth?, keywords?, temporaryKeywords? }
+  buff(state, e, ctx) {
+    // "until your next turn" is stored as the player whose next turn clears it.
+    let resolved = e.untilYourNextTurn ? { ...e, lingerUntil: ctx.controller } : e;
+    // eventKeyword: gain the keyword named by the triggering event (Gene-Thief Operative).
+    if (e.eventKeyword) resolved = { ...resolved, keywords: ctx.event?.keyword ? [ctx.event.keyword] : [] };
+    // attackFromEnemyMushrooms: { max } — +1 Attack per Mushroom in the enemy deck (Nano-Spores).
+    if (e.attackFromEnemyMushrooms) {
+      const n = state.players[opponentOf(ctx.controller)].deck.reduce((t, c) => t + (c.mushrooms ?? 0), 0);
+      resolved = { ...resolved, attack: Math.min(e.attackFromEnemyMushrooms.max ?? 99, n) };
+    }
+    // attackPerEventAmount: +N Attack per unit of the event's amount (Fungal Colossus, per Mushroom).
+    if (e.attackPerEventAmount) resolved = { ...resolved, attack: e.attackPerEventAmount * (ctx.event?.amount ?? 0) };
+    each(state, e.target, ctx, (c) => applyBuff(state, c, { ...resolved, byController: ctx.controller }));
+  },
+
+  // { target, options: [buff params, ...] } — one option at random.
+  randomBuff(state, e, ctx) {
+    each(state, e.target, ctx, (c) => applyBuff(state, c, pickRandom(state, e.options)));
+  },
+
+  // { target, amount, amountIf?: { if, amount }, lifesteal? }
+  // If the defending player holds a "would take damage" Quick Play for a
+  // target, that damage pauses for their window and resolves afterwards.
+  damage(state, e, ctx) {
+    let base = e.amountIf && checkCondition(state, e.amountIf.if, ctx) ? e.amountIf.amount : e.amount;
+    // amountPerCount: { count: selector, each, max } — extra damage per matching character (Colossus Prime).
+    if (e.amountPerCount) base += Math.min(e.amountPerCount.max ?? 99, resolveSelector(state, e.amountPerCount.count, ctx).length * (e.amountPerCount.each ?? 1));
+    const deferred = [];
+    each(state, e.target, ctx, (c) => {
+      // burningBonus: extra damage to a target that is Burning (Dragons).
+      // darkBonus: extra holy damage to a Dark or Undead minion (Divine).
+      const amount = base + (e.burningBonus && isBurning(c) ? e.burningBonus : 0) + (e.darkBonus && isDarkOrUndead(c) ? e.darkBonus : 0)
+        + (e.irradiatedBonus && radiationOf(c) > 0 ? e.irradiatedBonus : 0);
+      const responder = opponentOf(state.activePlayer);
+      const event = { type: 'wouldTakeDamage', source: ctx.self, target: c.uid, player: c.controller, amount };
+      if (!e.windowed && c.controller === responder && hooks.hasReaction(state, responder, 'wouldTakeDamage', { event })) {
+        deferred.push(
+          { kind: 'window', name: 'wouldTakeDamage', priority: responder, ctx: { event } },
+          { kind: 'effect', effect: { op: 'damage', target: { uid: c.uid }, amount, lifesteal: e.lifesteal, windowed: true }, ctx },
+        );
+        return;
+      }
+      dealDamage(state, ctx.self, c.uid, amount, { sourceController: ctx.controller, lifesteal: e.lifesteal });
+      // obliterateKilled: a minion this destroys is removed from the game (Reactor Meltdown, Ground Zero).
+      if (e.obliterateKilled && c.kind === 'minion' && c.health <= 0) c.obliterate = true;
+    });
+    pushFront(state, deferred);
+  },
+
+  // ---- Dragons ----
+  // { target, amount } — apply Burn (see core applyBurn).
+  applyBurn(state, e, ctx) {
+    each(state, e.target, ctx, (c) => applyBurn(state, c, e.amount));
+  },
+
+  // { target, amount, oncePerTurn? } — raise a Burning character's Burn value
+  // (Feed the Flames, Furnace Dragon). oncePerTurn: a key; each character can
+  // be raised by that source only once per turn.
+  addBurn(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (!isBurning(c) || c.health <= 0) return;
+      if (e.oncePerTurn) {
+        c.burnRaised ??= {};
+        if (c.burnRaised[e.oncePerTurn] === state.turn) return;
+        c.burnRaised[e.oncePerTurn] = state.turn;
+      }
+      c.burn += e.amount;
+      log(state, `🔥 ${nameOf(state, c)}'s Burn rises to ${c.burn}.`);
+    });
+  },
+
+  // { from: 'hand' | 'deck', count } — burn the opponent's cards.
+  burnCards(state, e, ctx) {
+    burnCards(state, opponentOf(ctx.controller), e.from, e.count ?? 1, ctx.controller);
+  },
+
+  // { target, amount: number | 'all' } — prevent the next damage the target would take.
+  preventDamage(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      state.damagePrevention ??= {};
+      const cur = state.damagePrevention[c.uid] ?? 0;
+      state.damagePrevention[c.uid] = e.amount === 'all' || cur === 'all' ? 'all' : cur + e.amount;
+    });
+  },
+
+  // { target, negative?, count? } — keywords the character doesn't have yet,
+  // from the designer's random pool (or the negative list).
+  giveRandomKeyword(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      for (let i = 0; i < (e.count ?? 1); i++) {
+        const pool = (e.negative ? NEGATIVE_KEYWORDS : RANDOM_KEYWORD_POOL).filter((k) => !hasKeyword(c, k));
+        const k = pickRandom(state, pool);
+        if (!k) return;
+        addKeyword(c, k, e.temporary, state);
+        log(state, `${nameOf(state, c)} gains ${k}.`);
+      }
+    });
+  },
+
+  // { target, keyword } — for cards that say they remove a keyword (e.g. Stealth).
+  removeKeyword(state, e, ctx) {
+    each(state, e.target, ctx, (c) => loseKeyword(state, c, e.keyword));
+  },
+
+  // { target } — remove every keyword (Subjugator Drone).
+  stripKeywords(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      const lost = allKeywords(c);
+      for (const k of lost) loseKeyword(state, c, k);
+      if (lost.length) log(state, `${nameOf(state, c)} loses ${lost.join(', ')}.`);
+    });
+  },
+
+  // { from, to } — remove all of `from`'s keywords and give them to `to`
+  // (Genetic Snare, Gene Corruption). If `to` is empty the keywords are just lost.
+  transferKeywords(state, e, ctx) {
+    const src = findCharacter(state, resolveSelector(state, e.from, ctx)[0]);
+    if (!src) return;
+    const kws = allKeywords(src);
+    for (const k of kws) loseKeyword(state, src, k);
+    const dest = findCharacter(state, resolveSelector(state, e.to, ctx)[0]);
+    if (dest) for (const k of kws) addKeyword(dest, k, false, state);
+    log(state, `${nameOf(state, src)} loses ${kws.join(', ') || 'nothing'}${dest && kws.length ? ` to ${nameOf(state, dest)}` : ''}.`);
+  },
+
+  // Hive Synchronization: every friendly minion gets every (positive) keyword
+  // that any friendly minion has.
+  shareKeywords(state, e, ctx) {
+    const board = state.players[ctx.controller].board;
+    const shared = [...new Set(board.flatMap((m) => allKeywords(m)))].filter((k) => !NEGATIVE_KEYWORDS.includes(k));
+    for (const m of board) for (const k of shared) addKeyword(m, k, false, state);
+    if (shared.length) log(state, `Your minions share ${shared.join(', ')}.`);
+  },
+
+  // Discover a Keyword: choose 1 of 3 random keywords for the target.
+  // { target, temporary? }
+  discoverKeyword(state, e, ctx) {
+    const c = findCharacter(state, resolveSelector(state, e.target, ctx)[0]);
+    if (!c) return;
+    const opts = randomKeywords(state, RANDOM_KEYWORD_POOL, allKeywords(c), 3);
+    if (!opts.length) return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: `Discover a Keyword for ${nameOf(state, c)}`, resolve: 'effects', ctx,
+      options: opts.map((k) => ({
+        label: k,
+        effects: [{ op: 'buff', target: { uid: c.uid }, [e.temporary ? 'temporaryKeywords' : 'keywords']: [k] }],
+      })),
+    };
+  },
+
+  // Terraform: Discover a minion from any faction; it goes to your hand as a
+  // 4/4 with 2 random keywords. { attack, health, randomKeywords }
+  discoverAnyMinion(state, e, ctx) {
+    const pool = shuffle(state, collectibleMinions().map((c) => c.id)).slice(0, 3);
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Discover a minion', resolve: 'effects', ctx,
+      options: pool.map((id) => ({
+        cardId: id, label: getCard(id).name,
+        effects: [{ op: 'addVariantToHand', base: id, attack: e.attack, health: e.health, randomKeywords: e.randomKeywords }],
+      })),
+    };
+  },
+
+  // Adds a modified copy of a card to your hand as a new card.
+  // { base | randomBase: { faction, noKeywords }, attack?, health?, randomKeywords? }
+  //   eventCard: the card of the event's minion (Mycelial Rebirth); attackDelta / healthDelta: +N to its stats.
+  addVariantToHand(state, e, ctx) {
+    let baseId = e.eventCard ? ctx.event?.cardId : e.base;
+    if (e.randomBase) {
+      baseId = pickRandom(state, collectibleMinions((c) => c.faction === e.randomBase.faction &&
+        (!e.randomBase.noKeywords || !(c.keywords ?? []).length)).map((c) => c.id));
+    }
+    if (!baseId) return;
+    const base = getCard(baseId);
+    const extra = randomKeywords(state, RANDOM_KEYWORD_POOL, base.keywords ?? [], e.randomKeywords ?? 0);
+    const card = {
+      ...base, id: `variant_${state.nextUid++}`, custom: true,
+      attack: e.attack ?? (base.attack ?? 0) + (e.attackDelta ?? 0),
+      health: e.health ?? (base.health ?? 0) + (e.healthDelta ?? 0),
+      keywords: [...(base.keywords ?? []), ...extra],
+      text: [extra.join(', ') + (extra.length ? '.' : ''), base.text].filter(Boolean).join(' '),
+      artFrom: base.artFrom ?? base.id,
+    };
+    registerCustom(state, card);
+    addToHand(state, ctx.controller, card.id);
+    log(state, `${state.players[ctx.controller].name} gets ${card.name} (${card.attack}/${card.health}${extra.length ? `, ${extra.join(', ')}` : ''}).`);
+  },
+
+  // Gene Splicing: Discover a minion from your deck to splice with the chosen enemy minion.
+  geneSplice(state, e, ctx) {
+    const enemy = findCharacter(state, ctx.chosen);
+    if (!enemy || enemy.kind !== 'minion') return;
+    const deck = state.players[ctx.controller].deck;
+    const byCard = new Map();
+    for (const inst of deck) if (getCard(inst.cardId).type === 'minion' && !byCard.has(inst.cardId)) byCard.set(inst.cardId, inst.uid);
+    const options = shuffle(state, [...byCard]).slice(0, 3);
+    if (!options.length) { log(state, 'No minion in your deck to splice.'); return; }
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: `Splice with ${nameOf(state, enemy)}`, resolve: 'effects', ctx,
+      options: options.map(([cardId, uid]) => ({
+        cardId, label: getCard(cardId).name,
+        effects: [{ op: 'makeHybrid', enemyCardId: enemy.cardId, deckUid: uid }],
+      })),
+    };
+  },
+
+  // { enemyCardId, deckUid } — the deck minion is replaced by the Hybrid,
+  // shuffled into a random spot in the top half of the deck (draws come from the top).
+  makeHybrid(state, e, ctx) {
+    const deck = state.players[ctx.controller].deck;
+    const i = deck.findIndex((c) => c.uid === e.deckUid);
+    if (i < 0) return;
+    const [inst] = deck.splice(i, 1);
+    const card = makeHybrid(state, e.enemyCardId, inst.cardId);
+    registerCustom(state, card);
+    const topHalf = Math.ceil(deck.length / 2);
+    deck.splice(randomInt(state, topHalf + 1), 0, { uid: state.nextUid++, cardId: card.id, owner: ctx.controller });
+    log(state, `${state.players[ctx.controller].name} shuffles ${card.name} (${card.cost} Mana, ${card.attack}/${card.health}) into the top half of their deck.`);
+  },
+
+  // { count } — set different Traps from your deck, up to the Trap limit.
+  setTrapsFromDeck(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const seen = new Set();
+    let set = 0;
+    for (const inst of [...pl.deck]) {
+      if (set >= e.count || pl.traps.length >= state.rules.maxTraps) break;
+      if (getCard(inst.cardId).type !== 'trap' || seen.has(inst.cardId)) continue;
+      seen.add(inst.cardId);
+      pl.deck.splice(pl.deck.indexOf(inst), 1);
+      pl.traps.push(inst);
+      set++;
+    }
+    log(state, `${pl.name} sets ${set} Trap${set === 1 ? '' : 's'} from their deck.`);
+  },
+
+  // { amount, side?: 'enemy', perEnemyKilled?: [effects] } — damage every minion
+  // (Genetic Scourge), or only enemy minions (Spore Burst).
+  damageAll(state, e, ctx) {
+    const hit = e.side === 'enemy'
+      ? [...state.players[opponentOf(ctx.controller)].board]
+      : [...state.players[0].board, ...state.players[1].board];
+    for (const m of hit) dealDamage(state, ctx.self, m.uid, e.amount, { sourceController: ctx.controller });
+    const killed = hit.filter((m) => m.controller !== ctx.controller && (m.health <= 0 || m.destroyed)).length;
+    for (let i = 0; i < killed; i++) for (const sub of e.perEnemyKilled ?? []) resolveEffect(state, sub, ctx);
+  },
+
+  // Overmind Xal'at: absorb the stats and keywords of all other friendly minions.
+  absorbFriendly(state, e, ctx) {
+    const self = findCharacter(state, ctx.self);
+    if (!self) return;
+    const board = state.players[ctx.controller].board;
+    const others = board.filter((m) => m !== self);
+    for (const m of others) {
+      self.attack += effectiveAttack(m);
+      self.health += m.health;
+      self.maxHealth += m.health;
+      for (const k of allKeywords(m)) addKeyword(self, k, false, state);
+      board.splice(board.indexOf(m), 1);
+      state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner });
+    }
+    if (others.length) log(state, `${nameOf(state, self)} absorbs ${others.length} minion${others.length === 1 ? '' : 's'} (${self.attack}/${self.health}).`);
+  },
+
+  // The Qu Bio-Engineer: choose `times` times — an ally gets a random keyword,
+  // or an enemy gets a random negative keyword.
+  boonOrBane(state, e, ctx) {
+    const minions = [...state.players[ctx.controller].board, ...state.players[opponentOf(ctx.controller)].board]
+      .filter((m) => m.uid !== ctx.self);
+    if (!minions.length || !e.times) return;
+    const next = e.times > 1 ? [{ op: 'boonOrBane', times: e.times - 1 }] : [];
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: `Choose a minion (${e.times} left)`, resolve: 'effects', ctx,
+      options: minions.map((m) => {
+        const ally = m.controller === ctx.controller;
+        return {
+          label: `${nameOf(state, m)} (${ally ? 'ally: random keyword' : 'enemy: random negative'})`,
+          effects: [{ op: 'giveRandomKeyword', target: { uid: m.uid }, negative: !ally }, ...next],
+        };
+      }),
+    };
+  },
+
+  // Neural Disruptor: the card that was just played gets a new random target.
+  redirectTarget(state, e, ctx) {
+    const ev = ctx.event;
+    if (!ev?.target || ev.cardId == null) return;
+    const card = getCard(ev.cardId);
+    if (!card.target) return;
+    const options = targetCandidates(state, card.target, ev.player, null, card.type === 'spell').filter((id) => id !== ev.target);
+    const next = pickRandom(state, options);
+    if (next == null) { log(state, 'There is no other target to redirect to.'); return; }
+    for (const step of state.queue) {
+      if (step.ctx?.self === ev.source && step.ctx.chosen === ev.target) step.ctx = { ...step.ctx, chosen: next };
+    }
+    log(state, `${card.name} is redirected to ${nameOf(state, findCharacter(state, next))}!`);
+  },
+
+  // Sub-Space Jump: leave the board until your next turn, then return with a buff.
+  // { target, attack?, health? }
+  banish(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      const pl = state.players[m.controller];
+      pl.board.splice(pl.board.indexOf(m), 1);
+      pl.limbo ??= [];
+      pl.limbo.push({ minion: m, returnAt: ctx.controller, attack: e.attack ?? 0, health: e.health ?? 0 });
+      log(state, `${nameOf(state, m)} jumps into sub-space.`);
+    });
+  },
+
+  // Abduct: move an enemy minion from the battlefield to your hand.
+  abduct(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      const board = state.players[m.controller].board;
+      board.splice(board.indexOf(m), 1);
+      log(state, `${nameOf(state, m)} is Abducted!`);
+      addToHand(state, ctx.controller, m.cardId);
+    });
+  },
+
+  // The player picks one option: { prompt, options: [{ label, effects }] }.
+  chooseOne(state, e, ctx) {
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: e.prompt ?? 'Choose one', resolve: 'effects', ctx,
+      options: e.options.map((o) => ({ label: o.label, effects: o.effects })),
+    };
+  },
+
+  // { cardId } — put a card into your hand.
+  addToHand(state, e, ctx) {
+    addToHand(state, ctx.controller, e.cardId);
+  },
+
+  // { amount } — extra Mana this turn only (Mana Potion).
+  gainMana(state, e, ctx) {
+    const m = state.players[ctx.controller].mana;
+    m.current += e.amount;
+    m.temp = (m.temp ?? 0) + e.amount; // temporary: spent first, shown gold
+    log(state, `${state.players[ctx.controller].name} gains ${e.amount} Mana this turn.`);
+  },
+
+  // { target, amount | amountFromEvent, overheal? }
+  heal(state, e, ctx) {
+    const amount = e.amountFromEvent ? (ctx.event?.amount ?? 0) : e.amount;
+    each(state, e.target, ctx, (c) => heal(state, c.uid, amount, { overheal: e.overheal, source: ctx.self }));
+  },
+
+  // { target, amount, forSummon? } — Health loss that is not damage (a cost paid with Health).
+  loseHealth(state, e, ctx) {
+    each(state, e.target, ctx, (c) => loseHealth(state, c.uid, e.amount, { forSummon: e.forSummon }));
+  },
+
+  // ---- Radioactive ----
+  // { target, amount, turns? } — Radiation (permanent unless `turns`, counted on the caster's turn ends).
+  radiate(state, e, ctx) {
+    each(state, e.target, ctx, (c) => applyRadiation(state, c, e.amount, { turns: e.turns, by: ctx.controller }));
+  },
+
+  // { target } — remove all Radiation (Radiation Surgeon).
+  // { target } Cleanse: remove Burn, Radiation and harmful keywords (Frozen, Burned, Blind).
+  cleanse(state, e, ctx) {
+    const BAD = ['Frozen', 'Burned', 'Blind'];
+    each(state, e.target, ctx, (c) => {
+      let any = false;
+      if ((c.burn ?? 0) > 0) { c.burn = 0; c.burnLeft = 0; any = true; }
+      if (radiationOf(c)) { clearRadiation(state, c); any = true; }
+      for (const k of ['keywords', 'tempKeywords']) {
+        if (Array.isArray(c[k]) && c[k].some((x) => BAD.includes(x))) { c[k] = c[k].filter((x) => !BAD.includes(x)); any = true; }
+      }
+      if (Array.isArray(c.lingerKeywords) && c.lingerKeywords.some((x) => BAD.includes(x.k))) { c.lingerKeywords = c.lingerKeywords.filter((x) => !BAD.includes(x.k)); any = true; }
+      if (any) log(state, `✨ ${nameOf(state, c)} is cleansed.`);
+    });
+  },
+
+  clearRadiation(state, e, ctx) {
+    each(state, e.target, ctx, (c) => clearRadiation(state, c));
+  },
+
+  // { target, amount, irradiatedBonus?, obliterateKilled? } — reduce Health (not damage).
+  // Faction passive: Radioactive minions ignore Health reductions their enemies cause.
+  reduceHealth(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind === 'minion' && getCard(c.cardId).faction === 'Radioactive' && c.controller !== ctx.controller) {
+        log(state, `${nameOf(state, c)} shrugs off the reduction.`);
+        return;
+      }
+      reduceHealthStat(state, c, e.amount + (e.irradiatedBonus && radiationOf(c) > 0 ? e.irradiatedBonus : 0));
+      if (e.obliterateKilled && c.kind === 'minion' && c.health <= 0) c.obliterate = true;
+    });
+  },
+
+  // { target } — The Irradiated Genius: ignore Radiation auras until your next turn.
+  radProof(state, e, ctx) {
+    each(state, e.target, ctx, (c) => { c.radProofUntil = ctx.controller; });
+  },
+
+  // ---- Fusions ----
+  // { amount } — Dinosaurs: extra Primal Mana this turn (Dinosaur cards only).
+  gainPrimal(state, e, ctx) {
+    const m = state.players[ctx.controller].mana;
+    m.current += e.amount;
+    m.primal = (m.primal ?? 0) + e.amount;
+    log(state, `${state.players[ctx.controller].name} gains ${e.amount} Primal Mana this turn.`);
+  },
+
+  // { trigger } — the caster's Hero gains a lasting ability ("this game").
+  heroTrigger(state, e, ctx) {
+    const h = heroOf(state, ctx.controller);
+    (h.grantedTriggers ??= []).push({ ...e.trigger, controller: ctx.controller });
+    if (e.log) log(state, e.log);
+  },
+
+  // { turns, pool } — Primal Seed: counts down at the start of your turn, then hatches into a random minion.
+  hatchCountdown(state, e, ctx) {
+    const m = findCharacter(state, ctx.self);
+    if (!m) return;
+    m.hatchIn = (m.hatchIn ?? e.turns) - 1;
+    if (m.hatchIn > 0) { log(state, `${nameOf(state, m)} will hatch in ${m.hatchIn} turn${m.hatchIn === 1 ? '' : 's'}.`); return; }
+    const id = pickRandom(state, collectibleMinions((c) => cardMatches(c, e.pool) && (e.pool.cost == null || c.cost === e.pool.cost)).map((c) => c.id));
+    if (id) EFFECT_OPS.transform(state, { target: 'self', into: id }, ctx);
+  },
+
+  // Abduction Rite: pay Health = your Summoning Tier, take control of a random enemy minion
+  // that costs that much or less until the end of your turn.
+  abductionRite(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const tier = Math.min(10, pl.summonTier ?? 1);
+    loseHealth(state, pl.hero.uid, tier);
+    const pick = pickRandom(state, state.players[opponentOf(ctx.controller)].board.filter((m) => getCard(m.cardId).cost <= tier).map((m) => m.uid));
+    if (pick == null) { log(state, 'No enemy minion is cheap enough to abduct.'); return; }
+    EFFECT_OPS.takeControlTemporarily(state, { target: { uid: pick }, until: 'endOfTurn' }, ctx);
+  },
+
+  // ---- Robots ----
+  // { amount } — the next Robot Upgrade you play costs N less (Chief Engineer).
+  upgradeDiscount(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    pl.upgradeDiscount = (pl.upgradeDiscount ?? 0) + e.amount;
+    log(state, `${pl.name}'s next Upgrade costs ${e.amount} less.`);
+  },
+
+  // { target } — counts one Upgrade on the minion and announces it (Scrapper Spider, Overclocked Destroyer).
+  markUpgrade(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      m.upgrades = (m.upgrades ?? 0) + 1;
+      emit(state, { type: 'upgradeInstalled', target: m.uid, player: m.controller, cardId: ctx.cardId });
+    });
+  },
+
+  // { target, name, attack, trigger } — attach a Weapon. One Weapon slot: a new one replaces the old
+  // (its Attack bonus and its effect go). Also counts as an Upgrade.
+  equipWeapon(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      if (m.weapon) {
+        m.attack = Math.max(0, m.attack - (m.weapon.attack ?? 0));
+        m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.weapon);
+        log(state, `${nameOf(state, m)} drops its ${m.weapon.name}.`);
+      }
+      m.weapon = { name: e.name, attack: e.attack ?? 0 };
+      m.attack += e.attack ?? 0;
+      if (e.trigger) (m.grantedTriggers ??= []).push({ ...e.trigger, controller: ctx.controller, weapon: true });
+      log(state, `${nameOf(state, m)} equips ${e.name}${e.attack ? ` (+${e.attack} Attack)` : ''}.`);
+      if (e.attack > 0) emit(state, { type: 'attackGained', target: m.uid, player: m.controller, amount: e.attack });
+    });
+    EFFECT_OPS.markUpgrade(state, { target: e.target }, ctx);
+  },
+
+  // ---- Divine ----
+  // { target, amount } — +N maximum Health, then restore N Health (Blessing of Vitality, Beacon Angel, Archangel).
+  vitality(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.health <= 0 || c.destroyed) return;
+      c.maxHealth += e.amount;
+      log(state, `${nameOf(state, c)} gains +${e.amount} maximum Health.`);
+      emit(state, { type: 'bonusHealth', target: c.uid, player: c.controller ?? c.owner, amount: e.amount });
+      heal(state, c.uid, e.amount, { source: ctx.self });
+    });
+  },
+
+  // ---- Demons ----
+  // Infernal Summoning: pay Health equal to your Summoning Tier, summon a random
+  // Demon of that cost, then the Tier rises by 1 (both cap at 10).
+  // Fusion options: { pay: false } (Health paid elsewhere), { rise: false }, { keywords }, { healBack: true }.
+  infernalSummon(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const tier = Math.min(10, pl.summonTier ?? 1);
+    if (e.pay !== false) loseHealth(state, pl.hero.uid, tier, { forSummon: true });
+    // No Demon at exactly this cost: the closest cheaper one.
+    let pool = [];
+    for (let c = tier; c >= 1 && !pool.length; c--) {
+      pool = collectibleMinions((card) => card.faction === 'Demons' && (card.tribes ?? []).includes('Demon') && card.cost === c).map((card) => card.id);
+    }
+    if (e.rise !== false) pl.summonTier = Math.min(10, tier + 1);
+    log(state, `😈 Infernal Summoning (Tier ${tier}).`);
+    if (e.healBack) heal(state, pl.hero.uid, tier, { overheal: true, source: ctx.self });
+    if (!pool.length) return;
+    const m = summonMinion(state, ctx.controller, pickRandom(state, pool), { keywords: e.keywords });
+    if (m) { ctx.summoned = m.uid; enterBattlefield(state, m); }
+  },
+
+  // { target } — destroy a friendly minion; your Hero restores Health equal to its Mana cost (Soul Sacrifice).
+  sacrifice(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion') return;
+      c.destroyed = true;
+      log(state, `${nameOf(state, c)} is sacrificed.`);
+      heal(state, heroOf(state, ctx.controller).uid, getCard(c.cardId).cost ?? 0, { source: ctx.self });
+    });
+  },
+
+  // { to } — the attack being declared now hits `to` instead (Unleash the Beast).
+  redirectAttack(state, e, ctx) {
+    const to = resolveSelector(state, e.to, ctx)[0];
+    const step = state.queue.find((s) => s.kind === 'combat' && s.attacker === ctx.event?.source);
+    if (!to || !step) return;
+    // onlyFromHero: only an attack aimed at a Hero is taken over.
+    if (e.onlyFromHero && findCharacter(state, step.defender)?.kind !== 'hero') return;
+    step.defender = to;
+    log(state, `The attack is redirected to ${nameOf(state, findCharacter(state, to))}.`);
+  },
+
+  // { attacker, defender } — the two fight right away (Gateway Collapse).
+  fight(state, e, ctx) {
+    const a = resolveSelector(state, e.attacker, ctx)[0];
+    const d = resolveSelector(state, e.defender, ctx)[0];
+    if (!a || !d) return;
+    log(state, `${nameOf(state, findCharacter(state, a))} attacks ${nameOf(state, findCharacter(state, d))}.`);
+    pushFront(state, [{ kind: 'combat', attacker: a, defender: d }, { kind: 'deaths' }]);
+  },
+
+  // Card to summon: cardId | pool: [ids] (random each) | copyOf: selector | eventCard: true
+  //   | randomMinion: { tribe?, costFromDead? }
+  // { count?, side?: 'friendly' | 'enemy', attack?, health?, keywords?, randomKeywords? }
+  summon(state, e, ctx) {
+    const p = e.side === 'enemy' ? opponentOf(ctx.controller) : ctx.controller;
+    let fixed = e.cardId;
+    if (e.copyOf) fixed = findCharacter(state, resolveSelector(state, e.copyOf, ctx)[0])?.cardId;
+    if (e.eventCard) fixed = ctx.event?.cardId;
+    let pool = e.pool;
+    // A random friendly Zombie that died this game (Raise the Dead, Graveyard Awakening).
+    if (e.fromDeadZombies) pool = [...new Set(state.players[ctx.controller].deadZombies ?? [])];
+    // fromGraveyard: { tribes?: [...] } — a random friendly minion that died this game (Fusions).
+    if (e.fromGraveyard) {
+      const tribes = e.fromGraveyard.tribes;
+      pool = [...new Set(state.players[ctx.controller].graveyard.map((g) => g.cardId).filter((id) => {
+        const c = getCard(id);
+        return c.type === 'minion' && !c.token && (!tribes || tribes.some((t) => (c.tribes ?? []).includes(t)));
+      }))];
+      if (!pool.length) { log(state, 'No such minion has died yet.'); return; }
+    }
+    if (e.randomMinion) {
+      // { tribe?, costFromDead? } — e.g. "a random Dinosaur that costs the same as the Egg".
+      const cost = e.randomMinion.costFromDead ? ctx.event?.dead?.storedCost : e.randomMinion.cost;
+      pool = collectibleMinions((c) => cardMatches(c, e.randomMinion) && (cost == null || c.cost === cost)).map((c) => c.id);
+    }
+    if (!fixed && !pool?.length) { if (e.fromDeadZombies) log(state, 'No friendly Zombie has died yet.'); return; }
+    // countFromCorpses: { per, max } — one per N friendly Corpses (Zombie Apocalypse).
+    const count = e.countFromCorpses
+      ? Math.min(e.countFromCorpses.max ?? 99, Math.floor((state.players[ctx.controller].corpses ?? 0) / e.countFromCorpses.per))
+      : (e.count ?? 1);
+    for (let i = 0; i < count; i++) {
+      const cardId = fixed ?? pickRandom(state, pool);
+      const m = summonMinion(state, p, cardId, { attack: e.attack, health: e.health, keywords: e.keywords });
+      if (m) ctx.summoned = m.uid;
+      if (m && e.loseKeywords) for (const k of e.loseKeywords) removeKeyword(m, k);
+      if (m && e.randomKeywords) {
+        for (const k of randomKeywords(state, RANDOM_KEYWORD_POOL, m.keywords, e.randomKeywords)) addKeyword(m, k, false, state);
+      }
+      if (m) enterBattlefield(state, m);
+    }
+  },
+
+  // { target, tribe }
+  addTribe(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind === 'minion' && !c.tribes.includes(e.tribe)) c.tribes.push(e.tribe);
+      log(state, `${nameOf(state, c)} becomes a ${e.tribe}.`);
+    });
+  },
+
+  // { count: selector, attack?, health? } — self gains stats per matching character.
+  gainStatsPerCount(state, e, ctx) {
+    const self = findCharacter(state, ctx.self);
+    if (!self) return;
+    const n = resolveSelector(state, e.count, ctx).length;
+    applyBuff(state, self, { attack: n * (e.attack ?? 0), health: n * (e.health ?? 0) });
+  },
+
+  // { per, attack?, health? } — per `per` Health your Hero is currently missing.
+  buffPerHealthLost(state, e, ctx) {
+    const self = findCharacter(state, ctx.self);
+    if (!self) return;
+    const h = heroOf(state, ctx.controller);
+    const n = Math.floor(Math.max(0, h.maxHealth - h.health) / e.per);
+    if (n > 0) applyBuff(state, self, { attack: n * (e.attack ?? 0), health: n * (e.health ?? 0) });
+  },
+
+  // Temporary Mana Crystal(s) usable next turn only.
+  gainManaNextTurn(state, e, ctx) {
+    state.players[ctx.controller].mana.bonusNextTurn += e.amount;
+    log(state, `${state.players[ctx.controller].name} will gain ${e.amount} temporary Mana next turn.`);
+  },
+
+  // { target, until: 'endOfTurn' | 'controllersNextTurnEnd' }
+  // 'endOfTurn' returns the minion at the end of the current turn; the other
+  // (Succubus) at the end of the new controller's next turn-end.
+  takeControlTemporarily(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.controller === ctx.controller) return;
+      const from = state.players[m.controller];
+      const to = state.players[ctx.controller];
+      if (to.board.length >= state.rules.maxBoardSize) return;
+      from.board.splice(from.board.indexOf(m), 1);
+      to.board.push(m);
+      const returnAt = e.until === 'endOfTurn' ? state.activePlayer : ctx.controller;
+      m.tempControl = { returnTo: m.controller, returnAtEndOfTurnOf: returnAt };
+      m.controller = ctx.controller;
+      m.sick = !!e.keepSick; // keepSick: only Rush lets it attack (Mind Control Beam)
+      m.attacksThisTurn = 0;
+      log(state, `${to.name} takes control of ${nameOf(state, m)}.`);
+    });
+  },
+
+  // { count?, filter?: { type?, tribe? } } — draws matching cards when filtered.
+  draw(state, e, ctx) {
+    drawCards(state, ctx.controller, e.count ?? 1, e.filter ? (card) => cardMatches(card, e.filter) : null);
+  },
+
+  // Discover: choose 1 of up to 3 different matching cards from your deck; it goes to your hand.
+  // { from: 'deck', filter }
+  discover(state, e, ctx) {
+    const deck = state.players[ctx.controller].deck;
+    const byCard = new Map();
+    for (const inst of deck) if (cardMatches(getCard(inst.cardId), e.filter) && !byCard.has(inst.cardId)) byCard.set(inst.cardId, inst.uid);
+    const options = shuffle(state, [...byCard].map(([cardId, uid]) => ({ cardId, uid }))).slice(0, 3);
+    if (!options.length) { log(state, 'Nothing to Discover.'); return; }
+    state.pending = { type: 'choice', player: ctx.controller, prompt: 'Discover a card', options, resolve: 'deckToHand', costMod: e.costMod ?? 0 };
+  },
+
+  // { target, count?, costChange? } — add copies of the target's card to your hand.
+  copyToHand(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion') return;
+      for (let i = 0; i < (e.count ?? 1); i++) addToHand(state, ctx.controller, c.cardId, e.costChange ? { costMod: e.costChange } : {});
+    });
+  },
+
+  // { target, costChange? } — return a minion to its owner's hand.
+  returnToHand(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      const board = state.players[m.controller].board;
+      board.splice(board.indexOf(m), 1);
+      log(state, `${nameOf(state, m)} returns to ${state.players[m.owner].name}'s hand.`);
+      addToHand(state, m.owner, m.cardId, e.costChange ? { costMod: e.costChange } : {});
+    });
+  },
+
+  // { target } — the minion returns to its owner's hand at the end of the turn.
+  returnAtEndOfTurn(state, e, ctx) {
+    each(state, e.target, ctx, (m) => { if (m.kind === 'minion') m.returnAtEndOfTurn = true; });
+  },
+
+  // Transform into a fixed card (`into`) or a random minion from `pool`:
+  // { target, into? , pool?: { type?, tribe?, faction?, costDelta? }, storeCost? }
+  // storeCost remembers the original Mana Cost on the new minion (Fossilization's Egg).
+  transform(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      const originalCost = getCard(m.cardId).cost;
+      let intoId = e.into;
+      if (!intoId) {
+        const cost = originalCost + (e.pool.costDelta ?? 0);
+        intoId = pickRandom(state, collectibleMinions((c) => cardMatches(c, e.pool) && c.cost === cost && c.id !== m.cardId))?.id;
+      }
+      if (!intoId) { log(state, `${nameOf(state, m)} has nothing to transform into.`); return; }
+      const card = getCard(intoId);
+      if (e.storeCost) m.storedCost = originalCost;
+      log(state, `${nameOf(state, m)} transforms into ${card.name}.`);
+      Object.assign(m, {
+        cardId: card.id, attack: card.attack, health: card.health, maxHealth: card.health,
+        tempAttack: 0, lingerAttack: [], tempHealth: 0, auraHealth: 0,
+        keywords: [...(card.keywords ?? [])], tempKeywords: [], statics: [...(card.statics ?? [])],
+        tribes: [...(card.tribes ?? [])], faction: card.faction,
+      });
+    });
+  },
+
+  // { target }
+  destroy(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion') return;
+      c.destroyed = true;
+      c.lastDamagedBy = ctx.self;
+      c.lastDamagedByController = ctx.controller;
+    });
+  },
+
+  // Mushrooms (Fungus): { count, countPer?: selector, onto?: 'eventCard' }
+  // Each Mushroom lands on a random card in the enemy deck (they can stack).
+  // countPer: count × the number of matching characters (Mycelium Lord).
+  // onto 'eventCard': all of them onto the card the event names (Hidden Spores).
+  placeMushrooms(state, e, ctx) {
+    const p = opponentOf(ctx.controller);
+    const pl = state.players[p];
+    const n = (e.count ?? 1) * (e.countPer ? resolveSelector(state, e.countPer, ctx).length : 1);
+    if (n <= 0) return;
+    if (e.onto === 'eventCard') {
+      const uid = ctx.event?.cardUid;
+      const inst = [...pl.hand, ...pl.graveyard, ...pl.deck].find((c) => c.uid === uid);
+      if (!inst) return;
+      inst.mushrooms = (inst.mushrooms ?? 0) + n;
+      log(state, `🍄 ${n} Mushroom${n === 1 ? '' : 's'} sprout on the card ${pl.name} drew.`);
+      return;
+    }
+    if (!pl.deck.length) { log(state, `${pl.name} has no cards in their deck for Mushrooms.`); return; }
+    for (let i = 0; i < n; i++) {
+      const inst = pickRandom(state, pl.deck);
+      inst.mushrooms = (inst.mushrooms ?? 0) + 1;
+    }
+    log(state, `🍄 ${n} Mushroom${n === 1 ? '' : 's'} placed in ${pl.name}'s deck.`);
+  },
+
+  // { target, trigger: { on, filter?, effects } } — attach an ability to minions
+  // (Fungal Infection, Consume Decay). It acts for the player who granted it.
+  grantTrigger(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      m.grantedTriggers ??= [];
+      m.grantedTriggers.push({ ...e.trigger, controller: ctx.controller, ...(e.temporary ? { temporary: true } : {}) });
+    });
+    if (e.log) log(state, e.log);
+  },
+
+  // { target, cantAttack? } — gain control of a minion permanently (Cordyceps Mind Control).
+  takeControl(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.controller === ctx.controller) return;
+      const from = state.players[m.controller];
+      const to = state.players[ctx.controller];
+      if (to.board.length >= state.rules.maxBoardSize) { log(state, `${to.name}'s board is full.`); return; }
+      from.board.splice(from.board.indexOf(m), 1);
+      to.board.push(m);
+      m.controller = ctx.controller;
+      m.tempControl = null;
+      m.attacksThisTurn = 0;
+      if (e.cantAttack) m.cantAttackThisTurn = true;
+      log(state, `${to.name} takes control of ${nameOf(state, m)}.`);
+    });
+  },
+
+  // ---- Zombies: Corpses ----
+  // { count, effects } — spend friendly Corpses; the effects happen only if you had enough.
+  consumeCorpses(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    if ((pl.corpses ?? 0) < e.count) { log(state, `Not enough Corpses (${pl.corpses ?? 0}/${e.count}).`); return; }
+    pl.corpses -= e.count;
+    log(state, `🪦 ${pl.name} consumes ${e.count} Corpse${e.count === 1 ? '' : 's'}.`);
+    for (const sub of e.effects ?? []) resolveEffect(state, sub, ctx);
+  },
+
+  // { count, side?: 'friendly' | 'enemy' } — create Corpses.
+  addCorpses(state, e, ctx) {
+    const p = e.side === 'enemy' ? opponentOf(ctx.controller) : ctx.controller;
+    const pl = state.players[p];
+    pl.corpses = (pl.corpses ?? 0) + (e.count ?? 1);
+    log(state, `🪦 A Corpse is left on ${pl.name}'s side.`);
+  },
+
+  // { target, keyword, attack, attackIfHas } — Zombie Surge: those without the keyword
+  // gain it and `attack` this turn; those that already had it gain `attackIfHas` instead.
+  surge(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (hasKeyword(m, e.keyword)) applyBuff(state, m, { attack: e.attackIfHas, temporary: true });
+      else applyBuff(state, m, { attack: e.attack, temporary: true, temporaryKeywords: [e.keyword] });
+    });
+  },
+
+  // { target } — Resurrection: grant Reborn; a minion can only be chosen once.
+  resurrect(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      m.resurrected = true;
+      // The granted Reborn lasts until the start of the caster's next turn.
+      addKeyword(m, 'Reborn', false, state, ctx.controller);
+      log(state, `${nameOf(state, m)} gains Reborn until its caster's next turn.`);
+    });
+  },
+
+  // { amount } — friendly hero gains Armor.
+  gainArmor(state, e, ctx) {
+    heroOf(state, ctx.controller).armor += e.amount;
+  },
+
+  // Dinosaur Extinction Cycle modifiers for the caster's next Extinction.
+  // { mode: 'bothBoards' | 'meteorShower' }
+  setExtinctionMode(state, e, ctx) {
+    const ext = state.players[ctx.controller].extinction;
+    if (!ext) return;
+    ext.mode = e.mode;
+    log(state, `The next Extinction will be ${e.mode === 'bothBoards' ? 'an Extremely Large Meteor' : 'a Meteor Shower'}.`);
+  },
+
+  // { turns }
+  delayExtinction(state, e, ctx) {
+    const ext = state.players[ctx.controller].extinction;
+    if (!ext) return;
+    ext.nextAt += e.turns;
+    log(state, `Extinction is delayed by ${e.turns} turns.`);
+  },
+};
+
+export function resolveEffect(state, effect, ctx) {
+  // perTurnLimit: this effect happens at most N times per turn for its card (Ash Collector).
+  if (effect.perTurnLimit) {
+    const self = findCharacter(state, ctx.self);
+    if (!self) return;
+    if (self.limitTurn !== state.turn) { self.limitTurn = state.turn; self.limitCount = 0; }
+    if (self.limitCount >= effect.perTurnLimit) return;
+    self.limitCount += 1;
+  }
+  if (effect.if && !checkCondition(state, effect.if, ctx)) {
+    for (const e of effect.else ?? []) resolveEffect(state, e, ctx);
+    return;
+  }
+  const op = EFFECT_OPS[effect.op];
+  if (!op) throw new Error(`Unknown effect op: ${effect.op}`);
+  op(state, effect, ctx);
+}
