@@ -2,6 +2,19 @@
 // new cards are data, and only genuinely new mechanics need a new op here.
 //
 // Every op receives (state, effect, ctx) where ctx = { self, controller, chosen, chosen2, event }.
+// Accelerated Incubation: a marked minion's Exit also happens when it leaves the
+// board without dying (returned to hand, transformed). Used once.
+function exitOnLeave(state, m) {
+  if (!m.exitOnLeave) return;
+  m.exitOnLeave = false;
+  log(state, `${nameOf(state, m)} hatches as it leaves!`);
+  const card = getCard(m.cardId);
+  const ctx = { self: m.uid, controller: m.controller, event: { type: 'minionLeft', source: m.uid } };
+  for (const t of (card.triggers ?? []).filter((x) => x.on === 'deathrattle')) {
+    pushFront(state, [...t.effects.map((effect) => ({ kind: 'effect', effect, ctx })), { kind: 'deaths' }]);
+  }
+}
+
 // Any effect may carry `if: <condition>` (and optional `else: [effects]`).
 
 import {
@@ -877,6 +890,7 @@ export const EFFECT_OPS = {
   returnToHand(state, e, ctx) {
     each(state, e.target, ctx, (m) => {
       if (m.kind !== 'minion') return;
+      exitOnLeave(state, m);
       const board = state.players[m.controller].board;
       board.splice(board.indexOf(m), 1);
       log(state, `${nameOf(state, m)} returns to ${state.players[m.owner].name}'s hand.`);
@@ -904,6 +918,9 @@ export const EFFECT_OPS = {
       if (!intoId) { log(state, `${nameOf(state, m)} has nothing to transform into.`); return; }
       const card = getCard(intoId);
       if (e.storeCost) m.storedCost = originalCost;
+      exitOnLeave(state, m);
+      // keepHealthBonus: Health it had gained over its card stays (Selective Breeding).
+      const bonus = e.keepHealthBonus ? Math.max(0, m.maxHealth - (getCard(m.cardId).health ?? 0)) : 0;
       log(state, `${nameOf(state, m)} transforms into ${card.name}.`);
       Object.assign(m, {
         cardId: card.id, attack: card.attack, health: card.health, maxHealth: card.health,
@@ -911,13 +928,33 @@ export const EFFECT_OPS = {
         keywords: [...(card.keywords ?? [])], tempKeywords: [], statics: [...(card.statics ?? [])],
         tribes: [...(card.tribes ?? [])], faction: card.faction,
       });
+      if (bonus) { m.maxHealth += bonus; m.health += bonus; }
     });
   },
 
-  // { target }
+  // { target } — Accelerated Incubation: its Exit also fires if it leaves without dying.
+  exitOnLeave(state, e, ctx) {
+    each(state, e.target, ctx, (c) => { if (c.kind === 'minion') c.exitOnLeave = true; });
+  },
+
+  // { target } — Selective Breeding: choose a different Dinosaur Egg for it to become
+  // (Health it gained stays).
+  chooseEgg(state, e, ctx) {
+    const m = findCharacter(state, resolveSelector(state, e.target, ctx)[0]);
+    if (!m || m.kind !== 'minion') return;
+    const eggs = collectibleMinions((c) => (c.tribes ?? []).includes('Egg') && c.id !== m.cardId);
+    if (!eggs.length) return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Choose the Egg it becomes', resolve: 'effects', ctx,
+      options: eggs.map((c) => ({ label: c.name, cardId: c.id, effects: [{ op: 'transform', target: { uid: m.uid }, into: c.id, keepHealthBonus: true }] })),
+    };
+  },
+
+  // { target, noExit? }
   destroy(state, e, ctx) {
     each(state, e.target, ctx, (c) => {
       if (c.kind !== 'minion') return;
+      if (e.noExit) c.noExit = true;
       c.destroyed = true;
       c.lastDamagedBy = ctx.self;
       c.lastDamagedByController = ctx.controller;

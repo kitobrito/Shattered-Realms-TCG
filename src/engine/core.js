@@ -125,6 +125,10 @@ export function costOf(state, inst) {
     const a = getCard(m.cardId).costAura;
     if (a && a.type === card.type) aura += a.amount;
   }
+  // Dinosaurs: Brood Architect — the first Egg you play each turn costs less.
+  if ((card.tribes ?? []).includes('Egg') && state && state.players[inst.owner]?.eggPlayedTurn !== state.turn) {
+    for (const m of state.players[inst.owner]?.board ?? []) aura -= getCard(m.cardId).firstEggDiscount ?? 0;
+  }
   // Robots: Chief Engineer — the next Upgrade you play costs less.
   if (card.upgrade && state) aura -= state.players[inst.owner]?.upgradeDiscount ?? 0;
   return Math.max(0, card.cost + (inst.costMod ?? 0) + aura);

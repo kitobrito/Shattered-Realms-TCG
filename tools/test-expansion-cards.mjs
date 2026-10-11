@@ -1,4 +1,4 @@
-// Rules tests for the 30 expansion cards (15 Radioactive, 15 Vampires).
+// Rules tests for the expansion cards (15 Radioactive, 15 Vampires, 15 Dinosaurs).
 // Each test sets up a small board, plays the card through the real engine,
 // and checks the outcome.   node tools/test-expansion-cards.mjs
 
@@ -11,8 +11,7 @@ let s;
 let failures = 0;
 let passed = 0;
 
-function fresh() {
-  const fa = ['Radioactive', 'Vampires'];
+function fresh(fa = ['Radioactive', 'Vampires']) {
   const fb = ['Vampires', 'Robots'];
   s = createGame({ seed: 5, rules: { mulligan: false, secondPlayerPotions: false, openingHandHelp: false },
     players: [{ name: 'A', factions: fa, deck: buildDeck(fa) }, { name: 'B', factions: fb, deck: buildDeck(fb) }] });
@@ -47,8 +46,8 @@ function endTurn(react) {
 }
 const qp = (cardId) => (legal) => legal.find((a) => a.type === 'quickPlay' && s.players[a.player].hand.find((h) => h.uid === a.card)?.cardId === cardId);
 
-function test(name, fn) {
-  fresh();
+function test(name, fn, factions) {
+  fresh(factions);
   try {
     const problem = fn();
     if (problem) { failures++; console.log(`FAIL ${name}: ${problem}`); } else { passed++; console.log(`ok   ${name}`); }
@@ -316,6 +315,132 @@ test('Bloodguard Intercession: prevents 3 damage, +1 Attack for a Vampire', () =
   const after = minion(v.uid);
   if (!after) return 'Vampire died (damage not reduced enough?)';
   if (hp - after.health !== 4) return `took ${hp - after.health} (want 4)`;
+});
+
+// ---- Dinosaurs ----------------------------------------------------------------------
+const DINO = ['Dinosaurs', 'Vampires'];
+const eggs = (p) => pl(p).board.filter((m) => m.tribes.includes('Egg'));
+const dtest = (name, fn) => test(name, fn, DINO);
+dtest('Hatchling Keeper: summons a 0/3 Egg', () => {
+  play(0, give(0, 'hatchling_keeper'));
+  if (eggs(0).length !== 1 || eggs(0)[0].maxHealth !== 3) return `eggs: ${eggs(0).map((e) => e.cardId)}`;
+});
+dtest('Nestling Triceratops: Exit summons an Egg', () => {
+  const n = put(0, 'nestling_triceratops');
+  attack(0, n.uid, put(1, 'the_crimson_king').uid);
+  if (eggs(0).length !== 1) return 'no Egg';
+});
+dtest('Raptor Brood: two 1/1 Raptors', () => {
+  play(0, give(0, 'raptor_brood'));
+  if (pl(0).board.filter((m) => m.cardId === 'raptor').length !== 2) return 'not two Raptors';
+});
+dtest('Eggguard Ankylosaur: enemy spells cannot target your Eggs', () => {
+  const egg = put(0, 'large_dinosaur_egg');
+  const inst = give(1, 'vampire_bite');
+  endTurn();
+  const before = getLegalActions(s).some((a) => a.card === inst.uid && a.target === egg.uid);
+  endTurn(); put(0, 'eggguard_ankylosaur'); endTurn();
+  const after = getLegalActions(s).some((a) => a.card === inst.uid && a.target === egg.uid);
+  if (!before) return 'Egg was not targetable even without the Ankylosaur';
+  if (after) return 'Egg still targetable';
+});
+dtest('Pterodactyl Hatchling: +1 Health to an Egg; Exit draws an Egg if you have one', () => {
+  const egg = put(0, 'large_dinosaur_egg');
+  play(0, give(0, 'pterodactyl_hatchling'), egg.uid);
+  if (egg.maxHealth !== 4) return `Egg Health ${egg.maxHealth}`;
+  const h = pl(0).board.at(-1);
+  h.sick = false;
+  const before = pl(0).hand.length;
+  attack(0, h.uid, put(1, 'the_crimson_king').uid);
+  if (pl(0).hand.length !== before + 1) return `hand ${before} -> ${pl(0).hand.length}`;
+  if (!getCard(pl(0).hand.at(-1).cardId).tribes.includes('Egg')) return 'drew a non-Egg';
+});
+dtest('Nesting Mother: a 1/1 Baby Raptor at end of turn while you have an Egg', () => {
+  put(0, 'nesting_mother');
+  endTurn(); endTurn();
+  if (pl(0).board.some((m) => m.cardId === 'baby_raptor')) return 'summoned without an Egg';
+  put(0, 'large_dinosaur_egg');
+  endTurn();
+  if (!pl(0).board.some((m) => m.cardId === 'baby_raptor')) return 'no Baby Raptor';
+});
+dtest('Brood Architect: Eggs get +1 Health; first Egg each turn costs 1 less', () => {
+  put(0, 'brood_architect');
+  const a = give(0, 'nest_of_dinosaur_eggs');
+  const b = give(0, 'nest_of_dinosaur_eggs');
+  const mana = pl(0).mana.current;
+  play(0, a);
+  if (mana - pl(0).mana.current !== 2) return `first Egg cost ${mana - pl(0).mana.current}`;
+  if (eggs(0)[0].maxHealth !== 4) return `Egg Health ${eggs(0)[0].maxHealth}`;
+  const m2 = pl(0).mana.current;
+  play(0, b);
+  if (m2 - pl(0).mana.current !== 3) return `second Egg cost ${m2 - pl(0).mana.current}`;
+});
+dtest('Colossal Brood Egg: 0/6, Exit summons two Babies', () => {
+  const e = put(0, 'colossal_brood_egg');
+  e.destroyed = true;
+  play(0, give(0, 'vampire_blood_price')); // any action processes deaths
+  const babies = pl(0).board.filter((m) => m.cardId !== 'colossal_brood_egg');
+  if (babies.length !== 2) return `${babies.length} babies`;
+});
+dtest('Relocate the Nest: Egg back to hand costing 2 less', () => {
+  const egg = put(0, 'nest_of_dinosaur_eggs');
+  play(0, give(0, 'relocate_the_nest'), egg.uid);
+  const back = pl(0).hand.find((h) => h.cardId === 'nest_of_dinosaur_eggs');
+  if (!back) return 'not in hand';
+  if ((back.costMod ?? 0) !== -2) return `cost change ${back.costMod}`;
+  if (pl(0).board.some((m) => m.uid === egg.uid)) return 'still on board';
+});
+dtest('Accelerated Incubation: +2 Health, Exit fires when returned to hand', () => {
+  const egg = put(0, 'large_dinosaur_egg');
+  play(0, give(0, 'accelerated_incubation'), egg.uid);
+  if (egg.maxHealth !== 5) return `Health ${egg.maxHealth}`;
+  play(0, give(0, 'relocate_the_nest'), egg.uid);
+  if (!pl(0).board.some((m) => m.cardId === 'baby_t_rex')) return 'Exit did not fire';
+});
+dtest('Emergency Hatching: Egg destroyed without its Exit, a Baby appears', () => {
+  const egg = put(0, 'large_dinosaur_egg');
+  play(0, give(0, 'emergency_hatching'), egg.uid);
+  if (pl(0).board.some((m) => m.uid === egg.uid)) return 'Egg survived';
+  if (pl(0).board.length !== 1) return `board: ${pl(0).board.map((m) => m.cardId)}`;
+});
+dtest('Selective Breeding: choose another Egg; extra Health stays', () => {
+  const egg = put(0, 'large_dinosaur_egg');
+  egg.maxHealth += 2; egg.health += 2;
+  play(0, give(0, 'selective_breeding'), egg.uid);
+  const now = minion(egg.uid);
+  if (now.cardId === 'large_dinosaur_egg') return 'not transformed';
+  if (!now.tribes.includes('Egg')) return 'not an Egg';
+  if (now.maxHealth !== getCard(now.cardId).health + 2) return `Health ${now.maxHealth}`;
+});
+dtest('False Nest: Egg when you have none, else -2 Attack', () => {
+  endTurn();
+  play(1, give(1, 'false_nest'));
+  endTurn();
+  play(0, give(0, 'the_crimson_king'));
+  if (eggs(1).length !== 1) return 'no Egg summoned';
+  fresh(DINO);
+  put(1, 'large_dinosaur_egg');
+  endTurn(); play(1, give(1, 'false_nest')); endTurn();
+  play(0, give(0, 'the_crimson_king'));
+  const k = pl(0).board.at(-1);
+  if (effectiveAttack(k) !== getCard('the_crimson_king').attack - 2) return `Attack ${effectiveAttack(k)}`;
+});
+dtest('Maternal Fury: a 2/2 Taunt Baby takes an attack on your Egg', () => {
+  const egg = put(1, 'large_dinosaur_egg');
+  endTurn(); play(1, give(1, 'maternal_fury')); endTurn();
+  const att = put(0, 'the_crimson_king');
+  attack(0, att.uid, egg.uid);
+  if (!minion(egg.uid) || minion(egg.uid).health !== 3) return 'the Egg was hit';
+  if (!msgs().some((m) => /redirected to Baby Dinosaur/.test(m))) return 'not redirected';
+});
+dtest('Hatchling Intercept: a Baby Raptor takes the attack if you have an Egg', () => {
+  const dino = put(1, 'triceratops');
+  put(1, 'large_dinosaur_egg');
+  give(1, 'hatchling_intercept');
+  const att = put(0, 'the_crimson_king');
+  attack(0, att.uid, dino.uid, qp('hatchling_intercept'));
+  if (minion(dino.uid).health !== minion(dino.uid).maxHealth) return 'the Dinosaur was hit';
+  if (!msgs().some((m) => /redirected to Baby Raptor/.test(m))) return 'not redirected';
 });
 
 console.log(`\n${passed} passed, ${failures} failed`);

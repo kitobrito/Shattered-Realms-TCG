@@ -45,8 +45,11 @@ export function targetCandidates(state, spec, controller, excludeUid = null, byS
     if (spec.type !== 'minion' && !spec.tribe && !spec.notTribe && !spec.darkOrUndead) out.push(pl.hero);
     if (spec.type !== 'hero') out.push(...pl.board.filter((m) => minionPasses(m, spec)));
   }
+  // Eggguard Ankylosaur: enemy spells can't choose that player's Dinosaur Eggs.
+  const eggGuarded = (c) => bySpell && c.kind === 'minion' && c.controller !== controller && c.tribes.includes('Egg')
+    && state.players[c.controller].board.some((m) => getCard(m.cardId).guardsEggsFromSpells);
   return out
-    .filter((c) => c.uid !== excludeUid && canBeChosenBy(c, controller, bySpell))
+    .filter((c) => c.uid !== excludeUid && canBeChosenBy(c, controller, bySpell) && !eggGuarded(c))
     .map((c) => c.uid);
 }
 
