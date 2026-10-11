@@ -7,7 +7,7 @@ import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, PLAYABLE_FACT
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
 import { ART } from '../cards/art-manifest.js';
 import { BOARD_ART, boardArtFor } from '../cards/board-art.js';
-import { applySettings, openSettings, setSetting } from './settings.js';
+import { applySettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck } from '../cards/deck-check.js';
@@ -140,7 +140,10 @@ function startGame(mode, factions = picked, rivalFactions = randomPick()) {
     seed: (Math.random() * 2 ** 31) | 0,
     players: human === 0 ? [you, rival] : [rival, you],
   });
-  game = { state, mode, factions, rivalFactions, human, format, stats: freshStats() };
+  const difficulty = mode === 'ai' ? getSettings().difficulty ?? 'medium' : null;
+  // Impossible: the AI's Hero also starts with 40 Health.
+  if (difficulty === 'impossible') Object.assign(state.players[1 - human].hero, { health: 40, maxHealth: 40 });
+  game = { state, mode, factions, rivalFactions, human, format, difficulty, stats: freshStats() };
   // Phones in full-screen can lock to landscape; elsewhere this quietly does nothing.
   enterGame(true);
 }
@@ -961,7 +964,7 @@ function scheduleAI() {
   const s = game?.state;
   if (game?.mode === 'online') return drainRemote();
   if (!s || s.gameOver || screen !== 'game' || animating || !isAI(actingPlayer(s))) return;
-  aiTimer = setTimeout(() => act(chooseAction(s)), (s.pending?.type === 'reaction' ? 600 : 450) * fx.speedFactor());
+  aiTimer = setTimeout(() => act(chooseAction(s, game.difficulty ?? 'medium')), (s.pending?.type === 'reaction' ? 600 : 450) * fx.speedFactor());
 }
 
 // ---- Online play (room codes, see net.js) ----------------------------------------
@@ -1466,6 +1469,7 @@ function renderMenu() {
 
       <nav class="ts-actions">
         <button data-act="ai" class="ts-play"><span>Play</span><small>vs AI</small></button>
+        ${difficultySliderHTML()}
         <div class="ts-row">
           ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
           <button data-act="hotseat">👥 Hot-seat</button>
