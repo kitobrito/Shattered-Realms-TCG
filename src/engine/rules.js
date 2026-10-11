@@ -158,7 +158,6 @@ export const DEFAULT_RULES = {
   maxCopies: 2,              // …with no more than 2 copies of any card
   heroSpellUsesPerTurn: 1,
   extinctionEvery: 7,        // Dinosaur Extinction Cycle period (the Dinosaur player's own turns)
-  meteorShowerManaPerTurn: 3, // Meteor Shower: Mana Crystals destroyed per turn-end
   quickPlaySeconds: 8,       // UI countdown before a Quick Play window auto-passes
   fatigue: true,
   summonTriggersOnPlay: true,  // playing a minion from hand counts as summoning it

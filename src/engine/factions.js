@@ -27,6 +27,12 @@ export const FACTION_HOOKS = {
     turnStartMana(state, player) {
       const m = player.mana;
       m.base = Math.min(state.rules.maxMana, (m.base ?? 0) + 1);
+      if (player.extinction?.shower) {
+        // Meteor Shower: only the normal crystal grows; no Primal Mana until it ends.
+        growMana(state, player, Math.max(0, m.base - m.max));
+        m.primal = 0;
+        return;
+      }
       growMana(state, player, player.turnsTaken === 1 ? 1 : 2);
       m.base = Math.min(m.base, m.max);
       m.primal = m.max - m.base;
