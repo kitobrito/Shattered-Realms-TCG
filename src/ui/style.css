@@ -2789,3 +2789,20 @@ body:not(.in-game):has(#menu-bg.show) { background: #05070f; }
 @keyframes unlock-pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes unlock-card { from { transform: translateY(30px) rotateY(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .reduced-motion .unlock-panel, .reduced-motion .unlock-card { animation: none; }
+
+/* ---- UI art: logo, islands backdrop, divider, icons ---- */
+.ts-logo { margin: 0; line-height: 0; }
+.ts-logo img { width: min(760px, 92vw); height: auto; filter: drop-shadow(0 6px 18px #000c) drop-shadow(0 0 28px #8a4dff55);
+  animation: tsLogoFloat 6s ease-in-out infinite; }
+@keyframes tsLogoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.ui-divider { display: block; width: min(460px, 80vw); height: auto; margin: 2px auto; pointer-events: none; filter: drop-shadow(0 2px 6px #000a); }
+.mbg-islands { position: absolute; inset: -6%; background-size: cover; background-position: center;
+  animation: mbgDrift 48s ease-in-out infinite alternate; }
+@keyframes mbgDrift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.08) translate(-1.5%, 1%); } }
+.loader { background: linear-gradient(#0c0816cc, #0c0816ee), url('../../art/ui/loading-art.jpg') center/cover no-repeat, #0c0816; }
+.loader-logo { display: block; width: min(460px, 82vw); height: auto; margin: 0 auto 14px; filter: drop-shadow(0 4px 14px #000); }
+.btn-icon { width: 1.5em; height: 1.5em; vertical-align: middle; margin: -0.3em 0.15em -0.2em 0; }
+.h-icon { width: 1.6em; height: 1.6em; vertical-align: middle; margin: -0.35em 0.15em -0.25em 0; }
+.unlock-icon { display: block; width: 72px; height: 72px; margin: 0 auto 4px; filter: drop-shadow(0 0 14px #b07cff); }
+.unlock-panel .ui-divider { width: min(320px, 70%); margin: 2px auto 0; }
+body.reduced-motion .ts-logo img, body.reduced-motion .mbg-islands { animation: none; }

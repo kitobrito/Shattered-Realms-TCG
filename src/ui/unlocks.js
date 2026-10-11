@@ -31,10 +31,12 @@ export function unlockPopupHTML(ids) {
   const left = lockedCount();
   return `<div class="overlay unlock-overlay"><div class="unlock-panel">
     <div class="unlock-burst"></div>
+    <img class="unlock-icon" src="art/ui/icon-unlocks.png" alt="">
     <h2>New cards unlocked!</h2>
+    <img class="ui-divider" src="art/ui/divider.png" alt="">
     <p class="sub">Your victory earned ${ids.length === 1 ? 'a new card' : `${ids.length} new cards`}.</p>
     <div class="unlock-row">${ids.map((id) => `<div class="unlock-card">${cardHTML(getCard(id))}<span class="unlock-faction">${esc(getCard(id).faction)}</span></div>`).join('')}</div>
-    <p class="sub">Add them to your deck with <b>🔁 Swap cards</b> on the main menu.${left ? ` ${left} more to unlock.` : ' You have unlocked every card!'}</p>
+    <p class="sub">Add them to your deck with the <b>Swap cards</b> buttons on the main menu.${left ? ` ${left} more to unlock.` : ' You have unlocked every card!'}</p>
     <button data-act="unlockOk">Awesome!</button>
   </div></div>`;
 }

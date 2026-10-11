@@ -6,7 +6,7 @@ import { applyAdvantage, chooseAction } from '../ai/smart.js';
 import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts, standardDuplicates } from '../cards/index.js';
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
 import { ART } from '../cards/art-manifest.js';
-import { BOARD_ART, boardArtFor } from '../cards/board-art.js';
+import { boardArtFor } from '../cards/board-art.js';
 import { applySettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
@@ -945,7 +945,7 @@ async function showLoader() {
   const s = game.state;
   const el = document.createElement('div');
   el.className = 'loader';
-  el.innerHTML = `<div class="loader-box"><div class="loader-sigil"></div><h2>Shattered Realms</h2>
+  el.innerHTML = `<div class="loader-box"><img class="loader-logo" src="art/ui/logo.png" alt="Shattered Realms"><div class="loader-sigil"></div>
     <p class="loader-tip">${esc(TIPS[Math.floor(Math.random() * TIPS.length)])}</p><div class="loader-bar"><i></i></div></div>`;
   fx.layer().appendChild(el);
   const urls = new Set();
@@ -1413,7 +1413,7 @@ function swapButtonsHTML() {
     const mine = customLineupFor(f);
     const swapped = mine ? mine.filter((id) => !FACTION_LISTS[f].includes(id)).length : 0;
     const note = swapped ? `${swapped} new in · ${open}/${n} unlocked` : open ? `${open}/${n} new unlocked` : `🔒 win matches to unlock ${n} new`;
-    return `<button data-swap="${esc(f)}" class="ghost swap-btn">🔁 ${esc(f)} cards <small>${note}</small></button>`;
+    return `<button data-swap="${esc(f)}" class="ghost swap-btn"><img class="btn-icon" src="art/ui/icon-unlocks.png" alt=""> ${esc(f)} cards <small>${note}</small></button>`;
   }).join('');
 }
 
@@ -1451,11 +1451,10 @@ function showMenuBackdrop(on) {
   if (!menuBg) {
     menuBg = document.createElement('div');
     menuBg.id = 'menu-bg';
-    const boards = Object.values(BOARD_ART);
-    menuBg.innerHTML = boards.map((src, k) => `<div class="mbg-slide" style="background-image:url('${src}');animation-delay:${k * 8 - boards.length * 8}s;--n:${boards.length}"></div>`).join('')
+    // The shattered realms drifting in the void (slow pan and zoom).
+    menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg.jpg\')"></div>'
       + '<div class="mbg-shade"></div><div class="mbg-rays"></div>'
       + Array.from({ length: 28 }, () => `<i class="mbg-ember" style="left:${Math.random() * 100}%;--d:${(6 + Math.random() * 8).toFixed(1)}s;--delay:${(-Math.random() * 14).toFixed(1)}s;--x:${(Math.random() * 120 - 60).toFixed(0)}px;--s:${(0.6 + Math.random() * 1.2).toFixed(2)}"></i>`).join('');
-    menuBg.querySelectorAll('.mbg-slide').forEach((el) => { el.style.animationDuration = `${boards.length * 8}s`; });
     document.body.prepend(menuBg);
   }
   menuBg.classList.toggle('show', on);
@@ -1509,8 +1508,9 @@ function renderMenu() {
     <div class="menu tavern title-screen">
       <header class="ts-title">
         <div class="ts-runes"></div>
-        <div class="tavern-sign"><h1>Shattered Realms</h1></div>
+        <h1 class="ts-logo"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"></h1>
         <p class="ts-tag">Eleven realms broke apart. Two of them are yours.</p>
+        <img class="ui-divider" src="art/ui/divider.png" alt="" draggable="false">
       </header>
 
       <nav class="ts-actions">
@@ -1523,7 +1523,7 @@ function renderMenu() {
         </div>
         <div class="ts-row small">
           <button data-act="howto" class="ghost ${howToOpened() ? '' : 'new-player'}">📘 How to play${howToOpened() ? '' : ' <small>New? Start here</small>'}</button>
-          <button data-act="gallery" class="ghost">📖 Card collection</button>
+          <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Card collection</button>
           <button data-act="settings" class="ghost">⚙ Settings</button>
         </div>
       </nav>
@@ -1619,7 +1619,7 @@ function renderSwapBuilder() {
           <button data-act="swapSave" ${n === need ? '' : 'disabled'}>Save cards</button>
         </div>
       </div>
-      <h3>✨ New cards <span class="pick-count">${cards.filter((c) => c.extra && draftLineup.includes(c.id)).length} of ${extras} in</span></h3>
+      <h3><img class="h-icon" src="art/ui/icon-dino-egg.png" alt=""> New cards <span class="pick-count">${cards.filter((c) => c.extra && draftLineup.includes(c.id)).length} of ${extras} in</span></h3>
       ${grid(cards.filter((c) => c.extra))}
       <h3>${FACTION_ICONS[f] ?? ''} Original cards <span class="pick-count">${cards.filter((c) => !c.extra && draftLineup.includes(c.id)).length} of ${FACTION_LISTS[f].length} in</span></h3>
       ${grid(cards.filter((c) => !c.extra))}
