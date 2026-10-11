@@ -107,8 +107,8 @@ export const DINOSAUR_CARDS = [
   {
     ...S, id: 'meteor_shower', name: 'Meteor Shower', art: '🌠',
     cost: 4,
-    text: 'The next time Extinction Cycle activates, instead of destroying your friendly minions, destroy 1 random minion at the end of each turn for 3 turns.',
-    // Ruling: each of the 3 turn-ends destroys 1 random minion (either side) and 3 of your Mana Crystals.
+    text: 'Your next Extinction Cycle instead destroys 1 random minion at the end of each turn for 3 turns, and all your Primal Mana. No Primal Mana until it ends.',
+    // Ruling: each of the 3 turn-ends destroys 1 random minion (either side). Normal Mana Crystals are kept.
     effects: [{ op: 'setExtinctionMode', mode: 'meteorShower' }],
   },
   {

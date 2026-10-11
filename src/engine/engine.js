@@ -488,13 +488,23 @@ function interceptDeath(state, m) {
 
 // ---- Extinction Cycle (Dinosaurs) ---------------------------------------
 
+// Meteor Shower: remove a player's Primal crystals and any unspent Primal Mana.
+function clearPrimal(pl) {
+  const m = pl.mana;
+  m.max = Math.min(m.max, m.base ?? m.max);
+  m.current = Math.max(0, Math.min(m.current - (m.primal ?? 0), m.max + (m.temp ?? 0)));
+  m.primal = 0;
+}
+
 function extinction(state, p) {
   const pl = state.players[p];
   const ext = pl.extinction;
   if (ext.mode === 'meteorShower') {
-    // Instead: 1 random minion and 3 Mana Crystals are destroyed at each of the next 3 turn-ends.
-    log(state, `☄ EXTINCTION! A Meteor Shower begins.`);
+    // Instead: 1 random minion is destroyed at each of the next 3 turn-ends, and all of
+    // this player's Primal Mana is destroyed; none can be gained until the shower ends.
+    log(state, `☄ EXTINCTION! A Meteor Shower begins. ${pl.name}'s Primal Mana is destroyed.`);
     ext.shower = 3;
+    clearPrimal(pl);
   } else {
     log(state, `☄ EXTINCTION! ${pl.name}'s Mana Crystals are destroyed.`);
     const victims = ext.mode === 'bothBoards' ? minionsInOrder(state) : pl.board;
@@ -693,18 +703,14 @@ const STEPS = {
     const ext = state.players[p].extinction;
     if (ext && ext.turns >= ext.nextAt) extinction(state, p);
     // Meteor Shower: one random minion is destroyed at the end of each turn,
-    // 3 times, starting with the Extinction turn itself.
+    // 3 times, starting with the Extinction turn itself. No Primal Mana meanwhile.
     for (const pl of state.players) {
       if (!pl.extinction?.shower) continue;
       const victim = pickRandom(state, minionsInOrder(state).filter((m) => !m.destroyed));
       if (victim) { victim.destroyed = true; log(state, `A meteor strikes ${nameOf(state, victim)}!`); }
-      const lost = Math.min(pl.mana.max, state.rules.meteorShowerManaPerTurn);
-      pl.mana.max -= lost;
-      pl.mana.current = Math.min(pl.mana.current, pl.mana.max);
-      pl.mana.base = Math.min(pl.mana.base ?? 0, pl.mana.max);
-      pl.mana.primal = Math.min(pl.mana.primal ?? 0, pl.mana.current, pl.mana.max - pl.mana.base);
-      if (lost) log(state, `${pl.name} loses ${lost} Mana Crystals.`);
+      clearPrimal(pl);
       pl.extinction.shower -= 1;
+      if (!pl.extinction.shower) log(state, `The Meteor Shower ends. ${pl.name} can gain Primal Mana again.`);
     }
   },
 
