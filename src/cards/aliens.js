@@ -52,7 +52,7 @@ export const ALIEN_CARDS = [
   },
   {
     ...T, id: 'alien_infection', name: 'Alien Infection', art: '🦠', cost: 2,
-    text: 'When an enemy minion attacks, give it a random negative Keyword or effect and gain a random positive Keyword.',
+    text: 'When an enemy minion attacks, give it a random negative Keyword or effect. A random friendly minion gains a random positive Keyword.',
     // Q: "gain" = a random friendly minion gains the positive Keyword.
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [
       { op: 'giveRandomKeyword', target: 'eventSource', negative: true },
@@ -144,7 +144,7 @@ export const ALIEN_CARDS = [
   },
   {
     ...S, id: 'genetic_scourge', name: 'Genetic Scourge', art: '☢️', cost: 4,
-    text: 'Deal 3 damage to all minions. For each enemy minion destroyed this way, gain a random Keyword.',
+    text: 'Deal 3 damage to all minions. For each enemy minion destroyed this way, a random friendly minion gains a random Keyword.',
     // Q: each Keyword goes to a random surviving friendly minion.
     effects: [{ op: 'damageAll', amount: 3, perEnemyKilled: [
       { op: 'giveRandomKeyword', target: { randomOf: { minions: { side: 'friendly', alive: true } } } },
@@ -165,13 +165,13 @@ export const ALIEN_CARDS = [
   },
   {
     ...M, id: 'probe_drone', name: 'Probe Drone', art: '🤖', tribes: ['Alien', 'Mech'], cost: 2, attack: 2, health: 2,
-    text: 'Mech. Whenever you gain a Keyword, gain +1/+1.',
+    text: 'Mech. Whenever a friendly minion gains a Keyword, this gains +1/+1.',
     // Q: "you" = any of your minions gaining a Keyword.
     triggers: [{ on: 'keywordGained', filter: { player: 'friendly', target: 'anyMinion' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
   },
   {
     ...M, id: 'gene_thief_operative', name: 'Gene-Thief Operative', art: '🕵️', cost: 2, attack: 2, health: 3,
-    text: 'Whenever an enemy minion loses a Keyword, gain it.',
+    text: 'Whenever an enemy minion loses a Keyword, this minion gains it.',
     triggers: [{ on: 'keywordLost', filter: { player: 'enemy' }, effects: [{ op: 'buff', target: 'self', eventKeyword: true }] }],
   },
   {
