@@ -247,8 +247,8 @@ export const DINOSAUR_CARDS = [
   },
   {
     ...D, id: 'nesting_mother', name: 'Nesting Mother', art: '🦕', extra: true, cost: 4, attack: 3, health: 5,
-    text: 'At the end of your turn, if you control a Dinosaur Egg, summon a 1/1 Baby Raptor.',
-    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'summon', cardId: 'baby_raptor', if: { controls: { tribe: 'Egg' } } }] }],
+    text: 'At the end of your turn, if you control a Dinosaur Egg, summon a Baby Velociraptor.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'summon', cardId: 'baby_velociraptor', if: { controls: { tribe: 'Egg' } } }] }],
   },
   {
     ...D, id: 'brood_architect', name: 'Brood Architect', art: '🏗️', extra: true, cost: 5, attack: 3, health: 6,
@@ -296,25 +296,22 @@ export const DINOSAUR_CARDS = [
   },
   {
     ...T, id: 'maternal_fury', name: 'Maternal Fury', art: '😤', extra: true, cost: 3, needsBoardSpace: true,
-    text: 'When an enemy attacks one of your Dinosaur Eggs: Summon a 2/2 Baby Dinosaur with Taunt. It takes the attack instead.',
+    text: 'When an enemy attacks one of your Dinosaur Eggs: Summon a Baby Triceratops. It takes the attack instead.',
     trap: { on: 'attackDeclared', filter: { target: FRIENDLY_EGG }, effects: [
-      { op: 'summon', cardId: 'baby_dinosaur' }, { op: 'redirectAttack', to: 'summoned' },
+      { op: 'summon', cardId: 'baby_triceratops' }, { op: 'redirectAttack', to: 'summoned' },
     ] },
   },
   {
     ...S, id: 'hatchling_intercept', name: 'Hatchling Intercept', art: '🛡️', extra: true, cost: 2,
-    text: 'When an enemy minion attacks a friendly Dinosaur: If you control a Dinosaur Egg, summon a 1/1 Baby Raptor with Taunt this turn. It takes the attack instead.',
+    text: 'When an enemy minion attacks a friendly Dinosaur: If you control a Dinosaur Egg, summon a Baby Velociraptor with Taunt this turn. It takes the attack instead.',
     quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion', target: FRIENDLY_DINO } },
     effects: [{ op: 'sequence', if: { controls: { tribe: 'Egg' } }, effects: [
-      { op: 'summon', cardId: 'baby_raptor' },
+      { op: 'summon', cardId: 'baby_velociraptor' },
       { op: 'buff', target: 'summoned', temporaryKeywords: ['Taunt'] },
       { op: 'redirectAttack', to: 'summoned' },
     ] }],
   },
 
-  // ---- Expansion tokens ----
-  { ...D, id: 'baby_raptor', name: 'Baby Raptor', art: '🦎', token: true, cost: 1, attack: 1, health: 1, text: 'Baby Dinosaur.' },
-  { ...D, id: 'baby_dinosaur', name: 'Baby Dinosaur', art: '🦕', token: true, cost: 2, attack: 2, health: 2, keywords: ['Taunt'], text: 'Baby Dinosaur. Taunt.' },
 
   // ---- Tokens ----
   { ...D, id: 'raptor', name: 'Raptor', art: '🦎', token: true, cost: 1, attack: 1, health: 1, text: '' },

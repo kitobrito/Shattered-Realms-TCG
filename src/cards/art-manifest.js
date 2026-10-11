@@ -23,8 +23,6 @@ export const ART = {
   ashen_tyrant: 'art/dragons/ashen_tyrant.jpg',
   ashwing_dragon: 'art/dragons/ashwing_dragon.jpg',
   automated_turret: 'art/robots/automated_turret.jpg',
-  baby_dinosaur: 'art/dinosaurs/baby_triceratops.jpg',
-  baby_raptor: 'art/dinosaurs/baby_velociraptor.jpg',
   baby_spinosaurus: 'art/dinosaurs/baby_spinosaurus.jpg',
   baby_stegosaurus: 'art/dinosaurs/baby_stegosaurus.jpg',
   baby_t_rex: 'art/dinosaurs/baby_t_rex.jpg',
