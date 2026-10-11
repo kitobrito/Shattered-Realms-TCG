@@ -247,13 +247,20 @@ function historyHTML(history) {
 
 // ---- Overlays --------------------------------------------------------------------
 
+// Starting-hand cards this expensive get a "Swap?" hint.
+const PRICEY_COST = 5;
+
 function mulliganHTML(s, p, marked) {
   const pl = s.players[p];
   const n = marked.length;
   return `<div class="overlay mull-overlay"><div class="mulligan-hs">
     <div class="mull-banner"><span>Starting Hand</span><small>Keep or Replace Cards</small></div>
     <p class="mull-who">${esc(pl.name)} · ${p === 0 ? 'You go first' : 'You go second, then pick a potion'}</p>
-    <div class="mull-row">${pl.hand.map((inst) => `<div class="mull-slot ${marked.includes(inst.uid) ? 'marked' : ''}" data-mull="${inst.uid}">${cardHTML(getCard(inst.cardId))}<span class="mull-x">✕</span></div>`).join('')}</div>
+    <p class="mull-hint">Tap a card to swap it. Tip: swap <b>expensive cards</b> so you have something to play on your first turns.</p>
+    <div class="mull-row">${pl.hand.map((inst) => {
+      const pricey = getCard(inst.cardId).cost >= PRICEY_COST && !marked.includes(inst.uid);
+      return `<div class="mull-slot ${marked.includes(inst.uid) ? 'marked' : ''}" data-mull="${inst.uid}">${cardHTML(getCard(inst.cardId))}${pricey ? '<span class="mull-pricey">Swap?</span>' : ''}<span class="mull-x">✕</span></div>`;
+    }).join('')}</div>
     <button data-act="mullConfirm" class="mull-confirm">${n ? `Replace ${n}` : 'Confirm'}</button>
   </div></div>`;
 }

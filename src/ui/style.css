@@ -1434,6 +1434,10 @@ body.in-game { overflow: hidden; }
 .mull-banner span { display: block; font-family: var(--font-title); font-weight: 900; font-size: clamp(26px, 3.4vw, 46px); }
 .mull-banner small { display: block; font-family: var(--font-title); font-weight: 700; font-size: clamp(14px, 1.5vw, 20px); color: #8a5a12; }
 .mull-who { margin: 0; color: #e8d6b0; font-family: var(--font-title); }
+.mull-hint { margin: 0 auto; max-width: 34em; padding: 0 16px; color: #cdbb96; font-size: clamp(13px, 1.4vw, 16px); text-align: center; line-height: 1.35; }
+.mull-hint b { color: #f2d58a; }
+.mull-pricey { position: absolute; left: 50%; bottom: -1.5em; transform: translateX(-50%); padding: 0.15em 0.7em; border-radius: 1em;
+  background: #2a1a10ee; border: 1px solid #f2b45a; color: #ffd27a; font-size: clamp(11px, 1.2vw, 14px); font-weight: 700; white-space: nowrap; pointer-events: none; }
 .mull-row { display: flex; gap: clamp(10px, 2vw, 28px); justify-content: center; }
 .mull-row .card:not(.back) { width: clamp(130px, 15vw, 220px); }
 .mull-slot { position: relative; cursor: pointer; transition: transform 0.18s; }

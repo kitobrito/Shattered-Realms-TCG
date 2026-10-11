@@ -1671,6 +1671,7 @@ function coachTips() {
   if (mp.traps.length) tip('myTrap');
   if (legal.some((a) => a.type === 'heroSpell')) tip('heroSpell');
   if (s.pending?.type === 'reaction' && s.pending.player === me) tip('quickPlay');
+  if (myTurn && mp.hand.length && !legal.some((a) => a.type === 'play' || a.type === 'heroSpell')) tip('nothingFits');
   if (myTurn && s.turn > 2 && legal.length === 1) tip('endTurn');
 }
 window.addEventListener('tips-off', () => { setSetting({ tips: false }); flash('Tips turned off. You can turn them back on in Settings.'); });

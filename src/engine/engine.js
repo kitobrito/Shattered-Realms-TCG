@@ -71,12 +71,28 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
   });
   drawCards(state, 0, state.rules.startingHandFirst);
   drawCards(state, 1, state.rules.startingHandSecond);
+  if (state.rules.openingHandHelp) [0, 1].forEach((p) => ensureEarlyPlay(state, p));
   state.buffer = [];
   // Mulligan: Player 1, then Player 2, may swap opening cards before turn 1.
   if (state.rules.mulligan) state.pending = { type: 'mulligan', player: 0 };
   else beginGame(state);
   run(state);
   return state;
+}
+
+// Opening-hand help: a starting hand with no minion costing openingHandHelp or less
+// swaps its most expensive card for a random cheap minion from the deck, so nobody
+// starts with nothing to put on the board. Same rule for both players.
+function ensureEarlyPlay(state, p) {
+  const pl = state.players[p];
+  const cheap = (c) => { const card = getCard(c.cardId); return card.type === 'minion' && card.cost <= state.rules.openingHandHelp; };
+  if (!pl.hand.length || pl.hand.some(cheap)) return;
+  const incoming = pickRandom(state, pl.deck.filter(cheap));
+  if (!incoming) return;
+  const out = pl.hand.reduce((a, b) => (getCard(b.cardId).cost > getCard(a.cardId).cost ? b : a));
+  pl.hand[pl.hand.indexOf(out)] = incoming;
+  pl.deck[pl.deck.indexOf(incoming)] = out;
+  shuffle(state, pl.deck);
 }
 
 // After the mulligan: going second gets the Mana Potion (an extra card was already

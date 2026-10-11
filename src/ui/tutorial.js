@@ -15,6 +15,9 @@ const SECTIONS = [
     You play from the bottom of the screen.`],
   ['💎', 'Mana', `Cards cost <b>Mana</b>: the number in the blue gem on each card.
     You start with 1 Mana Crystal and get <b>one more every turn</b>, up to 10. Your Mana refills at the start of each of your turns.`],
+  ['🖐️', 'Your starting hand', `Before the first turn you see your starting cards and can <b>swap any of them once</b>: tap a card to mark it, then press <b>Replace</b>.
+    Swap <b>expensive cards</b> (5+ Mana) and keep cheap ones, so you have something to play on your first turns.
+    Every starting hand includes at least one cheap minion (2 Mana or less) to put on the board early. Going second, you get an extra card and a potion.`],
   ['🃏', 'Playing cards', `<b>Drag a card</b> from your hand onto the battlefield to play it. Tap or click a card first to read it.
     <ul>
       <li><b>Minions</b> stay on the battlefield and fight. Yellow number = <b>Attack</b>, red number = <b>Health</b>.</li>
@@ -71,6 +74,7 @@ export const TIPS = {
   myTrap: ['Your Trap', "Your Trap is set face-down beside your Hero (the purple ?). It goes off by itself. Tap it to see which one it is."],
   heroSpell: ['Hero Spell', 'The round button beside your Hero is a Hero Spell: always there, usable once per turn. Using it charges your Fusion.'],
   quickPlay: ['Quick Play', 'You can answer right now, during your opponent\'s turn! Pick the card, or press Pass.'],
+  nothingFits: ['Nothing fits yet', "None of your cards costs little enough to play yet. That's normal early on: press End Turn. You get one more Mana every turn, so bigger cards open up soon."],
   endTurn: ['Out of moves', 'Nothing left to do this turn. Press End Turn (it glows green).'],
 };
 

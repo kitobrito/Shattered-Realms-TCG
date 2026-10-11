@@ -143,6 +143,7 @@ export const DEFAULT_RULES = {
   startingHandFirst: 3,
   startingHandSecond: 4,     // going second: an extra card plus the Mana Potion
   mulligan: true,            // before turn 1 each player may swap any opening cards once
+  openingHandHelp: 2,        // a starting hand always has a minion costing this or less (false = off)
   coinCardId: 'mana_potion', // the going-second card (Mana Potion; was The Coin)
   // Going second picks one: Mana Potion or Health Potion. false = always the Mana Potion.
   secondPlayerPotions: ['mana_potion', 'health_potion'],
