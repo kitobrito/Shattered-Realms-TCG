@@ -11,6 +11,8 @@ const T = { faction: 'Dinosaurs', type: 'trap' };
 
 export const DINOSAUR_EGGS = ['large_dinosaur_egg', 'nest_of_dinosaur_eggs'];
 export const BABY_DINOSAURS = ['baby_t_rex', 'baby_spinosaurus', 'baby_velociraptor', 'baby_triceratops', 'baby_stegosaurus'];
+// Expansion cards use this wider list (adds the expansion's Baby Dinosaurs).
+export const ALL_BABY_DINOSAURS = [...BABY_DINOSAURS, 'nestling_triceratops', 'pterodactyl_hatchling'];
 const FRIENDLY_DINO = { side: 'friendly', tribe: 'Dinosaur' };
 const FRIENDLY_EGG = { side: 'friendly', tribe: 'Egg' };
 
@@ -209,6 +211,110 @@ export const DINOSAUR_CARDS = [
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' },
       effects: [{ op: 'summon', pool: BABY_DINOSAURS, keywords: ['Taunt'] }] },
   },
+
+  // ---- Expansion: Babies, Eggs & Evolution (15 extra cards) ----
+  // `extra`: not in the standard 30; players swap them in ("Swap cards").
+  // "Summon a 0/3 Dinosaur Egg" = a random 0/3 Egg, as with Hidden Nest.
+  {
+    ...D, id: 'hatchling_keeper', name: 'Hatchling Keeper', art: '🧺', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Arrival: Summon a 0/3 Dinosaur Egg.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'summon', pool: DINOSAUR_EGGS }] }],
+  },
+  {
+    ...D, id: 'nestling_triceratops', name: 'Nestling Triceratops', art: '🦏', extra: true, cost: 2, attack: 2, health: 2,
+    text: 'Baby Dinosaur. Exit: Summon a 0/3 Dinosaur Egg.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'summon', pool: DINOSAUR_EGGS }] }],
+  },
+  {
+    ...D, id: 'raptor_brood', name: 'Raptor Brood', art: '🦖', extra: true, cost: 3, attack: 3, health: 2,
+    text: 'Arrival: Summon two 1/1 Raptors.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'summon', cardId: 'raptor', count: 2 }] }],
+  },
+  {
+    ...D, id: 'eggguard_ankylosaur', name: 'Eggguard Ankylosaur', art: '🛡️', extra: true, cost: 3, attack: 2, health: 4, keywords: ['Taunt'],
+    guardsEggsFromSpells: true,
+    text: 'Taunt. Your Dinosaur Eggs can\'t be targeted by enemy spells.',
+  },
+  {
+    ...D, id: 'pterodactyl_hatchling', name: 'Pterodactyl Hatchling', art: '🐣', extra: true, cost: 3, attack: 2, health: 3,
+    text: 'Baby Dinosaur. Arrival: Give a friendly Dinosaur Egg +1 Health. Exit: If you control a Dinosaur Egg, draw a Dinosaur Egg.',
+    // Ruling: "if it survives" = you still have an Egg when this leaves play.
+    target: { type: 'minion', side: 'friendly', tribe: 'Egg' },
+    triggers: [
+      { on: 'battlecry', effects: [{ op: 'buff', target: 'chosen', health: 1 }] },
+      { on: 'deathrattle', effects: [{ op: 'draw', filter: { tribe: 'Egg' }, if: { controls: { tribe: 'Egg' } } }] },
+    ],
+  },
+  {
+    ...D, id: 'nesting_mother', name: 'Nesting Mother', art: '🦕', extra: true, cost: 4, attack: 3, health: 5,
+    text: 'At the end of your turn, if you control a Dinosaur Egg, summon a 1/1 Baby Raptor.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'summon', cardId: 'baby_raptor', if: { controls: { tribe: 'Egg' } } }] }],
+  },
+  {
+    ...D, id: 'brood_architect', name: 'Brood Architect', art: '🏗️', extra: true, cost: 5, attack: 3, health: 6,
+    firstEggDiscount: 1,
+    text: 'Whenever you summon a Dinosaur Egg, give it +1 Health. The first Egg you play each turn costs (1) less.',
+    triggers: [{ on: 'minionSummoned', filter: { source: FRIENDLY_EGG }, effects: [{ op: 'buff', target: 'eventSource', health: 1 }] }],
+  },
+  {
+    ...EGG, id: 'colossal_brood_egg', name: 'Colossal Brood Egg', art: '🥚', extra: true, cost: 5, attack: 0, health: 6,
+    text: 'Exit: Summon two random Baby Dinosaurs.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'summon', pool: ALL_BABY_DINOSAURS, count: 2 }] }],
+  },
+  {
+    ...S, id: 'relocate_the_nest', name: 'Relocate the Nest', art: '🧳', extra: true, cost: 1,
+    text: 'Return a friendly Dinosaur Egg to your hand. It costs (2) less.',
+    target: { type: 'minion', side: 'friendly', tribe: 'Egg' },
+    effects: [{ op: 'returnToHand', target: 'chosen', costChange: -2 }],
+  },
+  {
+    ...S, id: 'accelerated_incubation', name: 'Accelerated Incubation', art: '⚗️', extra: true, cost: 2,
+    text: 'Give a friendly Dinosaur Egg +2 Health. The next time it leaves play (even returned to hand or transformed), its Exit activates.',
+    target: { type: 'minion', side: 'friendly', tribe: 'Egg' },
+    effects: [{ op: 'buff', target: 'chosen', health: 2 }, { op: 'exitOnLeave', target: 'chosen' }],
+  },
+  {
+    ...S, id: 'emergency_hatching', name: 'Emergency Hatching', art: '🐣', extra: true, cost: 3,
+    text: 'Destroy a friendly Dinosaur Egg (its Exit does not activate). Summon a random Baby Dinosaur that costs (3) or less.',
+    // Ruling: "trades the Egg's delayed value" — the Egg's own Exit is skipped.
+    target: { type: 'minion', side: 'friendly', tribe: 'Egg' },
+    effects: [{ op: 'destroy', target: 'chosen', noExit: true }, { op: 'summon', pool: ALL_BABY_DINOSAURS }],
+  },
+  {
+    ...S, id: 'selective_breeding', name: 'Selective Breeding', art: '🧬', extra: true, cost: 4,
+    text: 'Transform a friendly Dinosaur Egg into a different Dinosaur Egg of your choice. It keeps any extra Health.',
+    // Ruling: no two Eggs share a Mana Cost, so "same cost" is dropped (any other Egg).
+    target: { type: 'minion', side: 'friendly', tribe: 'Egg' },
+    effects: [{ op: 'chooseEgg', target: 'chosen' }],
+  },
+  {
+    ...T, id: 'false_nest', name: 'False Nest', art: '🪹', extra: true, cost: 2,
+    text: 'When your opponent summons a minion: If you control a Dinosaur Egg, give it -2 Attack this turn. Otherwise, summon a 0/3 Dinosaur Egg.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [
+      { op: 'buff', target: 'eventSource', attack: -2, temporary: true, if: { controls: { tribe: 'Egg' } }, else: [{ op: 'summon', pool: DINOSAUR_EGGS }] },
+    ] },
+  },
+  {
+    ...T, id: 'maternal_fury', name: 'Maternal Fury', art: '😤', extra: true, cost: 3, needsBoardSpace: true,
+    text: 'When an enemy attacks one of your Dinosaur Eggs: Summon a 2/2 Baby Dinosaur with Taunt. It takes the attack instead.',
+    trap: { on: 'attackDeclared', filter: { target: FRIENDLY_EGG }, effects: [
+      { op: 'summon', cardId: 'baby_dinosaur' }, { op: 'redirectAttack', to: 'summoned' },
+    ] },
+  },
+  {
+    ...S, id: 'hatchling_intercept', name: 'Hatchling Intercept', art: '🛡️', extra: true, cost: 2,
+    text: 'When an enemy minion attacks a friendly Dinosaur: If you control a Dinosaur Egg, summon a 1/1 Baby Raptor with Taunt this turn. It takes the attack instead.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion', target: FRIENDLY_DINO } },
+    effects: [{ op: 'sequence', if: { controls: { tribe: 'Egg' } }, effects: [
+      { op: 'summon', cardId: 'baby_raptor' },
+      { op: 'buff', target: 'summoned', temporaryKeywords: ['Taunt'] },
+      { op: 'redirectAttack', to: 'summoned' },
+    ] }],
+  },
+
+  // ---- Expansion tokens ----
+  { ...D, id: 'baby_raptor', name: 'Baby Raptor', art: '🦎', token: true, cost: 1, attack: 1, health: 1, text: 'Baby Dinosaur.' },
+  { ...D, id: 'baby_dinosaur', name: 'Baby Dinosaur', art: '🦕', token: true, cost: 2, attack: 2, health: 2, keywords: ['Taunt'], text: 'Baby Dinosaur. Taunt.' },
 
   // ---- Tokens ----
   { ...D, id: 'raptor', name: 'Raptor', art: '🦎', token: true, cost: 1, attack: 1, health: 1, text: '' },

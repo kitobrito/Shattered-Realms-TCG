@@ -318,6 +318,8 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
   const chosen2 = target2 ?? null;
   log(state, `${pl.name} plays ${card.type === 'trap' ? 'a Trap' : card.name}.`);
 
+  // Brood Architect: the first Egg you play each turn costs less.
+  if ((card.tribes ?? []).includes('Egg')) pl.eggPlayedTurn = state.turn;
   if (card.type === 'minion') {
     // The minion takes its board slot immediately; its abilities resolve
     // after the opponent's reaction window.
@@ -534,6 +536,10 @@ const STEPS = {
     if (event.type === 'heroLostHealth') {
       steps.push({ kind: 'window', name: 'heroLostHealth', priority: event.player, ctx: { event } });
     }
+    // Radioactive: Quick Plays for an enemy character gaining Radiation (on either turn).
+    if (event.type === 'radiationApplied') {
+      steps.push({ kind: 'window', name: 'enemyIrradiated', priority: opponentOf(event.player), ctx: { event } });
+    }
     pushFront(state, steps);
   },
 
@@ -619,7 +625,8 @@ const STEPS = {
         zp.zombieDeathsThisTurn = (zp.zombieDeathsThisTurn ?? 0) + 1;
         log(state, `🪦 ${nameOf(state, m)} leaves a Corpse.`);
       }
-      steps.push(...selfTriggerSteps(state, card, 'deathrattle', { self: m.uid, controller: m.controller, event }));
+      // noExit: destroyed without its Exit (Emergency Hatching).
+      if (!m.noExit) steps.push(...selfTriggerSteps(state, card, 'deathrattle', { self: m.uid, controller: m.controller, event }));
       // Granted Exits (Consume Decay) act for the player who granted them.
       for (const g of (m.grantedTriggers ?? []).filter((t) => t.on === 'deathrattle')) {
         const ctx = { self: m.uid, controller: g.controller, event, cardId: m.cardId };
@@ -821,9 +828,20 @@ function checkGameOver(state) {
 
 export function run(state) {
   let guard = 0;
+  const recent = [];
   while (state.queue.length && !state.pending && !state.gameOver) {
-    if (++guard > 20000) throw new Error('Resolution loop exceeded 20000 steps (infinite trigger loop?)');
+    // Safety net: effects that keep triggering each other forever are stopped
+    // (the rest of the chain is dropped) instead of freezing the game.
+    if (++guard > 20000) {
+      const kinds = [...new Set(recent.slice(-50))].join(', ');
+      log(state, `⚠ An endless chain of effects was stopped (${kinds}).`);
+      state.queue = [];
+      state.buffer = [];
+      break;
+    }
     const step = state.queue.shift();
+    recent.push(step.kind + (step.cardId ? `:${step.cardId}` : '') + (step.event?.type ? `:${step.event.type}` : ''));
+    if (recent.length > 200) recent.splice(0, 100);
     STEPS[step.kind](state, step);
     if (state.buffer.length) {
       const buffered = state.buffer;

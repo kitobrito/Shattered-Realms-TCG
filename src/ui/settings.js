@@ -7,7 +7,43 @@ import { setMusicVolume } from './music.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium' };
+
+// AI difficulty, easiest first (keys match DIFFICULTIES in ai/smart.js).
+export const DIFFICULTY_LEVELS = [
+  ['easy', 'Easy', 'Makes mistakes. Good for learning.'],
+  ['medium', 'Medium', 'Plans its turn sensibly. A fair fight.'],
+  ['hard', 'Hard', 'Trained by machine learning. Its Hero starts with 38 Health (yours has 30) and it gets 1 extra starting card.'],
+  ['veryHard', 'Very Hard', 'Trained, plans further ahead. Its Hero starts with 42 Health and it gets 2 extra starting cards.'],
+  ['impossible', 'Impossible', '⚠ This AI has big advantages: it can see your hand, its Hero starts with 50 Health (yours has 30), and it gets 3 extra starting cards.'],
+]
+const levelIndex = (key) => Math.max(0, DIFFICULTY_LEVELS.findIndex(([k]) => k === key));
+
+// The difficulty slider (main menu and Settings share it).
+export function difficultySliderHTML(key = getSettings().difficulty) {
+  const i = levelIndex(key);
+  const [, name, about] = DIFFICULTY_LEVELS[i];
+  return `<div class="difficulty-slider lvl-${i}">
+    <div class="diff-top"><span>AI difficulty</span><b class="diff-name">${name}</b></div>
+    <input type="range" min="0" max="${DIFFICULTY_LEVELS.length - 1}" step="1" value="${i}" data-difficulty aria-label="AI difficulty">
+    <div class="diff-ticks">${DIFFICULTY_LEVELS.map(([, n], j) => `<span class="${j === i ? 'on' : ''}">${n}</span>`).join('')}</div>
+    <small class="diff-about">${about}</small>
+  </div>`;
+}
+
+// Live update for any difficulty slider: saves the choice and refreshes its labels.
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (!t.matches?.('[data-difficulty]')) return;
+  const i = Number(t.value);
+  const [key, name, about] = DIFFICULTY_LEVELS[i];
+  setSetting({ difficulty: key });
+  const box = t.closest('.difficulty-slider');
+  box.className = `difficulty-slider lvl-${i}`;
+  box.querySelector('.diff-name').textContent = name;
+  box.querySelector('.diff-about').textContent = about;
+  box.querySelectorAll('.diff-ticks span').forEach((s, j) => s.classList.toggle('on', j === i));
+});
 
 export function getSettings() {
   try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return { ...DEFAULTS }; }
@@ -43,6 +79,7 @@ export function openSettings() {
         <input type="range" min="0" max="100" step="5" value="${st.volume}" data-set="volume"><b>${st.volume}%</b></label>
       <label class="set-row"><span>Music</span>
         <input type="range" min="0" max="100" step="5" value="${st.music}" data-set="music"><b>${st.music}%</b></label>
+      <div class="set-row set-difficulty">${difficultySliderHTML(st.difficulty)}</div>
       <div class="set-row"><span>Game speed</span>
         <div class="seg">${Object.keys(SPEEDS).map((k) => `<button data-speed="${k}" class="${st.speed === k ? 'on' : ''}">${k === 'turbo' ? 'Very fast' : k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>

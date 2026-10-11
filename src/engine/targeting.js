@@ -24,6 +24,7 @@ function minionPasses(m, f) {
   if (f.hasWeapon && !m.weapon) return false;
   if (f.faction && getCard(m.cardId).faction !== f.faction) return false;
   if (f.irradiated != null && (radiationOf(m) > 0) !== f.irradiated) return false;
+  if (f.damaged && !(m.health < m.maxHealth)) return false; // took damage and hasn't fully healed
   if (f.cardId && m.cardId !== f.cardId) return false;
   if (f.maxAttack != null && effectiveAttack(m) > f.maxAttack) return false;
   if (f.hasKeyword && !allKeywords(m).length) return false;
@@ -44,8 +45,11 @@ export function targetCandidates(state, spec, controller, excludeUid = null, byS
     if (spec.type !== 'minion' && !spec.tribe && !spec.notTribe && !spec.darkOrUndead) out.push(pl.hero);
     if (spec.type !== 'hero') out.push(...pl.board.filter((m) => minionPasses(m, spec)));
   }
+  // Eggguard Ankylosaur: enemy spells can't choose that player's Dinosaur Eggs.
+  const eggGuarded = (c) => bySpell && c.kind === 'minion' && c.controller !== controller && c.tribes.includes('Egg')
+    && state.players[c.controller].board.some((m) => getCard(m.cardId).guardsEggsFromSpells);
   return out
-    .filter((c) => c.uid !== excludeUid && canBeChosenBy(c, controller, bySpell))
+    .filter((c) => c.uid !== excludeUid && canBeChosenBy(c, controller, bySpell) && !eggGuarded(c))
     .map((c) => c.uid);
 }
 
@@ -83,9 +87,11 @@ export function resolveSelector(state, sel, ctx) {
     for (const p of [ctx.controller, opponentOf(ctx.controller)]) {
       const s = p === ctx.controller ? 'friendly' : 'enemy';
       if (side !== 'any' && side !== s) continue;
-      out.push(heroOf(state, p).uid);
+      // irradiated: only characters with Radiation (Critical Mass Mutant).
+      if (sel.characters.irradiated == null || (radiationOf(heroOf(state, p)) > 0) === sel.characters.irradiated) out.push(heroOf(state, p).uid);
     }
-    return [...out, ...minionsInOrder(state).filter((m) => matchesMinionFilter(m, { side }, ctx)).map((m) => m.uid)]
+    const mf = { side, ...(sel.characters.irradiated != null ? { irradiated: sel.characters.irradiated } : {}) };
+    return [...out, ...minionsInOrder(state).filter((m) => matchesMinionFilter(m, mf, ctx)).map((m) => m.uid)]
       .filter((id) => !(sel.characters.excludeSelf && id === ctx.self));
   }
   if (sel.minions) {

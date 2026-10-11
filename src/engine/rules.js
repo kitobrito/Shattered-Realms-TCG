@@ -122,7 +122,8 @@ export const TRIGGER_EVENTS = [...SELF_TRIGGERS, ...BOARD_EVENTS];
 // wouldTakeDamage opens only for Quick Plays that name it (Blood Shield, Protective Mother).
 // damageDealt / burnDamage open only for Quick Plays that name them (Dragons).
 // friendlyAttack / heroLostHealth go to the attacking / Health-losing player, even on their own turn (Demons).
-export const REACTION_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn', 'wouldTakeDamage', 'damageDealt', 'burnDamage', 'friendlyAttack', 'heroLostHealth'];
+// enemyIrradiated goes to the opponent of whoever gained Radiation, on either turn (Gamma Reversal).
+export const REACTION_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn', 'wouldTakeDamage', 'damageDealt', 'burnDamage', 'friendlyAttack', 'heroLostHealth', 'enemyIrradiated'];
 export const DEFAULT_QUICK_PLAY_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn'];
 
 // Dark / Undead (Divine's "holy" targets): a shared tag, not a faction name.

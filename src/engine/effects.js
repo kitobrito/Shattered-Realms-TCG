@@ -2,6 +2,19 @@
 // new cards are data, and only genuinely new mechanics need a new op here.
 //
 // Every op receives (state, effect, ctx) where ctx = { self, controller, chosen, chosen2, event }.
+// Accelerated Incubation: a marked minion's Exit also happens when it leaves the
+// board without dying (returned to hand, transformed). Used once.
+function exitOnLeave(state, m) {
+  if (!m.exitOnLeave) return;
+  m.exitOnLeave = false;
+  log(state, `${nameOf(state, m)} hatches as it leaves!`);
+  const card = getCard(m.cardId);
+  const ctx = { self: m.uid, controller: m.controller, event: { type: 'minionLeft', source: m.uid } };
+  for (const t of (card.triggers ?? []).filter((x) => x.on === 'deathrattle')) {
+    pushFront(state, [...t.effects.map((effect) => ({ kind: 'effect', effect, ctx })), { kind: 'deaths' }]);
+  }
+}
+
 // Any effect may carry `if: <condition>` (and optional `else: [effects]`).
 
 import {
@@ -50,6 +63,15 @@ export function checkCondition(state, cond, ctx) {
   }
   // { eventDeadUpgrades: N } — the minion that just died had at least N Upgrades (Final Assembly).
   if (cond.eventDeadUpgrades != null) return (ctx.event?.dead?.upgrades ?? 0) >= cond.eventDeadUpgrades;
+  // { enemyIrradiated: true } — the opponent controls a character with Radiation (Fallout Scavenger).
+  if (cond.enemyIrradiated != null) {
+    const opp = state.players[opponentOf(ctx.controller)];
+    return [opp.hero, ...opp.board].some((c) => radiationOf(c) > 0) === cond.enemyIrradiated;
+  }
+  // { myTurn: true } — it is the card controller's turn (Blood Alchemist).
+  if (cond.myTurn != null) return (state.activePlayer === ctx.controller) === cond.myTurn;
+  // { heroLostHealthThisTurn: true } — your Hero lost Health this turn (Crimson Oracle).
+  if (cond.heroLostHealthThisTurn != null) return (state.players[ctx.controller].lostHealthTurn === state.turn) === cond.heroLostHealthThisTurn;
   if (cond.subject) {
     const c = findCharacter(state, resolveSelector(state, cond.subject, ctx)[0]);
     if (!c) return false;
@@ -524,7 +546,7 @@ export const EFFECT_OPS = {
   // { target, amount | amountFromEvent, overheal? }
   heal(state, e, ctx) {
     const amount = e.amountFromEvent ? (ctx.event?.amount ?? 0) : e.amount;
-    each(state, e.target, ctx, (c) => heal(state, c.uid, amount, { overheal: e.overheal, source: ctx.self }));
+    each(state, e.target, ctx, (c) => heal(state, c.uid, amount, { overheal: e.overheal, source: ctx.self, ignoreRadiation: e.ignoreRadiation }));
   },
 
   // { target, amount, forSummon? } — Health loss that is not damage (a cost paid with Health).
@@ -556,6 +578,17 @@ export const EFFECT_OPS = {
 
   clearRadiation(state, e, ctx) {
     each(state, e.target, ctx, (c) => clearRadiation(state, c));
+  },
+
+  // { target, damageTo } — Reactor Overload: remove all Radiation from the targets; then,
+  // one at a time, deal 1 damage to a random character from damageTo per Radiation removed.
+  overload(state, e, ctx) {
+    let n = 0;
+    each(state, e.target, ctx, (c) => { n += radiationOf(c); clearRadiation(state, c); });
+    if (!n) { log(state, 'There was no Radiation to overload.'); return; }
+    log(state, `☢ Overload! ${n} Radiation becomes ${n} damage.`);
+    const hit = { op: 'damage', target: { randomOf: e.damageTo }, amount: 1 };
+    pushFront(state, Array.from({ length: n }, () => ({ kind: 'effect', effect: hit, ctx })));
   },
 
   // { target, amount, irradiatedBonus?, obliterateKilled? } — reduce Health (not damage).
@@ -747,7 +780,10 @@ export const EFFECT_OPS = {
       ? Math.min(e.countFromCorpses.max ?? 99, Math.floor((state.players[ctx.controller].corpses ?? 0) / e.countFromCorpses.per))
       : (e.count ?? 1);
     for (let i = 0; i < count; i++) {
+      // distinct: never the same card twice (Sanguine Recollection).
+      if (e.distinct && !fixed && !pool.length) break;
       const cardId = fixed ?? pickRandom(state, pool);
+      if (e.distinct && !fixed) pool = pool.filter((id) => id !== cardId);
       const m = summonMinion(state, p, cardId, { attack: e.attack, health: e.health, keywords: e.keywords });
       if (m) ctx.summoned = m.uid;
       if (m && e.loseKeywords) for (const k of e.loseKeywords) removeKeyword(m, k);
@@ -764,6 +800,27 @@ export const EFFECT_OPS = {
       if (c.kind === 'minion' && !c.tribes.includes(e.tribe)) c.tribes.push(e.tribe);
       log(state, `${nameOf(state, c)} becomes a ${e.tribe}.`);
     });
+  },
+
+  // { target, attack, health, name? } — set base stats (Queen of the Red Veil: 3/3 Blood Shades).
+  setStats(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion') return;
+      c.attack = e.attack;
+      c.maxHealth = e.health;
+      c.health = e.health;
+      log(state, `${nameOf(state, c)} becomes a ${e.attack}/${e.health}${e.name ? ` ${e.name}` : ''}.`);
+    });
+  },
+
+  // { key, effects } — runs at most once per turn for this minion (Lord of the Unburied).
+  oncePerTurn(state, e, ctx) {
+    const self = findCharacter(state, ctx.self);
+    if (!self) return;
+    self.oncePerTurn ??= {};
+    if (self.oncePerTurn[e.key] === state.turn) return;
+    self.oncePerTurn[e.key] = state.turn;
+    for (const sub of e.effects) resolveEffect(state, sub, ctx);
   },
 
   // { count: selector, attack?, health? } — self gains stats per matching character.
@@ -837,6 +894,7 @@ export const EFFECT_OPS = {
   returnToHand(state, e, ctx) {
     each(state, e.target, ctx, (m) => {
       if (m.kind !== 'minion') return;
+      exitOnLeave(state, m);
       const board = state.players[m.controller].board;
       board.splice(board.indexOf(m), 1);
       log(state, `${nameOf(state, m)} returns to ${state.players[m.owner].name}'s hand.`);
@@ -864,6 +922,9 @@ export const EFFECT_OPS = {
       if (!intoId) { log(state, `${nameOf(state, m)} has nothing to transform into.`); return; }
       const card = getCard(intoId);
       if (e.storeCost) m.storedCost = originalCost;
+      exitOnLeave(state, m);
+      // keepHealthBonus: Health it had gained over its card stays (Selective Breeding).
+      const bonus = e.keepHealthBonus ? Math.max(0, m.maxHealth - (getCard(m.cardId).health ?? 0)) : 0;
       log(state, `${nameOf(state, m)} transforms into ${card.name}.`);
       Object.assign(m, {
         cardId: card.id, attack: card.attack, health: card.health, maxHealth: card.health,
@@ -871,13 +932,33 @@ export const EFFECT_OPS = {
         keywords: [...(card.keywords ?? [])], tempKeywords: [], statics: [...(card.statics ?? [])],
         tribes: [...(card.tribes ?? [])], faction: card.faction,
       });
+      if (bonus) { m.maxHealth += bonus; m.health += bonus; }
     });
   },
 
-  // { target }
+  // { target } — Accelerated Incubation: its Exit also fires if it leaves without dying.
+  exitOnLeave(state, e, ctx) {
+    each(state, e.target, ctx, (c) => { if (c.kind === 'minion') c.exitOnLeave = true; });
+  },
+
+  // { target } — Selective Breeding: choose a different Dinosaur Egg for it to become
+  // (Health it gained stays).
+  chooseEgg(state, e, ctx) {
+    const m = findCharacter(state, resolveSelector(state, e.target, ctx)[0]);
+    if (!m || m.kind !== 'minion') return;
+    const eggs = collectibleMinions((c) => (c.tribes ?? []).includes('Egg') && c.id !== m.cardId);
+    if (!eggs.length) return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Choose the Egg it becomes', resolve: 'effects', ctx,
+      options: eggs.map((c) => ({ label: c.name, cardId: c.id, effects: [{ op: 'transform', target: { uid: m.uid }, into: c.id, keepHealthBonus: true }] })),
+    };
+  },
+
+  // { target, noExit? }
   destroy(state, e, ctx) {
     each(state, e.target, ctx, (c) => {
       if (c.kind !== 'minion') return;
+      if (e.noExit) c.noExit = true;
       c.destroyed = true;
       c.lastDamagedBy = ctx.self;
       c.lastDamagedByController = ctx.controller;

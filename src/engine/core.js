@@ -125,6 +125,10 @@ export function costOf(state, inst) {
     const a = getCard(m.cardId).costAura;
     if (a && a.type === card.type) aura += a.amount;
   }
+  // Dinosaurs: Brood Architect — the first Egg you play each turn costs less.
+  if ((card.tribes ?? []).includes('Egg') && state && state.players[inst.owner]?.eggPlayedTurn !== state.turn) {
+    for (const m of state.players[inst.owner]?.board ?? []) aura -= getCard(m.cardId).firstEggDiscount ?? 0;
+  }
   // Robots: Chief Engineer — the next Upgrade you play costs less.
   if (card.upgrade && state) aura -= state.players[inst.owner]?.upgradeDiscount ?? 0;
   return Math.max(0, card.cost + (inst.costMod ?? 0) + aura);
@@ -284,7 +288,7 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     const lost = amount - absorbed;
     t.health -= lost;
     t.healthLost += lost;
-    if (lost > 0) emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount: lost, source: sourceId });
+    if (lost > 0) { state.players[t.owner].lostHealthTurn = state.turn; emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount: lost, source: sourceId }); }
   } else {
     reduceHealth(t, amount);
     t.lastDamagedBy = sourceId;
@@ -311,8 +315,9 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
 export function heal(state, targetId, amount, opts = {}) {
   const t = findCharacter(state, targetId);
   if (!t || amount <= 0) return 0;
-  // Radiation: a character whose Health a Radiation aura is lowering can't be healed.
-  if ((t.radReduction ?? 0) > 0) { log(state, `☢ ${nameOf(state, t)} can't be healed while irradiated.`); return 0; }
+  // Radiation: a character whose Health a Radiation aura is lowering can't be healed
+  // (ignoreRadiation: Irradiated Behemoth's heal still works).
+  if ((t.radReduction ?? 0) > 0 && !opts.ignoreRadiation) { log(state, `☢ ${nameOf(state, t)} can't be healed while irradiated.`); return 0; }
   let healed = 0;
   if (t.health >= t.maxHealth) {
     if (!opts.overheal) return 0;
@@ -343,6 +348,7 @@ export function loseHealth(state, targetId, amount, opts = {}) {
   log(state, `${nameOf(state, t)} loses ${amount} Health.`);
   if (t.kind === 'hero') {
     t.healthLost += amount;
+    state.players[t.owner].lostHealthTurn = state.turn;
     emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount, source: null, paid: opts.paid !== false, forSummon: !!opts.forSummon });
   } else {
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: null });

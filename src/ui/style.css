@@ -2744,3 +2744,48 @@ body:not(.in-game):has(#menu-bg.show) { background: #05070f; }
 .mana-bar .crystal.primal.full, .mana-bar .crystal.primal.spent { background-size: contain !important; background-position: center !important;
   background-repeat: no-repeat !important; background-color: transparent !important; }
 .mana-bar .crystal.primal.full { filter: brightness(1.25) saturate(1.3) drop-shadow(0 0 4px #ffa02a) drop-shadow(0 0 2px #ffd27a) !important; }
+
+/* ---- AI difficulty slider (main menu + Settings) ---- */
+.difficulty-slider { width: min(420px, 100%); box-sizing: border-box; padding: 10px 14px 8px; border-radius: 14px;
+  background: #1a100acc; border: 1px solid #6a4a2a; color: #e8d6b0; text-align: left; --diff: #6fcf6a; }
+.difficulty-slider.lvl-1 { --diff: #e7b552; }
+.difficulty-slider.lvl-2 { --diff: #f08a3c; }
+.difficulty-slider.lvl-3 { --diff: #e5484d; }
+.difficulty-slider.lvl-4 { --diff: #b05cff; }
+.diff-top { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-title); font-size: 15px; }
+.diff-name { color: var(--diff); font-size: 18px; letter-spacing: 0.04em; }
+.difficulty-slider input[type=range] { width: 100%; margin: 8px 0 2px; accent-color: var(--diff); cursor: pointer; }
+.diff-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #a8957a; }
+.diff-ticks span { flex: 1; text-align: center; }
+.diff-ticks span:first-child { text-align: left; }
+.diff-ticks span:last-child { text-align: right; }
+.diff-ticks span.on { color: var(--diff); font-weight: 700; }
+.diff-about { display: block; margin-top: 4px; font-size: 12px; color: #cbb8a0; min-height: 1.3em; }
+.set-row.set-difficulty { display: block; }
+.set-row.set-difficulty .difficulty-slider { width: 100%; background: none; border: 0; padding: 0; }
+@media (max-width: 420px) { .diff-ticks { font-size: 9.5px; } }
+.difficulty-slider.lvl-4 .diff-about { color: #e6c8ff; background: #b05cff22; border: 1px solid #b05cff66; border-radius: 8px; padding: 5px 8px; }
+
+/* ---- Card swaps (factions with expansion cards) ---- */
+.swap-btn small { display: block; font-size: 11px; opacity: 0.8; }
+.swap-builder .card.cut .cut-tag { background: #3a2a20; }
+
+/* ---- Card unlocks ---- */
+.card.locked { filter: grayscale(0.85) brightness(0.55); }
+.card.locked .cut-tag { background: #1d1410; color: #f2d58a; }
+.unlock-overlay { z-index: 1280; display: grid; place-items: center; background: #000b; }
+.unlock-panel { position: relative; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box;
+  padding: 22px 18px; border-radius: 18px; text-align: center; color: #f3e6c8;
+  background: radial-gradient(circle at 50% 0%, #4a2f12, #1b120c 70%); border: 2px solid #e7b552; box-shadow: 0 0 60px #e7b55266;
+  animation: unlock-pop 0.45s cubic-bezier(.2,1.4,.4,1); }
+.unlock-panel h2 { margin: 0 0 4px; font-family: var(--font-title); color: #ffd27a; font-size: clamp(24px, 6vw, 34px); text-shadow: 0 0 18px #e7b552aa; }
+.unlock-row { display: flex; gap: 14px; justify-content: center; margin: 14px 0 8px; }
+.unlock-card { display: flex; flex-direction: column; align-items: center; gap: 6px; animation: unlock-card 0.6s 0.15s both; }
+.unlock-card:nth-child(2) { animation-delay: 0.35s; }
+.unlock-card .card { width: min(40vw, 190px); }
+.unlock-faction { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #cbb8a0; }
+.unlock-burst { position: absolute; inset: -40% -20% auto; height: 80%; pointer-events: none;
+  background: radial-gradient(circle, #ffd27a44, transparent 60%); }
+@keyframes unlock-pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes unlock-card { from { transform: translateY(30px) rotateY(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.reduced-motion .unlock-panel, .reduced-motion .unlock-card { animation: none; }

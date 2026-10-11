@@ -267,4 +267,105 @@ export const VAMPIRE_CARDS = [
       { op: 'buff', target: FRIENDLY_VAMPIRES, attack: 1, health: 1, temporaryKeywords: ['Lifesteal'] },
     ] },
   },
+
+  // ---- Expansion: 15 extra cards (designer's second set) ----
+  // `extra`: not in the standard 30; players can swap them in (deck builder, "Swap cards").
+  {
+    ...V, id: 'crimson_duelist', name: 'Crimson Duelist', art: '🤺', extra: true, cost: 2, attack: 3, health: 2,
+    text: 'Whenever this attacks a minion, it has +2 Attack for that attack.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [{ op: 'buff', target: 'self', attack: 2, temporary: true }] }],
+  },
+  {
+    ...V, id: 'blood_alchemist', name: 'Blood Alchemist', art: '⚗️', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Whenever your Hero loses Health on your turn, give a random friendly Vampire +1 Attack.',
+    triggers: [{ on: 'heroLostHealth', filter: { player: 'friendly' }, effects: [
+      { op: 'buff', target: { randomOf: FRIENDLY_VAMPIRES }, attack: 1, if: { myTurn: true } },
+    ] }],
+  },
+  {
+    ...V, id: 'crypt_executioner', name: 'Crypt Executioner', art: '🪓', extra: true, cost: 3, attack: 3, health: 3,
+    text: 'Arrival: Destroy a damaged enemy minion with 2 or less Attack.',
+    target: { ...ENEMY_MINION, damaged: true, maxAttack: 2 },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'destroy', target: 'chosen' }] }],
+  },
+  {
+    ...V, id: 'crimson_oracle', name: 'Crimson Oracle', art: '🔮', extra: true, cost: 3, attack: 2, health: 4,
+    text: 'At the end of your turn, if your Hero lost Health this turn, draw a card.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'draw', if: { heroLostHealthThisTurn: true } }] }],
+  },
+  {
+    ...V, id: 'bloodmoon_gargant', name: 'Bloodmoon Gargant', art: '🦍', extra: true, tribes: ['Vampire', 'Beast'], cost: 5, attack: 5, health: 5,
+    text: 'Whenever another friendly Vampire dies, gain +1 Health.',
+    triggers: [{ on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Vampire', notSelf: true } }, effects: [{ op: 'buff', target: 'self', health: 1 }] }],
+  },
+  {
+    ...V, id: 'lord_of_the_unburied', name: 'Lord of the Unburied', art: '⚰️', extra: true, cost: 6, attack: 4, health: 7,
+    text: 'The first time another friendly Vampire dies each turn, summon a 1/1 Vampire Thrall.',
+    triggers: [{ on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Vampire', notSelf: true } }, effects: [
+      { op: 'oncePerTurn', key: 'lord', effects: [{ op: 'summon', cardId: 'vampire_thrall', health: 1 }] },
+    ] }],
+  },
+  {
+    ...V, id: 'queen_of_the_red_veil', name: 'Queen of the Red Veil', art: '👑', extra: true, cost: 8, attack: 6, health: 7,
+    text: 'Arrival: Your other Vampires with 2 or less Attack become 3/3 Blood Shades. They keep their other abilities.',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'setStats', target: { minions: { side: 'friendly', tribe: 'Vampire', maxAttack: 2, excludeSelf: true } }, attack: 3, health: 3, name: 'Blood Shade' },
+    ] }],
+  },
+  {
+    ...S, id: 'vampire_blood_price', name: 'Blood Price', art: '🩸', extra: true, cost: 1,
+    text: 'Lose 2 Health. Draw a card.',
+    effects: [{ op: 'loseHealth', target: 'friendlyHero', amount: 2 }, { op: 'draw' }],
+  },
+  {
+    ...S, id: 'shadow_veil', name: 'Shadow Veil', art: '🌫️', extra: true, cost: 2,
+    text: 'Give a friendly Vampire Stealth and Evade until your next turn.',
+    target: FRIENDLY_VAMPIRE,
+    effects: [{ op: 'buff', target: 'chosen', lingerKeywords: ['Stealth', 'Evade'], untilYourNextTurn: true }],
+  },
+  {
+    ...S, id: 'turn_the_thirst', name: 'Turn the Thirst', art: '🍷', extra: true, cost: 3,
+    text: 'Give a friendly minion +3/+2 and Lifesteal. At the end of your turn, destroy it.',
+    target: { type: 'minion', side: 'friendly' },
+    effects: [
+      { op: 'buff', target: 'chosen', attack: 3, health: 2, keywords: ['Lifesteal'] },
+      { op: 'grantTrigger', target: 'chosen', temporary: true, trigger: { on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'destroy', target: 'self' }] } },
+    ],
+  },
+  {
+    ...S, id: 'sanguine_recollection', name: 'Sanguine Recollection', art: '🕯️', extra: true, cost: 4,
+    text: 'Summon copies of up to two different friendly Vampires that died this game, each with 1 Health.',
+    effects: [{ op: 'summon', fromGraveyard: { tribes: ['Vampire'] }, count: 2, distinct: true, health: 1 }],
+  },
+  {
+    ...T, id: 'crimson_snare', name: 'Crimson Snare', art: '🕸️', extra: true, cost: 2,
+    text: 'When an enemy minion attacks your Hero: Give it -3 Attack this turn and -1 Attack permanently.',
+    // Ruling: the permanent -1 lands right away and counts toward the -3 (so the attack is
+    // -3 in total, and -1 remains afterwards; if the minion dies it no longer matters).
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [
+      { op: 'buff', target: 'eventSource', attack: -2, temporary: true },
+      { op: 'buff', target: 'eventSource', attack: -1 },
+    ] },
+  },
+  {
+    ...T, id: 'mirror_of_the_damned', name: 'Mirror of the Damned', art: '🪞', extra: true, cost: 3,
+    text: 'When your opponent targets a friendly Vampire with a spell: Redirect it to a random other valid target.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'spell', target: { side: 'friendly', tribe: 'Vampire' } }, effects: [{ op: 'redirectTarget' }] },
+  },
+  {
+    ...S, id: 'supernatural_reflexes', name: 'Supernatural Reflexes', art: '⚡', extra: true, cost: 1,
+    text: 'When an enemy minion attacks: Give a friendly Vampire +2 Attack and Lifesteal this turn.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
+    target: FRIENDLY_VAMPIRE,
+    effects: [{ op: 'buff', target: 'chosen', attack: 2, temporary: true, temporaryKeywords: ['Lifesteal'] }],
+  },
+  {
+    ...S, id: 'bloodguard_intercession', name: 'Bloodguard Intercession', art: '🛡️', extra: true, cost: 2,
+    text: 'When a friendly character would take damage: Prevent 3 of that damage. If it is a Vampire, give it +1 Attack this turn.',
+    quickPlay: { windows: ['wouldTakeDamage'], filter: { target: 'friendlyCharacter' } },
+    effects: [
+      { op: 'preventDamage', target: 'eventTarget', amount: 3 },
+      { op: 'buff', target: 'eventTarget', attack: 1, temporary: true, if: { subject: 'eventTarget', tribe: 'Vampire' } },
+    ],
+  },
 ];
