@@ -1,0 +1,26 @@
+# Builds the itch.io upload (index.html, art/, src/ at the top of the zip) and
+# publishes it on the "itch-latest" release every time main changes.
+# Download: https://github.com/kitobrito/Shattered-Realms-TCG/releases/download/itch-latest/shattered-realms-itch.zip
+name: itch build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zip the game
+        run: zip -qr shattered-realms-itch.zip index.html art src
+      - name: Publish to the itch-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete itch-latest --yes --cleanup-tag || true
+          gh release create itch-latest shattered-realms-itch.zip \
+            --title "itch.io build (latest)" \
+            --notes "Ready to upload to itch.io: index.html, art and src are at the top of the zip. Rebuilt automatically from main ($GITHUB_SHA)." \
+            --target "$GITHUB_SHA"

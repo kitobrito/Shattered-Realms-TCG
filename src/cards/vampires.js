@@ -313,7 +313,7 @@ export const VAMPIRE_CARDS = [
     ] }],
   },
   {
-    ...S, id: 'vampire_blood_price', name: 'Blood Price', art: '🩸', extra: true, cost: 1,
+    ...S, id: 'blood_tithe', name: 'Blood Tithe', art: '🩸', extra: true, cost: 1,
     text: 'Lose 2 Health. Draw a card.',
     effects: [{ op: 'loseHealth', target: 'friendlyHero', amount: 2 }, { op: 'draw' }],
   },
