@@ -355,13 +355,13 @@ dtest('Pterodactyl Hatchling: +1 Health to an Egg; Exit draws an Egg if you have
   if (pl(0).hand.length !== before + 1) return `hand ${before} -> ${pl(0).hand.length}`;
   if (!getCard(pl(0).hand.at(-1).cardId).tribes.includes('Egg')) return 'drew a non-Egg';
 });
-dtest('Nesting Mother: a Baby Velociraptor at end of turn while you have an Egg', () => {
+dtest('Nesting Mother: a 1/1 Baby Raptor at end of turn while you have an Egg', () => {
   put(0, 'nesting_mother');
   endTurn(); endTurn();
-  if (pl(0).board.some((m) => m.cardId === 'baby_velociraptor')) return 'summoned without an Egg';
+  if (pl(0).board.some((m) => m.cardId === 'baby_raptor')) return 'summoned without an Egg';
   put(0, 'large_dinosaur_egg');
   endTurn();
-  if (!pl(0).board.some((m) => m.cardId === 'baby_velociraptor')) return 'no Baby Velociraptor';
+  if (!pl(0).board.some((m) => m.cardId === 'baby_raptor')) return 'no Baby Raptor';
 });
 dtest('Brood Architect: Eggs get +1 Health; first Egg each turn costs 1 less', () => {
   put(0, 'brood_architect');
@@ -425,22 +425,22 @@ dtest('False Nest: Egg when you have none, else -2 Attack', () => {
   const k = pl(0).board.at(-1);
   if (effectiveAttack(k) !== getCard('the_crimson_king').attack - 2) return `Attack ${effectiveAttack(k)}`;
 });
-dtest('Maternal Fury: a Baby Triceratops takes an attack on your Egg', () => {
+dtest('Maternal Fury: a 2/2 Taunt Baby takes an attack on your Egg', () => {
   const egg = put(1, 'large_dinosaur_egg');
   endTurn(); play(1, give(1, 'maternal_fury')); endTurn();
   const att = put(0, 'the_crimson_king');
   attack(0, att.uid, egg.uid);
   if (!minion(egg.uid) || minion(egg.uid).health !== 3) return 'the Egg was hit';
-  if (!msgs().some((m) => /redirected to Baby Triceratops/.test(m))) return 'not redirected';
+  if (!msgs().some((m) => /redirected to Baby Dinosaur/.test(m))) return 'not redirected';
 });
-dtest('Hatchling Intercept: a Baby Velociraptor takes the attack if you have an Egg', () => {
+dtest('Hatchling Intercept: a Baby Raptor takes the attack if you have an Egg', () => {
   const dino = put(1, 'triceratops');
   put(1, 'large_dinosaur_egg');
   give(1, 'hatchling_intercept');
   const att = put(0, 'the_crimson_king');
   attack(0, att.uid, dino.uid, qp('hatchling_intercept'));
   if (minion(dino.uid).health !== minion(dino.uid).maxHealth) return 'the Dinosaur was hit';
-  if (!msgs().some((m) => /redirected to Baby Velociraptor/.test(m))) return 'not redirected';
+  if (!msgs().some((m) => /redirected to Baby Raptor/.test(m))) return 'not redirected';
 });
 
 console.log(`\n${passed} passed, ${failures} failed`);
