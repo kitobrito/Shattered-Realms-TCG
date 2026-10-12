@@ -78,8 +78,8 @@ function ribbonSVG(name, type) {
     <path class="rb-back" d="M2,${38 + bend * 0.4} L18,${30 + bend * 0.5} L18,${62 + bend * 0.2} Z M298,${38 + bend * 0.4} L282,${30 + bend * 0.5} L282,${62 + bend * 0.2} Z"/>
     <path class="rb-band" d="M14,${30 + bend * 0.6} Q150,${-2 + bend} 286,${30 + bend * 0.6} L286,${62 + bend * 0.2} Q150,${30 + bend} 14,${62 + bend * 0.2} Z"/>
     <path class="rb-shine" d="M18,${33 + bend * 0.6} Q150,${2 + bend} 282,${33 + bend * 0.6}"/>
-    <path id="${id}" d="M20,${51 + bend * 0.35} Q150,${19 + bend} 280,${51 + bend * 0.35}" fill="none"/>
-    <text class="rb-text" font-size="${size.toFixed(1)}" text-anchor="middle"><textPath href="#${id}" startOffset="50%">${esc(name)}</textPath></text>
+    <path id="${id}" d="M28,45 C80,36 140,19 190,17 S258,21 288,28" fill="none"/>
+    <text class="rb-text" font-size="${size.toFixed(1)}" text-anchor="middle" dominant-baseline="central"><textPath href="#${id}" startOffset="50%">${esc(name)}</textPath></text>
   </svg>`;
 }
 
@@ -95,8 +95,9 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
     : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap' : 'Spell';
   const faction = card.faction.toLowerCase().replace(/\s+/g, '-');
   return `
-    <div class="big-card t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
+    <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
+      <img class="bc-frame" src="art/frames/${card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell'}.png" alt="" draggable="false">
       <i class="bc-sock sock-cost"></i>${card.type === 'minion' ? '<i class="bc-sock sock-atk"></i><i class="bc-sock sock-hp"></i>' : ''}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
       ${ribbonSVG(card.name, card.type)}

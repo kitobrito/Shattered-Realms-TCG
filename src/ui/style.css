@@ -2881,3 +2881,41 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .big-card .sock-atk { left: -1.13em; }
 .big-card .sock-hp { left: 23.32em; }
 .big-card .bc-gem { z-index: 3; }
+
+/* ==== Painted card frames (art/frames/{minion,spell,trap}.png, 728x1024) ====
+   The frame sits over the art and the text panel; its windows are transparent.
+   Everything is placed in % of the card so it lines up with the painting at any size. */
+.big-card.framed { border: 0 !important; border-radius: 0.6em; background: none !important; box-shadow: none !important;
+  filter: drop-shadow(0 1.2em 2.4em #000c); }
+.big-card.framed::after { display: none !important; }
+.big-card.framed .bc-frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; user-select: none; }
+.big-card.framed .bc-sock { display: none; }
+.big-card.framed .bc-art { left: 23.8% !important; top: 6.3% !important; width: 54.6% !important; height: 45.5% !important; transform: none !important;
+  border: 0 !important; border-radius: 50% !important; box-shadow: none !important; background: #120c08; z-index: 1; }
+.big-card.framed.t-spell .bc-art, .big-card.framed.t-trap .bc-art { left: 27.4% !important; top: 8.3% !important; width: 47.6% !important; height: 44.1% !important;
+  border-radius: 50% 50% 0 0 / 38% 38% 0 0 !important; }
+.big-card.framed .bc-text { left: 17.4% !important; top: 64.8% !important; width: 66.8% !important; height: 25.4% !important; transform: none !important;
+  border: 0 !important; border-radius: 0.4em !important; box-shadow: inset 0 0 1.4em #6a4a2066 !important; z-index: 1; padding: 0.8em 1.6em !important;
+  background: radial-gradient(120% 90% at 50% 40%, #f6ecd6, #dcc69c) !important; box-sizing: border-box; }
+.big-card.framed .bc-ribbon { left: 11.5% !important; top: 49.6% !important; width: 80% !important; height: 13.2% !important; transform: none !important;
+  z-index: 3; filter: none !important; }
+.big-card.framed .rb-back, .big-card.framed .rb-band, .big-card.framed .rb-shine { display: none; }
+.big-card.framed .rb-text { fill: #2a1a08; paint-order: stroke fill; stroke: #f3e2b866; stroke-width: 1.2px; }
+.big-card.framed.t-trap .rb-text { fill: #1e0f2e; stroke: #f3e6ffcc; stroke-width: 2px; }
+.big-card.framed .bc-type { z-index: 3; bottom: 2.6% !important; font-size: 0.78em !important; padding: 0.15em 0.8em !important; max-width: 52%; overflow: hidden; text-overflow: ellipsis; }
+.big-card.framed .bc-gem { z-index: 4; }
+/* Mana: a flat-topped crystal set into the hexagonal socket. */
+.big-card.framed .bc-cost { left: 8.4% !important; top: 9.2% !important; width: 13.9% !important; height: 9.1% !important; font-size: 2.9em !important;
+  line-height: 1 !important; padding: 0 !important; display: grid !important; place-items: center !important;
+  clip-path: polygon(25% 3%, 75% 3%, 99% 50%, 75% 97%, 25% 97%, 1% 50%) !important; }
+/* Attack: a gold coin inside the sword ring; Health: the number on the painted blood drop. */
+.big-card.framed .bc-atk, .big-card.framed .bc-hp { font-size: 2.9em !important; line-height: 1 !important; padding: 0 !important;
+  display: grid !important; place-items: center !important; }
+.big-card.framed .bc-atk { left: 10.3% !important; top: 85.9% !important; width: 11.8% !important; height: 8.8% !important; bottom: auto !important; border-radius: 50% !important;
+  background: radial-gradient(circle at 38% 30%, #fff0b0 0%, #f3c14e 40%, #b8791a 80%, #6a420a 100%) !important; box-shadow: inset 0 -0.08em 0.12em #0007, inset 0 0.06em 0.1em #fff8 !important; }
+.big-card.framed .bc-hp { left: 80.5% !important; top: 85.2% !important; width: 12.6% !important; height: 11.6% !important; bottom: auto !important; right: auto !important; background: none !important; }
+.big-card.framed .bc-atk::before, .big-card.framed .bc-atk::after, .big-card.framed .bc-hp::before, .big-card.framed .bc-hp::after { display: none !important; }
+/* Playable / quick-play glow follows the frame's shape. */
+.card.playable > .big-card.framed, .card.respond > .big-card.framed { box-shadow: none !important; filter: drop-shadow(0 0 0.25em #57e07a) drop-shadow(0 0 0.5em #57e07a); }
+.card.quick.playable > .big-card.framed { filter: drop-shadow(0 0 0.25em #ffd25a) drop-shadow(0 0 0.5em #ffd25a); }
+.card.cut > .big-card.framed { filter: grayscale(0.85) brightness(0.6); }
