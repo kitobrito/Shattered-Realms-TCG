@@ -26,9 +26,9 @@ export const DIVINE_CARDS = [
   // ---- Hero Spell ----
   {
     ...S, id: 'summoners_grace', name: "Summoner's Grace", art: '✨', heroSpell: true, cost: 2,
-    text: 'Restore 1 Health to a friendly character and Cleanse it (remove Burn, Radiation, Frozen and other harmful effects). Overheal: if it is at full Health, its maximum Health increases by 1 instead.',
+    text: 'Restore 2 Health to a friendly character and Cleanse it (remove Burn, Radiation, Frozen and other harmful effects). Overheal: if it is at full Health, its maximum Health increases by 2 instead.',
     target: FRIENDLY_CHARACTER,
-    effects: [{ op: 'cleanse', target: 'chosen' }, heal('chosen', 1)],
+    effects: [{ op: 'cleanse', target: 'chosen' }, heal('chosen', 2)],
   },
 
   // ---- Minions (16) ----

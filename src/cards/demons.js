@@ -26,7 +26,7 @@ const PAID = { player: 'friendly', paid: true };
 export const DEMON_CARDS = [
   // ---- Hero Spell ----
   {
-    ...S, id: 'infernal_summoning', name: 'Infernal Summoning', art: '🕳️', heroSpell: true, cost: 2, needsBoardSpace: true,
+    ...S, id: 'infernal_summoning', name: 'Infernal Summoning', art: '🕳️', heroSpell: true, cost: 3, needsBoardSpace: true,
     text: 'Lose Health equal to your Summoning Tier. Summon a random Demon of that Mana Cost. Starts at Tier 1; each use raises the Tier by 1, up to 10.',
     effects: [{ op: 'infernalSummon' }],
   },

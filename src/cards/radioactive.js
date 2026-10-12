@@ -73,7 +73,7 @@ export const RADIOACTIVE_CARDS = [
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 1)] }],
   },
   {
-    ...RM, id: 'radiation_surgeon', name: 'Radiation Surgeon', art: '🩺', cost: 4, attack: 3, health: 4,
+    ...RM, id: 'radiation_surgeon', name: 'Radiation Surgeon', art: '🩺', cost: 4, attack: 4, health: 4,
     text: 'Arrival: Remove all Radiation from a character. If friendly, give it +2/+2. If enemy, reduce its Health by 2.',
     target: { type: 'character', side: 'any' },
     triggers: [{ on: 'battlecry', effects: [
@@ -116,7 +116,7 @@ export const RADIOACTIVE_CARDS = [
     ] }],
   },
   {
-    ...RM, id: 'ground_zero', name: 'Ground Zero', art: '💥', cost: 10, attack: 8, health: 10,
+    ...RM, id: 'ground_zero', name: 'Ground Zero', art: '💥', cost: 9, attack: 8, health: 10,
     text: 'Arrival: Deal 4 damage to all other characters. Obliterate every minion destroyed by this effect.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: { characters: { side: 'any', excludeSelf: true } }, amount: 4, obliterateKilled: true }] }],
   },
@@ -181,7 +181,7 @@ export const RADIOACTIVE_CARDS = [
     effects: [rad('eventSource', 1, 2)],
   },
   {
-    ...S, id: 'chain_reaction', name: 'Chain Reaction', art: '⚛️', cost: 4,
+    ...S, id: 'chain_reaction', name: 'Chain Reaction', art: '⚛️', cost: 3,
     text: 'When an enemy minion with Radiation dies: Give a random enemy minion Radiation 1 permanently.',
     quickPlay: { windows: ['minionDied'], filter: { source: 'enemyMinion', deadIrradiated: true } },
     effects: [rad(RANDOM_ENEMY_MINION)],

@@ -23,7 +23,7 @@ const drones = (count, extra = {}) => ({ op: 'summon', cardId: 'drone', count, .
 export const ROBOT_CARDS = [
   // ---- Hero Spell ----
   {
-    ...S, id: 'modular_upgrade', name: 'Modular Upgrade', art: '🔧', heroSpell: true, cost: 2,
+    ...S, id: 'modular_upgrade', name: 'Modular Upgrade', art: '🔧', heroSpell: true, cost: 3,
     text: 'Choose one Upgrade for a friendly Robot: Reinforced Frame (+1/+2) or Offensive Calibration (+2/+1).',
     target: FRIENDLY_ROBOT,
     effects: [
