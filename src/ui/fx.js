@@ -1024,3 +1024,65 @@ export function heroHit(el) {
     { filter: 'none' },
   ], { duration: 420, fill: 'none' });
 }
+
+// ---- Mushrooms (Fungus) ----------------------------------------------------------------
+
+// One mushroom glyph that arcs from a to b (spinning a little), then removes itself.
+function mushroomArc(a, b, { size = 26, delay = 0, duration = 700, lift = 90, endScale = 0.5 } = {}) {
+  const el = document.createElement('div');
+  el.className = 'fx-glyph fx-mushroom';
+  el.textContent = '🍄';
+  Object.assign(el.style, { left: `${a.x}px`, top: `${a.y}px`, fontSize: `${size}px` });
+  layer().appendChild(el);
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const spin = (Math.random() - 0.5) * 120;
+  return done(el, animate(el, [
+    { transform: 'translate(-50%, -50%) scale(0.2) rotate(0deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.15) rotate(0deg)', opacity: 1, offset: 0.15 },
+    { transform: `translate(calc(-50% + ${dx * 0.5}px), calc(-50% + ${dy * 0.5 - lift}px)) scale(1) rotate(${spin / 2}deg)`, opacity: 1, offset: 0.55 },
+    { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${endScale}) rotate(${spin}deg)`, opacity: 1 },
+  ], { duration, delay, easing: 'cubic-bezier(.35,.1,.45,1)' }));
+}
+
+// Mushrooms are placed in a deck: they hop from the caster into the deck pile, which
+// shudders and glows purple as each one sinks in.
+export function mushroomsToDeck(fromRect, pileEl, count = 1) {
+  if (!pileEl) return Promise.resolve();
+  const to = center(pileEl.getBoundingClientRect());
+  const from = fromRect ? center(fromRect) : { x: to.x, y: to.y - 160 };
+  const n = Math.max(1, Math.min(6, count));
+  const jobs = [];
+  for (let i = 0; i < n; i++) {
+    const jitter = { x: to.x + (Math.random() - 0.5) * 24, y: to.y + (Math.random() - 0.5) * 16 };
+    jobs.push(mushroomArc(from, jitter, { delay: i * 140, lift: 70 + Math.random() * 60 }).then(() => {
+      spores(jitter, 46, 2);
+      return animate(pileEl, [{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.08) rotate(-2deg)', filter: 'drop-shadow(0 0 12px #c98cff) brightness(1.2)', offset: 0.4 }, { transform: 'scale(1)', filter: 'none' }], { duration: 320, fill: 'none' });
+    }));
+  }
+  return Promise.all(jobs);
+}
+
+// Mushrooms burst from a drawn card: they pop up out of the deck, fly at the Hero and
+// explode there one after another in purple spore blasts.
+export function mushroomBurst(pileEl, heroEl, count = 1) {
+  const pr = pileEl?.getBoundingClientRect();
+  const hr = heroEl?.getBoundingClientRect();
+  if (!pr || !hr) return Promise.resolve();
+  const from = center(pr);
+  const hit = center(hr);
+  const n = Math.max(1, Math.min(6, count));
+  const size = Math.max(hr.width, 60);
+  const jobs = [animate(pileEl, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', filter: 'drop-shadow(0 0 14px #c98cff)', offset: 0.3 }, { transform: 'scale(1)' }], { duration: 420, fill: 'none' })];
+  for (let i = 0; i < n; i++) {
+    const t = { x: hit.x + (Math.random() - 0.5) * hr.width * 0.4, y: hit.y + (Math.random() - 0.5) * hr.height * 0.3 };
+    jobs.push(mushroomArc(from, t, { size: 30, delay: 120 + i * 180, duration: 620, lift: 120, endScale: 1.3 }).then(() => Promise.all([
+      bigGlyph(t, '💥', size * 0.6, { duration: 520 }),
+      glowBall(t, size * 0.9, '#e8c8ff', '#7a3ac8', { duration: 560 }),
+      ring(t, size, '#c98cff', { width: 3, duration: 520 }),
+      spores(t, size * 0.9, 4),
+      shake(heroEl, 7),
+    ])));
+  }
+  return Promise.all(jobs);
+}

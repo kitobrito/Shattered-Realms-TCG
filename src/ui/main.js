@@ -840,17 +840,26 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     }
   }
 
-  // Mushrooms burst from a drawn card: spores fly from the deck to the Hero.
+  // Mushrooms (Fungus): placed ones hop into the deck; bursting ones fly out and explode on the Hero.
   for (const line of newLog) {
-    const m = /^🍄 (\d+) Mushrooms? burst from (.+)'s card!$/.exec(line);
+    const placed = /^🍄 (\d+) Mushrooms? placed in (.+)'s deck\.$/.exec(line);
+    const sprout = /^🍄 (\d+) Mushrooms? sprouts? on the card (.+) drew\.$/.exec(line);
+    const burst = /^🍄 (\d+) Mushrooms? burst from (.+)'s card!$/.exec(line);
+    const m = placed ?? sprout ?? burst;
     if (!m) continue;
     const pl = s.players.find((x) => x.name === m[2]);
     if (!pl) continue;
-    const heroEl = charEl(pl.hero.uid);
-    const pile = app.querySelector(`.deck-pile.${pl.index === viewer ? 'me' : 'opp'}`);
-    sound.play('mushroom');
-    if (pile) jobs.push(fx.particles(pile.getBoundingClientRect(), 'Fungus', Number(m[1]) + 2));
-    if (heroEl) jobs.push(fx.particles(heroEl.getBoundingClientRect(), 'Fungus', Number(m[1]) * 2));
+    const side = pl.index === viewer ? 'me' : 'opp';
+    const pile = app.querySelector(`.deck-pile.${side}`);
+    if (burst) {
+      sound.play('mushroom');
+      jobs.push(fx.mushroomBurst(pile, charEl(pl.hero.uid), Number(m[1])));
+    } else {
+      // From the Fungus player (the deck owner's opponent) into the deck, or onto the hand for a freshly drawn card.
+      const caster = charEl(s.players[1 - pl.index].hero.uid)?.getBoundingClientRect();
+      const target = sprout ? (app.querySelector(side === 'me' ? '.my-hand' : '.opp-hand') ?? pile) : pile;
+      jobs.push(fx.mushroomsToDeck(caster, target, Number(m[1])));
+    }
   }
 
   // Big moments.

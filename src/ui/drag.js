@@ -7,10 +7,13 @@
 //
 // Touch: there is no hover, so the first tap on a hand card inspects it (big
 // preview, card lifted); a second tap plays it, and dragging plays it as usual.
+// Pressing and holding a hand card shows its big preview until you let go
+// (the release neither picks the card up nor plays it).
 
 import { ghost } from './fx.js';
 
 const DRAG_START = 6; // px of movement before a press becomes a drag
+const HOLD_MS = 420;  // press and hold a hand card this long (without moving) for its big preview
 
 let api = null;
 let press = null;   // pointer is down on something
@@ -140,7 +143,14 @@ function clearInspect() {
   inspected = null;
 }
 
+function endHold() {
+  if (!press) return;
+  clearTimeout(press.holdTimer);
+  if (press.held) { press.held = false; api.inspect?.(null); }
+}
+
 export function cancel() {
+  endHold();
   if (aim) aimEndedAt = Date.now();
   clearInspect();
   if (drag?.ghost) drag.ghost.remove();
@@ -226,6 +236,12 @@ function onDown(e) {
     // Touch (and portrait): unplayable cards can still be tapped to read them.
     if (!options.length && e.pointerType !== 'touch' && !api.root().querySelector('.arena.portrait')) { api.deny?.(handEl, 'card', uid); return; }
     press = { kind: 'hand', el: handEl, uid, options, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch' };
+    const held = press;
+    held.holdTimer = setTimeout(() => {
+      if (press !== held || drag || aim || !handEl.isConnected) return;
+      held.held = true;
+      api.inspect?.(handEl);
+    }, HOLD_MS);
   } else if (hsEl) {
     const options = legal.filter((a) => a.type === 'heroSpell' && a.card === hsEl.dataset.hs);
     if (!options.length) return;
@@ -246,6 +262,7 @@ function onDown(e) {
 }
 
 function onMove(e) {
+  if (press && !drag && press.kind === 'hand' && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) endHold();
   if (press && !drag && press.kind === 'hand' && press.options.length && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) {
     clearInspect();
     // Start dragging a hand card.
@@ -292,6 +309,9 @@ function onUp(e) {
     return;
   }
   if (!press) return;
+  // Held for the big preview: letting go just closes it.
+  if (press.kind === 'hand' && press.held && !drag) { endHold(); press = null; return; }
+  clearTimeout(press.holdTimer);
   const { kind, options, el } = press;
 
   if (kind === 'heroSpell') {
