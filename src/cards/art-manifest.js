@@ -434,6 +434,7 @@ export const ART = {
   supernatural_reflexes: 'art/vampires/supernatural_reflexes.jpg',
   swarm_commander: 'art/robots/swarm_commander.jpg',
   swarm_muster: 'art/bees/swarm_muster.jpg',
+  swarming_hive: 'art/bees/swarming_hive.jpg',
   targeting_matrix: 'art/robots/targeting_matrix.jpg',
   tarman: 'art/zombies/tarman.jpg',
   terraform: 'art/aliens/terraform.jpg',

@@ -146,6 +146,17 @@ function extinctionHTML(pl, s) {
     <span>☄</span><b>${left}</b></div>`;
 }
 
+// Bees: The Living Hive (passive Hero Spell). Shows whether the Hive stands, the Queen is out, or both are gone.
+function hiveHTML(pl) {
+  if (!pl.factions.includes('Bees')) return '';
+  const hive = pl.board.find((m) => m.cardId === 'the_hive');
+  const queen = pl.board.find((m) => m.cardId === 'the_queen');
+  const state = hive?.swarmingUntil != null ? ['⚔', 'The Hive is swarming: enemy attackers get stung'] : hive ? ['🐝', 'The Hive stands'] : queen ? ['👑', 'The Queen is out: if she dies, your Hero takes 10 damage'] : ['✖', 'The Hive and the Queen are gone'];
+  const art = artOf(getCard('hive_mind'));
+  return `<div class="hive-badge ${queen ? 'queen' : ''} ${!hive && !queen ? 'gone' : ''}" title="The Living Hive · ${state[1]}" data-preview="hive_mind">
+    ${art ? `<img src="${art}" alt="" draggable="false">` : '<span>🐝</span>'}<b>${state[0]}</b></div>`;
+}
+
 // Cracks spread across a hero's portrait as Health drops (half, quarter, a tenth).
 const CRACKS = [
   'M6 30 L20 35 L27 31 L38 43 M94 62 L81 59 L75 67 L63 65',
@@ -183,7 +194,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${corpseHTML(pl)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}</div>
     </div>`;
 }
 

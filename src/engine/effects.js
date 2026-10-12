@@ -86,6 +86,7 @@ export function checkCondition(state, cond, ctx) {
     if (cond.alive && dead) return false;
     if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
     if (cond.cardId && c.cardId !== cond.cardId) return false;
+    if (cond.swarming != null && (c.swarmingUntil != null) !== cond.swarming) return false; // Swarming Hive
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
@@ -806,6 +807,7 @@ export const EFFECT_OPS = {
   // The Living Hive's Exit: the Queen emerges, with any Health Royal Chambers stored up.
   queenEmerges(state, e, ctx) {
     const pl = state.players[ctx.controller];
+    pl.queenEmerged = true;
     const m = summonMinion(state, ctx.controller, 'the_queen');
     if (!m) return;
     ctx.summoned = m.uid;
@@ -815,12 +817,17 @@ export const EFFECT_OPS = {
     enterBattlefield(state, m);
   },
 
+  // Swarming Hive: until the caster's next turn, the Hive stings every enemy attacker (see the Hive's card).
+  markSwarming(state, e, ctx) {
+    each(state, e.target, ctx, (c) => { c.swarmingUntil = ctx.controller; log(state, `🐝 ${nameOf(state, c)} is swarming!`); });
+  },
+
   // Royal Chamber: the Queen has +1 Health (now if she's in play, otherwise when she emerges).
   royalChamber(state, e, ctx) {
     const pl = state.players[ctx.controller];
     const queen = pl.board.find((m) => m.cardId === 'the_queen');
     if (queen) applyBuff(state, queen, { health: e.amount ?? 1 });
-    else if (!(pl.uniquesSummoned ?? []).includes('the_queen')) pl.queenBonusHealth = (pl.queenBonusHealth ?? 0) + (e.amount ?? 1);
+    else if (!pl.queenEmerged) pl.queenBonusHealth = (pl.queenBonusHealth ?? 0) + (e.amount ?? 1);
   },
 
   // { target, tribe }

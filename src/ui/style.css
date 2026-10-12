@@ -1928,6 +1928,17 @@ body.reduced-motion .hero-spell.fusion-spell.ready, body.reduced-motion .fusion-
 .arena .hero-spell .cooldown-badge { position: absolute; inset: auto; left: 50%; bottom: -0.9em; width: auto; height: auto; transform: translateX(-50%); z-index: 3;
   padding: 0.05em 0.45em; border-radius: 999px; background: #1a1a22; border: 2px solid #000; color: #e8e0ff; font-size: clamp(10px, 0.95cqw, 16px); line-height: 1.2; white-space: nowrap; }
 
+/* Bees: The Living Hive badge (passive Hero Spell) */
+.hive-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; overflow: visible;
+  border: 3px solid #c8901a; box-shadow: 0 0 0 2px #000, 0 0 10px #ffc21a88; background: #2a1a04; }
+.hive-badge img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+.hive-badge b { position: absolute; bottom: -6px; right: -6px; background: #ffc21a; color: #1a0a04; border-radius: 50%; width: 22px; height: 22px;
+  display: grid; place-items: center; font-size: 13px; border: 2px solid #000; }
+.hive-badge.queen { border-color: #ffe08a; box-shadow: 0 0 0 2px #000, 0 0 14px #ffe08a; }
+.hive-badge.gone img { filter: grayscale(1) brightness(0.6); }
+.arena.has-board .hive-badge { width: calc(var(--hero) * 0.48); height: calc(var(--hero) * 0.48); }
+.arena.portrait .hive-badge { width: calc(var(--hero) * 0.46); height: calc(var(--hero) * 0.46); }
+
 /* ---- Bees ---- */
 .big-card.f-bees { --frame: #6a4a0a; --frame-hi: #ffc21a; --body: #1e1404; }
 .arena.f-bees { --felt: #4a3410; --felt-2: #1a1004; --rim: #c8901a; }

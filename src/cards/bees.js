@@ -1,7 +1,7 @@
-// BEE FACTION — Queen & Hive. The designer's 30-card list, two Hero Spells and
-// the faction mechanic.
+// BEE FACTION — Queen & Hive. The designer's 30-card list, the passive
+// Hero Spell The Living Hive (like Dinosaurs' Extinction Cycle) and the active one, Swarming Hive.
 //
-// The Living Hive (0/5, can't attack) starts the game on an Insect player's board
+// The Living Hive (0/5, can't attack) starts the game on a Bee player's board
 // (engine createGame). Its Exit summons the Queen (5/1 Venomous); when the Queen
 // leaves play, her Hero takes 10 damage. The Queen is unique: she enters play at
 // most once per game (core summonMinion), so nothing can bring her back.
@@ -39,6 +39,11 @@ export const BEE_CARDS = [
     text: "Can't attack. At the end of your turn, summon a 1/1 Worker Bee. Exit: Summon the Queen.",
     triggers: [
       { on: 'endOfTurn', filter: { player: 'friendly' }, effects: [workers(1)] },
+      // Swarming Hive: every enemy attack is stung first.
+      { on: 'attackDeclared', filter: { source: 'enemyCharacter' }, effects: [{
+        op: 'damage', target: 'eventSource', amount: 1, if: { subject: 'self', swarming: true },
+        amountPerCount: { count: { minions: { side: 'friendly', tribes: ['Bee', 'Wasp'] } }, each: 1 },
+      }] },
       { on: 'deathrattle', effects: [{ op: 'queenEmerges' }] },
     ],
   },
@@ -49,16 +54,16 @@ export const BEE_CARDS = [
     triggers: [{ on: 'deathrattle', effects: [{ op: 'damage', target: 'friendlyHero', amount: 10 }] }],
   },
 
-  // ---- Hero Spells ----
+  // ---- Hero Spell ----
   {
-    ...S, id: 'rally_the_swarm', name: 'Rally the Swarm', art: '🐝', heroSpell: true, cost: 1, needsBoardSpace: true,
-    text: 'Summon a 1/1 Worker Bee.',
-    effects: [workers(1)],
-  },
-  {
-    ...S, id: 'mend_the_hive', name: 'Mend the Hive', art: '🍯', heroSpell: true, cost: 2, playIf: HIVE_IN_PLAY,
-    text: 'Restore 3 Health to your Hive (Overheal).',
-    effects: [{ op: 'heal', target: HIVE, amount: 3, overheal: true }],
+    ...S, id: 'swarming_hive', name: 'Swarming Hive', art: '🐝', heroSpell: true, cost: 2, cooldown: 2, playIf: HIVE_IN_PLAY,
+    text: 'Until your next turn, your Hive has Taunt and +2 temporary Health, and whenever an enemy attacks, it takes 1 damage, +1 for each Bee and Wasp you control. (Cooldown 2.)',
+    // The damage lands before the attack, so an attacker it kills never hits.
+    // Cooldown 2 (balance), like Controlled Irradiation's cooldown.
+    effects: [
+      { op: 'buff', target: HIVE, lingerKeywords: ['Taunt'], health: 2, temporaryHealth: true, untilYourNextTurn: true },
+      { op: 'markSwarming', target: HIVE },
+    ],
   },
 
   // ---- Minions (16) ----

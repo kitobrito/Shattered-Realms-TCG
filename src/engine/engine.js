@@ -33,6 +33,17 @@ export function heroSpellsFor(factions) {
   return allCards().filter((c) => c.heroSpell && factions.includes(c.faction));
 }
 
+// A faction whose only Hero Spell is passive (Dinosaurs, Bees) has nothing to press,
+// so its Fusion charges on its own instead (see startTurn).
+const passiveOnly = new Map();
+export function hasPassiveHeroSpell(faction) {
+  if (!passiveOnly.has(faction)) {
+    const own = heroSpellsFor([faction]);
+    passiveOnly.set(faction, own.length > 0 && own.every((c) => c.passive));
+  }
+  return passiveOnly.get(faction);
+}
+
 // players: [{ name, factions: [a, b], deck: [cardId, ...] }, ...]
 // The deck is the two factions' fixed decks combined (see cards/index.js buildDeck).
 export function createGame({ players, seed = Date.now(), rules = {} }) {
@@ -57,7 +68,7 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
       hero: createHero(state, p),
       mana: { current: 0, max: 0, bonusNextTurn: 0 }, turnsTaken: 0,
       heroSpells: heroSpells.filter((c) => !c.passive).map((c) => ({ cardId: c.id, uses: 0 })),
-      // Fusion: charges by 1 per Hero Spell use (and per turn for Dinosaur pairs); usable at 3.
+      // Fusion: charges by 1 per Hero Spell use (and every other turn per passive faction); usable at 3.
       fusion: fusionFor(cfg.factions) ? { cardId: fusionFor(cfg.factions).id, charge: 0 } : null,
       passives: heroSpells.filter((c) => c.passive).map((c) => c.id),
       extinction: cfg.factions.includes('Dinosaurs')
@@ -335,6 +346,7 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
     // after the opponent's reaction window.
     const slot = Number.isInteger(position) ? Math.max(0, Math.min(position, pl.board.length)) : undefined;
     const m = summonMinion(state, p, card.id, { silent: true, position: slot, fromHand: true });
+    if (!m) { pl.graveyard.push(inst); return; } // it couldn't enter play (a Queen who has already died)
     const event = { type: 'cardPlayed', source: m.uid, player: p, cardId: card.id, cardType: 'minion', target: chosen };
     const ctx = { self: m.uid, controller: p, chosen, chosen2 };
     const steps = [
@@ -621,6 +633,8 @@ const STEPS = {
     for (const m of dead) {
       const board = state.players[m.controller].board;
       board.splice(board.indexOf(m), 1);
+      // Unique minions (the Queen) can never come back once they have died.
+      if (getCard(m.cardId).unique) (state.players[m.owner].uniquesDead ??= []).push(m.cardId);
       // Obliterate: removed from the game — no graveyard, no Exit, no Reborn, no death events.
       if (m.obliterate) { log(state, `☢ ${nameOf(state, m)} is obliterated.`); continue; }
       state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner });
@@ -813,13 +827,16 @@ const STEPS = {
     factionHook(pl, 'turnStartMana')(state, pl);
     pl.hero.attacksThisTurn = 0;
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }
-    // Dinosaur pairs: Extinction Cycle is passive, so their Fusion also charges every other turn.
-    if (pl.fusion && pl.factions.includes('Dinosaurs') && pl.turnsTaken % 2 === 0) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + 1);
+    // Passive Hero Spells (Extinction Cycle, The Living Hive) can't be used, so each
+    // such faction charges the Fusion by 1 every other turn instead.
+    const passives = pl.factions.filter(hasPassiveHeroSpell).length;
+    if (pl.fusion && passives && pl.turnsTaken % 2 === 0) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + passives);
     // "Until your next turn" effects that player p applied expire now.
     for (const c of [...state.players.flatMap((x) => [x.hero, ...x.board])]) {
       c.lingerAttack = (c.lingerAttack ?? []).filter((x) => x.until !== p);
       c.lingerKeywords = (c.lingerKeywords ?? []).filter((x) => x.until !== p);
       if (c.radProofUntil === p) c.radProofUntil = null;
+      if (c.swarmingUntil === p) c.swarmingUntil = null; // Swarming Hive ends
       // Temporary Health "until your next turn" (Sanctuary) ends now.
       for (const x of (c.lingerHealth ?? []).filter((x) => x.until === p)) {
         c.maxHealth -= x.amount;
