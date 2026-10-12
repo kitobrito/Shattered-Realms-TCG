@@ -30,7 +30,7 @@ export const FUNGUS_CARDS = [
   // ---- Minions (16) ----
   {
     ...F, id: 'death_cap', name: 'Death Cap', art: '🍄',
-    cost: 3, attack: 3, health: 3, keywords: ['Poisonous'],
+    cost: 3, attack: 3, health: 4, keywords: ['Poisonous'],
     text: 'Poisonous. Exit: Place 2 random Mushrooms onto cards in the enemy deck.',
     triggers: [{ on: 'deathrattle', effects: [shrooms(2)] }],
   },
@@ -41,7 +41,7 @@ export const FUNGUS_CARDS = [
   },
   {
     ...F, id: 'toxic_shroom', name: 'Toxic Shroom', art: '☣️',
-    cost: 2, attack: 2, health: 2,
+    cost: 2, attack: 2, health: 3,
     text: 'Arrival: Place 2 random Mushrooms onto cards in the enemy deck.',
     triggers: [{ on: 'battlecry', effects: [shrooms(2)] }],
   },
@@ -61,7 +61,7 @@ export const FUNGUS_CARDS = [
   },
   {
     ...F, id: 'spore_crawler', name: 'Spore Crawler', art: '🐛',
-    cost: 2, attack: 3, health: 2,
+    cost: 2, attack: 3, health: 3,
     text: 'Whenever this attacks, place 1 Mushroom onto a random card in the enemy deck.',
     triggers: [{ on: 'attackDeclared', filter: { source: 'self' }, effects: [shrooms(1)] }],
   },
@@ -93,14 +93,14 @@ export const FUNGUS_CARDS = [
   },
   {
     ...F, id: 'plague_mushroom', name: 'Plague Mushroom', art: '☠️',
-    cost: 4, attack: 4, health: 4,
+    cost: 4, attack: 4, health: 5,
     text: 'Arrival: Place 4 random Mushrooms onto cards in the enemy deck.',
     triggers: [{ on: 'battlecry', effects: [shrooms(4)] }],
   },
   {
     ...F, id: 'fungus_giant', name: 'Fungus Giant', art: '🗿',
-    cost: 5, attack: 5, health: 6, costPerEnemyMushrooms: 3,
-    text: 'Costs 1 less Mana for each 3 Mushrooms in the enemy deck.',
+    cost: 5, attack: 5, health: 6, costPerEnemyMushrooms: 2,
+    text: 'Costs 1 less Mana for each 2 Mushrooms in the enemy deck.',
   },
   {
     ...F, id: 'mycelium_lord', name: 'Mycelium Lord', art: '👑',
@@ -148,7 +148,7 @@ export const FUNGUS_CARDS = [
   },
   {
     ...S, id: 'mushroom_city', name: 'Mushroom City', art: '🏙️',
-    cost: 6,
+    cost: 5,
     text: 'Place 10 random Mushrooms onto cards in the enemy deck.',
     effects: [shrooms(10)],
   },

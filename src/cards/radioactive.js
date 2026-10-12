@@ -68,7 +68,7 @@ export const RADIOACTIVE_CARDS = [
     text: 'Rush. Drawback: Cannot attack enemy Heroes.',
   },
   {
-    ...RM, id: 'genetic_abomination', name: 'Genetic Abomination', art: '🧬', cost: 4, attack: 5, health: 5,
+    ...RM, id: 'genetic_abomination', name: 'Genetic Abomination', art: '🧬', cost: 4, attack: 5, health: 6,
     text: "Drawback: At the end of your turn, reduce this minion's Health by 1. This is Health reduction, not damage.",
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 1)] }],
   },
@@ -82,17 +82,17 @@ export const RADIOACTIVE_CARDS = [
     ] }],
   },
   {
-    ...RM, id: 'isotope_scorpion', name: 'Isotope Scorpion', art: '🦂', cost: 4, attack: 4, health: 3,
+    ...RM, id: 'isotope_scorpion', name: 'Isotope Scorpion', art: '🦂', cost: 4, attack: 4, health: 4,
     text: 'Whenever this minion damages an enemy character, give that character Radiation 1 permanently.',
     triggers: [{ on: 'damageDealt', filter: { source: 'self', target: 'enemyCharacter' }, effects: [rad('eventTarget')] }],
   },
   {
-    ...RM, id: 'meltdown_mutant', name: 'Meltdown Mutant', art: '☣️', cost: 5, attack: 6, health: 5,
+    ...RM, id: 'meltdown_mutant', name: 'Meltdown Mutant', art: '☣️', cost: 5, attack: 6, health: 6,
     text: 'Exit: Give a random enemy minion Radiation 2 permanently.',
     triggers: [{ on: 'deathrattle', effects: [rad(RANDOM_ENEMY_MINION, 2)] }],
   },
   {
-    ...RM, id: 'nuclear_bear', name: 'Nuclear Bear', art: '🐻', cost: 5, attack: 5, health: 7,
+    ...RM, id: 'nuclear_bear', name: 'Nuclear Bear', art: '🐻', cost: 5, attack: 6, health: 7,
     text: 'Drawback: Whenever this minion takes damage, reduce the Health of all other friendly minions by 1.',
     triggers: [{ on: 'damageDealt', filter: { target: 'self' }, effects: [reduce({ minions: { side: 'friendly', excludeSelf: true } }, 1)] }],
   },
@@ -104,8 +104,8 @@ export const RADIOACTIVE_CARDS = [
   },
   {
     ...RM, id: 'the_unstable_colossus', name: 'The Unstable Colossus', art: '🗿', cost: 7, attack: 7, health: 8, keywords: ['Taunt'],
-    text: "Taunt. Drawback: At the end of your turn, reduce this minion's Health by 2.",
-    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 2)] }],
+    text: "Taunt. Drawback: At the end of your turn, reduce this minion's Health by 1.",
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 1)] }],
   },
   {
     ...RM, id: 'the_irradiated_genius', name: 'The Irradiated Genius', art: '🧠', cost: 8, attack: 6, health: 8,

@@ -126,7 +126,7 @@ export const DEMON_CARDS = [
 
   // ---- Spells (6) ----
   {
-    ...S, id: 'blood_pact', name: 'Blood Pact', art: '🤝', cost: 1,
+    ...S, id: 'blood_pact', name: 'Blood Pact', art: '🤝', cost: 2,
     text: 'Lose 2 Health. Give a friendly Demon +2/+2.',
     target: FRIENDLY_DEMON,
     effects: [pay(2), { op: 'buff', target: 'chosen', attack: 2, health: 2 }],

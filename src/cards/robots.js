@@ -168,7 +168,7 @@ export const ROBOT_CARDS = [
     ],
   },
   {
-    ...S, id: 'targeting_matrix', name: 'Targeting Matrix', art: '🎯', cost: 3, upgrade: true,
+    ...S, id: 'targeting_matrix', name: 'Targeting Matrix', art: '🎯', cost: 4, upgrade: true,
     text: 'Upgrade. Give a friendly Robot Twin Strike. If it already has Twin Strike, give it +2 Attack instead.',
     target: FRIENDLY_ROBOT,
     effects: [
