@@ -32,6 +32,22 @@ export function animate(el, frames, opts) {
 
 const center = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
 
+// Painted sprites for the little glyphs flung around by effects (the emoji stays as
+// the fallback for any glyph without art). Sized by the element's font size.
+const SPRITES = {
+  '🦇': 'bat', '🩸': 'blood', '🌸': 'petal', '🍃': 'leaf', '🪦': 'tombstone', '🪰': 'fly', '🔥': 'flame', '🪙': 'coin',
+  '☢️': 'radiation', '☢': 'radiation', '⚙️': 'gear', '🔩': 'bolt', '🪶': 'feather', '✨': 'sparkle', '😈': 'demon',
+  '🦴': 'bone', '🐝': 'bee', '🍄': 'mushroom', '💥': 'spore-burst',
+};
+// Load them up front so the first bat or feather never pops in late.
+if (typeof Image !== 'undefined') for (const name of new Set(Object.values(SPRITES))) new Image().src = `art/fx/sprites/${name}.png`;
+function setGlyph(el, glyph) {
+  const name = SPRITES[glyph];
+  if (!name) { el.textContent = glyph; return; }
+  el.classList.add('has-sprite');
+  el.innerHTML = `<img src="art/fx/sprites/${name}.png" alt="" draggable="false">`;
+}
+
 // Positions of everything that can move, keyed: c<uid> characters, h<uid> hand cards.
 export function snapshotRects(root) {
   const out = new Map();
@@ -494,7 +510,7 @@ function fling(rect, glyph, count, { rise = 1, spread = 1, size = 18, duration =
   for (let i = 0; i < count; i++) {
     const el = document.createElement('div');
     el.className = 'fx-glyph';
-    el.textContent = glyph;
+    setGlyph(el, glyph);
     el.style.fontSize = `${size * (0.7 + Math.random() * 0.6)}px`;
     Object.assign(el.style, { left: `${c.x}px`, top: `${c.y}px` });
     layer().appendChild(el);
@@ -625,7 +641,7 @@ function drain(c, toRect, color, count = 14) {
 }
 function bigGlyph(c, glyph, size, { duration = 700, delay = 0, cls = '' } = {}) {
   const el = addFx(`fx-kill-glyph ${cls}`, { left: `${c.x}px`, top: `${c.y}px`, fontSize: `${size}px` });
-  el.textContent = glyph;
+  setGlyph(el, glyph);
   return done(el, animate(el, [
     { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 0 },
     { transform: 'translate(-50%, -50%) scale(1.15)', opacity: 1, offset: 0.25 },
@@ -1031,7 +1047,7 @@ export function heroHit(el) {
 function mushroomArc(a, b, { size = 26, delay = 0, duration = 700, lift = 90, endScale = 0.5 } = {}) {
   const el = document.createElement('div');
   el.className = 'fx-glyph fx-mushroom';
-  el.textContent = '🍄';
+  setGlyph(el, '🍄');
   Object.assign(el.style, { left: `${a.x}px`, top: `${a.y}px`, fontSize: `${size}px` });
   layer().appendChild(el);
   const dx = b.x - a.x;
