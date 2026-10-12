@@ -1949,7 +1949,7 @@ function showPreview(target) {
   if (m?.kind === 'minion') {
     const kws = [...new Set([...m.keywords, ...(m.tempKeywords ?? []), ...(m.lingerKeywords ?? []).map((x) => x.k)])];
     const atk = m.attack + m.tempAttack + (m.lingerAttack ?? []).reduce((t, x) => t + x.amount, 0);
-    live = { attack: Math.max(0, atk), health: m.health, extra: kws.length ? `<br><i class="live-kw">Now: ${esc(kws.join(', '))}</i>` : '' };
+    live = { attack: Math.max(0, atk), health: m.health, maxHealth: m.maxHealth, extra: kws.length ? `<br><i class="live-kw">Now: ${esc(kws.join(', '))}</i>` : '' };
   }
   const note = target.dataset.history ? `<div class="preview-note">${esc(target.dataset.history)}</div>` : '';
   const el = previewEl();
@@ -2346,4 +2346,4 @@ document.addEventListener('touchmove', (e) => { if (screen === 'game') e.prevent
 document.addEventListener('dragstart', (e) => e.preventDefault());
 
 // Debugging aid (browser console): the live game and UI flags.
-window.__shattered = () => ({ game, animating, remoteQueue, viewer, screen, act, chooseAction, actingPlayer, hash: net.stateHash });
+window.__shattered = () => ({ game, animating, remoteQueue, viewer, screen, act, chooseAction, actingPlayer, render, hash: net.stateHash });

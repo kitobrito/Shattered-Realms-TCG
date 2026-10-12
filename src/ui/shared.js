@@ -86,7 +86,9 @@ function ribbonSVG(name, type) {
 // A live stat that differs from the printed card: green up, red down.
 const statClass = (now, printed) => (now == null || printed == null ? '' : now > printed ? 'up' : now < printed ? 'down' : '');
 
-export function bigCardHTML(card, { attack, health, cost, costClass = '', extra = '', small = false } = {}) {
+export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass = '', extra = '', small = false } = {}) {
+  // Like Hearthstone: damaged Health is red even on a buffed minion; otherwise compare with the printed stat.
+  const hpClass = maxHealth != null && health < maxHealth ? 'down' : statClass(health, card.health);
   const { incomplete } = validateCard(card);
   const label = card.fusion ? `Fusion · ${card.fusion.join(' + ')}` : card.heroSpell ? 'Hero Spell' : card.quickPlay ? 'Spell ⚡'
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
@@ -95,11 +97,12 @@ export function bigCardHTML(card, { attack, health, cost, costClass = '', extra 
   return `
     <div class="big-card t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
+      <i class="bc-sock sock-cost"></i>${card.type === 'minion' ? '<i class="bc-sock sock-atk"></i><i class="bc-sock sock-hp"></i>' : ''}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
       ${ribbonSVG(card.name, card.type)}
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
-      ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${statClass(health, card.health)}">${health ?? card.health ?? '?'}</span>` : ''}
+      ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass}">${health ?? card.health ?? '?'}</span>` : ''}
       ${card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
