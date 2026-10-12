@@ -1598,6 +1598,9 @@ body:not(.in-game) { background:
 /* ==== BATCH: feel, warnings, cards, loader, settings ======================= */
 /* Deaths */
 .fx-glyph { position: fixed; pointer-events: none; filter: drop-shadow(0 2px 3px #000c); }
+/* Painted effect sprites (fx.js SPRITES) take the place of the emoji at the same size. */
+.has-sprite img { display: block; width: 1.25em; height: 1.25em; object-fit: contain; pointer-events: none; }
+
 .fx-teleport { position: fixed; pointer-events: none; border-radius: 40%;
   background: linear-gradient(90deg, transparent, #9fffe8cc 30%, #ffffff 50%, #9fffe8cc 70%, transparent); box-shadow: 0 0 30px #5affd8; }
 
