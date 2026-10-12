@@ -80,11 +80,12 @@ export function reduceHealthStat(state, c, amount) {
 // Keywords come from three lists: permanent, "this turn", and "until a
 // player's next turn" ({ k, until }).
 export function hasKeyword(c, k) {
-  return c.keywords.includes(k) || (c.tempKeywords ?? []).includes(k) || (c.lingerKeywords ?? []).some((x) => x.k === k);
+  return c.keywords.includes(k) || (c.tempKeywords ?? []).includes(k) || (c.lingerKeywords ?? []).some((x) => x.k === k)
+    || (c.auraKeywords ?? []).includes(k);
 }
 
 export function allKeywords(c) {
-  return [...new Set([...c.keywords, ...(c.tempKeywords ?? []), ...(c.lingerKeywords ?? []).map((x) => x.k)])];
+  return [...new Set([...c.keywords, ...(c.tempKeywords ?? []), ...(c.lingerKeywords ?? []).map((x) => x.k), ...(c.auraKeywords ?? [])])];
 }
 
 // Silent removal (expiry, Reborn used up).
@@ -405,6 +406,12 @@ export function summonMinion(state, p, cardId, opts = {}) {
   if (pl.board.length >= state.rules.maxBoardSize) {
     log(state, `${pl.name}'s board is full; ${getCard(cardId).name} is not summoned.`);
     return null;
+  }
+  // Unique (the Queen): only ever enters play once per game for a player.
+  if (getCard(cardId).unique) {
+    pl.uniquesSummoned ??= [];
+    if (pl.uniquesSummoned.includes(cardId)) { log(state, `${getCard(cardId).name} can't return.`); return null; }
+    pl.uniquesSummoned.push(cardId);
   }
   const m = createMinion(state, cardId, p);
   if (opts.attack != null) m.attack = opts.attack;

@@ -205,6 +205,7 @@ const PARTICLES = {
   Divine: { cls: 'light', gravity: -0.5 },
   Robots: { cls: 'spark', gravity: 0.6 },
   Radioactive: { cls: 'ooze', gravity: 0.8 },
+  Bees: { cls: 'pollen', gravity: 0.3 },
 };
 export function particles(rect, faction, power = 1) {
   const kind = PARTICLES[faction] ?? { cls: 'spark', gravity: 0.3 };
@@ -310,7 +311,7 @@ export function flashScreen(color = '#ff7a3a') {
 
 // ---- Spells ------------------------------------------------------------------
 
-const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a' };
+const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a' };
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
@@ -517,6 +518,7 @@ export function deathFx(rect, faction) {
     case 'Fungus': particles(rect, 'Fungus', 10); break;
     case 'Dragons': particles(rect, 'Dragons', 12); fling(rect, '🔥', 3, { rise: 0.9, spread: 0.5 }); break;
     case 'Radioactive': particles(rect, 'Radioactive', 12); fling(rect, '☢️', 1, { rise: 0.6, spread: 0.1, size: 26, duration: 1200 }); break;
+    case 'Bees': particles(rect, 'Bees', 10); fling(rect, '🐝', 3, { rise: 1.2, spread: 1 }); break;
     case 'Robots': particles(rect, 'Robots', 14); fling(rect, '⚙️', 3, { rise: 0.5, spread: 0.9 }); fling(rect, '🔩', 2, { rise: 0.4 }); break;
     case 'Divine': particles(rect, 'Divine', 12); fling(rect, '🪶', 4, { rise: 1.1, spread: 0.8 }); break;
     case 'Demons': particles(rect, 'Dragons', 8); particles(rect, 'Demons', 6); fling(rect, '😈', 1, { rise: -0.4, spread: 0.1, size: 28, duration: 1100 }); break;
@@ -541,7 +543,7 @@ export function deathFx(rect, faction) {
 const KILL_COLOR = {
   Vampires: ['#ff2a44', '#ff6a7a'], Zombies: ['#9cff4a', '#4a7a1a'], Dinosaurs: ['#f0d8a8', '#8a5a2a'], Plants: ['#7dff6a', '#2f8a2a'],
   Dragons: ['#ff8a1a', '#ffd25a'], Demons: ['#ff2a3a', '#3a0006'], Radioactive: ['#a8ff3a', '#3aff7a'], Fungus: ['#c98cff', '#6a2bb0'],
-  Divine: ['#ffe8a0', '#fff6d8'], Aliens: ['#5affd8', '#2affa0'], Robots: ['#7fd0ff', '#2a8aff'],
+  Divine: ['#ffe8a0', '#fff6d8'], Aliens: ['#5affd8', '#2affa0'], Robots: ['#7fd0ff', '#2a8aff'], Bees: ['#ffc21a', '#3a2a06'],
 };
 
 function addFx(cls, style) {
@@ -962,6 +964,7 @@ const HITS = {
   },
   Aliens: ({ c, size, fromRect }) => Promise.all([laserStreak(c, fromRect, '#5affd8'), ring(c, size * 0.7, '#5affd8', { width: 2, to: 1.3, duration: 420, delay: 120 })]),
   Robots: ({ c, rect }) => zapAcross(c, rect, '#2a8aff'),
+  Bees: ({ c, rect, size }) => { fling(rect, '🐝', 2, { rise: 0.6, spread: 0.9, size: 14 }); return ring(c, size * 0.8, '#ffc21a', { width: 3, to: 1.25, duration: 440 }); },
 };
 
 // One landed hit, drawn in the striker's faction style.

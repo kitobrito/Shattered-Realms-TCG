@@ -12,6 +12,7 @@ export const BOARD_ART = {
   Divine: 'art/boards-v2/divine.jpg',
   Robots: 'art/boards-v2/robots.jpg',
   Radioactive: 'art/boards-v2/radioactive.jpg',
+  Bees: 'art/boards-v2/bees.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -51,6 +52,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Bees: { src: 'art/boards-portrait/bees.jpg', opp: [198, 19, 262, 91, 'arch'], me: [195, 922, 264, 1009, 'circle'], field: [110, 905],
+    props: [P([20, 15, 95, 125], 'drip', '#ffb21a', { sound: 'drip' }), P([360, 5, 440, 110], 'sway', '#f0e0c0', { sound: 'rustle', glyph: '🐝' }),
+      P([15, 915, 90, 1010], 'glow', '#ffc21a', { sound: 'clink' }), P([355, 910, 450, 1015], 'wobble', '#ffe8c8', { sound: 'rustle' })] },
   Radioactive: { src: 'art/boards-portrait/radioactive.jpg', opp: [181, 24, 277, 134, 'arch'], me: [187, 748, 273, 847, 'circle'], field: [150, 735],
     props: [P([10, 5, 95, 105], 'glow', '#7aff3a', { sound: 'splash' }), P([370, 15, 440, 90], 'flicker', '#e8ffd8', { sound: 'clink' }),
       P([15, 820, 85, 890], 'blink', '#9aff5a', { sound: 'chime' }), P([360, 820, 459, 890], 'drip', '#7aff2a', { sound: 'drip' })] },
@@ -90,6 +94,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Bees: { src: 'art/boards-v2/bees.jpg', opp: [468, 24, 556, 125], me: [464, 437, 559, 555], field: [60, 140, 965, 425],
+    props: [P([30, 15, 130, 165], 'drip', '#ffb21a', { sound: 'drip' }), P([885, 5, 975, 150], 'sway', '#f0e0c0', { sound: 'rustle', glyph: '🐝' }),
+      P([25, 430, 120, 550], 'glow', '#ffc21a', { sound: 'clink' }), P([880, 425, 1010, 560], 'wobble', '#ffe8c8', { sound: 'rustle' })] },
   Vampires: { src: 'art/boards-v2/vampires.jpg', opp: [468, 20, 552, 112], me: [465, 440, 550, 537], field: [35, 130, 980, 420],
     props: [P([30, 10, 70, 80], 'flicker', '#ffcf6a', { sound: 'whoosh' }), P([925, 5, 985, 90], 'glow', '#ff2a44', { sound: 'clink' }),
       P([20, 475, 85, 545], 'wobble', '#e8dcc8', { sound: 'rattle' }), P([880, 425, 1024, 572], 'wobble', '#ff2a44', { sound: 'knock', glyph: '🦇' })] },

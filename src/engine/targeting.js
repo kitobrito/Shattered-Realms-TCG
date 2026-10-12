@@ -17,6 +17,7 @@ export function canBeChosenBy(target, controller, bySpell = false) {
 // Extra minion conditions shared by target specs and selectors.
 function minionPasses(m, f) {
   if (f.tribe && !m.tribes.includes(f.tribe)) return false;
+  if (f.tribes && !f.tribes.some((t) => m.tribes.includes(t))) return false;
   if (f.notTribe && m.tribes.includes(f.notTribe)) return false;
   if (f.darkOrUndead && !isDarkOrUndead(m)) return false;
   if (f.hasUpgrade && !(m.upgrades > 0)) return false;   // Robots
@@ -42,7 +43,7 @@ export function targetCandidates(state, spec, controller, excludeUid = null, byS
     const side = p === controller ? 'friendly' : 'enemy';
     if (spec.side !== 'any' && spec.side !== side) continue;
     const pl = state.players[p];
-    if (spec.type !== 'minion' && !spec.tribe && !spec.notTribe && !spec.darkOrUndead) out.push(pl.hero);
+    if (spec.type !== 'minion' && !spec.tribe && !spec.tribes && !spec.cardId && !spec.notTribe && !spec.darkOrUndead) out.push(pl.hero);
     if (spec.type !== 'hero') out.push(...pl.board.filter((m) => minionPasses(m, spec)));
   }
   // Eggguard Ankylosaur: enemy spells can't choose that player's Dinosaur Eggs.
