@@ -26,7 +26,7 @@ const PAID = { player: 'friendly', paid: true };
 export const DEMON_CARDS = [
   // ---- Hero Spell ----
   {
-    ...S, id: 'infernal_summoning', name: 'Infernal Summoning', art: '🕳️', heroSpell: true, cost: 2, needsBoardSpace: true,
+    ...S, id: 'infernal_summoning', name: 'Infernal Summoning', art: '🕳️', heroSpell: true, cost: 3, needsBoardSpace: true,
     text: 'Lose Health equal to your Summoning Tier. Summon a random Demon of that Mana Cost. Starts at Tier 1; each use raises the Tier by 1, up to 10.',
     effects: [{ op: 'infernalSummon' }],
   },
@@ -64,8 +64,8 @@ export const DEMON_CARDS = [
   },
   {
     ...DM, id: 'abyssal_brute', name: 'Abyssal Brute', art: '👹', cost: 4, attack: 4, health: 4,
-    text: 'Arrival: Lose 3 Health. Gain +3/+3.',
-    triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'buff', target: 'self', attack: 3, health: 3 }] }],
+    text: 'Arrival: Lose 3 Health. Gain +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'buff', target: 'self', attack: 2, health: 2 }] }],
   },
   {
     ...DM, id: 'soulflayer', name: 'Soulflayer', art: '🦑', cost: 4, attack: 3, health: 5,
@@ -126,7 +126,7 @@ export const DEMON_CARDS = [
 
   // ---- Spells (6) ----
   {
-    ...S, id: 'blood_pact', name: 'Blood Pact', art: '🤝', cost: 1,
+    ...S, id: 'blood_pact', name: 'Blood Pact', art: '🤝', cost: 2,
     text: 'Lose 2 Health. Give a friendly Demon +2/+2.',
     target: FRIENDLY_DEMON,
     effects: [pay(2), { op: 'buff', target: 'chosen', attack: 2, health: 2 }],

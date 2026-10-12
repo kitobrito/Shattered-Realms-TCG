@@ -23,7 +23,7 @@ const drones = (count, extra = {}) => ({ op: 'summon', cardId: 'drone', count, .
 export const ROBOT_CARDS = [
   // ---- Hero Spell ----
   {
-    ...S, id: 'modular_upgrade', name: 'Modular Upgrade', art: '🔧', heroSpell: true, cost: 2,
+    ...S, id: 'modular_upgrade', name: 'Modular Upgrade', art: '🔧', heroSpell: true, cost: 3,
     text: 'Choose one Upgrade for a friendly Robot: Reinforced Frame (+1/+2) or Offensive Calibration (+2/+1).',
     target: FRIENDLY_ROBOT,
     effects: [
@@ -98,7 +98,7 @@ export const ROBOT_CARDS = [
     ] }] }],
   },
   {
-    ...R, id: 'swarm_commander', name: 'Swarm Commander', art: '🎖️', cost: 5, attack: 4, health: 5,
+    ...R, id: 'swarm_commander', name: 'Swarm Commander', art: '🎖️', cost: 6, attack: 4, health: 5,
     text: 'Your other friendly Robots have +1 Attack. Your Drones have an additional +1 Attack.',
     aura: [
       { target: { minions: { side: 'friendly', tribe: 'Robot', excludeSelf: true } }, attack: 1 },
@@ -168,7 +168,7 @@ export const ROBOT_CARDS = [
     ],
   },
   {
-    ...S, id: 'targeting_matrix', name: 'Targeting Matrix', art: '🎯', cost: 3, upgrade: true,
+    ...S, id: 'targeting_matrix', name: 'Targeting Matrix', art: '🎯', cost: 4, upgrade: true,
     text: 'Upgrade. Give a friendly Robot Twin Strike. If it already has Twin Strike, give it +2 Attack instead.',
     target: FRIENDLY_ROBOT,
     effects: [
@@ -192,10 +192,10 @@ export const ROBOT_CARDS = [
   // ---- Quick Plays (4) ----
   {
     ...S, id: 'emergency_shielding', name: 'Emergency Shielding', art: '🔰', cost: 1,
-    text: 'When a friendly Robot would take damage: Reduce that damage by 3. If it survives, give it +1 Health.',
+    text: 'When a friendly Robot would take damage: Reduce that damage by 2. If it survives, give it +1 Health.',
     // Ruling (Q17): the +1 Health is given right away (before the reduced hit lands).
     quickPlay: { windows: ['wouldTakeDamage'], filter: { target: { side: 'friendly', tribe: 'Robot' } } },
-    effects: [{ op: 'preventDamage', target: 'eventTarget', amount: 3 }, { op: 'buff', target: 'eventTarget', health: 1 }],
+    effects: [{ op: 'preventDamage', target: 'eventTarget', amount: 2 }, { op: 'buff', target: 'eventTarget', health: 1 }],
   },
   {
     ...S, id: 'laser_retaliation', name: 'Laser Retaliation', art: '🔴', cost: 2,

@@ -39,7 +39,7 @@ export const RADIOACTIVE_CARDS = [
     triggers: [{ on: 'battlecry', effects: [rad('self')] }],
   },
   {
-    ...RM, id: 'radroach_swarm', name: 'Radroach Swarm', art: '🪳', cost: 1, attack: 1, health: 2,
+    ...RM, id: 'radroach_swarm', name: 'Radroach Swarm', art: '🪳', cost: 1, attack: 2, health: 2,
     text: 'Exit: Give a random enemy minion Radiation 1 permanently.',
     triggers: [{ on: 'deathrattle', effects: [rad(RANDOM_ENEMY_MINION)] }],
   },
@@ -68,12 +68,12 @@ export const RADIOACTIVE_CARDS = [
     text: 'Rush. Drawback: Cannot attack enemy Heroes.',
   },
   {
-    ...RM, id: 'genetic_abomination', name: 'Genetic Abomination', art: '🧬', cost: 4, attack: 5, health: 5,
+    ...RM, id: 'genetic_abomination', name: 'Genetic Abomination', art: '🧬', cost: 4, attack: 5, health: 6,
     text: "Drawback: At the end of your turn, reduce this minion's Health by 1. This is Health reduction, not damage.",
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 1)] }],
   },
   {
-    ...RM, id: 'radiation_surgeon', name: 'Radiation Surgeon', art: '🩺', cost: 4, attack: 3, health: 4,
+    ...RM, id: 'radiation_surgeon', name: 'Radiation Surgeon', art: '🩺', cost: 4, attack: 4, health: 4,
     text: 'Arrival: Remove all Radiation from a character. If friendly, give it +2/+2. If enemy, reduce its Health by 2.',
     target: { type: 'character', side: 'any' },
     triggers: [{ on: 'battlecry', effects: [
@@ -82,17 +82,17 @@ export const RADIOACTIVE_CARDS = [
     ] }],
   },
   {
-    ...RM, id: 'isotope_scorpion', name: 'Isotope Scorpion', art: '🦂', cost: 4, attack: 4, health: 3,
+    ...RM, id: 'isotope_scorpion', name: 'Isotope Scorpion', art: '🦂', cost: 4, attack: 4, health: 4,
     text: 'Whenever this minion damages an enemy character, give that character Radiation 1 permanently.',
     triggers: [{ on: 'damageDealt', filter: { source: 'self', target: 'enemyCharacter' }, effects: [rad('eventTarget')] }],
   },
   {
-    ...RM, id: 'meltdown_mutant', name: 'Meltdown Mutant', art: '☣️', cost: 5, attack: 6, health: 5,
+    ...RM, id: 'meltdown_mutant', name: 'Meltdown Mutant', art: '☣️', cost: 5, attack: 6, health: 6,
     text: 'Exit: Give a random enemy minion Radiation 2 permanently.',
     triggers: [{ on: 'deathrattle', effects: [rad(RANDOM_ENEMY_MINION, 2)] }],
   },
   {
-    ...RM, id: 'nuclear_bear', name: 'Nuclear Bear', art: '🐻', cost: 5, attack: 5, health: 7,
+    ...RM, id: 'nuclear_bear', name: 'Nuclear Bear', art: '🐻', cost: 5, attack: 6, health: 7,
     text: 'Drawback: Whenever this minion takes damage, reduce the Health of all other friendly minions by 1.',
     triggers: [{ on: 'damageDealt', filter: { target: 'self' }, effects: [reduce({ minions: { side: 'friendly', excludeSelf: true } }, 1)] }],
   },
@@ -104,8 +104,8 @@ export const RADIOACTIVE_CARDS = [
   },
   {
     ...RM, id: 'the_unstable_colossus', name: 'The Unstable Colossus', art: '🗿', cost: 7, attack: 7, health: 8, keywords: ['Taunt'],
-    text: "Taunt. Drawback: At the end of your turn, reduce this minion's Health by 2.",
-    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 2)] }],
+    text: "Taunt. Drawback: At the end of your turn, reduce this minion's Health by 1.",
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [reduce('self', 1)] }],
   },
   {
     ...RM, id: 'the_irradiated_genius', name: 'The Irradiated Genius', art: '🧠', cost: 8, attack: 6, health: 8,
@@ -116,7 +116,7 @@ export const RADIOACTIVE_CARDS = [
     ] }],
   },
   {
-    ...RM, id: 'ground_zero', name: 'Ground Zero', art: '💥', cost: 10, attack: 8, health: 10,
+    ...RM, id: 'ground_zero', name: 'Ground Zero', art: '💥', cost: 9, attack: 8, health: 10,
     text: 'Arrival: Deal 4 damage to all other characters. Obliterate every minion destroyed by this effect.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: { characters: { side: 'any', excludeSelf: true } }, amount: 4, obliterateKilled: true }] }],
   },
@@ -150,12 +150,12 @@ export const RADIOACTIVE_CARDS = [
     ],
   },
   {
-    ...S, id: 'reactor_meltdown', name: 'Reactor Meltdown', art: '☢️', cost: 5,
+    ...S, id: 'reactor_meltdown', name: 'Reactor Meltdown', art: '☢️', cost: 4,
     text: 'Deal 3 damage to all minions. Obliterate every minion destroyed by this spell.',
     effects: [{ op: 'damage', target: ALL_MINIONS, amount: 3, obliterateKilled: true }],
   },
   {
-    ...S, id: 'nuclear_erasure', name: 'Nuclear Erasure', art: '🌋', cost: 8,
+    ...S, id: 'nuclear_erasure', name: 'Nuclear Erasure', art: '🌋', cost: 7,
     text: 'Reduce the Health of all minions by 4. Obliterate every minion whose Health reaches 0 or less as a result. Your Hero takes 3 damage.',
     // Ruling (Q18): enemy Radioactive minions shrug off the reduction (faction passive).
     effects: [reduce(ALL_MINIONS, 4, { obliterateKilled: true }), { op: 'damage', target: 'friendlyHero', amount: 3 }],
@@ -181,7 +181,7 @@ export const RADIOACTIVE_CARDS = [
     effects: [rad('eventSource', 1, 2)],
   },
   {
-    ...S, id: 'chain_reaction', name: 'Chain Reaction', art: '⚛️', cost: 4,
+    ...S, id: 'chain_reaction', name: 'Chain Reaction', art: '⚛️', cost: 3,
     text: 'When an enemy minion with Radiation dies: Give a random enemy minion Radiation 1 permanently.',
     quickPlay: { windows: ['minionDied'], filter: { source: 'enemyMinion', deadIrradiated: true } },
     effects: [rad(RANDOM_ENEMY_MINION)],
@@ -189,19 +189,19 @@ export const RADIOACTIVE_CARDS = [
 
   // ---- Traps (4) ----
   {
-    ...T, id: 'rad_mine', name: 'Rad Mine', art: '💣', cost: 2,
+    ...T, id: 'rad_mine', name: 'Rad Mine', art: '💣', cost: 1,
     text: 'When an enemy minion attacks: Give it Radiation 1 permanently.',
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [rad('eventSource')] },
   },
   {
-    ...T, id: 'containment_breach', name: 'Containment Breach', art: '🚨', cost: 3,
+    ...T, id: 'containment_breach', name: 'Containment Breach', art: '🚨', cost: 2,
     text: 'When your opponent plays a minion: If it has no Radiation, give it Radiation 1 permanently. Otherwise, reduce its Health by 3.',
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [
       { ...rad('eventSource'), if: { subject: 'eventSource', irradiated: false }, else: [reduce('eventSource', 3)] },
     ] },
   },
   {
-    ...T, id: 'feral_ambush', name: 'Feral Ambush', art: '🐾', cost: 3, needsBoardSpace: true,
+    ...T, id: 'feral_ambush', name: 'Feral Ambush', art: '🐾', cost: 2, needsBoardSpace: true,
     text: 'When an enemy minion attacks your Hero: Summon a 3/2 Feral Ghoul with Rush. It attacks the triggering minion if able.',
     // Ruling (Q18): the Ghoul fights the attacker right away.
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [
