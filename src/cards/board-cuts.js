@@ -163,6 +163,29 @@ export const BOARD_CUTS = {
      ]
     }
    }
+  },
+  "Bees": {
+   "plate": "art/boards-v2/bees-plate.jpg",
+   "cuts": {
+    "1": {
+     "src": "art/board-props/bees-land-1.png",
+     "box": [
+      883,
+      29,
+      978,
+      152
+     ]
+    },
+    "3": {
+     "src": "art/board-props/bees-land-3.png",
+     "box": [
+      874,
+      428,
+      1001,
+      557
+     ]
+    }
+   }
   }
  },
  "portrait": {
@@ -324,6 +347,29 @@ export const BOARD_CUTS = {
       772,
       459,
       938
+     ]
+    }
+   }
+  },
+  "Bees": {
+   "plate": "art/boards-portrait/bees-plate.jpg",
+   "cuts": {
+    "1": {
+     "src": "art/board-props/bees-portrait-1.png",
+     "box": [
+      364,
+      23,
+      437,
+      118
+     ]
+    },
+    "3": {
+     "src": "art/board-props/bees-portrait-3.png",
+     "box": [
+      346,
+      914,
+      445,
+      1011
      ]
     }
    }
