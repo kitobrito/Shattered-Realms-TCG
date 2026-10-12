@@ -114,7 +114,7 @@ export function fitText(el, box = el) {
   el.style.fontSize = '';
   const start = parseFloat(getComputedStyle(el).fontSize);
   let size = start;
-  while (box.scrollHeight > box.clientHeight + 1 && size > start * 0.6) {
+  while (box.scrollHeight > box.clientHeight + 1 && size > start * 0.4) {
     size -= 0.5;
     el.style.fontSize = `${size}px`;
   }
