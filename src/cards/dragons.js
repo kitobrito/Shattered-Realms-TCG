@@ -37,7 +37,7 @@ export const DRAGON_CARDS = [
     triggers: [{ on: 'battlecry', effects: [burn('chosen', 1)] }],
   },
   {
-    ...D, id: 'cinder_drake', name: 'Cinder Drake', art: '🐲', cost: 2, attack: 2, health: 3,
+    ...D, id: 'cinder_drake', name: 'Cinder Drake', art: '🐲', cost: 2, attack: 3, health: 3,
     text: 'Whenever an enemy character takes Burn damage, gain +1 Attack this turn.',
     // Ruling (Q14): taken literally. Enemy Burn ticks at the end of the enemy's turn,
     // so the Attack is gone by your turn unless Burn damage happens on your turn.
@@ -144,12 +144,12 @@ export const DRAGON_CARDS = [
   },
   {
     ...S, id: 'dragons_breath', name: "Dragon's Breath", art: '🐉', cost: 4,
-    text: 'Deal 4 damage to a minion. If it dies, apply Burn 2 to the enemy Hero.',
+    text: 'Deal 5 damage to a minion. If it dies, apply Burn 2 to the enemy Hero.',
     target: { type: 'minion', side: 'any' },
-    effects: [{ op: 'damage', target: 'chosen', amount: 4 }, burn('enemyHero', 2, { if: { subject: 'chosen', dead: true } })],
+    effects: [{ op: 'damage', target: 'chosen', amount: 5 }, burn('enemyHero', 2, { if: { subject: 'chosen', dead: true } })],
   },
   {
-    ...S, id: 'scorched_earth', name: 'Scorched Earth', art: '🏜️', cost: 5,
+    ...S, id: 'scorched_earth', name: 'Scorched Earth', art: '🏜️', cost: 4,
     text: 'Deal 2 damage to all minions. Burning minions take 2 additional damage.',
     effects: [{ op: 'damage', target: { minions: { side: 'any' } }, amount: 2, burningBonus: 2 }],
   },
@@ -177,9 +177,9 @@ export const DRAGON_CARDS = [
   },
   {
     ...S, id: 'explosive_reaction', name: 'Explosive Reaction', art: '💣', cost: 2,
-    text: 'When an enemy minion attacks, deal 2 damage to it. If it is Burning, deal 4 damage instead.',
+    text: 'When an enemy minion attacks, deal 3 damage to it. If it is Burning, deal 5 damage instead.',
     quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
-    effects: [{ op: 'damage', target: 'eventSource', amount: 2, burningBonus: 2 }],
+    effects: [{ op: 'damage', target: 'eventSource', amount: 3, burningBonus: 2 }],
   },
   {
     ...S, id: 'feed_the_flames', name: 'Feed the Flames', art: '🪵', cost: 3,

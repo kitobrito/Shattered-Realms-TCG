@@ -174,7 +174,7 @@ export const FUNGUS_CARDS = [
   },
   {
     ...S, id: 'fungal_bloom', name: 'Fungal Bloom', art: '🌸',
-    cost: 5,
+    cost: 4,
     text: 'Place 5 Mushrooms onto random cards in the enemy deck. Then give all enemy minions -1 Attack.',
     effects: [shrooms(5), { op: 'buff', target: ENEMY_MINIONS, attack: -1 }],
   },
@@ -235,7 +235,7 @@ export const FUNGUS_CARDS = [
   },
   {
     ...T, id: 'spore_ambush', name: 'Spore Ambush', art: '🎯',
-    cost: 3,
+    cost: 2,
     text: 'When an enemy minion attacks, summon a 2/2 Sporeling with Poisonous. Place 2 Mushrooms onto random cards in the enemy deck.',
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' },
       effects: [{ op: 'summon', cardId: 'sporeling', attack: 2, health: 2 }, shrooms(2)] },

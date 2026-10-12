@@ -39,7 +39,7 @@ export const RADIOACTIVE_CARDS = [
     triggers: [{ on: 'battlecry', effects: [rad('self')] }],
   },
   {
-    ...RM, id: 'radroach_swarm', name: 'Radroach Swarm', art: '🪳', cost: 1, attack: 1, health: 2,
+    ...RM, id: 'radroach_swarm', name: 'Radroach Swarm', art: '🪳', cost: 1, attack: 2, health: 2,
     text: 'Exit: Give a random enemy minion Radiation 1 permanently.',
     triggers: [{ on: 'deathrattle', effects: [rad(RANDOM_ENEMY_MINION)] }],
   },
@@ -150,12 +150,12 @@ export const RADIOACTIVE_CARDS = [
     ],
   },
   {
-    ...S, id: 'reactor_meltdown', name: 'Reactor Meltdown', art: '☢️', cost: 5,
+    ...S, id: 'reactor_meltdown', name: 'Reactor Meltdown', art: '☢️', cost: 4,
     text: 'Deal 3 damage to all minions. Obliterate every minion destroyed by this spell.',
     effects: [{ op: 'damage', target: ALL_MINIONS, amount: 3, obliterateKilled: true }],
   },
   {
-    ...S, id: 'nuclear_erasure', name: 'Nuclear Erasure', art: '🌋', cost: 8,
+    ...S, id: 'nuclear_erasure', name: 'Nuclear Erasure', art: '🌋', cost: 7,
     text: 'Reduce the Health of all minions by 4. Obliterate every minion whose Health reaches 0 or less as a result. Your Hero takes 3 damage.',
     // Ruling (Q18): enemy Radioactive minions shrug off the reduction (faction passive).
     effects: [reduce(ALL_MINIONS, 4, { obliterateKilled: true }), { op: 'damage', target: 'friendlyHero', amount: 3 }],
@@ -189,19 +189,19 @@ export const RADIOACTIVE_CARDS = [
 
   // ---- Traps (4) ----
   {
-    ...T, id: 'rad_mine', name: 'Rad Mine', art: '💣', cost: 2,
+    ...T, id: 'rad_mine', name: 'Rad Mine', art: '💣', cost: 1,
     text: 'When an enemy minion attacks: Give it Radiation 1 permanently.',
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [rad('eventSource')] },
   },
   {
-    ...T, id: 'containment_breach', name: 'Containment Breach', art: '🚨', cost: 3,
+    ...T, id: 'containment_breach', name: 'Containment Breach', art: '🚨', cost: 2,
     text: 'When your opponent plays a minion: If it has no Radiation, give it Radiation 1 permanently. Otherwise, reduce its Health by 3.',
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [
       { ...rad('eventSource'), if: { subject: 'eventSource', irradiated: false }, else: [reduce('eventSource', 3)] },
     ] },
   },
   {
-    ...T, id: 'feral_ambush', name: 'Feral Ambush', art: '🐾', cost: 3, needsBoardSpace: true,
+    ...T, id: 'feral_ambush', name: 'Feral Ambush', art: '🐾', cost: 2, needsBoardSpace: true,
     text: 'When an enemy minion attacks your Hero: Summon a 3/2 Feral Ghoul with Rush. It attacks the triggering minion if able.',
     // Ruling (Q18): the Ghoul fights the attacker right away.
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [

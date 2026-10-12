@@ -64,8 +64,8 @@ export const DEMON_CARDS = [
   },
   {
     ...DM, id: 'abyssal_brute', name: 'Abyssal Brute', art: '👹', cost: 4, attack: 4, health: 4,
-    text: 'Arrival: Lose 3 Health. Gain +3/+3.',
-    triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'buff', target: 'self', attack: 3, health: 3 }] }],
+    text: 'Arrival: Lose 3 Health. Gain +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'buff', target: 'self', attack: 2, health: 2 }] }],
   },
   {
     ...DM, id: 'soulflayer', name: 'Soulflayer', art: '🦑', cost: 4, attack: 3, health: 5,

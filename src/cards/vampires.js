@@ -99,7 +99,7 @@ export const VAMPIRE_CARDS = [
   },
   {
     ...V, id: 'crimson_batmaster', name: 'Crimson Batmaster', art: '🦇',
-    cost: 3, attack: 3, health: 3,
+    cost: 3, attack: 2, health: 2,
     text: 'Arrival: Summon two 1/1 Vampire Bats.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'summon', cardId: 'vampire_bat', count: 2 }] }],
   },
