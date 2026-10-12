@@ -836,7 +836,6 @@ const STEPS = {
       c.lingerAttack = (c.lingerAttack ?? []).filter((x) => x.until !== p);
       c.lingerKeywords = (c.lingerKeywords ?? []).filter((x) => x.until !== p);
       if (c.radProofUntil === p) c.radProofUntil = null;
-      if (c.swarmingUntil === p) c.swarmingUntil = null; // Swarming Hive ends
       // Temporary Health "until your next turn" (Sanctuary) ends now.
       for (const x of (c.lingerHealth ?? []).filter((x) => x.until === p)) {
         c.maxHealth -= x.amount;

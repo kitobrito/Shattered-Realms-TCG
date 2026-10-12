@@ -86,7 +86,6 @@ export function checkCondition(state, cond, ctx) {
     if (cond.alive && dead) return false;
     if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
     if (cond.cardId && c.cardId !== cond.cardId) return false;
-    if (cond.swarming != null && (c.swarmingUntil != null) !== cond.swarming) return false; // Swarming Hive
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
@@ -815,11 +814,6 @@ export const EFFECT_OPS = {
     if (bonus) { m.health += bonus; m.maxHealth += bonus; }
     log(state, `👑 The Queen emerges from the Hive${bonus ? ` (+${bonus} Health from Royal Chambers)` : ''}!`);
     enterBattlefield(state, m);
-  },
-
-  // Swarming Hive: until the caster's next turn, the Hive stings every enemy attacker (see the Hive's card).
-  markSwarming(state, e, ctx) {
-    each(state, e.target, ctx, (c) => { c.swarmingUntil = ctx.controller; log(state, `🐝 ${nameOf(state, c)} is swarming!`); });
   },
 
   // Royal Chamber: the Queen has +1 Health (now if she's in play, otherwise when she emerges).

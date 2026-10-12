@@ -114,47 +114,19 @@ test('Queen is Venomous when she attacks', () => {
   if (minion(big.uid)) return 'big minion survived the Queen';
 });
 
-// ---- Hero Spells: The Living Hive (passive) + Swarming Hive -----------------------------
-test('Bees have one active Hero Spell (Swarming Hive) plus the passive Hive', () => {
-  if (pl(0).heroSpells.map((h) => h.cardId).filter((id) => id === 'swarming_hive').length !== 1) return 'no Swarming Hive';
-  if (pl(0).heroSpells.some((h) => /rally|mend/.test(h.cardId))) return 'old Hero Spells still there';
+// ---- Passive Hero Spell: Fusion charging ----------------------------------------------
+test('The Living Hive is the only Hero Spell (passive); the Fusion charges every other turn', () => {
+  if (pl(0).heroSpells.some((h) => getCard(h.cardId).faction === 'Bees')) return 'Bees have an active Hero Spell';
   if (!pl(0).passives.includes('hive_mind')) return 'no passive';
-});
-test('Swarming Hive: Taunt and +2 Health until your next turn; attackers take 1 + Bees/Wasps', () => {
-  put(0, 'worker_bee'); put(0, 'soldier_wasp'); put(0, 'hornet_guard');
-  pl(0).board = pl(0).board.filter((m) => m.cardId !== 'hornet_guard'); // no other Taunt in the way
-  heroSpell(0, 'swarming_hive');
-  if (!hasKeyword(hive(), 'Taunt') || hive().health !== 7) return `hive ${hive().health}`;
-  endTurn(); // the Hive's own end-of-turn Worker Bee makes it 3 Bees/Wasps
-  const foe = put(1, 'vampire_gargoyle', { attack: 1, health: 10 });
-  attack(1, foe.uid, hive().uid);
-  if (minion(foe.uid).health !== 10 - (1 + 3)) return `attacker ${minion(foe.uid).health}`;
-  endTurn();
-  if (hasKeyword(hive(), 'Taunt') || hive().maxHealth !== 5) return `still buffed ${hive().maxHealth}`;
-  endTurn();
-  const foe2 = put(1, 'vampire_gargoyle', { attack: 1, health: 10 });
-  attack(1, foe2.uid, hive().uid);
-  if (minion(foe2.uid).health !== 10) return `stung after it ended (${minion(foe2.uid).health})`;
-});
-test('Swarming Hive: an attacker it kills never hits', () => {
-  heroSpell(0, 'swarming_hive');
-  endTurn();
-  const foe = put(1, 'vampire_gargoyle', { attack: 5, health: 1 });
-  attack(1, foe.uid, hive().uid);
-  if (minion(foe.uid)) return 'attacker alive';
-  if (hive().health !== 7) return `hive took damage (${hive().health})`;
-});
-test('Swarming Hive needs the Hive; using it charges the Fusion', () => {
-  const c = pl(0).fusion.charge;
-  heroSpell(0, 'swarming_hive');
-  if (pl(0).fusion.charge !== c + 1) return 'no charge';
-  endTurn(); endTurn();
-  if (getLegalActions(s).some((a) => a.card === 'swarming_hive')) return 'usable again the next turn (cooldown)';
-  endTurn(); endTurn();
-  if (!getLegalActions(s).some((a) => a.card === 'swarming_hive')) return 'not usable after the 2-turn cooldown';
-  hive().destroyed = true; endTurn(); endTurn(); endTurn(); endTurn();
-  if (getLegalActions(s).some((a) => a.card === 'swarming_hive')) return 'usable without a Hive';
+  const start = pl(0).fusion.charge;
+  for (let i = 0; i < 4; i++) endTurn();
+  if (pl(0).fusion.charge !== start + 1) return `charge ${start} -> ${pl(0).fusion.charge}`;
 }, 'Robots');
+test('Bees + Dinosaurs: both passive, so +2 charge every other turn', () => {
+  const start = pl(0).fusion.charge;
+  for (let i = 0; i < 4; i++) endTurn();
+  if (pl(0).fusion.charge !== Math.min(3, start + 2)) return `charge ${start} -> ${pl(0).fusion.charge}`;
+}, 'Dinosaurs');
 
 // ---- Minions ----------------------------------------------------------------
 test('Waxworker: restores 2 to the Hive', () => {

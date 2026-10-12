@@ -82,7 +82,7 @@ export const FACTION_INFO = {
     summary: 'Guard the Hive, raise a swarm, and decide when to let the Queen emerge.',
     strengths: ['A tough Hive that soaks early attacks', 'Worker Bees and Wasps that fill the board', 'Venomous minions that trade up'],
     weaknesses: ['Losing the Queen costs your Hero 10 damage', 'Small Bees die to board-wide damage', 'Many cards need the Hive alive'],
-    mechanic: 'The Living Hive (passive): a 0/5 Hive makes a Worker Bee every turn; when it falls the 5/1 Venomous Queen emerges, and if she dies your Hero takes 10 damage. Swarming Hive (2 Mana, cooldown 2): the Hive gets Taunt and +2 temporary Health and stings every attacker until your next turn.',
+    mechanic: 'The Living Hive (passive): a 0/5 Hive makes a Worker Bee every turn; when it falls the 5/1 Venomous Queen emerges, and if she dies your Hero takes 10 damage.',
     style: 'Defensive · Swarm',
   },
 };
