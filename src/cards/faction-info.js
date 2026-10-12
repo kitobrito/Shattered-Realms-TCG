@@ -78,6 +78,13 @@ export const FACTION_INFO = {
     mechanic: 'Controlled Irradiation: give a minion Radiation 1 for 2 turns (cooldown 3).',
     style: 'Control · Auras',
   },
+  Bees: {
+    summary: 'Guard the Hive, raise a swarm, and decide when to let the Queen emerge.',
+    strengths: ['A tough Hive that soaks early attacks', 'Worker Bees and Wasps that fill the board', 'Venomous minions that trade up'],
+    weaknesses: ['Losing the Queen costs your Hero 10 damage', 'Small Bees die to board-wide damage', 'Many cards need the Hive alive'],
+    mechanic: 'The Living Hive: start with a 0/5 Hive that makes a Worker Bee every turn. When it falls, the 5/1 Venomous Queen emerges; if she dies, your Hero takes 10 damage.',
+    style: 'Defensive · Swarm',
+  },
 };
 
 // Synergy rating (1-5 stars) for each faction pair: how well their mechanics work
@@ -139,6 +146,17 @@ export const SYNERGY = {
   'Divine+Robots': [3, 'Protect your most upgraded machine.'],
   'Divine+Radioactive': [1, 'Radiation blocks the healing Divine relies on.'],
   'Radioactive+Robots': [3, 'Reactor-powered Robots.'],
+  'Bees+Vampires': [3, 'Lifesteal swarms keep your Hero healthy for the Queen risk.'],
+  'Aliens+Bees': [3, 'Random keywords make cheap Bees into real threats.'],
+  'Bees+Dinosaurs': [2, 'Extinction wipes your board, Hive included, and releases the Queen early.'],
+  'Bees+Plants': [4, 'Two wide boards of Seedlings and Bees that grow together.'],
+  'Bees+Fungus': [3, 'Hold the line behind the Hive while Mushrooms do the damage.'],
+  'Bees+Zombies': [3, 'Reborn Bees keep coming back to guard the Hive.'],
+  'Bees+Dragons': [3, 'The Hive stalls while Burn wears the enemy down.'],
+  'Bees+Demons': [2, "Both spend Hero Health, and the Queen's 10-damage risk adds up."],
+  'Bees+Divine': [5, 'Overheal turns the Hive into a fortress and keeps the Queen alive.'],
+  'Bees+Robots': [3, 'Venomous upgrades and Drone swarms.'],
+  'Bees+Radioactive': [1, 'Radiation drains your own Hive and fragile 1-Health Queen.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;

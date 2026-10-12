@@ -41,6 +41,7 @@ const cardMatches = (card, f = {}) =>
   (!f.upgrade || !!card.upgrade) &&
   (f.maxCost == null || card.cost <= f.maxCost) &&
   (!f.tribe || (card.tribes ?? []).includes(f.tribe)) &&
+  (!f.tribes || f.tribes.some((t) => (card.tribes ?? []).includes(t))) &&
   (!f.faction || card.faction === f.faction);
 
 // ---- Conditions -----------------------------------------------------------
@@ -72,6 +73,11 @@ export function checkCondition(state, cond, ctx) {
   if (cond.myTurn != null) return (state.activePlayer === ctx.controller) === cond.myTurn;
   // { heroLostHealthThisTurn: true } — your Hero lost Health this turn (Crimson Oracle).
   if (cond.heroLostHealthThisTurn != null) return (state.players[ctx.controller].lostHealthTurn === state.turn) === cond.heroLostHealthThisTurn;
+  // { eventTargetSurvives: true } — the damage in this wouldTakeDamage window won't kill its target (Last Line of the Colony).
+  if (cond.eventTargetSurvives != null) {
+    const t = findCharacter(state, ctx.event?.target);
+    return (!!t && t.health > (ctx.event?.amount ?? 0)) === cond.eventTargetSurvives;
+  }
   if (cond.subject) {
     const c = findCharacter(state, resolveSelector(state, cond.subject, ctx)[0]);
     if (!c) return false;
@@ -79,6 +85,8 @@ export function checkCondition(state, cond, ctx) {
     if (cond.dead && !dead) return false;
     if (cond.alive && dead) return false;
     if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
+    if (cond.cardId && c.cardId !== cond.cardId) return false;
+    if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
@@ -792,6 +800,27 @@ export const EFFECT_OPS = {
       }
       if (m) enterBattlefield(state, m);
     }
+  },
+
+  // ---- Bees ----
+  // The Living Hive's Exit: the Queen emerges, with any Health Royal Chambers stored up.
+  queenEmerges(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const m = summonMinion(state, ctx.controller, 'the_queen');
+    if (!m) return;
+    ctx.summoned = m.uid;
+    const bonus = pl.queenBonusHealth ?? 0;
+    if (bonus) { m.health += bonus; m.maxHealth += bonus; }
+    log(state, `👑 The Queen emerges from the Hive${bonus ? ` (+${bonus} Health from Royal Chambers)` : ''}!`);
+    enterBattlefield(state, m);
+  },
+
+  // Royal Chamber: the Queen has +1 Health (now if she's in play, otherwise when she emerges).
+  royalChamber(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const queen = pl.board.find((m) => m.cardId === 'the_queen');
+    if (queen) applyBuff(state, queen, { health: e.amount ?? 1 });
+    else if (!(pl.uniquesSummoned ?? []).includes('the_queen')) pl.queenBonusHealth = (pl.queenBonusHealth ?? 0) + (e.amount ?? 1);
   },
 
   // { target, tribe }

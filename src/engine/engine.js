@@ -11,7 +11,7 @@ import {
   hasKeyword, hooks, log, loseHealth, minionsInOrder, nameOf, opponentOf, pushFront, removeKeyword,
   summonMinion, isBurning, manaFor, payMana, radiationOf,
 } from './core.js';
-import { resolveEffect } from './effects.js';
+import { checkCondition, resolveEffect } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -68,6 +68,11 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
     };
     shuffle(state, pl.deck);
     state.players.push(pl);
+    // Bees: the game starts with The Living Hive on the board.
+    if (cfg.factions.includes('Bees')) {
+      const hive = summonMinion(state, p, 'the_hive', { silent: true });
+      if (hive) hive.sick = false;
+    }
   });
   drawCards(state, 0, state.rules.startingHandFirst);
   drawCards(state, 1, state.rules.startingHandSecond);
@@ -134,6 +139,7 @@ function mulligan(state, { player: p, replace }) {
 // ---- Legal actions -------------------------------------------------------
 
 function canAttack(c) {
+  if (c.kind === 'minion' && getCard(c.cardId).cantAttack) return false; // The Living Hive
   if (effectiveAttack(c) <= 0 || hasKeyword(c, 'Frozen') || c.cantAttackThisTurn) return false;
   if (c.attacksThisTurn >= (hasKeyword(c, 'Twin Strike') ? 2 : 1)) return false;
   if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush')) return false;
@@ -145,7 +151,9 @@ export function attackTargets(state, p) {
   const visible = enemy.board.filter((m) => !hasKeyword(m, 'Stealth'));
   const taunts = visible.filter((m) => hasKeyword(m, 'Taunt'));
   if (taunts.length) return taunts.map((m) => m.uid);
-  return [enemy.hero.uid, ...visible.map((m) => m.uid)];
+  // Hive Enforcer: while it's in play, the enemy Hive can't be attacked.
+  const guarded = enemy.board.some((m) => getCard(m.cardId).guardsHive && m.health > 0 && !m.destroyed);
+  return [enemy.hero.uid, ...visible.filter((m) => !(guarded && getCard(m.cardId).isHive)).map((m) => m.uid)];
 }
 
 // Rush: on the turn it arrives, a minion may attack only minions.
@@ -177,6 +185,8 @@ function playOptions(state, p, card, id, type) {
 function hasRoom(state, p, card) {
   const pl = state.players[p];
   if (card.requiresCorpses && (pl.corpses ?? 0) < card.requiresCorpses) return false;
+  // playIf: a condition that must hold to play the card (Bees: "your Hive is in play").
+  if (card.playIf && !checkCondition(state, card.playIf, { controller: p })) return false;
   if ((card.type === 'minion' || card.needsBoardSpace) && pl.board.length >= state.rules.maxBoardSize) return false;
   if (card.type === 'trap' && pl.traps.length >= state.rules.maxTraps) return false;
   return true;
@@ -429,14 +439,24 @@ function declareAttack(state, { player: p, attacker, defender }) {
 function applyAuras(state) {
   const bonus = new Map();
   const bonusAtk = new Map();
+  const bonusKw = new Map();
   for (const s of minionsInOrder(state)) {
-    // aura: one { target, attack?, health? } or a list of them (Swarm Commander).
+    // aura: one { target, attack?, health?, keywords?, if? } or a list of them (Swarm Commander).
     for (const aura of [].concat(getCard(s.cardId).aura ?? [])) {
-      for (const id of resolveSelector(state, aura.target, { self: s.uid, controller: s.controller })) {
+      const ctx = { self: s.uid, controller: s.controller };
+      if (aura.if && !checkCondition(state, aura.if, ctx)) continue;
+      for (const id of resolveSelector(state, aura.target, ctx)) {
         if (aura.health) bonus.set(id, (bonus.get(id) ?? 0) + aura.health);
         if (aura.attack) bonusAtk.set(id, (bonusAtk.get(id) ?? 0) + aura.attack);
+        if (aura.keywords) bonusKw.set(id, [...(bonusKw.get(id) ?? []), ...aura.keywords]);
       }
     }
+  }
+  // Keyword auras (Royal Bodyguard) are recomputed outright each step.
+  for (const m of minionsInOrder(state)) {
+    const kw = bonusKw.get(m.uid);
+    if (kw) m.auraKeywords = [...new Set(kw)];
+    else if (m.auraKeywords) delete m.auraKeywords;
   }
   // Radiation: every living irradiated character lowers the Health of every other
   // non-irradiated character by its Radiation (stacking). Recomputed like any aura;

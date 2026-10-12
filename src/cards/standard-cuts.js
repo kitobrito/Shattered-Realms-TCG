@@ -82,6 +82,12 @@ export const STANDARD_CUTS = {
     'toxic_backlash', 'adrenal_mutation', 'chain_reaction',
     'feral_ambush', 'last_resort_protocol',
   ],
+  // Keeps: the Hive builders, Worker Bee makers and Venomous Hornets.
+  Bees: [
+    'royal_bodyguard', 'scout_wasp', 'hive_overlord',
+    'honey_reserve', 'venomous_uprising', 'royal_ascension',
+    'royal_ambush', 'royal_sacrifice', 'last_line_of_the_colony', 'stinger_interception',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their

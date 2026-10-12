@@ -1928,6 +1928,14 @@ body.reduced-motion .hero-spell.fusion-spell.ready, body.reduced-motion .fusion-
 .arena .hero-spell .cooldown-badge { position: absolute; inset: auto; left: 50%; bottom: -0.9em; width: auto; height: auto; transform: translateX(-50%); z-index: 3;
   padding: 0.05em 0.45em; border-radius: 999px; background: #1a1a22; border: 2px solid #000; color: #e8e0ff; font-size: clamp(10px, 0.95cqw, 16px); line-height: 1.2; white-space: nowrap; }
 
+/* ---- Bees ---- */
+.big-card.f-bees { --frame: #6a4a0a; --frame-hi: #ffc21a; --body: #1e1404; }
+.arena.f-bees { --felt: #4a3410; --felt-2: #1a1004; --rim: #c8901a; }
+.big-card.t-spell.f-bees { --frame: #7a5a1a; --frame-hi: #ffe08a; --body: #241a06; }  /* honey */
+.big-card.t-trap.f-bees  { --frame: #3a2a14; --frame-hi: #c8a050; --body: #120c04; }  /* wax */
+.fx-p.pollen { width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle, #fff6c0, #ffc21a 50%, #a86a00 85%, transparent); box-shadow: 0 0 6px #ffc21a; }
+.medallion.f-bees { --fc: #ffc21a; } .ts-guide.f-bees { --fc: #ffc21a; }
+
 /* =====================================================================
    MAIN MENU — living title screen
    ===================================================================== */

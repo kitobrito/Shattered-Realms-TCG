@@ -25,6 +25,9 @@ const ENEMY_CHARACTER = { type: 'character', side: 'enemy' };
 const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const ENEMY_MINIONS = { minions: { side: 'enemy' } };
 const ENEMY_CHARACTERS = { characters: { side: 'enemy' } };
+const FRIENDLY_INSECT = { type: 'minion', side: 'friendly', tribe: 'Insect' };
+const HIVE = { minions: { side: 'friendly', cardId: 'the_hive' } };
+const HIVE_IN_PLAY = { controls: { cardId: 'the_hive' } };
 const onMushroomBurst = (effects) => ({ op: 'heroTrigger', trigger: { on: 'mushroomTriggered', filter: { player: 'enemy' }, effects } });
 
 export const FUSION_CARDS = [
@@ -246,6 +249,49 @@ export const FUSION_CARDS = [
     text: 'Upgrade a friendly Robot: +2/+2 and Radiation 1 permanently.',
     target: FRIENDLY_ROBOT,
     effects: [{ op: 'buff', target: 'chosen', attack: 2, health: 2 }, { op: 'radiate', target: 'chosen', amount: 1 }, upgraded()] },
+
+  // ---- Bees ----
+  { ...F('Bees', 'Vampires'), id: 'blood_nectar', name: 'Blood Nectar', art: '🩸', cost: 3,
+    text: "Lose 1 Health. Give a friendly Insect +2 Attack and Lifesteal this turn. If it's the Queen, she also gains +2 Health.",
+    target: FRIENDLY_INSECT,
+    effects: [pay(1), { op: 'buff', target: 'chosen', attack: 2, temporary: true, temporaryKeywords: ['Lifesteal'] },
+      { op: 'buff', target: 'chosen', health: 2, if: { subject: 'chosen', cardId: 'the_queen' } }] },
+  { ...F('Bees', 'Aliens'), id: 'xeno_brood', name: 'Xeno-Brood', art: '🛸', cost: 3, needsBoardSpace: true,
+    text: 'Summon a 1/1 Worker Bee with 2 random positive keywords.',
+    effects: [{ op: 'summon', cardId: 'worker_bee', randomKeywords: 2 }] },
+  { ...F('Bees', 'Dinosaurs'), id: 'amber_fossil', name: 'Amber Fossil', art: '🦴', cost: 4,
+    text: 'Gain 2 Primal Mana this turn. Give your Hive +0/+3.',
+    effects: [{ op: 'gainPrimal', amount: 2 }, { op: 'buff', target: HIVE, health: 3 }] },
+  { ...F('Bees', 'Plants'), id: 'pollination', name: 'Pollination', art: '🌸', cost: 3, needsBoardSpace: true,
+    text: 'Summon a 1/2 Seedling and a 1/1 Worker Bee. If your Hive is in play, give both +1 Health.',
+    effects: [seedling({ attack: 1, health: 2 }), { op: 'buff', target: 'summoned', health: 1, if: HIVE_IN_PLAY },
+      { op: 'summon', cardId: 'worker_bee' }, { op: 'buff', target: 'summoned', health: 1, if: HIVE_IN_PLAY }] },
+  { ...F('Bees', 'Fungus'), id: 'cordyceps_bloom', name: 'Cordyceps Bloom', art: '🍄', cost: 3,
+    text: 'Place 2 Mushrooms in the enemy deck. Summon a 1/1 Worker Bee with Venomous.',
+    effects: [mushrooms(2), { op: 'summon', cardId: 'worker_bee', keywords: ['Venomous'] }] },
+  { ...F('Bees', 'Zombies'), id: 'undying_swarm', name: 'Undying Swarm', art: '🧟', cost: 4, needsBoardSpace: true,
+    text: 'Summon two 1/1 Worker Bees with Reborn.',
+    effects: [{ op: 'summon', cardId: 'worker_bee', count: 2, keywords: ['Reborn'] }] },
+  { ...F('Bees', 'Dragons'), id: 'ember_wasps', name: 'Ember Wasps', art: '🔥', cost: 3,
+    text: 'Apply Burn 2 to an enemy minion. If your Hive is in play, apply Burn 1 to all other enemy minions.',
+    target: ENEMY_MINION,
+    // The Burn 1 goes on first, so the chosen minion still ends at Burn 2.
+    effects: [{ ...burn(ENEMY_MINIONS, 1), if: HIVE_IN_PLAY }, burn('chosen', 2)] },
+  { ...F('Bees', 'Demons'), id: 'infernal_brood', name: 'Infernal Brood', art: '😈', cost: 5, needsBoardSpace: true,
+    text: 'Lose Health equal to your Summoning Tier. Summon a Demon of that cost with Venomous. The Tier rises by 1.',
+    effects: [{ op: 'infernalSummon', keywords: ['Venomous'] }] },
+  { ...F('Bees', 'Divine'), id: 'royal_halo', name: 'Royal Halo', art: '😇', cost: 3,
+    text: "Restore 4 Health to a friendly character (Overheal). If it's the Queen, she also gains Evade until your next turn.",
+    target: FRIENDLY_CHARACTER,
+    effects: [{ op: 'heal', target: 'chosen', amount: 4, overheal: true },
+      { op: 'buff', target: 'chosen', lingerKeywords: ['Evade'], untilYourNextTurn: true, if: { subject: 'chosen', cardId: 'the_queen' } }] },
+  { ...F('Bees', 'Robots'), id: 'stinger_module', name: 'Stinger Module', art: '🔧', cost: 4,
+    text: 'Upgrade a friendly Robot: +1/+1 and Venomous.',
+    target: FRIENDLY_ROBOT,
+    effects: [{ op: 'buff', target: 'chosen', attack: 1, health: 1, keywords: ['Venomous'] }, upgraded()] },
+  { ...F('Bees', 'Radioactive'), id: 'glow_wasps', name: 'Glow Wasps', art: '☢️', cost: 3, needsBoardSpace: true,
+    text: 'Summon a 2/2 Soldier Wasp. Give a random enemy minion Radiation 1 for 2 turns.',
+    effects: [{ op: 'summon', cardId: 'soldier_wasp' }, { op: 'radiate', target: { randomOf: ENEMY_MINIONS }, amount: 1, turns: 2 }] },
 
   // ---- Token ----
   { faction: 'Fusion', type: 'minion', tribes: ['Plant'], id: 'primal_seedling', name: 'Primal Egg', art: '🥚', token: true,

@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  Bees: {
+    greetings: "Bzzz. Welcome to the hive.",
+    wellPlayed: "The colony salutes you. Well played.",
+    thanks: "Thank bee.",
+    wow: "Un-bee-lievable!",
+    oops: "Oops… that stings.",
+    threaten: "The swarm is coming for you!",
+  },
   Radioactive: {
     greetings: "Welcome to the wasteland.",
     wellPlayed: "You've got some glow in you. Well played.",
