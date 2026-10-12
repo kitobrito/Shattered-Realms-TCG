@@ -2860,3 +2860,24 @@ body.reduced-motion .ts-logo img, body.reduced-motion .mbg-islands { animation: 
 @keyframes playSpark { 0% { opacity: 0; transform: translate(0, 0) scale(0.6); } 15% { opacity: 1; }
   100% { opacity: 0; transform: translate(var(--x), -70px) scale(0.2); } }
 body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, body.reduced-motion .play-art .pa-shine, body.reduced-motion .play-art .pa-sparks b { animation: none !important; }
+
+/* ---- Hearthstone-style stats: big bold numbers, red when damaged, green when buffed ---- */
+.atk.up, .hp.up, .bc-atk.up, .bc-hp.up { color: #52ff3a !important; }
+.atk.down, .hp.down, .bc-atk.down, .bc-hp.down { color: #ff3426 !important; }
+.arena .minion .atk, .arena .minion .hp { width: calc(var(--minion-w) * 0.36); height: calc(var(--minion-w) * 0.36); font-size: calc(var(--minion-w) * 0.35); }
+.arena.portrait .minion .atk, .arena.portrait .minion .hp { width: calc(var(--minion-w) * 0.36); height: calc(var(--minion-w) * 0.36); font-size: calc(var(--minion-w) * 0.34); }
+.arena .hero-portrait .hp, .arena .hero-portrait .atk { font-size: calc(var(--hero) * 0.28) !important; }
+
+/* ---- Gem sockets: each stat gem sits in a bronze socket built into the frame (like Hearthstone),
+   instead of floating on the card like a sticker. Centres match the gems (measured in card em). ---- */
+.big-card .bc-sock { position: absolute; z-index: 2; border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(circle, #0c0704 0 60%, #2a1a0c 63%, transparent 64%),
+    conic-gradient(from 200deg, #fff0bf, #b58a3e 18%, #5a3e16 34%, #e2bf6e 52%, #7a5622 70%, #f3d98f 86%, #fff0bf);
+  box-shadow: 0 0 0 0.14em #1a1208, 0 0 0 0.3em color-mix(in srgb, var(--frame) 80%, #000), 0 0.35em 0.7em #000c,
+    inset 0 0.12em 0.18em #fff8, inset 0 -0.18em 0.25em #0008; }
+.big-card .sock-cost { width: 6.6em; height: 6.6em; left: -1.84em; top: -1.84em; }
+.big-card .sock-atk, .big-card .sock-hp { width: 5.8em; height: 5.8em; top: 34.52em; }
+.big-card .sock-atk { left: -1.13em; }
+.big-card .sock-hp { left: 23.32em; }
+.big-card .bc-gem { z-index: 3; }
