@@ -2922,9 +2922,10 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 
 /* ==== Hearthstone-like lettering ====
    Card names and stat numbers: Fraunces (soft, heavy), the free font closest to Belwe Bold.
-   Rules text: Archivo Narrow, a close match for Hearthstone's condensed Franklin Gothic. */
+   Rules text: Libre Franklin (Medium, with Demi for bold keywords), a revival of Franklin Gothic. */
 @font-face { font-family: 'Card Title'; src: url('../../art/fonts/card-title.ttf') format('truetype'); font-weight: 100 900; font-display: block; }
-@font-face { font-family: 'Card Text'; src: url('../../art/fonts/card-text.ttf') format('truetype'); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: 'Card Text'; src: url('../../art/fonts/card-text.ttf') format('truetype'); font-weight: 400 500; font-display: swap; }
+@font-face { font-family: 'Card Text'; src: url('../../art/fonts/card-text-bold.ttf') format('truetype'); font-weight: 600 900; font-display: swap; }
 .cost, .atk, .hp, .bc-gem, .zoom-cost, .mana-num, .m-cost {
   font-family: 'Card Title', 'Stat Numbers', serif !important; font-weight: 800 !important; font-variation-settings: 'SOFT' 100, 'WONK' 0; }
 .big-card .rb-text { font-family: 'Card Title', serif; font-weight: 800; font-variation-settings: 'SOFT' 100, 'WONK' 0;
@@ -2936,3 +2937,9 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .big-card.framed .bc-atk { left: 8.9% !important; top: 85.2% !important; width: 14.6% !important; height: 10.4% !important; font-size: 3.6em !important; }
 .big-card.framed .bc-hp { left: 79.4% !important; top: 85.3% !important; width: 14.8% !important; height: 11.4% !important; font-size: 3.6em !important; }
 .big-card.framed .bc-gem { -webkit-text-stroke: 0.12em #000 !important; paint-order: stroke fill; }
+
+/* Keep rules text inside the clear part of the frame's text window (the scrollwork at the
+   top and bottom and the curled corners cover the panel's edges). Measured from the frames:
+   clear from 700 to ~880 px down, 150 to 590 px across (of 728x1024). */
+.big-card.framed .bc-text { padding: 5.9% 5.6% 6.4% 4.6% !important; }
+.big-card.framed .bc-text span { line-height: 1.12; }
