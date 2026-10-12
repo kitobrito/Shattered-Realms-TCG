@@ -1524,7 +1524,7 @@ function renderMenu() {
       </header>
 
       <nav class="ts-actions">
-        <button data-act="ai" class="ts-play"><span>Play</span><small>vs AI</small></button>
+        <button data-act="ai" class="ts-play play-art" aria-label="Play vs AI"><img class="pa-img" src="art/ui/play-button.png" alt="" draggable="false"><i class="pa-glow"></i><i class="pa-shine"></i><span class="pa-sparks">${'<b></b>'.repeat(8)}</span><small>vs AI</small></button>
         ${difficultySliderHTML()}
         <div class="ts-row">
           ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
