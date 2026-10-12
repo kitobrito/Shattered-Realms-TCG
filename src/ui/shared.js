@@ -16,7 +16,7 @@ export const artOf = (card) => ART[card.id] ?? (card.artFrom ? ART[card.artFrom]
 export const heroArtOf = (faction) => HERO_ART?.[faction];
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? `art/backs/${faction.toLowerCase()}.jpg` : undefined);
 export const backStyle = (faction) => (backArtOf(faction) ? `style="--back:url('${new URL(backArtOf(faction), document.baseURI).href}')"` : '');
 

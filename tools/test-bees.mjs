@@ -93,6 +93,18 @@ test('Queen dies: her Hero takes 10 damage, and she can never return', () => {
   summonMinion(s, 0, 'the_queen');
   if (queen()) return 'Queen came back';
 });
+test('A Queen returned to hand can be played again; a dead Queen never returns', () => {
+  hive().destroyed = true; endTurn(); endTurn();
+  const q = queen();
+  pl(0).board = pl(0).board.filter((m) => m !== q);
+  const card = give(0, 'the_queen');
+  play(0, card);
+  if (!queen()) return 'replayed Queen did not enter play';
+  queen().health = 0; endTurn(); endTurn();
+  if (queen()) return 'Queen survived';
+  play(0, give(0, 'the_queen'));
+  if (queen()) return 'a dead Queen came back';
+});
 test('Queen is Venomous when she attacks', () => {
   hive().destroyed = true;
   endTurn(); endTurn();
@@ -102,18 +114,19 @@ test('Queen is Venomous when she attacks', () => {
   if (minion(big.uid)) return 'big minion survived the Queen';
 });
 
-// ---- Hero Spells ----------------------------------------------------------------
-test('Rally the Swarm: summons a Worker Bee', () => {
-  heroSpell(0, 'rally_the_swarm');
-  if (count(0, 'worker_bee') !== 1) return 'no Worker Bee';
-});
-test('Mend the Hive: heals 3 (Overheal), and needs the Hive', () => {
-  hive().health = 1;
-  heroSpell(0, 'mend_the_hive');
-  if (hive().health !== 4) return `hive ${hive().health}`;
-  hive().destroyed = true; endTurn(); endTurn();
-  if (getLegalActions(s).some((a) => a.card === 'mend_the_hive')) return 'usable without a Hive';
-});
+// ---- Passive Hero Spell: Fusion charging ----------------------------------------------
+test('The Living Hive is the only Hero Spell (passive); the Fusion charges every other turn', () => {
+  if (pl(0).heroSpells.some((h) => getCard(h.cardId).faction === 'Bees')) return 'Bees have an active Hero Spell';
+  if (!pl(0).passives.includes('hive_mind')) return 'no passive';
+  const start = pl(0).fusion.charge;
+  for (let i = 0; i < 4; i++) endTurn();
+  if (pl(0).fusion.charge !== start + 1) return `charge ${start} -> ${pl(0).fusion.charge}`;
+}, 'Robots');
+test('Bees + Dinosaurs: both passive, so +2 charge every other turn', () => {
+  const start = pl(0).fusion.charge;
+  for (let i = 0; i < 4; i++) endTurn();
+  if (pl(0).fusion.charge !== Math.min(3, start + 2)) return `charge ${start} -> ${pl(0).fusion.charge}`;
+}, 'Dinosaurs');
 
 // ---- Minions ----------------------------------------------------------------
 test('Waxworker: restores 2 to the Hive', () => {

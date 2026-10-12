@@ -1,6 +1,7 @@
 // FUSION HERO SPELLS — one per faction pair (two-faction mode only).
 // A Fusion charges by 1 each time you use either of your Hero Spells (and at
-// the start of every other turn for Dinosaur pairs); at 3 charges it can be cast,
+// the start of every other turn for each faction with a passive Hero Spell:
+// Dinosaurs, Bees); at 3 charges it can be cast,
 // which spends the charge. See docs/FUSION_HERO_SPELLS.md for the design list;
 // simplifications made while building are marked "Ruling:".
 

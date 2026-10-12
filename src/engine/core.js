@@ -407,11 +407,10 @@ export function summonMinion(state, p, cardId, opts = {}) {
     log(state, `${pl.name}'s board is full; ${getCard(cardId).name} is not summoned.`);
     return null;
   }
-  // Unique (the Queen): only ever enters play once per game for a player.
-  if (getCard(cardId).unique) {
-    pl.uniquesSummoned ??= [];
-    if (pl.uniquesSummoned.includes(cardId)) { log(state, `${getCard(cardId).name} can't return.`); return null; }
-    pl.uniquesSummoned.push(cardId);
+  // Unique (the Queen): one at a time, and never again once she has died.
+  if (getCard(cardId).unique && (pl.board.some((x) => x.cardId === cardId) || (pl.uniquesDead ?? []).includes(cardId))) {
+    log(state, `${getCard(cardId).name} can't return.`);
+    return null;
   }
   const m = createMinion(state, cardId, p);
   if (opts.attack != null) m.attack = opts.attack;

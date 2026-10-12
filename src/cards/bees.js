@@ -1,7 +1,7 @@
-// BEE FACTION — Queen & Hive. The designer's 30-card list, two Hero Spells and
-// the faction mechanic.
+// BEE FACTION — Queen & Hive. The designer's 30-card list and the faction's
+// passive Hero Spell, The Living Hive (like Dinosaurs' Extinction Cycle).
 //
-// The Living Hive (0/5, can't attack) starts the game on an Insect player's board
+// The Living Hive (0/5, can't attack) starts the game on a Bee player's board
 // (engine createGame). Its Exit summons the Queen (5/1 Venomous); when the Queen
 // leaves play, her Hero takes 10 damage. The Queen is unique: she enters play at
 // most once per game (core summonMinion), so nothing can bring her back.
@@ -47,18 +47,6 @@ export const BEE_CARDS = [
     cost: 5, attack: 5, health: 1, keywords: ['Venomous'],
     text: 'Venomous. Unique. Exit: Your Hero takes 10 damage.',
     triggers: [{ on: 'deathrattle', effects: [{ op: 'damage', target: 'friendlyHero', amount: 10 }] }],
-  },
-
-  // ---- Hero Spells ----
-  {
-    ...S, id: 'rally_the_swarm', name: 'Rally the Swarm', art: '🐝', heroSpell: true, cost: 1, needsBoardSpace: true,
-    text: 'Summon a 1/1 Worker Bee.',
-    effects: [workers(1)],
-  },
-  {
-    ...S, id: 'mend_the_hive', name: 'Mend the Hive', art: '🍯', heroSpell: true, cost: 2, playIf: HIVE_IN_PLAY,
-    text: 'Restore 3 Health to your Hive (Overheal).',
-    effects: [{ op: 'heal', target: HIVE, amount: 3, overheal: true }],
   },
 
   // ---- Minions (16) ----

@@ -806,6 +806,7 @@ export const EFFECT_OPS = {
   // The Living Hive's Exit: the Queen emerges, with any Health Royal Chambers stored up.
   queenEmerges(state, e, ctx) {
     const pl = state.players[ctx.controller];
+    pl.queenEmerged = true;
     const m = summonMinion(state, ctx.controller, 'the_queen');
     if (!m) return;
     ctx.summoned = m.uid;
@@ -820,7 +821,7 @@ export const EFFECT_OPS = {
     const pl = state.players[ctx.controller];
     const queen = pl.board.find((m) => m.cardId === 'the_queen');
     if (queen) applyBuff(state, queen, { health: e.amount ?? 1 });
-    else if (!(pl.uniquesSummoned ?? []).includes('the_queen')) pl.queenBonusHealth = (pl.queenBonusHealth ?? 0) + (e.amount ?? 1);
+    else if (!pl.queenEmerged) pl.queenBonusHealth = (pl.queenBonusHealth ?? 0) + (e.amount ?? 1);
   },
 
   // { target, tribe }
