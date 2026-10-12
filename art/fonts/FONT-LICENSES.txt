@@ -1,2 +1,5 @@
 Pirata One by Rodrigo Fuenzalida & Nicolas Massi. SIL Open Font License 1.1 (https://openfontlicense.org). Free to use, bundle and sell with software.
 stat-numbers.woff2: Alegreya Sans Black (digits only) by Huerta Tipografica. SIL Open Font License 1.1.
+
+card-title.ttf: Fraunces (Undercase Type), SIL Open Font License 1.1, from github.com/google/fonts.
+card-text.ttf: Archivo Narrow (Omnibus-Type), SIL Open Font License 1.1, from github.com/google/fonts.
