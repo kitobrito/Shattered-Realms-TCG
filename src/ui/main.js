@@ -1999,7 +1999,8 @@ document.addEventListener('pointerdown', (e) => {
   if (screen !== 'game' || e.pointerType !== 'touch') return;
   const t = e.target.closest('[data-preview]');
   // Overlay cards (mulligan, Discover) can be held to read them too.
-  if (!t || t.closest('[data-hand], .reaction, button')) return;
+  // Hero Spells are buttons too: holding one shows the spell (releasing doesn't cast it).
+  if (!t || t.closest('[data-hand], .reaction') || t.closest('button:not(.hero-spell)')) return;
   clearTimeout(longPress?.timer);
   longPress = { x: e.clientX, y: e.clientY, shown: false, timer: setTimeout(() => {
     if (!t.isConnected) return;
