@@ -3012,3 +3012,4 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 /* Radiation keeps the Health drop red (and a damaged number red); it only adds a green glow around it. */
 .minion.rad-hit .hp, .hero-portrait.rad-hit .hp { filter: drop-shadow(0 0 0.12em #7dff4a) drop-shadow(0 0 0.25em #7dff4a99) !important; }
 .big-card.framed .bc-hp { left: 80.9% !important; }
+.big-card.framed .bc-hp.two-digit { left: 78.8% !important; }
