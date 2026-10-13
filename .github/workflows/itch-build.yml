@@ -14,7 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Zip the game
-        run: zip -qr shattered-realms-itch.zip index.html art src
+        # itch.io refuses zips with more than 1000 entries, so leave out folder
+        # entries (-D) and art the game never loads (old boards, app-store icons).
+        run: |
+          zip -qrD shattered-realms-itch.zip index.html art src \
+            -x 'art/boards/*' 'art/boards-portrait-old/*' 'art/app/*'
+          n=$(unzip -Z1 shattered-realms-itch.zip | wc -l)
+          echo "Files in zip: $n"
+          if [ "$n" -gt 1000 ]; then echo "::error::itch.io allows at most 1000 files; this zip has $n"; exit 1; fi
       - name: Publish to the itch-latest release
         env:
           GH_TOKEN: ${{ github.token }}
