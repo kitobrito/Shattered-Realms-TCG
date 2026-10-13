@@ -109,7 +109,7 @@ export const RADIOACTIVE_CARDS = [
   },
   {
     ...RM, id: 'the_irradiated_genius', name: 'The Irradiated Genius', art: '🧠', cost: 8, attack: 6, health: 8,
-    text: 'Arrival: Give all enemy minions Radiation 1 for 2 turns. Your other Radioactive minions ignore Health reduction from Radiation auras until your next turn.',
+    text: "Arrival: Give all enemy minions Radiation 1 for 2 turns. Until your next turn, your other Radioactive minions ignore Radiation auras.",
     triggers: [{ on: 'battlecry', effects: [
       rad(ENEMY_MINIONS, 1, 2),
       { op: 'radProof', target: { minions: { side: 'friendly', faction: 'Radioactive', excludeSelf: true } } },
@@ -210,7 +210,7 @@ export const RADIOACTIVE_CARDS = [
   },
   {
     ...T, id: 'last_resort_protocol', name: 'Last Resort Protocol', art: '🛑', cost: 5,
-    text: 'When your Hero would take lethal damage: Prevent that damage. Reduce the Health of all minions by 3. Obliterate every minion whose Health reaches 0 or less as a result.',
+    text: "When your Hero would take lethal damage: prevent it. All minions lose 3 Health; Obliterate any that reach 0.",
     // Ruling (Q18): "once per game" is automatic — a Trap is used up when it triggers.
     trap: { on: 'heroLethal', effects: [reduce(ALL_MINIONS, 3, { obliterateKilled: true })] },
   },

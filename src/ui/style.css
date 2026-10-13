@@ -2943,3 +2943,7 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
    clear from 700 to ~880 px down, 150 to 590 px across (of 728x1024). */
 .big-card.framed .bc-text { padding: 5.9% 5.6% 6.4% 4.6% !important; }
 .big-card.framed .bc-text span { line-height: 1.12; }
+/* Card text at a Hearthstone-like size for the framed text window: most cards fit at full size. */
+.big-card.framed .bc-text span { font-size: 1.4em; }
+/* Minions: the Attack ring's swords reach into the lower-left of the text window. */
+.big-card.framed.t-minion .bc-text { padding: 5.9% 6.4% 8.6% 8.2% !important; }

@@ -23,7 +23,7 @@ export const FUNGUS_CARDS = [
   {
     ...S, id: 'spore_infection', name: 'Spore Infection', art: '🍄', heroSpell: true,
     cost: 2,
-    text: 'Place 2 Mushrooms onto random cards in the enemy deck. When a card with Mushrooms attached to it is drawn, the enemy Hero takes 1 damage for each Mushroom attached to that card, then those Mushrooms are removed.',
+    text: "Place 2 Mushrooms in the enemy deck. When a card with Mushrooms is drawn, the enemy Hero takes 1 damage per Mushroom.",
     effects: [shrooms(2)],
   },
 
@@ -236,7 +236,7 @@ export const FUNGUS_CARDS = [
   {
     ...T, id: 'spore_ambush', name: 'Spore Ambush', art: '🎯',
     cost: 2,
-    text: 'When an enemy minion attacks, summon a 2/2 Sporeling with Poisonous. Place 2 Mushrooms onto random cards in the enemy deck.',
+    text: "When an enemy minion attacks: Summon a 2/2 Sporeling with Poisonous and place 2 Mushrooms in the enemy deck.",
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' },
       effects: [{ op: 'summon', cardId: 'sporeling', attack: 2, health: 2 }, shrooms(2)] },
   },

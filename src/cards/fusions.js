@@ -45,7 +45,7 @@ export const FUSION_CARDS = [
     text: 'Lose 1 Health. Summon a 1/2 Seedling with Lifesteal.',
     effects: [pay(1), seedling({ attack: 1, health: 2, keywords: ['Lifesteal'] })] },
   { ...F('Vampires', 'Fungus'), id: 'blood_spores', name: 'Blood Spores', art: '🍄', cost: 3,
-    text: 'Lose 2 Health. Place 3 Mushrooms in the enemy deck. This game, whenever Mushrooms burst on the enemy, restore 1 Health to your Hero.',
+    text: "Lose 2 Health. Place 3 Mushrooms in the enemy deck. This game, whenever Mushrooms burst on the enemy, restore 1 Health to your Hero.",
     effects: [pay(2), mushrooms(3), onMushroomBurst([healHero(1)])] },
   { ...F('Vampires', 'Zombies'), id: 'undying_hunger', name: 'Undying Hunger', art: '🧛', cost: 3,
     text: 'Give a friendly minion +2 Attack and Lifesteal this turn, and Reborn until your next turn.',
@@ -88,7 +88,7 @@ export const FUSION_CARDS = [
     target: ENEMY_MINION,
     effects: [{ op: 'stripKeywords', target: 'chosen' }, burn('chosen', 2)] },
   { ...F('Aliens', 'Demons'), id: 'abduction_rite', name: 'Abduction Rite', art: '🛸', cost: 5,
-    text: 'Lose Health equal to your Summoning Tier. Take control of a random enemy minion that costs that much or less until the end of your turn.',
+    text: "Lose Health equal to your Summoning Tier. Take control of a random enemy minion costing that much or less until your turn ends.",
     effects: [{ op: 'abductionRite' }] },
   { ...F('Aliens', 'Divine'), id: 'holy_sequencing', name: 'Holy Sequencing', art: '🧬', cost: 3,
     text: 'Give a friendly minion Evade, then Discover a keyword for it.',
@@ -201,7 +201,7 @@ export const FUSION_CARDS = [
 
   // ---- Demons ----
   { ...F('Demons', 'Divine'), id: 'fallen_grace', name: 'Fallen Grace', art: '😇', cost: 5, needsBoardSpace: true,
-    text: 'Lose Health equal to your Summoning Tier. Summon a Demon of that cost with Taunt, then restore that much Health to your Hero (Overheal). The Tier rises by 1.',
+    text: "Lose Health equal to your Summoning Tier. Summon a Demon of that cost with Taunt and restore that much Health (Overheal). The Tier rises by 1.",
     effects: [{ op: 'infernalSummon', keywords: ['Taunt'], healBack: true }] },
   { ...F('Demons', 'Robots'), id: 'infernal_engine', name: 'Infernal Engine', art: '🏭', cost: 5, needsBoardSpace: true,
     text: 'Lose Health equal to your Summoning Tier. Summon a Demon of that cost and give it a Modular Upgrade of your choice. The Tier rises by 1.',

@@ -30,7 +30,7 @@ export const BEE_CARDS = [
   // ---- Faction mechanic ----
   {
     ...S, id: 'hive_mind', name: 'The Living Hive', art: '🐝', heroSpell: true, passive: true, cost: 0,
-    text: 'Passive. You start the game with a 0/5 Hive that can\'t attack and makes a 1/1 Worker Bee at the end of your turn. When it is destroyed, the Queen (5/1 Venomous) emerges. If the Queen dies, your Hero takes 10 damage.',
+    text: "Passive. Start with a 0/5 Hive that can't attack and makes a 1/1 Worker Bee each turn. When it dies, the 5/1 Venomous Queen emerges. If she dies, your Hero takes 10 damage.",
     effects: [],
   },
   {
@@ -201,7 +201,7 @@ export const BEE_CARDS = [
   },
   {
     ...T, id: 'decoy_nest', name: 'Decoy Nest', art: '🪹', cost: 1,
-    text: 'When your opponent summons a minion: Summon a 0/3 Hive Decoy. When the Decoy is destroyed, it deals 2 damage to the enemy minion that destroyed it.',
+    text: "When your opponent summons a minion: Summon a 0/3 Hive Decoy. It deals 2 damage to the enemy minion that destroys it.",
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [{ op: 'summon', cardId: 'hive_decoy' }] },
   },
   {

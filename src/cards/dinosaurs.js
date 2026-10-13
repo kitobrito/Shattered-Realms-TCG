@@ -21,7 +21,7 @@ export const DINOSAUR_CARDS = [
   {
     ...S, id: 'extinction_cycle', name: 'Extinction Cycle', art: '☄️', heroSpell: true, passive: true,
     cost: 0,
-    text: 'Passive. You gain 2 Mana Crystals per turn instead of 1 (only 1 on your first turn); the extra one is Primal Mana. Every 7 turns, EXTINCTION: Destroy all of your Mana Crystals and all friendly minions. Mana progression begins again from 0.',
+    text: "Passive. Gain 2 Mana Crystals a turn (1 on your first turn); the extra one is Primal Mana. Every 7 turns, EXTINCTION: destroy all your Mana Crystals and friendly minions.",
     // Mana: engine/factions.js. Extinction: engine.js, at the end of the Dinosaur player's turn.
     effects: [],
   },
@@ -107,7 +107,7 @@ export const DINOSAUR_CARDS = [
   {
     ...S, id: 'meteor_shower', name: 'Meteor Shower', art: '🌠',
     cost: 4,
-    text: 'Your next Extinction Cycle instead destroys 1 random minion at the end of each turn for 3 turns, and all your Primal Mana. No Primal Mana until it ends.',
+    text: "Your next Extinction instead destroys 1 random minion at each turn's end for 3 turns, plus all your Primal Mana. No Primal Mana until it ends.",
     // Ruling: each of the 3 turn-ends destroys 1 random minion (either side). Normal Mana Crystals are kept.
     effects: [{ op: 'setExtinctionMode', mode: 'meteorShower' }],
   },
@@ -120,7 +120,7 @@ export const DINOSAUR_CARDS = [
   {
     ...S, id: 'fossilization', name: 'Fossilization', art: '🦴',
     cost: 2,
-    text: 'Transform a friendly Dinosaur into a Dinosaur Egg with the same Mana Cost. Exit: Summon a random Dinosaur that costs the same as the Egg.',
+    text: "Transform a friendly Dinosaur into a Dinosaur Egg of the same cost. Exit: Summon a random Dinosaur of that cost.",
     target: { type: 'minion', side: 'friendly', tribe: 'Dinosaur' },
     effects: [{ op: 'transform', target: 'chosen', into: 'fossilized_egg', storeCost: true }],
   },
@@ -289,7 +289,7 @@ export const DINOSAUR_CARDS = [
   },
   {
     ...T, id: 'false_nest', name: 'False Nest', art: '🪹', extra: true, cost: 2,
-    text: 'When your opponent summons a minion: If you control a Dinosaur Egg, give it -2 Attack this turn. Otherwise, summon a 0/3 Dinosaur Egg.',
+    text: "When your opponent summons a minion: if you have a Dinosaur Egg, give it -2 Attack this turn. If not, summon a 0/3 Dinosaur Egg.",
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [
       { op: 'buff', target: 'eventSource', attack: -2, temporary: true, if: { controls: { tribe: 'Egg' } }, else: [{ op: 'summon', pool: DINOSAUR_EGGS }] },
     ] },
@@ -303,7 +303,7 @@ export const DINOSAUR_CARDS = [
   },
   {
     ...S, id: 'hatchling_intercept', name: 'Hatchling Intercept', art: '🛡️', extra: true, cost: 2,
-    text: 'When an enemy minion attacks a friendly Dinosaur: If you control a Dinosaur Egg, summon a 1/1 Baby Raptor with Taunt this turn. It takes the attack instead.',
+    text: "When an enemy minion attacks a friendly Dinosaur: if you have a Dinosaur Egg, a 1/1 Baby Raptor with Taunt takes the attack this turn.",
     quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion', target: FRIENDLY_DINO } },
     effects: [{ op: 'sequence', if: { controls: { tribe: 'Egg' } }, effects: [
       { op: 'summon', cardId: 'baby_raptor' },

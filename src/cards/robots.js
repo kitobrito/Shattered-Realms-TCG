@@ -133,7 +133,7 @@ export const ROBOT_CARDS = [
   },
   {
     ...MECH, id: 'colossus_prime', name: 'Colossus Prime', art: '🗿', cost: 10, attack: 8, health: 10,
-    text: 'Arrival: Deal 3 damage to all enemies. For each friendly Robot with an Upgrade, deal 1 additional damage to all enemy minions, up to 3 additional damage.',
+    text: "Arrival: Deal 3 damage to all enemies. Enemy minions take 1 more for each friendly Robot with an Upgrade (up to 3 more).",
     triggers: [{ on: 'battlecry', effects: [
       { op: 'damage', target: 'enemyHero', amount: 3 },
       { op: 'damage', target: ENEMY_MINIONS, amount: 3, amountPerCount: { count: { minions: { side: 'friendly', tribe: 'Robot', hasUpgrade: true } }, each: 1, max: 3 } },
@@ -240,7 +240,7 @@ export const ROBOT_CARDS = [
   },
   {
     ...T, id: 'final_assembly', name: 'Final Assembly', art: '🔩', cost: 5, needsBoardSpace: true,
-    text: 'When one of your Mechs is destroyed: Summon a 4/4 Combat Mech with Taunt. If the destroyed Mech had at least 2 Upgrades, give the Combat Mech +2/+2.',
+    text: "When one of your Mechs is destroyed: Summon a 4/4 Combat Mech with Taunt. It gets +2/+2 if the Mech had 2+ Upgrades.",
     trap: { on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Mech' } }, effects: [
       { op: 'summon', cardId: 'combat_mech', attack: 6, health: 6, if: { eventDeadUpgrades: 2 }, else: [{ op: 'summon', cardId: 'combat_mech' }] },
     ] },
