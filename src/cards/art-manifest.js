@@ -483,7 +483,7 @@ export const ART = {
   sovereign_of_elsewhere: 'art/ultraterrestrials/sovereign_of_elsewhere.jpg',
   spatial_redirection: 'art/ultraterrestrials/spatial_redirection.jpg',
   spectral_gene_splicing: 'art/fusion/spectral_gene_splicing.jpg',
-  spectral_insect: 'art/bees/worker_bee.jpg',
+  spectral_insect: 'art/ghosts/spectral_insect.jpg',
   spinosaurus: 'art/dinosaurs/spinosaurus.jpg',
   spirit: 'art/divine/spirit.jpg',
   spore_ambush: 'art/fungus/spore_ambush.jpg',
