@@ -161,7 +161,9 @@ export const DEFAULT_RULES = {
   maxTraps: 5,               // hard limit
   factionDeckSize: 30,       // every faction has one fixed 30-card deck
   factionsPerDeck: 2,        // players combine 2 factions into a 60-card deck…
-  cardsCut: 20,              // …then cut 20 (any split between the factions) → 40-card deck
+  cardsCut: 20,              // the old way to a 40-card deck (cut 20); now the recommended deck's cut
+  pairDeckSize: 40,          // two-faction decks: choose exactly 40 cards…
+  minPerFaction: 10,         // …at least this many from each faction…
   standardCutPerFaction: 10, // the default cut, used unless the player makes their own
   singleFactionDuplicates: 10, // One-faction format: the 30 cards + 10 duplicates → 40
   maxCopies: 2,              // …with no more than 2 copies of any card
