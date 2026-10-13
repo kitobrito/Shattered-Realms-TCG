@@ -3003,8 +3003,8 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .arena.has-board .mana-bar.me { right: 15.5cqw; }
 .arena.has-board .deck-pile.me[style*="--back"] { top: 66.5cqh; }
 
-/* Rules text in Libre Franklin Thin, keywords in Libre Franklin ExtraBold, so keywords stand right out. */
-@font-face { font-family: 'Card Rules'; src: url('../../art/fonts/card-text-thin.ttf') format('truetype'); font-weight: 100 500; font-display: swap; }
+/* Rules text in Libre Franklin Medium, keywords in Libre Franklin ExtraBold, so keywords stand right out. */
+@font-face { font-family: 'Card Rules'; src: url('../../art/fonts/card-text.ttf') format('truetype'); font-weight: 100 500; font-display: swap; }
 @font-face { font-family: 'Card Rules'; src: url('../../art/fonts/card-text-xbold.ttf') format('truetype'); font-weight: 600 900; font-display: swap; }
 .big-card.framed .bc-text, .big-card.framed .bc-text span { font-family: 'Card Rules', 'Card Text', sans-serif !important; font-weight: 400; }
 .big-card.framed .bc-text b, .big-card.framed .bc-text strong { font-family: 'Card Rules', 'Card Text', sans-serif !important; font-weight: 800; }
