@@ -2995,3 +2995,20 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .fx-draw-show .df-front > .big-card { position: absolute; inset: 0; width: 100%; height: 100%; }
 .fx-draw-show .df-back { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; border-radius: 6%/4.3%;
   background: var(--back, #3a2a30) center / cover no-repeat; border: 1px solid #000c; box-shadow: 0 1em 2em #000c; }
+
+/* Attack number level with the Health number beside it. */
+.arena .minion .atk { display: grid; place-items: center; line-height: 1; padding: 0 0 0.12em !important; }
+/* Both decks in one column, and your Mana crystals left of the bottom-right corner prop. */
+.arena.has-board .deck-pile.opp[style*="--back"], .arena.has-board .deck-pile.me[style*="--back"] { left: 94.6cqw; }
+.arena.has-board .mana-bar.me { right: 15.5cqw; }
+.arena.has-board .deck-pile.me[style*="--back"] { top: 66.5cqh; }
+
+/* Rules text in Libre Franklin Thin, keywords in Libre Franklin ExtraBold, so keywords stand right out. */
+@font-face { font-family: 'Card Rules'; src: url('../../art/fonts/card-text-thin.ttf') format('truetype'); font-weight: 100 500; font-display: swap; }
+@font-face { font-family: 'Card Rules'; src: url('../../art/fonts/card-text-xbold.ttf') format('truetype'); font-weight: 600 900; font-display: swap; }
+.big-card.framed .bc-text, .big-card.framed .bc-text span { font-family: 'Card Rules', 'Card Text', sans-serif !important; font-weight: 400; }
+.big-card.framed .bc-text b, .big-card.framed .bc-text strong { font-family: 'Card Rules', 'Card Text', sans-serif !important; font-weight: 800; }
+
+/* Radiation keeps the Health drop red (and a damaged number red); it only adds a green glow around it. */
+.minion.rad-hit .hp, .hero-portrait.rad-hit .hp { filter: drop-shadow(0 0 0.12em #7dff4a) drop-shadow(0 0 0.25em #7dff4a99) !important; }
+.big-card.framed .bc-hp { left: 80.9% !important; }
