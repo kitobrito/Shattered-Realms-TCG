@@ -142,7 +142,7 @@ export const ART = {
   dread_summoner: 'art/demons/dread_summoner.jpg',
   drone: 'art/robots/drone.jpg',
   drone_fabricator: 'art/robots/drone_fabricator.jpg',
-  echo_copy: 'art/ultraterrestrials/parallel_self.jpg',
+  echo_copy: 'art/ultraterrestrials/echo_copy.jpg',
   egg_incubator: 'art/dinosaurs/egg_incubator.jpg',
   egg_retrieval: 'art/dinosaurs/egg_retrieval.jpg',
   eggguard_ankylosaur: 'art/dinosaurs/eggguard_ankylosaur.jpg',
