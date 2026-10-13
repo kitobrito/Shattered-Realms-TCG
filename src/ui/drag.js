@@ -149,6 +149,13 @@ function endHold() {
   if (press.held) { press.held = false; api.inspect?.(null); }
 }
 
+// The lifted (clicked) hand card goes back down and its preview closes.
+export function putBack() {
+  if (inspected == null) return;
+  clearInspect();
+  api?.inspect?.(null);
+}
+
 export function cancel() {
   endHold();
   if (aim) aimEndedAt = Date.now();
