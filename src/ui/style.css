@@ -3190,19 +3190,100 @@ body.colorblind .card.playable > .big-card.shard { filter: drop-shadow(0 0 0.25e
 body.reduced-motion .big-card.shard.legend .sh-accent { animation: none; }
 
 /* Faction colours for the cracks and trim. */
-.big-card.shard.f-vampires { --accent: #d02a5a; }
-.big-card.shard.f-demons { --accent: #ff3a1a; }
-.big-card.shard.f-dragons { --accent: #ff8c1a; }
-.big-card.shard.f-dinosaurs { --accent: #e0a848; }
-.big-card.shard.f-bees { --accent: #ffd21a; }
-.big-card.shard.f-divine { --accent: #fff0a0; }
-.big-card.shard.f-radioactive { --accent: #9dff2a; }
-.big-card.shard.f-plants { --accent: #4ed86a; }
-.big-card.shard.f-zombies { --accent: #9cb84a; }
-.big-card.shard.f-aliens { --accent: #2ae8c8; }
-.big-card.shard.f-sharks { --accent: #3ab4ff; }
-.big-card.shard.f-robots { --accent: #7a96ff; }
-.big-card.shard.f-ghosts { --accent: #bfe9ff; }
-.big-card.shard.f-fungus { --accent: #b46aff; }
-.big-card.shard.f-ultraterrestrials { --accent: #ff5ae0; }
-.big-card.shard.f-fusion { --accent: #ffe2a0; }
+.big-card.shard.f-vampires, .minion.shardm.f-vampires { --accent: #d02a5a; }
+.big-card.shard.f-demons, .minion.shardm.f-demons { --accent: #ff3a1a; }
+.big-card.shard.f-dragons, .minion.shardm.f-dragons { --accent: #ff8c1a; }
+.big-card.shard.f-dinosaurs, .minion.shardm.f-dinosaurs { --accent: #e0a848; }
+.big-card.shard.f-bees, .minion.shardm.f-bees { --accent: #ffd21a; }
+.big-card.shard.f-divine, .minion.shardm.f-divine { --accent: #fff0a0; }
+.big-card.shard.f-radioactive, .minion.shardm.f-radioactive { --accent: #9dff2a; }
+.big-card.shard.f-plants, .minion.shardm.f-plants { --accent: #4ed86a; }
+.big-card.shard.f-zombies, .minion.shardm.f-zombies { --accent: #9cb84a; }
+.big-card.shard.f-aliens, .minion.shardm.f-aliens { --accent: #2ae8c8; }
+.big-card.shard.f-sharks, .minion.shardm.f-sharks { --accent: #3ab4ff; }
+.big-card.shard.f-robots, .minion.shardm.f-robots { --accent: #7a96ff; }
+.big-card.shard.f-ghosts, .minion.shardm.f-ghosts { --accent: #bfe9ff; }
+.big-card.shard.f-fungus, .minion.shardm.f-fungus { --accent: #b46aff; }
+.big-card.shard.f-ultraterrestrials, .minion.shardm.f-ultraterrestrials { --accent: #ff5ae0; }
+.big-card.shard.f-fusion, .minion.shardm.f-fusion { --accent: #ffe2a0; }
+
+/* ==== SHARD MINIONS (board) ===============================================
+   Six-sided crystal shards in a bronze rim, edged in the faction's colour, with the
+   cards' Attack/Health shards on the bottom corners. Classic card frames keep the ovals. */
+.arena .minion .sm-frame, .arena .minion .sm-shine, .arena .minion .sm-socket, .arena .minion .sm-ward { display: none; }
+body:not(.classic-cards) .arena .minion.shardm { --hexclip: polygon(50% 0, 100% 17%, 100% 83%, 50% 100%, 0 83%, 0 17%);
+  --sock: polygon(0 50%, 24.7% 0, 75.3% 0, 100% 50%, 75.3% 100%, 24.7% 100%); filter: drop-shadow(0 0.35em 0.45em #000c); }
+body:not(.classic-cards) .arena .minion.shardm .m-ring, body:not(.classic-cards) .arena .minion.shardm .m-shield { display: none !important; }
+body:not(.classic-cards) .arena .minion.shardm .sm-frame { display: block; position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+body:not(.classic-cards) .arena .minion.shardm .sm-frame > i { position: absolute; clip-path: var(--hexclip); }
+body:not(.classic-cards) .arena .minion.shardm .sm-rim { inset: 0 3%;
+  background: linear-gradient(135deg, #fbeab5 0%, #c79a4a 22%, #5e3f15 45%, #e8c87e 62%, #7c5722 82%, #f1d690 100%); }
+body:not(.classic-cards) .arena .minion.shardm .sm-glow { inset: 3.2% 7.5%; background: var(--accent, #d8c8a8); }
+body:not(.classic-cards) .arena .minion.shardm .sm-crack { inset: 5.4% 10.4%; background: #0b0a0d; }
+body:not(.classic-cards) .arena .minion.shardm .m-art, body:not(.classic-cards) .arena .minion.shardm .m-fx { inset: 6.6% 11.8% !important; border: 0 !important;
+  border-radius: 0 !important; z-index: 3; clip-path: var(--hexclip); background-size: cover; background-position: center 30%; box-shadow: none !important; }
+body:not(.classic-cards) .arena .minion.shardm .m-art::after { background: radial-gradient(ellipse at 50% 40%, transparent 55%, #000a 100%) !important; }
+body:not(.classic-cards) .arena .minion.shardm .sm-shine { display: block; position: absolute; inset: 6.6% 11.8%; z-index: 4; pointer-events: none; clip-path: var(--hexclip);
+  background: linear-gradient(115deg, transparent 30%, #ffffff22 38%, transparent 46%); }
+/* Attack and Health: the cards' six-sided shards in bronze sockets on the bottom corners. */
+body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .arena .minion.shardm .hp {
+  width: calc(var(--minion-w) * 0.37) !important; height: calc(var(--minion-w) * 0.29) !important; top: auto !important; bottom: -3% !important;
+  padding: 0 !important; display: grid !important; place-items: center !important; line-height: 1 !important; font-size: calc(var(--minion-w) * 0.24) !important;
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important; z-index: 7; clip-path: var(--sock);
+  -webkit-text-stroke: 0.12em #000 !important; paint-order: stroke fill; }
+body:not(.classic-cards) .arena .minion.shardm .atk::before, body:not(.classic-cards) .arena .minion.shardm .atk::after,
+body:not(.classic-cards) .arena .minion.shardm .hp::before, body:not(.classic-cards) .arena .minion.shardm .hp::after { display: none !important; }
+body:not(.classic-cards) .arena .minion.shardm .atk { left: -2% !important; right: auto !important;
+  background: linear-gradient(90deg, #ffffff30 0 50%, transparent 50%), linear-gradient(180deg, transparent 49%, #0000003a 50%),
+    linear-gradient(135deg, #ffe7a0 0%, #f0a830 38%, #b0620e 72%, #5a2c04 100%) !important; }
+body:not(.classic-cards) .arena .minion.shardm .hp { right: -2% !important; left: auto !important;
+  background: linear-gradient(90deg, #ffffff26 0 50%, transparent 50%), linear-gradient(180deg, transparent 49%, #0000004a 50%),
+    linear-gradient(135deg, #ff9aa6 0%, #e0283e 38%, #8e0a1e 72%, #45020c 100%) !important; }
+body:not(.classic-cards) .arena .minion.shardm .sm-socket { display: block; position: absolute; z-index: 6; pointer-events: none; bottom: calc(-3% - 3px);
+  width: calc(var(--minion-w) * 0.37 + 6px); height: calc(var(--minion-w) * 0.29 + 6px); clip-path: var(--sock);
+  background: linear-gradient(135deg, #fbeab5, #c79a4a 30%, #5e3f15 60%, #e8c87e); }
+body:not(.classic-cards) .arena .minion.shardm .sm-socket.l { left: calc(-2% - 3px); }
+body:not(.classic-cards) .arena .minion.shardm .sm-socket.r { right: calc(-2% - 3px); }
+/* States: ready to attack (green), a legal target, Marked Prey (pulsing blood red). */
+body:not(.classic-cards) .arena .minion.shardm.can-attack .sm-frame { filter: drop-shadow(0 0 2px #57e07a) drop-shadow(0 0 7px #57e07a); }
+body:not(.classic-cards) .arena .minion.shardm.can-attack .sm-glow { background: #57e07a; }
+body.colorblind:not(.classic-cards) .arena .minion.shardm.can-attack .sm-frame { filter: drop-shadow(0 0 2px #3a9aff) drop-shadow(0 0 7px #3a9aff); }
+body.colorblind:not(.classic-cards) .arena .minion.shardm.can-attack .sm-glow { background: #3a9aff; }
+body:not(.classic-cards) .arena.aiming .minion.shardm.can-attack .sm-frame { filter: none; }
+body:not(.classic-cards) .arena .minion.shardm.targetable .sm-frame { filter: drop-shadow(0 0 2px var(--target)) drop-shadow(0 0 8px var(--target)); }
+body:not(.classic-cards) .arena .minion.shardm.targetable .sm-glow { background: var(--target); }
+body:not(.classic-cards) .arena .minion.shardm.prey .sm-glow { background: #ff2a3a; animation: sm-prey 1s ease-in-out infinite alternate; }
+body:not(.classic-cards) .arena .minion.shardm.prey .sm-frame { filter: drop-shadow(0 0 3px #ff1a1a) drop-shadow(0 0 8px #ff2a2acc); }
+@keyframes sm-prey { to { filter: brightness(1.7); } }
+
+/* ---- Taunt: a glowing magic shield standing in front of the minion ---- */
+body:not(.classic-cards) .arena .minion.shardm.kw-taunt .sm-glow { background: #ffd76a; }
+body:not(.classic-cards) .arena .minion.shardm .sm-ward { display: block; position: absolute; z-index: 5; left: -7%; right: -7%; top: 10%; bottom: -4%;
+  pointer-events: none; transform-origin: 50% 60%; animation: sm-ward-pulse 1.8s ease-in-out infinite alternate; }
+body:not(.classic-cards) .arena .minion.shardm .sm-ward svg { width: 100%; height: 100%; overflow: visible; display: block; }
+@keyframes sm-ward-pulse { from { transform: scale(0.98); } to { transform: scale(1.03); } }
+.arena .minion .sm-ward .edge { animation: sm-ward-glow 1.8s ease-in-out infinite alternate; }
+@keyframes sm-ward-glow { from { opacity: .55; } to { opacity: 1; } }
+.arena .minion .sm-ward .shine { animation: sm-ward-shine 2.6s linear infinite; }
+@keyframes sm-ward-shine { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+.arena .minion .sm-ward i { position: absolute; bottom: 10%; width: 3px; height: 3px; border-radius: 50%; background: #fff3c0;
+  box-shadow: 0 0 4px #ffd76a; animation: sm-spark 2.2s linear infinite; opacity: 0; }
+.arena .minion .sm-ward i:nth-of-type(1) { left: 22%; }
+.arena .minion .sm-ward i:nth-of-type(2) { left: 50%; animation-delay: .7s; }
+.arena .minion .sm-ward i:nth-of-type(3) { left: 74%; animation-delay: 1.4s; }
+@keyframes sm-spark { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-260%); opacity: 0; } }
+/* Shield activation (a minion is played with Taunt or gains it): the shield slams up out of a
+   point of light, overshoots with a white flash, and sends a ring of light outward. */
+.arena .minion .sm-ward .burst { display: none; }
+body:not(.classic-cards) .arena .minion.shardm .sm-ward.up { animation: sm-ward-up 1s cubic-bezier(.2,.9,.3,1.25) var(--wd, 0s) both, sm-ward-pulse 1.8s ease-in-out 1s infinite alternate; }
+@keyframes sm-ward-up {
+  0% { transform: scale(0.1) translateY(30%); opacity: 0; filter: brightness(3) drop-shadow(0 0 0 #fff); }
+  35% { transform: scale(1.2); opacity: 1; filter: brightness(2.4) drop-shadow(0 0 10px #fff6cf) drop-shadow(0 0 22px #ffb83a); }
+  60% { transform: scale(0.95); filter: brightness(1.4) drop-shadow(0 0 6px #ffd76a); }
+  100% { transform: scale(1); opacity: 1; filter: none; } }
+body:not(.classic-cards) .arena .minion.shardm .sm-ward.up .burst { display: block; position: absolute; left: 50%; top: 50%; width: 100%; aspect-ratio: 1; border-radius: 50%;
+  border: 3px solid #fff3c0; box-shadow: 0 0 12px #ffd76a, inset 0 0 12px #ffd76a; transform: translate(-50%, -50%) scale(0.2); opacity: 0;
+  animation: sm-ward-burst 0.8s ease-out calc(var(--wd, 0s) + 0.25s) both; }
+@keyframes sm-ward-burst { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.9); opacity: 0; } }
+body.reduced-motion .arena .minion .sm-ward, body.reduced-motion .arena .minion .sm-ward * { animation: none !important; }
+body.reduced-motion .arena .minion .sm-ward i, body.reduced-motion .arena .minion .sm-ward .burst { display: none !important; }
