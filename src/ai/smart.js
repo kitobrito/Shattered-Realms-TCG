@@ -132,6 +132,11 @@ export function evaluate(s, me, W = BASE_WEIGHTS) {
   const doomed = ext && ext.nextAt - ext.turns <= 1 ? W.doomed : 1;
   score += my.board.reduce((t, m) => t + minionValue(m, W, doomed), 0);
   score -= opp.board.reduce((t, m) => t + minionValue(m, W), 0) * W.oppBoard;
+  // Ultraterrestrials: Displaced minions are coming back (a little less valuable while away).
+  for (const x of s.beyond ?? []) {
+    const v = minionValue(x.minion, W) * 0.85 + ((x.attack ?? 0) + (x.health ?? 0)) * 0.5;
+    if (x.controller === me) score += v; else score -= v * W.oppBoard;
+  }
 
   score += my.hand.length * W.hand - opp.hand.length * W.oppHand;
   score += my.traps.length * W.trap - opp.traps.length * W.oppTrap;

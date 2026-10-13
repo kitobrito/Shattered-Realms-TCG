@@ -134,7 +134,7 @@ export function costOf(state, inst) {
   if (card.costPerDeaths && state) aura -= Math.min(Math.floor((state.deathsThisGame ?? 0) / card.costPerDeaths.per), Math.max(0, card.cost - card.costPerDeaths.min));
   // Robots: Chief Engineer — the next Upgrade you play costs less.
   if (card.upgrade && state) aura -= state.players[inst.owner]?.upgradeDiscount ?? 0;
-  return Math.max(0, card.cost + (inst.costMod ?? 0) + aura);
+  return Math.max(inst.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
 }
 
 export function createHero(state, p) {

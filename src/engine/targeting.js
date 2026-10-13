@@ -30,6 +30,7 @@ function minionPasses(m, f) {
   if (f.maxAttack != null && effectiveAttack(m) > f.maxAttack) return false;
   if (f.hasKeyword && !allKeywords(m).length) return false;
   if (f.alive && (m.health <= 0 || m.destroyed)) return false;
+  if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
   if (f.unresurrected && m.resurrected) return false; // Resurrection: once per minion
   // Attack below its card's printed Attack (Mycelium Lord).
   if (f.reducedAttack && effectiveAttack(m) >= (getCard(m.cardId).attack ?? 0)) return false;
@@ -77,6 +78,7 @@ export function resolveSelector(state, sel, ctx) {
       case 'eventSource': return one(ctx.event?.source);
       case 'eventTarget': return one(ctx.event?.target);
       case 'summoned': return one(ctx.summoned); // the minion this card's summon effect just made
+      case 'returned': return one(ctx.returned); // Ultraterrestrials: the minion returning from Displacement
       default: throw new Error(`Unknown selector: ${sel}`);
     }
   }
@@ -154,6 +156,16 @@ export function matchFilter(state, filter, ctx) {
     if (key === 'sourceBurning' || key === 'targetBurning') {
       const c = findCharacter(state, key === 'sourceBurning' ? ev.source : ev.target);
       if (isBurning(c) !== want) return false;
+      continue;
+    }
+    // Ultraterrestrials: who Displaced the minion; the played card's cost.
+    if (key === 'by') {
+      if (want === 'friendly' && ev.by !== ctx.controller) return false;
+      if (want === 'enemy' && (ev.by == null || ev.by === ctx.controller)) return false;
+      continue;
+    }
+    if (key === 'minCost') {
+      if (!ev.cardId || (getCard(ev.cardId).cost ?? 0) < want) return false;
       continue;
     }
     if (key === 'killerMinion') {

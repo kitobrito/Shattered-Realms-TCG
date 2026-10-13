@@ -94,6 +94,12 @@ export const STANDARD_CUTS = {
     'silence_the_living', 'stolen_afterlife', 'beyond_the_veil',
     'mirror_of_the_departed', 'not_of_this_world', 'refuse_the_grave',
   ],
+  // Keeps: the cheap Displacers, the return payoffs and the board resets.
+  Ultraterrestrials: [
+    'riftling', 'chrono_warp_adept', 'probability_engine', 'parallel_self',
+    'temporal_reversal', 'impossible_blueprint', 'reality_overlap',
+    'paradox_mine', 'borrowed_seconds', 'spatial_redirection',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their

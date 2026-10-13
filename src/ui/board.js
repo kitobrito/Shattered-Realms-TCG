@@ -135,6 +135,17 @@ function tierHTML(pl) {
   return `<span class="tier-badge" title="Summoning Tier ${t}: costs ${t} Health and summons a ${t}-Mana Demon">🩸${t}</span>`;
 }
 
+// Ultraterrestrials: minions this player will get back from Beyond Reality (Displaced).
+function beyondHTML(pl, s) {
+  const mine = (s.beyond ?? []).filter((x) => x.controller === pl.index);
+  if (!mine.length) return '';
+  const when = (x) => (x.waiting ? 'waiting for room' : `back at the start of ${s.players[x.returnAt].name}'s ${x.skips ? `turn after next (+${x.skips})` : 'next turn'}`);
+  const tip = mine.map((x) => `${getCard(x.minion.cardId).name}: ${when(x)}`).join(' · ');
+  const art = artOf(getCard(mine[0].minion.cardId));
+  return `<div class="beyond-badge" title="Beyond Reality · ${esc(tip)}" data-preview="${mine[0].minion.cardId}">
+    ${art ? `<img src="${art}" alt="" draggable="false">` : '<span>🌀</span>'}<b>${mine.length}</b></div>`;
+}
+
 // Zombies: Corpses left behind (shown once a player has any, or plays Zombies).
 function corpseHTML(pl) {
   const n = pl.corpses ?? 0;
@@ -201,7 +212,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${beyondHTML(pl, s)}</div>
     </div>`;
 }
 

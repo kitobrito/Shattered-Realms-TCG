@@ -95,6 +95,72 @@ function hauntEntry(state, entry, ctx, mods = {}) {
 const STAT_MODS = ['attack', 'health', 'setHealth', 'keywords', 'payCost', 'onRebornSummon', 'tag'];
 const modsOf = (e) => Object.fromEntries(STAT_MODS.filter((k) => e[k] != null).map((k) => [k, e[k]]));
 
+// ---- Ultraterrestrials: Displacement ---------------------------------------------
+// A Displaced minion leaves the battlefield for Beyond Reality (state.beyond): it can't attack,
+// be attacked or targeted, doesn't use a board slot, and its abilities stop. It returns at the
+// start of the named player's turn (after `skips` extra such turns), with any return bonus.
+// opts: { returnAt, by, skips?, attack?, health?, keywords?, exhausted?, toController?, onReturn?, ctx? }
+export function displaceMinion(state, m, opts) {
+  if (!m || m.kind !== 'minion') return false;
+  const pl = state.players[m.controller];
+  const i = pl.board.indexOf(m);
+  if (i < 0) return false;
+  pl.board.splice(i, 1);
+  // Temporary effects end when it leaves (this-turn Attack, Health and keywords).
+  m.tempAttack = 0; m.tempKeywords = [];
+  if (m.tempHealth > 0) { m.maxHealth -= m.tempHealth; m.health = Math.min(m.health, m.maxHealth); }
+  m.tempHealth = 0;
+  if (m.tempControl) { m.controller = m.owner; m.tempControl = null; }
+  // Riftling: your next Displacement this turn lasts 1 more turn.
+  const by = state.players[opts.by];
+  let skips = opts.skips ?? 0;
+  if (by && by.riftBonusTurn === state.turn) { skips += 1; by.riftBonusTurn = null; }
+  state.beyond ??= [];
+  state.beyond.push({
+    minion: m, controller: opts.toController ?? m.controller, from: m.controller, returnAt: opts.returnAt, skips, by: opts.by,
+    attack: opts.attack ?? 0, health: opts.health ?? 0, keywords: [...(opts.keywords ?? [])], exhausted: !!opts.exhausted,
+    onReturn: opts.onReturn?.length ? { effects: opts.onReturn, ctx: opts.ctx } : null, turn: state.turn,
+  });
+  log(state, `🌀 ${nameOf(state, m)} is Displaced Beyond Reality.`);
+  emit(state, { type: 'minionDisplaced', source: m.uid, player: m.controller, by: opts.by });
+  return true;
+}
+
+// Brings a Displaced minion back (now, or as soon as its controller has room).
+export function returnFromBeyond(state, entry) {
+  const pl = state.players[entry.controller];
+  if (pl.board.length >= state.rules.maxBoardSize) {
+    if (!entry.waiting) log(state, `${nameOf(state, entry.minion)} has no room to return and waits Beyond Reality.`);
+    entry.waiting = true;
+    return false;
+  }
+  state.beyond.splice(state.beyond.indexOf(entry), 1);
+  const m = entry.minion;
+  m.controller = entry.controller;
+  if (entry.attack) m.attack = Math.max(0, m.attack + entry.attack);
+  if (entry.health) { m.maxHealth += entry.health; m.health += entry.health; }
+  for (const k of entry.keywords) addKeyword(m, k, false, state);
+  if (entry.exhausted) m.exhausted = true;   // can't attack during its next turn
+  if (entry.controller !== entry.from) { m.sick = true; m.attacksThisTurn = 0; }
+  m.justReturned = true;
+  pl.board.push(m);
+  const bonus = [entry.attack || entry.health ? `+${entry.attack}/+${entry.health}` : '', ...entry.keywords].filter(Boolean).join(', ');
+  log(state, `🌀 ${nameOf(state, m)} returns from Beyond Reality${bonus ? ` (${bonus})` : ''}.`);
+  if (entry.onReturn) pushFront(state, [...entry.onReturn.effects.map((effect) => ({ kind: 'effect', effect, ctx: { ...entry.onReturn.ctx, returned: m.uid } })), { kind: 'deaths' }]);
+  emit(state, { type: 'minionReturned', source: m.uid, player: m.controller });
+  return true;
+}
+
+// Start of player p's turn: everything due back at p's turn returns (or counts down).
+export function processBeyond(state, p) {
+  for (const entry of [...(state.beyond ?? [])]) {
+    if (entry.waiting) { returnFromBeyond(state, entry); continue; }
+    if (entry.returnAt !== p) continue;
+    if (entry.skips > 0) { entry.skips -= 1; continue; }
+    returnFromBeyond(state, entry);
+  }
+}
+
 const cardMatches = (card, f = {}) =>
   (!f.type || card.type === f.type) &&
   (!f.upgrade || !!card.upgrade) &&
@@ -624,7 +690,7 @@ export const EFFECT_OPS = {
 
   // { cardId } — put a card into your hand.
   addToHand(state, e, ctx) {
-    addToHand(state, ctx.controller, e.cardId, e.costMod ? { costMod: e.costMod } : {});
+    addToHand(state, ctx.controller, e.cardId, { ...(e.costMod ? { costMod: e.costMod } : {}), ...(e.minCost != null ? { minCost: e.minCost } : {}) });
   },
 
   // { amount } — extra Mana this turn only (Mana Potion).
@@ -1158,6 +1224,78 @@ export const EFFECT_OPS = {
       if (hasKeyword(m, e.keyword)) applyBuff(state, m, { attack: e.attackIfHas, temporary: true });
       else applyBuff(state, m, { attack: e.attack, temporary: true, temporaryKeywords: [e.keyword] });
     });
+  },
+
+  // ---- Ultraterrestrials ----
+  // { target, until?: 'myNextTurn' | 'theirNextTurn' (the minion's controller's), attack?, health?,
+  //   keywords?, exhausted?, ifFriendly?: {...}, ifEnemy?: {...}, toController?: 'me', onReturn?: [effects],
+  //   drawPer?: N (draw a card per N Displaced) }
+  displace(state, e, ctx) {
+    let n = 0;
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      const side = m.controller === ctx.controller ? e.ifFriendly : e.ifEnemy;
+      const o = { ...e, ...(side ?? {}) };
+      const returnAt = o.until === 'theirNextTurn' ? m.controller : ctx.controller;
+      if (displaceMinion(state, m, {
+        returnAt, by: ctx.controller, attack: o.attack, health: o.health, keywords: o.keywords, exhausted: o.exhausted,
+        toController: o.toController === 'me' ? ctx.controller : undefined, onReturn: o.onReturn, ctx: { self: ctx.self, controller: ctx.controller },
+      })) n++;
+    });
+    if (e.drawPer && n >= e.drawPer) drawCards(state, ctx.controller, Math.floor(n / e.drawPer));
+  },
+
+  // Riftling: your next Displacement this turn lasts 1 more turn.
+  riftBonus(state, e, ctx) {
+    state.players[ctx.controller].riftBonusTurn = state.turn;
+  },
+
+  // Sovereign of Elsewhere: the minion that was just Displaced gets a bonus when it returns.
+  boostBeyond(state, e, ctx) {
+    const entry = (state.beyond ?? []).find((x) => x.minion.uid === ctx.event?.source);
+    if (!entry) return;
+    entry.attack += e.attack ?? 0;
+    entry.health += e.health ?? 0;
+    log(state, `${nameOf(state, entry.minion)} will return with +${e.attack ?? 0}/+${e.health ?? 0}.`);
+  },
+
+  // Chrono-Warp Adept: a friendly Displaced minion's absence is 1 turn shorter
+  // (one due back at your next turn returns right away).
+  hastenBeyond(state, e, ctx) {
+    const mine = (state.beyond ?? []).filter((x) => x.controller === ctx.controller);
+    if (!mine.length) { log(state, 'No friendly minion is Beyond Reality.'); return; }
+    const entry = mine.reduce((a, b) => (b.skips > a.skips ? b : a));
+    if (entry.skips > 0) { entry.skips -= 1; log(state, `${nameOf(state, entry.minion)} will return a turn sooner.`); }
+    else returnFromBeyond(state, entry);
+  },
+
+  // Observer Outside Time: look at the top 3 cards; choose one to stay on top, the rest go to the bottom.
+  scry(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const top = pl.deck.slice(0, e.count ?? 3);
+    if (top.length <= 1) return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Keep one on top (the rest go to the bottom)', resolve: 'effects', ctx,
+      options: top.map((c) => ({ cardId: c.cardId, label: getCard(c.cardId).name, effects: [{ op: 'arrangeTop', keep: c.uid, others: top.filter((x) => x !== c).map((x) => x.uid) }] })),
+    };
+  },
+  arrangeTop(state, e, ctx) {
+    const deck = state.players[ctx.controller].deck;
+    const take = (uid) => { const i = deck.findIndex((c) => c.uid === uid); return i < 0 ? null : deck.splice(i, 1)[0]; };
+    const keep = take(e.keep);
+    for (const uid of e.others) { const c = take(uid); if (c) deck.push(c); }
+    if (keep) deck.unshift(keep);
+  },
+
+  // Impossible Blueprint: Discover a minion of a faction; it costs less (not below minCost).
+  // { faction, costMod, minCost }
+  discoverFaction(state, e, ctx) {
+    const pool = shuffle(state, collectibleMinions((c) => c.faction === e.faction).map((c) => c.id)).slice(0, 3);
+    if (!pool.length) return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Discover a minion', resolve: 'effects', ctx,
+      options: pool.map((id) => ({ cardId: id, label: getCard(id).name, effects: [{ op: 'addToHand', cardId: id, costMod: e.costMod, minCost: e.minCost }] })),
+    };
   },
 
   // ---- Ghosts ----

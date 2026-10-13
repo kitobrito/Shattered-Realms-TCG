@@ -3046,3 +3046,21 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .big-card.t-trap.f-ghosts  { --frame: #2a2e34; --frame-hi: #90a8b0; --body: #0a0c0e; }
 .fx-p.wisp { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle, #ffffff, #8ff0ff 45%, transparent 75%); box-shadow: 0 0 10px #8ff0ff; opacity: 0.85; }
 .medallion.f-ghosts { --fc: #8ff0ff; } .ts-guide.f-ghosts { --fc: #8ff0ff; }
+
+/* ---- Ultraterrestrials ---- */
+.big-card.f-ultraterrestrials { --frame: #3a2a6a; --frame-hi: #b48cff; --body: #100a22; }
+.arena.f-ultraterrestrials { --felt: #2e2648; --felt-2: #0e0a1c; --rim: #b48cff; }
+.big-card.t-spell.f-ultraterrestrials { --frame: #4a3a7a; --frame-hi: #ffd76a; --body: #140e2a; }
+.big-card.t-trap.f-ultraterrestrials  { --frame: #2a2440; --frame-hi: #8a7ab8; --body: #0c0a16; }
+.fx-p.shard { width: 8px; height: 8px; background: linear-gradient(135deg, #fff, #b48cff 50%, #ffd76a); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); box-shadow: 0 0 8px #b48cff; }
+.medallion.f-ultraterrestrials { --fc: #b48cff; } .ts-guide.f-ultraterrestrials { --fc: #b48cff; }
+
+/* Ultraterrestrials: the Beyond Reality marker (Displaced minions coming back to this player). */
+.beyond-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); min-width: 28px; min-height: 28px; border-radius: 50%;
+  overflow: visible; display: grid; place-items: center; cursor: help;
+  box-shadow: 0 0 0 2px #1a1030, 0 0 0 4px #b48cff, 0 0 14px #b48cffaa; animation: beyondPulse 2.4s ease-in-out infinite; }
+.beyond-badge img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; opacity: 0.55; filter: saturate(0.6) hue-rotate(20deg) blur(0.5px); }
+.beyond-badge b { position: absolute; right: -6%; bottom: -6%; min-width: 1.4em; height: 1.4em; border-radius: 999px; display: grid; place-items: center;
+  background: #3a2a6a; border: 2px solid #b48cff; color: #fff; font-size: clamp(10px, calc(var(--hero) * 0.14), 16px); font-family: 'Card Title', serif; font-weight: 800; }
+@keyframes beyondPulse { 0%, 100% { box-shadow: 0 0 0 2px #1a1030, 0 0 0 4px #b48cff, 0 0 10px #b48cff88; } 50% { box-shadow: 0 0 0 2px #1a1030, 0 0 0 4px #d8c0ff, 0 0 20px #b48cffdd; } }
+body.reduced-motion .beyond-badge { animation: none; }
