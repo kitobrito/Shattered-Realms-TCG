@@ -14,6 +14,7 @@ export const BOARD_ART = {
   Radioactive: 'art/boards-v2/radioactive.jpg',
   Bees: 'art/boards-v2/bees.jpg',
   Ghosts: 'art/boards-v2/ghosts.jpg',
+  Ultraterrestrials: 'art/boards-v2/ultraterrestrials.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -53,6 +54,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Ultraterrestrials: { src: 'art/boards-portrait/ultraterrestrials.jpg', opp: [197, 28, 262, 111, 'arch'], me: [199, 820, 260, 895, 'circle'], field: [125, 810],
+    props: [P([8, 2, 58, 72], 'sparkle', '#ffe8a8', { sound: 'chime' }), P([402, 2, 457, 72], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' }),
+      P([8, 930, 78, 1012], 'sparkle', '#d8c8ff', { sound: 'clink' }), P([388, 922, 457, 1016], 'glow', '#9fd8ff', { sound: 'chime' })] },
   Ghosts: { src: 'art/boards-portrait/ghosts.jpg', opp: [193, 19, 266, 102, 'arch'], me: [194, 869, 265, 958, 'circle'], field: [115, 860],
     props: [P([20, 5, 120, 95], 'flicker', '#9ff0ff', { sound: 'whoosh' }), P([365, 5, 435, 115], 'glow', '#9ff0ff', { sound: 'clink', glyph: '👻' }),
       P([15, 880, 125, 1012], 'smoke', '#7dff9a', { sound: 'rattle' }), P([340, 860, 455, 1015], 'fireflies', '#c8f8ff', { sound: 'screech', glyph: '🪶' })] },
@@ -98,6 +102,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Ultraterrestrials: { src: 'art/boards-v2/ultraterrestrials.jpg', opp: [468, 34, 554, 140], me: [465, 425, 558, 540], field: [60, 150, 965, 415],
+    props: [P([25, 5, 120, 120], 'sparkle', '#ffe8a8', { sound: 'chime' }), P([895, 5, 995, 100], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' }),
+      P([25, 420, 130, 548], 'sparkle', '#d8c8ff', { sound: 'clink' }), P([890, 415, 1005, 562], 'glow', '#9fd8ff', { sound: 'chime' })] },
   Ghosts: { src: 'art/boards-v2/ghosts.jpg', opp: [467, 23, 555, 124], me: [466, 440, 556, 551], field: [70, 140, 955, 425],
     props: [P([30, 10, 150, 130], 'flicker', '#9ff0ff', { sound: 'whoosh' }), P([900, 5, 990, 140], 'glow', '#9ff0ff', { sound: 'clink', glyph: '👻' }),
       P([20, 400, 150, 556], 'smoke', '#7dff9a', { sound: 'rattle' }), P([870, 385, 1012, 560], 'fireflies', '#c8f8ff', { sound: 'screech', glyph: '🪶' })] },
