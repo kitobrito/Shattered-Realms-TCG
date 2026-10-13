@@ -5,7 +5,7 @@ import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
 
-export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Fusion: '🌀' };
+export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Ghosts: '👻', Fusion: '🌀' };
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -16,7 +16,7 @@ export const artOf = (card) => ART[card.id] ?? (card.artFrom ? ART[card.artFrom]
 export const heroArtOf = (faction) => HERO_ART?.[faction];
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? `art/backs/${faction.toLowerCase()}.jpg` : undefined);
 export const backStyle = (faction) => (backArtOf(faction) ? `style="--back:url('${new URL(backArtOf(faction), document.baseURI).href}')"` : '');
 

@@ -3038,3 +3038,11 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
   background: linear-gradient(180deg, #fff3c8, #ffd76a 50%, #fff3c8); clip-path: polygon(56.2% 0, 57.8% 0, 43.8% 100%, 42.2% 100%);
   filter: drop-shadow(0 0 4px #ffd76a); }
 .hero-portrait.burning .portrait-img.split-b { position: absolute; z-index: 1; }
+
+/* ---- Ghosts ---- */
+.big-card.f-ghosts { --frame: #2a4a5a; --frame-hi: #8ff0ff; --body: #0a161c; }
+.arena.f-ghosts { --felt: #26323a; --felt-2: #0c1216; --rim: #6ab0c0; }
+.big-card.t-spell.f-ghosts { --frame: #3a3a6a; --frame-hi: #b8c8ff; --body: #0e0e22; }
+.big-card.t-trap.f-ghosts  { --frame: #2a2e34; --frame-hi: #90a8b0; --body: #0a0c0e; }
+.fx-p.wisp { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle, #ffffff, #8ff0ff 45%, transparent 75%); box-shadow: 0 0 10px #8ff0ff; opacity: 0.85; }
+.medallion.f-ghosts { --fc: #8ff0ff; } .ts-guide.f-ghosts { --fc: #8ff0ff; }

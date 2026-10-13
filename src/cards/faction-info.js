@@ -85,6 +85,13 @@ export const FACTION_INFO = {
     mechanic: 'The Living Hive (passive): a 0/5 Hive makes a Worker Bee every turn; when it falls the 5/1 Venomous Queen emerges, and if she dies your Hero takes 10 damage.',
     style: 'Defensive · Swarm',
   },
+  Ghosts: {
+    summary: "Spirits that dodge spells, refuse to stay dead, and steal what died from either Graveyard.",
+    strengths: ['Elusive, Evade and Spell Ward shrug off removal spells', 'Haunt: both Graveyards become your army', 'Reborn and repeated returns win long games'],
+    weaknesses: ['Weak early: Haunt needs minions to have died first', 'Board-wide damage and combat still work', 'Haunted minions come back smaller'],
+    mechanic: "Call Beyond the Veil: Haunt a random minion that died this game from either Graveyard. It enters with Reborn.",
+    style: 'Control · Graveyard',
+  },
 };
 
 // Synergy rating (1-5 stars) for each faction pair: how well their mechanics work
@@ -157,6 +164,18 @@ export const SYNERGY = {
   'Bees+Divine': [5, 'Overheal turns the Hive into a fortress and keeps the Queen alive.'],
   'Bees+Robots': [3, 'Venomous upgrades and Drone swarms.'],
   'Bees+Radioactive': [1, 'Radiation drains your own Hive and fragile 1-Health Queen.'],
+  'Ghosts+Vampires': [4, 'Undead allies: Lifesteal keeps you alive while the dead keep returning.'],
+  'Aliens+Ghosts': [3, 'Steal from the living and the dead: abductions and Haunts.'],
+  'Dinosaurs+Ghosts': [4, 'Extinction fills the Graveyard with giants to Haunt back.'],
+  'Ghosts+Plants': [2, 'Small Seedlings make poor Graveyard picks.'],
+  'Fungus+Ghosts': [3, 'Slow, grinding games where Mushrooms and Haunts add up.'],
+  'Ghosts+Zombies': [5, 'Two undying armies: Corpses, Reborn and Haunts everywhere.'],
+  'Dragons+Ghosts': [3, 'Elusive spirits hold the board while Burn finishes the job.'],
+  'Demons+Ghosts': [4, 'Sacrificed Demons come straight back as Haunts.'],
+  'Divine+Ghosts': [2, 'Holy cards punish Undead, and Ghosts are Undead.'],
+  'Ghosts+Robots': [3, 'Upgraded machines are worth stealing back from the Graveyard.'],
+  'Ghosts+Radioactive': [2, 'Radiation shrinks the Haunted minions that return weakened.'],
+  'Bees+Ghosts': [3, 'Plenty of small Bees die, ready to be Haunted.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;

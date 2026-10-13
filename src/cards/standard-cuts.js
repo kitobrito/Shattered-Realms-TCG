@@ -88,6 +88,12 @@ export const STANDARD_CUTS = {
     'honey_reserve', 'venomous_uprising', 'royal_ascension',
     'royal_ambush', 'royal_sacrifice', 'last_line_of_the_colony', 'stinger_interception',
   ],
+  // Keeps: the cheap Elusive spirits, the main Haunt minions and spells.
+  Ghosts: [
+    'phantom_raven', 'mirror_haunt', 'veilkeeper', 'knight_of_the_second_death',
+    'silence_the_living', 'stolen_afterlife', 'beyond_the_veil',
+    'mirror_of_the_departed', 'not_of_this_world', 'refuse_the_grave',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their
