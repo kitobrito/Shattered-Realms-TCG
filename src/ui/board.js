@@ -227,12 +227,18 @@ function manaHTML(pl, mine) {
   return `<div class="mana-bar ${mine ? 'me' : 'opp'}"><b class="mana-text">${current}/${max}${next}${primalNote}</b><div class="crystals">${crystals}</div></div>`;
 }
 
+// The pile is as thick as the deck: a card back for every 3 cards (at most 12), down to the last one.
+function pileLayers(n) {
+  const k = n > 0 ? Math.min(12, Math.ceil(n / 3)) : 0;
+  return Array.from({ length: k }, (_, i) => `<span style="--i:${i}"></span>`).join('');
+}
+
 // The Mushroom count is public; which cards carry them is not.
 function deckHTML(pl, mine) {
   const shrooms = mushroomsIn(pl.deck);
   const tip = `${pl.deck.length} cards left${shrooms ? ` · ${shrooms} Mushroom${shrooms === 1 ? '' : 's'} hidden in this deck` : ''}`;
   return `<div class="deck-pile ${mine ? 'me' : 'opp'}" title="${tip}" ${backStyle(pl.factions[0])}>
-    <div class="pile">${'<span></span>'.repeat(Math.min(4, Math.ceil(pl.deck.length / 8)))}${shrooms ? `<i class="shroom-count">🍄${shrooms}</i>` : ''}</div><b>${pl.deck.length}</b></div>`;
+    <div class="pile ${pl.deck.length ? '' : 'empty'}">${pileLayers(pl.deck.length)}${shrooms ? `<i class="shroom-count">🍄${shrooms}</i>` : ''}</div><b>${pl.deck.length}</b></div>`;
 }
 
 function endTurnHTML(s, me, legal, armed) {

@@ -293,6 +293,7 @@ function snapshot(s) {
     hand: new Set(me.hand.map((c) => c.uid)),
     oppHand: s.players[1 - viewer].hand.length,
     oppDeck: s.players[1 - viewer].deck.length,
+    myDeck: me.deck.length,
     mana: { ...me.mana },
     fusionCharge: me.fusion?.charge ?? 0,
     active: s.activePlayer,
@@ -770,16 +771,25 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     if (btn) jobs.push(fx.animate(btn, [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.15)', filter: 'brightness(1.6)', offset: 0.4 }, { transform: 'scale(1)', filter: 'brightness(1)' }], { duration: 900, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' }));
   }
 
-  // Cards drawn fly in from the deck pile.
+  // Cards drawn from the deck are swiped off the top, shown big for a moment, then put in
+  // the hand (fx.drawShow). Cards made by effects (or a big batch) just fly in from the pile.
   const pile = app.querySelector('.deck-pile.me');
-  let drew = false;
-  for (const el of app.querySelectorAll('.my-hand [data-hand]')) {
-    if (before.hand.has(Number(el.dataset.hand)) || !pile) continue;
-    drew = true;
-    el.style.visibility = 'hidden';
-    jobs.push(fx.drawFlip(el, pile.getBoundingClientRect(), el.getBoundingClientRect(), backArtOf(s.players[viewer].factions[0])).then(() => { el.style.visibility = ''; }));
+  const back = backArtOf(s.players[viewer].factions[0]);
+  const fresh = pile ? [...app.querySelectorAll('.my-hand [data-hand]')].filter((el) => !before.hand.has(Number(el.dataset.hand))) : [];
+  const fromDeck = Math.min(fresh.length, Math.max(0, before.myDeck - s.players[viewer].deck.length));
+  const showBig = fromDeck > 0 && fromDeck <= 3 && s.pending?.type !== 'mulligan';
+  const shown = showBig ? fresh.slice(0, fromDeck) : [];
+  for (const el of fresh) el.style.visibility = 'hidden';
+  for (const el of fresh.filter((e) => !shown.includes(e))) {
+    jobs.push(fx.drawFlip(el, pile.getBoundingClientRect(), el.getBoundingClientRect(), back).then(() => { el.style.visibility = ''; }));
   }
-  if (drew) sound.play('draw');
+  if (shown.length) {
+    const hand = s.players[viewer].hand;
+    const items = shown.map((el) => ({ el, html: bigCardHTML(getCard(hand.find((c) => c.uid === Number(el.dataset.hand)).cardId)) }));
+    const top = pile.querySelector('.pile span:last-child') ?? pile;
+    jobs.push(fx.drawShow(items, top.getBoundingClientRect(), back).then(() => { for (const el of shown) el.style.visibility = ''; }));
+  }
+  if (fresh.length) sound.play('draw');
   // The opponent's new cards: a glowing card back flies into their hand, and a label says so.
   const opp = s.players[1 - viewer];
   const gained = opp.hand.length - before.oppHand;

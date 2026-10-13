@@ -1,3 +1,5 @@
+import { fitAllText } from './shared.js';
+
 // Animation toolkit (Web Animations API). Effects are drawn in a fixed layer
 // outside the board, so re-rendering the board never cuts an animation short.
 
@@ -1101,4 +1103,63 @@ export function mushroomBurst(pileEl, heroEl, count = 1) {
     ])));
   }
   return Promise.all(jobs);
+}
+
+// Cards you draw: each one is swiped off the top of your deck face-down, turns over into a
+// big preview in the middle of the screen, stays there for about 3 seconds (tap to skip),
+// then shrinks into its place in your hand. Several cards drawn at once are shown side by side.
+//   items: [{ el: the card in the hand, html: its big card }]
+export async function drawShow(items, from, backUrl, { hold = 3000 } = {}) {
+  if (!items.length) return;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const gap = 18;
+  let h = Math.min(vh * 0.52, 420);
+  let w = h * 0.711;
+  const fit = (vw - 32 - gap * (items.length - 1)) / items.length;
+  if (w > fit) { w = fit; h = w / 0.711; }
+  const total = items.length * w + (items.length - 1) * gap;
+  const top = vh * 0.46 - h / 2;
+  const back = backUrl ? `url('${new URL(backUrl, document.baseURI).href}')` : '';
+  const wraps = items.map((it, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fx-draw-show';
+    Object.assign(wrap.style, { left: `${(vw - total) / 2 + i * (w + gap)}px`, top: `${top}px`, width: `${w}px`, height: `${h}px` });
+    wrap.innerHTML = `<div class="card df-front" style="width:100%;height:100%;margin:0">${it.html}</div><div class="df-back"></div>`;
+    if (back) wrap.querySelector('.df-back').style.setProperty('--back', back);
+    layer().appendChild(wrap);
+    fitAllText(wrap);
+    return wrap;
+  });
+  const fromC = { x: from.left + from.width / 2, y: from.top + from.height / 2, s: Math.max(0.15, from.width / w) };
+  // 1) Off the top of the deck, turning face-up on the way.
+  await Promise.all(wraps.map((wrap, i) => {
+    const r = wrap.getBoundingClientRect();
+    const dx = fromC.x - (r.left + r.width / 2);
+    const dy = fromC.y - (r.top + r.height / 2);
+    return animate(wrap, [
+      { transform: `translate(${dx}px, ${dy}px) rotateY(180deg) rotate(-8deg) scale(${fromC.s})`, opacity: 1 },
+      { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 30}px) rotateY(150deg) rotate(-4deg) scale(${(fromC.s + 1) / 2})`, offset: 0.35 },
+      { transform: 'translate(0, 0) rotateY(0deg) rotate(0deg) scale(1)', opacity: 1 },
+    ], { duration: 700, delay: i * 140, easing: 'cubic-bezier(.25,.8,.25,1)' });
+  }));
+  // 2) Hold so it can be read; a tap (anywhere) moves on.
+  await new Promise((resolve) => {
+    const done = () => { clearTimeout(t); document.removeEventListener('pointerdown', done, true); resolve(); };
+    const t = setTimeout(done, hold * speed());
+    document.addEventListener('pointerdown', done, true);
+  });
+  // 3) Into the hand.
+  await Promise.all(wraps.map((wrap, i) => {
+    const r = wrap.getBoundingClientRect();
+    const to = items[i].el.getBoundingClientRect();
+    const dx = to.left + to.width / 2 - (r.left + r.width / 2);
+    const dy = to.top + to.height / 2 - (r.top + r.height / 2);
+    const s = to.width / r.width;
+    return animate(wrap, [
+      { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 1 },
+    ], { duration: 420, delay: i * 80, easing: 'cubic-bezier(.5,0,.3,1)' });
+  }));
+  wraps.forEach((wrap) => wrap.remove());
 }
