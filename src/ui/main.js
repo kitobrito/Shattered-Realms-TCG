@@ -2344,6 +2344,15 @@ render();
 // drag-an-image-out-of-the-app gesture. Outside a match, pages scroll normally.
 document.addEventListener('touchmove', (e) => { if (screen === 'game') e.preventDefault(); }, { passive: false });
 document.addEventListener('dragstart', (e) => e.preventDefault());
+// Older browsers without overflow: clip: if anything scrolls the arena, put it straight back
+// (a scrolled arena lifts every piece off the painted board).
+document.addEventListener('scroll', (e) => {
+  const el = e.target;
+  if (el instanceof Element && (el.classList.contains('arena') || el.id === 'board-layer') && (el.scrollTop || el.scrollLeft)) {
+    el.scrollTop = 0;
+    el.scrollLeft = 0;
+  }
+}, true);
 
 // Debugging aid (browser console): the live game and UI flags.
 window.__shattered = () => ({ game, animating, remoteQueue, viewer, screen, act, chooseAction, actingPlayer, render, hash: net.stateHash });

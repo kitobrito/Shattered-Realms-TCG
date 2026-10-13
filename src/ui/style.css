@@ -2890,7 +2890,7 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .big-card.framed::after { display: none !important; }
 .big-card.framed .bc-frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; user-select: none; }
 .big-card.framed .bc-sock { display: none; }
-.big-card.framed .bc-art { left: 23.8% !important; top: 6.3% !important; width: 54.6% !important; height: 45.5% !important; transform: none !important;
+.big-card.framed .bc-art { left: 23.6% !important; top: 6.4% !important; width: 54.8% !important; height: 52% !important; transform: none !important;
   border: 0 !important; border-radius: 50% !important; box-shadow: none !important; background: #120c08; z-index: 1; }
 .big-card.framed.t-spell .bc-art, .big-card.framed.t-trap .bc-art { left: 27.4% !important; top: 8.3% !important; width: 47.6% !important; height: 44.1% !important;
   border-radius: 50% 50% 0 0 / 38% 38% 0 0 !important; }
@@ -2947,3 +2947,37 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .big-card.framed .bc-text span { font-size: 1.4em; }
 /* Minions: the Attack ring's swords reach into the lower-left of the text window. */
 .big-card.framed.t-minion .bc-text { padding: 5.9% 6.4% 8.6% 8.2% !important; }
+
+/* ==== Board minions, Hearthstone style ====
+   A tall oval portrait in the silver bezel cut from the minion card frame
+   (art/frames/board-oval.png, built from art/frames/minion.png), Attack and Health
+   gems set over the bottom corners, and no Mana cost (that's only shown on cards). */
+.arena .minion .m-ring { position: absolute; z-index: 3; top: 0; bottom: 0; left: 3.8%; right: 3.8%; pointer-events: none;
+  background: url('../../art/frames/board-oval.png') center / 100% 100% no-repeat; filter: drop-shadow(0 0.25em 0.4em #000c); }
+.arena .minion .m-art, .arena .minion .m-fx { inset: 4.6% 8.6% !important; border: 0 !important; }
+.arena .minion .m-art::after { background: radial-gradient(ellipse at 50% 42%, transparent 62%, #0008 100%); }
+.arena .minion .m-cost { display: none !important; }
+.arena .minion .atk { left: -1% !important; bottom: -2% !important; }
+.arena .minion .hp { right: -1% !important; bottom: -2% !important; }
+
+/* The arena and the board painting must never scroll: the hand hangs off the bottom edge, and a
+   drag or a focused card could scroll the arena (overflow: hidden still allows that), lifting every
+   piece off its painted frame. overflow: clip can't be scrolled at all. */
+.arena, #board-layer { overflow: clip !important; }
+
+/* ==== Hero Spells around the hero, Hearthstone style ====
+   The two Hero Spells sit just right of the portrait, the Fusion just left of it, both
+   level with the lower half of the frame; Traps move out past the Fusion. */
+.hero-fusion { display: flex; align-items: center; }
+.arena.has-board .hero-fusion { position: absolute; transform: translateY(-50%); }
+.arena.has-board .hero-zone.opp .hero-fusion { right: 57.5cqw; top: 13.6cqh; }
+.arena.has-board .hero-zone.me .hero-fusion { right: 57.5cqw; top: 84cqh; }
+.arena.has-board.v-board .hero-zone.opp .hero-fusion { right: calc(100% - var(--oh-x) + 0.7cqw); top: calc(var(--oh-y) + var(--oh-h) * 0.6); }
+.arena.has-board.v-board .hero-zone.me .hero-fusion { right: calc(100% - var(--mh-x) + 0.7cqw); top: calc(var(--mh-y) + var(--mh-h) * 0.4); }
+.arena.has-board.v-board .hero-zone.opp .hero-powers { left: calc(var(--oh-x) + var(--oh-w) + 0.7cqw); top: calc(var(--oh-y) + var(--oh-h) * 0.6); }
+.arena.has-board.v-board .hero-zone.me .hero-powers { left: calc(var(--mh-x) + var(--mh-w) + 0.7cqw); top: calc(var(--mh-y) + var(--mh-h) * 0.4); }
+.arena.has-board .hero-zone:has(.hero-fusion) .traps { margin-right: calc(var(--hero) * 0.62 + 1.4cqw); }
+.arena.p-board .hero-fusion { position: absolute; transform: translateY(-50%); }
+.arena.p-board .hero-zone.opp .hero-fusion { right: calc(100% - var(--oh-x) + 8px); top: calc(var(--oh-y) + var(--oh-h) / 2); }
+.arena.p-board .hero-zone.me .hero-fusion { right: calc(100% - var(--mh-x) + 8px); top: calc(var(--mh-y) + var(--mh-h) / 2); }
+.arena.p-board .hero-zone:has(.hero-fusion) .traps { margin-right: calc(var(--hero) * 0.5 + 14px); }
