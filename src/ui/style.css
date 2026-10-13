@@ -3025,3 +3025,8 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
   calc(max(30px, var(--hero) * 0.5) + max(12px, var(--hero) * 0.2) / 2 + 10px)); }
 /* ...and keep yours clear of the hand below. */
 .arena.p-board .hero-zone.me .hero-powers { top: calc(var(--mh-y) + var(--mh-h) / 2 - max(6px, var(--hero) * 0.22)); }
+
+/* Phones too: your hero's Health (and Attack/Armor) sit on the top of the frame's rim, as in landscape. */
+.arena.portrait .hero-zone.me .hero-portrait .hp { top: -8% !important; bottom: auto !important; right: -12% !important; left: auto !important; }
+.arena.portrait .hero-zone.me .hero-portrait .atk { top: -8% !important; bottom: auto !important; left: -12% !important; right: auto !important; }
+.arena.portrait .hero-zone.me .hero-portrait .armor { top: 30% !important; bottom: auto !important; right: -14% !important; }
