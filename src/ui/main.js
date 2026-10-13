@@ -1565,7 +1565,7 @@ function renderMenu() {
             return `<span class="faction medallion f-${f.toLowerCase()} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}">
               <span class="medal-ring"></span>
               <span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
-              <span class="medal-name">${esc(f)}</span>${on ? '<span class="medal-check">✓</span>' : ''}</span>`;
+              <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span>${on ? '<span class="medal-check">✓</span>' : ''}</span>`;
           }).join('')}
         </div>
         ${ready ? `<div class="ts-matchup">
