@@ -1106,10 +1106,10 @@ export function mushroomBurst(pileEl, heroEl, count = 1) {
 }
 
 // Cards you draw: each one is swiped off the top of your deck face-down, turns over into a
-// big preview in the middle of the screen, stays there for about 3 seconds (tap to skip),
+// big preview in the middle of the screen, stays there for about 2 seconds (tap to skip),
 // then shrinks into its place in your hand. Several cards drawn at once are shown side by side.
 //   items: [{ el: the card in the hand, html: its big card }]
-export async function drawShow(items, from, backUrl, { hold = 3000 } = {}) {
+export async function drawShow(items, from, backUrl, { hold = 2000 } = {}) {
   if (!items.length) return;
   const vw = window.innerWidth;
   const vh = window.innerHeight;

@@ -87,11 +87,16 @@ export function minionHTML(m, s, cls = '') {
     </div>`;
 }
 
+// Two-faction decks show both heroes, split down a slanted seam (first faction on the
+// left, second on the right), so you can tell at a glance which pair, and so which
+// Fusion, each player has.
 function portraitHTML(pl) {
   const art = heroArtOf(pl.factions[0]);
-  return art
-    ? `<img class="portrait-img" src="${art}" alt="" draggable="false">`
-    : `<div class="portrait-placeholder f-${pl.factions[0].toLowerCase()}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
+  const second = pl.factions[1] ? heroArtOf(pl.factions[1]) : null;
+  if (!art) return `<div class="portrait-placeholder f-${pl.factions[0].toLowerCase()}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
+  if (!second || second === art) return `<img class="portrait-img" src="${art}" alt="" draggable="false">`;
+  return `<img class="portrait-img split-a" src="${art}" alt="" draggable="false">`
+    + `<img class="portrait-img split-b" src="${second}" alt="" draggable="false"><i class="portrait-seam"></i>`;
 }
 
 // Fusion Hero Spell: charges with each Hero Spell use; at full charge it blazes so it can't be missed.
