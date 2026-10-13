@@ -73,6 +73,7 @@ export function minionHTML(m, s, cls = '') {
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}</div>
+      <div class="m-ring"></div>
       ${burnHTML(m)}
       ${radHTML(m)}
       <div class="m-fx"><span class="m-ice"></span><span class="m-drip"></span><span class="m-embers"></span><span class="m-blind"></span><span class="m-silence"></span><span class="m-camo"></span><span class="m-smoke"></span><span class="m-ghost"></span><span class="m-ghost two"></span></div>
@@ -111,7 +112,7 @@ function fusionHTML(pl, legal, mine) {
 }
 
 function heroSpellsHTML(pl, legal, mine) {
-  return fusionHTML(pl, legal, mine) + pl.heroSpells.map((hs) => {
+  return pl.heroSpells.map((hs) => {
     const card = getCard(hs.cardId);
     const usable = mine && legal.some((a) => a.type === 'heroSpell' && a.card === hs.cardId);
     const art = artOf(card);
@@ -183,6 +184,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
   return `
     <div class="hero-zone ${mine ? 'me' : 'opp'}">
       <div class="traps">${traps}</div>
+      ${pl.fusion ? `<div class="hero-fusion">${fusionHTML(pl, legal, mine)}</div>` : ''}
       <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
