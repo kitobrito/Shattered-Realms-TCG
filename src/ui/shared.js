@@ -94,6 +94,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
     : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap' : 'Spell';
   const faction = card.faction.toLowerCase().replace(/\s+/g, '-');
+  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete });
   return `
     <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
@@ -104,6 +105,39 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(health ?? card.health ?? '').length > 1 ? 'two-digit' : ''}">${health ?? card.health ?? '?'}</span>` : ''}
+      ${card.token ? '<span class="bc-token">Token</span>' : ''}
+    </div>`;
+}
+
+// Players can switch back to the older painted frames in Settings.
+const classicCards = () => typeof document !== 'undefined' && document.body?.classList.contains('classic-cards');
+
+// The faction sigil in the top-right socket: the centre of the faction's card back
+// (Fusions show both of their factions' halves).
+function sigilHTML(card) {
+  const halves = card.fusion ?? [card.faction];
+  const parts = halves.map((f) => backArtOf(f) ? `<i style="background-image:url('${backArtOf(f)}')"></i>` : `<i class="sg-none">${FACTION_ICONS[f] ?? '✦'}</i>`);
+  return `<span class="sh-sigil ${halves.length > 1 ? 'split' : ''}" title="${esc(halves.join(' + '))}">${parts.join('')}</span>`;
+}
+
+// The "Shard" card: a chamfered slab of dark stone with bronze trim and shatter-cracks in the
+// faction's colour. Cost hangs from the top-left in a crystal pennant; minions carry Attack and
+// Health in two crystal shards either side of the name plate; the type sits in a tab at the bottom.
+// Frames: art/frames/shard-<type>.svg (+ -accent.svg, the faction-coloured layer).
+function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete }) {
+  const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
+  const hp = health ?? card.health ?? '?';
+  return `
+    <div class="big-card shard t-${card.type} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
+      <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
+      <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
+      <img class="bc-frame" src="art/frames/shard-${type}.svg" alt="" draggable="false">
+      <i class="sh-accent" style="-webkit-mask-image:url('art/frames/shard-${type}-accent.svg');mask-image:url('art/frames/shard-${type}-accent.svg')"></i>
+      ${sigilHTML(card)}
+      <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
+      <div class="bc-banner"><span>${esc(card.name)}</span></div>
+      ${label ? `<div class="bc-type"><span>${esc(label)}</span></div>` : ''}
+      ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(hp).length > 1 ? 'two-digit' : ''}">${hp}</span>` : ''}
       ${card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
@@ -134,7 +168,7 @@ export function fitWidth(el) {
 export function fitAllText(root) {
   for (const el of root.querySelectorAll('.card .text')) fitText(el);
   for (const big of root.querySelectorAll('.bc-text span')) fitText(big, big.parentElement);
-  for (const banner of root.querySelectorAll('.bc-banner span')) fitWidth(banner);
+  for (const banner of root.querySelectorAll('.bc-banner span, .shard .bc-type span')) fitWidth(banner);
 }
 
 // The engine writes the log in the third person with player names ("You wins!",
