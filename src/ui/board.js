@@ -6,7 +6,7 @@ import { actingPlayer } from '../engine/engine.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
 import { BOARD_ART, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
-import { isMuted } from './sound.js';
+import { isMuted, play as playSound } from './sound.js';
 import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, youText, rankBadgeHTML, rankProgressHTML } from './shared.js';
 
 // ---- Pieces ------------------------------------------------------------------
@@ -64,16 +64,58 @@ const burnHTML = (c) => (c.burn > 0
 
 const asleep = (m, s) => m.sick && !hasKeyword(m, 'Charge') && !hasKeyword(m, 'Rush') && m.controller === s.activePlayer;
 
+// ---- Shard minions -------------------------------------------------------------
+// Board minions are six-sided crystal shards in a bronze rim, edged in their faction's
+// colour (the old ovals return with Settings > Classic card frames). Taunt raises a glowing
+// magic shield in front of the minion; it flares up the moment a minion gains Taunt.
+const WARD_UP_MS = 1000;
+const WARD_PATH = 'M50,4 C64,10 80,12 94,12 C94,52 82,86 50,106 C18,86 6,52 6,12 C20,12 36,10 50,4 Z';
+const wardSince = new Map(); // minion uid -> when its Taunt shield first appeared
+let wardGame = null;          // the match those uids belong to
+
+// The shield's shared gradients live once in the page; every shield refers to them.
+if (typeof document !== 'undefined' && !document.getElementById('ward-defs')) {
+  document.body?.insertAdjacentHTML('beforeend', `<svg id="ward-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <pattern id="ward-hex" width="10" height="8.66" patternUnits="userSpaceOnUse"><path d="M2.5,0 L7.5,0 L10,4.33 L7.5,8.66 L2.5,8.66 L0,4.33 Z" fill="none" stroke="#fff6cf" stroke-width=".5" opacity=".3"/></pattern>
+    <linearGradient id="ward-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6cf" stop-opacity=".2"/><stop offset=".55" stop-color="#ffd76a" stop-opacity=".04"/><stop offset="1" stop-color="#ff9a2a" stop-opacity=".2"/></linearGradient>
+    <linearGradient id="ward-shine" x1="0" y1="0" x2="1" y2="0"><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".35"/><stop offset=".65" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <filter id="ward-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+    <clipPath id="ward-clip"><path d="${WARD_PATH}"/></clipPath></defs></svg>`);
+}
+
+function wardHTML(m) {
+  if (!wardSince.has(m.uid)) {
+    wardSince.set(m.uid, Date.now());
+    if (!document.body.classList.contains('classic-cards')) playSound('shield');
+  }
+  const age = Date.now() - wardSince.get(m.uid);
+  const up = age < WARD_UP_MS ? ` up" style="--wd:-${age}ms` : '';
+  return `<div class="sm-ward${up}"><svg viewBox="0 0 100 110" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${WARD_PATH}" fill="url(#ward-fill)"/>
+    <g clip-path="url(#ward-clip)"><rect width="100" height="110" fill="url(#ward-hex)"/><rect class="shine" width="100" height="110" fill="url(#ward-shine)"/></g>
+    <path class="edge" d="${WARD_PATH}" fill="none" stroke="#ffb83a" stroke-width="7" filter="url(#ward-blur)"/>
+    <path d="${WARD_PATH}" fill="none" stroke="#fff3c0" stroke-width="3.2"/>
+    <path d="M50,11 C61,16 74,18 86,18 C86,52 76,79 50,96 C24,79 14,52 14,18 C26,18 39,16 50,11 Z" fill="none" stroke="#ffd76a" stroke-width="1.4" opacity=".9"/>
+    <path d="M50,40 L55,50 L50,66 L45,50 Z" fill="#fff6cf" opacity=".45"/>
+  </svg><i></i><i></i><i></i><b class="burst"></b></div>`;
+}
+
 export function minionHTML(m, s, cls = '') {
   const card = getCard(m.cardId);
   const atk = effectiveAttack(m);
   const art = artOf(card);
   const kws = allKeywords(m).map(kwSlug);
+  const taunt = kws.includes('taunt');
+  if (wardGame !== s) { wardGame = s; wardSince.clear(); }
+  if (!taunt) wardSince.delete(m.uid);
+  const faction = (card.faction ?? 'neutral').toLowerCase().replace(/\s+/g, '-');
   return `
-    <div class="minion ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
+      <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>
       <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}</div>
+      <i class="sm-shine"></i>
       <div class="m-ring"></div>
       ${burnHTML(m)}
       ${radHTML(m)}
@@ -83,6 +125,8 @@ export function minionHTML(m, s, cls = '') {
       <div class="icons">${cornerIcons(m, s)}</div>
       <div class="badges">${badges(m)}</div>
       ${card.cost != null ? `<span class="m-cost" title="Mana cost">${card.cost}</span>` : ''}
+      ${taunt ? wardHTML(m) : ''}
+      <i class="sm-socket l"></i><i class="sm-socket r"></i>
       <span class="atk ${atk > m.attack ? 'up' : atk < m.attack ? 'down' : ''}">${atk}</span>
       <span class="hp ${m.health < m.maxHealth ? 'down' : m.maxHealth > (card.health ?? 0) ? 'up' : ''}">${m.health}</span>
     </div>`;
