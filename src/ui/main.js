@@ -954,6 +954,7 @@ const TIPS = [
   'Divine: healing a character at full Health raises its maximum Health (Overheal).',
   'Robots: Upgrades stack on one machine. Build one great Robot, or a swarm of Drones.',
   'Bees: protect the Hive. When it falls, the Queen emerges, and if she dies your Hero takes 10 damage.',
+  "Ghosts: Haunt steals minions that died this game from either Graveyard. Kill the enemy's best minion and it may be back on their side.",
   'Radioactive: an irradiated minion lowers the Health of everything else without Radiation, on both sides.',
   "Characters losing Health to Radiation can't be healed. Obliterated minions skip their Exit effects.",
   'Robots hold one Weapon at a time; equipping a new one replaces the old.',
@@ -1529,7 +1530,7 @@ function renderMenu() {
       <header class="ts-title">
         <div class="ts-runes"></div>
         <h1 class="ts-logo"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"></h1>
-        <p class="ts-tag">Twelve realms broke apart. Two of them are yours.</p>
+        <p class="ts-tag">Thirteen realms broke apart. Two of them are yours.</p>
         <img class="ui-divider" src="art/ui/divider.png" alt="" draggable="false">
       </header>
 

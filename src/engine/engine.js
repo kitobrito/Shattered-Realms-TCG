@@ -637,8 +637,12 @@ const STEPS = {
       if (getCard(m.cardId).unique) (state.players[m.owner].uniquesDead ??= []).push(m.cardId);
       // Obliterate: removed from the game — no graveyard, no Exit, no Reborn, no death events.
       if (m.obliterate) { log(state, `☢ ${nameOf(state, m)} is obliterated.`); continue; }
-      state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner });
+      state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner, died: true });
       log(state, `${nameOf(state, m)} dies.`);
+      // Ghosts: deaths counted this turn / this game, and per player (friendly minions that died).
+      state.deathsThisTurn = (state.deathsThisTurn ?? 0) + 1;
+      state.deathsThisGame = (state.deathsThisGame ?? 0) + 1;
+      state.players[m.controller].minionDeaths = (state.players[m.controller].minionDeaths ?? 0) + 1;
       const card = getCard(m.cardId);
       const event = {
         type: 'minionDied', source: m.uid, player: m.controller, cardId: m.cardId,
@@ -666,7 +670,11 @@ const STEPS = {
         const ctx = { self: m.uid, controller: g.controller, event, cardId: m.cardId };
         steps.push(...g.effects.map((effect) => ({ kind: 'effect', effect, ctx })), { kind: 'deaths' });
       }
-      if (hasKeyword(m, 'Reborn')) steps.push({ kind: 'reborn', cardId: m.cardId, controller: m.controller, resurrected: m.resurrected });
+      if (hasKeyword(m, 'Reborn')) steps.push({ kind: 'reborn', cardId: m.cardId, controller: m.controller, resurrected: m.resurrected, owner: m.owner, uid: m.uid, onRebornSummon: m.onRebornSummon, hauntTag: m.hauntTag });
+      // Ghosts: marked to be Haunted if it dies (Soul Reaper, Grave Grasp, Irradiated Afterlife).
+      else if (m.hauntOnDeath && state.turn <= m.hauntOnDeath.until) {
+        steps.push({ kind: 'effect', effect: { op: 'hauntDead', uid: m.uid, ...m.hauntOnDeath.mods }, ctx: { controller: m.hauntOnDeath.controller, self: null } });
+      }
       steps.push(
         { kind: 'event', event },
         { kind: 'window', name: 'minionDied', priority: opponentOf(state.activePlayer), ctx: { event } },
@@ -688,9 +696,19 @@ const STEPS = {
     emit(state, { type: 'mushroomTriggered', player: p, amount: n, cardUid });
   },
 
-  reborn(state, { cardId, controller, resurrected }) {
+  reborn(state, { cardId, controller, resurrected, owner, uid, onRebornSummon, hauntTag }) {
+    // It comes back from the Graveyard, so it is no longer there to be Haunted.
+    if (uid != null && owner != null) {
+      const grave = state.players[owner].graveyard;
+      const i = grave.findIndex((g) => g.uid === uid);
+      if (i >= 0) grave.splice(i, 1);
+    }
     const m = summonMinion(state, controller, cardId, { silent: true });
     if (!m) return;
+    if (owner != null) m.owner = owner;
+    if (hauntTag) m.hauntTag = hauntTag; // still the same Haunted minion
+    // The Eternal Swarm: whenever it loses Reborn, a 1/1 Spectral Insect appears.
+    if (onRebornSummon) pushFront(state, [{ kind: 'effect', effect: { op: 'summon', cardId: onRebornSummon }, ctx: { controller, self: null } }]);
     m.health = state.rules.rebornHealth;
     m.maxHealth = state.rules.rebornHealth;
     removeKeyword(m, 'Reborn');
@@ -822,6 +840,8 @@ const STEPS = {
       enterBattlefield(state, m);
     }
     for (const x of state.players) x.zombieDeathsThisTurn = 0;
+    state.deathsLastTurn = state.deathsThisTurn ?? 0;
+    state.deathsThisTurn = 0;
     pl.turnsTaken += 1;
     if (pl.extinction) pl.extinction.turns += 1;
     factionHook(pl, 'turnStartMana')(state, pl);

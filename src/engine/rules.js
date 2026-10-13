@@ -3,7 +3,7 @@
 
 export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
-  'Plants', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
+  'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Werewolves', 'Aquatic', 'Radioactive', 'Old Gods',
   'Other Ones', 'Ultraterrestrial',
 ];
@@ -37,7 +37,7 @@ export const POSITIVE_KEYWORDS = [
 //   Burned    loses 1 Health at the end of its controller's turn
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
-export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', ...NEGATIVE_KEYWORDS];
+export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', ...NEGATIVE_KEYWORDS];
 
 // Player-facing rules text for keywords and card terms (collection glossary, tooltips).
 export const KEYWORD_TEXT = {
@@ -59,6 +59,9 @@ export const KEYWORD_TEXT = {
   Lifesteal: 'Damage this deals also restores that much Health to your Hero.',
   Evade: 'The first damage this would take does nothing.',
   Elusive: "Can't be targeted by enemy spells.",
+  'Spell Ward': 'The next enemy spell that would affect this minion has no effect on it; then Spell Ward is removed.',
+  Haunt: "Summon a minion that died this game from either player's Graveyard onto your side. It still belongs to its owner, so if it dies again it goes back to their Graveyard.",
+  Graveyard: 'Where minions go when they die. Minions that were Obliterated never get there.',
   Poisonous: 'When this dies, the enemy that killed it dies too.',
   Venomous: 'Kills any enemy minion it attacks.',
   Charge: 'Can attack the turn it is played.',
@@ -106,6 +109,7 @@ export const BOARD_EVENTS = [
   'mushroomTriggered', // Mushrooms on a drawn card burst: { player: drawer, amount }
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)
   'minionReborn',     // a minion came back through Reborn
+  'minionHaunted',    // Ghosts: a minion was Haunted from a Graveyard
   'burnApplied',      // a character's Burn value was set or raised
   'burnDamage',       // a character took Burn damage (end of its controller's turn)
   'cardBurned',       // a card was burned from a hand or deck
@@ -131,6 +135,7 @@ export const DEFAULT_QUICK_PLAY_WINDOWS = ['cardPlayed', 'attackDeclared', 'mini
 export const FACTION_TAGS = {
   Vampires: ['Dark', 'Undead'],
   Zombies: ['Undead'],
+  Ghosts: ['Undead'],
   Demons: ['Dark'],
   Werewolves: ['Dark'],
   Void: ['Dark'],

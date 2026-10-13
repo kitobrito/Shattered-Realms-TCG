@@ -17,6 +17,7 @@ import { DIVINE_CARDS } from './divine.js';
 import { ROBOT_CARDS } from './robots.js';
 import { FUSION_CARDS } from './fusions.js';
 import { BEE_CARDS } from './bees.js';
+import { GHOST_CARDS } from './ghosts.js';
 import { RADIOACTIVE_CARDS } from './radioactive.js';
 import { NEUTRAL_CARDS } from './neutral.js';
 import { PLANT_CARDS } from './plants.js';
@@ -24,7 +25,7 @@ import { STANDARD_CUTS, STANDARD_DUPLICATES } from './standard-cuts.js';
 import { isComplete } from './validate.js';
 import { VAMPIRE_CARDS } from './vampires.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...FUSION_CARDS]);
 
 const isDeckCard = (c) => !c.token && !c.heroSpell;
 

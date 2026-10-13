@@ -13,6 +13,7 @@ export const BOARD_ART = {
   Robots: 'art/boards-v2/robots.jpg',
   Radioactive: 'art/boards-v2/radioactive.jpg',
   Bees: 'art/boards-v2/bees.jpg',
+  Ghosts: 'art/boards-v2/ghosts.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -52,6 +53,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Ghosts: { src: 'art/boards-portrait/ghosts.jpg', opp: [193, 19, 266, 102, 'arch'], me: [194, 869, 265, 958, 'circle'], field: [115, 860],
+    props: [P([20, 5, 120, 95], 'flicker', '#9ff0ff', { sound: 'whoosh' }), P([365, 5, 435, 115], 'glow', '#9ff0ff', { sound: 'clink', glyph: '👻' }),
+      P([15, 880, 125, 1012], 'smoke', '#7dff9a', { sound: 'rattle' }), P([340, 860, 455, 1015], 'fireflies', '#c8f8ff', { sound: 'screech', glyph: '🪶' })] },
   Bees: { src: 'art/boards-portrait/bees.jpg', opp: [198, 19, 262, 91, 'arch'], me: [195, 922, 264, 1009, 'circle'], field: [110, 905],
     props: [P([20, 15, 95, 125], 'drip', '#ffb21a', { sound: 'drip' }), P([360, 5, 440, 110], 'sway', '#f0e0c0', { sound: 'rustle', glyph: '🐝' }),
       P([15, 915, 90, 1010], 'glow', '#ffc21a', { sound: 'clink' }), P([355, 910, 450, 1015], 'wobble', '#ffe8c8', { sound: 'rustle' })] },
@@ -94,6 +98,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Ghosts: { src: 'art/boards-v2/ghosts.jpg', opp: [467, 23, 555, 124], me: [466, 440, 556, 551], field: [70, 140, 955, 425],
+    props: [P([30, 10, 150, 130], 'flicker', '#9ff0ff', { sound: 'whoosh' }), P([900, 5, 990, 140], 'glow', '#9ff0ff', { sound: 'clink', glyph: '👻' }),
+      P([20, 400, 150, 556], 'smoke', '#7dff9a', { sound: 'rattle' }), P([870, 385, 1012, 560], 'fireflies', '#c8f8ff', { sound: 'screech', glyph: '🪶' })] },
   Bees: { src: 'art/boards-v2/bees.jpg', opp: [468, 24, 556, 125], me: [464, 437, 559, 555], field: [60, 140, 965, 425],
     props: [P([30, 15, 130, 165], 'drip', '#ffb21a', { sound: 'drip' }), P([885, 5, 975, 150], 'sway', '#f0e0c0', { sound: 'rustle', glyph: '🐝' }),
       P([25, 430, 120, 550], 'glow', '#ffc21a', { sound: 'clink' }), P([880, 425, 1010, 560], 'wobble', '#ffe8c8', { sound: 'rustle' })] },

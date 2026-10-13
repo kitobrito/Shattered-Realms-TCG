@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  Ghosts: {
+    greetings: "Oooo… welcome to the other side.",
+    wellPlayed: "Hauntingly well played.",
+    thanks: "My thanks, from beyond.",
+    wow: "Spooky!",
+    oops: "Oops… I'll be back.",
+    threaten: "Your dead belong to me now.",
+  },
   Bees: {
     greetings: "Bzzz. Welcome to the hive.",
     wellPlayed: "The colony salutes you. Well played.",

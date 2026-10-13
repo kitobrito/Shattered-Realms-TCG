@@ -32,9 +32,68 @@ import { enterBattlefield } from './triggers.js';
 const each = (state, sel, ctx, fn) => {
   for (const id of resolveSelector(state, sel, ctx)) {
     const c = findCharacter(state, id);
-    if (c) fn(c);
+    if (c && !spellWarded(state, c, ctx)) fn(c);
   }
 };
+
+// Ghosts' Spell Ward: the next enemy spell that would affect this minion has no effect on it,
+// then the Ward is gone (every part of that one spell is blocked, not just the first).
+function spellWarded(state, c, ctx) {
+  if (c.kind !== 'minion' || c.controller === ctx.controller || !ctx.cardId) return false;
+  if (getCard(ctx.cardId).type !== 'spell') return false;
+  if (c.wardBlocks === ctx.self) return true;
+  if (!hasKeyword(c, 'Spell Ward')) return false;
+  loseKeyword(state, c, 'Spell Ward');
+  c.wardBlocks = ctx.self;
+  log(state, `🛡 ${nameOf(state, c)}'s Spell Ward blocks ${getCard(ctx.cardId).name}.`);
+  return true;
+}
+
+// ---- Ghosts: the Graveyard ------------------------------------------------
+// Minions that actually died (not spells, burned cards or Obliterated minions), from
+// one or both Graveyards. Each entry is { uid, cardId, owner, died: true }.
+function deadEntries(state, ctx, from = 'either', f = {}) {
+  const sides = from === 'enemy' ? [opponentOf(ctx.controller)] : from === 'friendly' ? [ctx.controller] : [ctx.controller, opponentOf(ctx.controller)];
+  return sides.flatMap((p) => state.players[p].graveyard.filter((g) => {
+    if (!g.died) return false;
+    const c = getCard(g.cardId);
+    if (c.type !== 'minion' || c.unique || c.isHive) return false;
+    if (f.maxCost != null && c.cost > f.maxCost) return false;
+    if (f.tribe && !(c.tribes ?? []).includes(f.tribe)) return false;
+    return true;
+  }));
+}
+
+// Haunt one Graveyard entry: it leaves the Graveyard and is summoned on ctx.controller's
+// side (its owner stays the same, so if it dies again it goes back to its owner's Graveyard).
+// mods: { attack?, health? (deltas), setHealth?, keywords?, payCost? }
+function hauntEntry(state, entry, ctx, mods = {}) {
+  const me = state.players[ctx.controller];
+  if (me.board.length >= state.rules.maxBoardSize) { log(state, `${me.name}'s board is full; nothing can be Haunted.`); return null; }
+  const grave = state.players[entry.owner].graveyard;
+  const i = grave.indexOf(entry);
+  if (i < 0) return null;
+  grave.splice(i, 1);
+  const m = summonMinion(state, ctx.controller, entry.cardId, { silent: true });
+  if (!m) return null;
+  m.owner = entry.owner;
+  m.haunted = true;
+  if (mods.attack) m.attack = Math.max(0, m.attack + mods.attack);
+  if (mods.health) { m.maxHealth = Math.max(1, m.maxHealth + mods.health); m.health = Math.min(m.maxHealth, Math.max(1, m.health + mods.health)); }
+  if (mods.setHealth != null) { m.health = mods.setHealth; m.maxHealth = mods.setHealth; }
+  for (const k of mods.keywords ?? []) addKeyword(m, k, false, state);
+  if (mods.onRebornSummon) m.onRebornSummon = mods.onRebornSummon;
+  if (mods.tag) m.hauntTag = mods.tag; // Call Beyond the Veil: locked while this one lives
+  log(state, `👻 ${me.name} Haunts ${getCard(entry.cardId).name}${entry.owner !== ctx.controller ? ` from ${state.players[entry.owner].name}'s Graveyard` : ''}.`);
+  ctx.summoned = m.uid;
+  enterBattlefield(state, m);
+  emit(state, { type: 'minionHaunted', source: m.uid, player: ctx.controller, cardId: entry.cardId });
+  if (mods.payCost) loseHealth(state, heroOf(state, ctx.controller).uid, getCard(entry.cardId).cost, { paid: true });
+  return m;
+}
+
+const STAT_MODS = ['attack', 'health', 'setHealth', 'keywords', 'payCost', 'onRebornSummon', 'tag'];
+const modsOf = (e) => Object.fromEntries(STAT_MODS.filter((k) => e[k] != null).map((k) => [k, e[k]]));
 
 const cardMatches = (card, f = {}) =>
   (!f.type || card.type === f.type) &&
@@ -49,6 +108,8 @@ const cardMatches = (card, f = {}) =>
 // { subject: selector, attackAtMost?, healthAtMost?, dead?, alive?, tribe?, attackLessThanSelf? }
 export function checkCondition(state, cond, ctx) {
   if (!cond) return true;
+  // { all: [conditions] } — every one must hold.
+  if (cond.all) return cond.all.every((c) => checkCondition(state, c, ctx));
   // { eventDeadFaction } — the minion that just died was from this faction (Graceful Return).
   if (cond.eventDeadFaction) return !!ctx.event?.dead?.cardId && getCard(ctx.event.dead.cardId).faction === cond.eventDeadFaction;
   // { enemyHandEmpty: true } — Ashen Curse.
@@ -69,6 +130,20 @@ export function checkCondition(state, cond, ctx) {
     const opp = state.players[opponentOf(ctx.controller)];
     return [opp.hero, ...opp.board].some((c) => radiationOf(c) > 0) === cond.enemyIrradiated;
   }
+  // Ghosts: a minion died this turn / during the previous turn (Grave Lantern, Tomb Without a Door).
+  if (cond.deathsThisTurn != null) return ((state.deathsThisTurn ?? 0) > 0) === cond.deathsThisTurn;
+  if (cond.deathsLastTurn != null) return ((state.deathsLastTurn ?? 0) > 0) === cond.deathsLastTurn;
+  // { extinctionWithin: N } — your next Extinction is N or fewer of your turns away (Fossils Beyond the Veil).
+  if (cond.extinctionWithin != null) {
+    const ext = state.players[ctx.controller].extinction;
+    return !!ext && ext.nextAt - ext.turns <= cond.extinctionWithin;
+  }
+  // { deadInGraveyard: { from?, maxCost?, tribe? } } — a minion that can be Haunted has died (Ghosts).
+  if (cond.deadInGraveyard) return deadEntries(state, ctx, cond.deadInGraveyard.from, cond.deadInGraveyard).length > 0;
+  // { noHauntAlive: tag } — none of your minions Haunted by that card is still in play.
+  if (cond.noHauntAlive) return !state.players[ctx.controller].board.some((m) => m.hauntTag === cond.noHauntAlive);
+  // { ctxFlag } — an earlier effect of this card set the flag (a minion was cleansed).
+  if (cond.ctxFlag) return !!ctx[cond.ctxFlag];
   // { myTurn: true } — it is the card controller's turn (Blood Alchemist).
   if (cond.myTurn != null) return (state.activePlayer === ctx.controller) === cond.myTurn;
   // { heroLostHealthThisTurn: true } — your Hero lost Health this turn (Crimson Oracle).
@@ -85,11 +160,14 @@ export function checkCondition(state, cond, ctx) {
     if (cond.dead && !dead) return false;
     if (cond.alive && dead) return false;
     if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
+    if (cond.notTribe && (c.tribes ?? []).includes(cond.notTribe)) return false;
     if (cond.cardId && c.cardId !== cond.cardId) return false;
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
+    if (cond.notKeyword && hasKeyword(c, cond.notKeyword)) return false;
+    if (cond.kind && c.kind !== cond.kind) return false;
     if (cond.burning != null && isBurning(c) !== cond.burning) return false;
     if (cond.darkOrUndead != null && isDarkOrUndead(c) !== cond.darkOrUndead) return false;
     if (cond.irradiated != null && (radiationOf(c) > 0) !== cond.irradiated) return false;
@@ -220,6 +298,12 @@ export const EFFECT_OPS = {
     }
     // attackPerEventAmount: +N Attack per unit of the event's amount (Fungal Colossus, per Mushroom).
     if (e.attackPerEventAmount) resolved = { ...resolved, attack: e.attackPerEventAmount * (ctx.event?.amount ?? 0) };
+    // perFriendlyDeaths: { max } — +1/+1 per friendly minion that died this game (Gravebloom).
+    if (e.perFriendlyDeaths) {
+      const n = Math.min(e.perFriendlyDeaths.max ?? 99, state.players[ctx.controller].minionDeaths ?? 0);
+      if (!n) return;
+      resolved = { ...resolved, attack: n, health: n };
+    }
     each(state, e.target, ctx, (c) => applyBuff(state, c, { ...resolved, byController: ctx.controller }));
   },
 
@@ -540,7 +624,7 @@ export const EFFECT_OPS = {
 
   // { cardId } — put a card into your hand.
   addToHand(state, e, ctx) {
-    addToHand(state, ctx.controller, e.cardId);
+    addToHand(state, ctx.controller, e.cardId, e.costMod ? { costMod: e.costMod } : {});
   },
 
   // { amount } — extra Mana this turn only (Mana Potion).
@@ -581,6 +665,7 @@ export const EFFECT_OPS = {
       }
       if (Array.isArray(c.lingerKeywords) && c.lingerKeywords.some((x) => BAD.includes(x.k))) { c.lingerKeywords = c.lingerKeywords.filter((x) => !BAD.includes(x.k)); any = true; }
       if (any) log(state, `✨ ${nameOf(state, c)} is cleansed.`);
+      if (any && c.kind === 'minion') ctx.cleansedMinion = true;
     });
   },
 
@@ -1073,6 +1158,147 @@ export const EFFECT_OPS = {
       if (hasKeyword(m, e.keyword)) applyBuff(state, m, { attack: e.attackIfHas, temporary: true });
       else applyBuff(state, m, { attack: e.attack, temporary: true, temporaryKeywords: [e.keyword] });
     });
+  },
+
+  // ---- Ghosts ----
+  // Haunt random minions that died this game. { count?, distinct?, from?: 'either' | 'enemy' | 'friendly',
+  //   maxCost?, tribe?, requireEnemy? (the first comes from the enemy Graveyard if it can), ...STAT_MODS }
+  haunt(state, e, ctx) {
+    const count = e.count ?? 1;
+    const taken = new Set();
+    for (let i = 0; i < count; i++) {
+      let pool = deadEntries(state, ctx, e.from, e).filter((g) => !(e.distinct || count > 1) || !taken.has(g.cardId));
+      if (e.requireEnemy && i === 0) {
+        const enemy = pool.filter((g) => g.owner !== ctx.controller);
+        if (enemy.length) pool = enemy;
+      }
+      const pick = pickRandom(state, pool);
+      if (!pick) { if (i === 0) log(state, 'No minion that can be Haunted has died yet.'); return; }
+      taken.add(pick.cardId);
+      if (!hauntEntry(state, pick, ctx, modsOf(e))) return;
+    }
+  },
+
+  // Haunt the minion that just died (from the event) or a marked one. { eventDead?, uid?, ...STAT_MODS }
+  hauntDead(state, e, ctx) {
+    const uid = e.uid ?? (e.eventDead ? ctx.event?.source : null);
+    const entry = state.players.flatMap((pl) => pl.graveyard).find((g) => g.uid === uid && g.died);
+    if (!entry) return;
+    hauntEntry(state, entry, ctx, modsOf(e));
+  },
+
+  // If the target dies before the given turn ends, ctx.controller Haunts it. { target, turns?, ...STAT_MODS }
+  markHaunt(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      m.hauntOnDeath = { controller: ctx.controller, until: state.turn + (e.turns ?? 0), mods: modsOf(e) };
+    });
+  },
+
+  // Choose a dead minion (up to 3 different options), then run `then` with it as `entry`.
+  // { from?, maxCost?, prompt, then: 'toHand' | 'haunt' | 'copyText' | 'ghostHybrid', costMod?, ...STAT_MODS }
+  chooseDead(state, e, ctx) {
+    const byCard = new Map();
+    for (const g of shuffle(state, deadEntries(state, ctx, e.from, e))) if (!byCard.has(g.cardId)) byCard.set(g.cardId, g);
+    const options = [...byCard.values()].slice(0, 3);
+    if (!options.length) { log(state, 'No minion has died yet.'); return; }
+    const next = (g) => {
+      if (e.then === 'toHand') return [{ op: 'addToHand', cardId: g.cardId, costMod: e.costMod }];
+      if (e.then === 'copyText') return [{ op: 'copyText', target: 'self', cardId: g.cardId }];
+      if (e.then === 'ghostHybrid') return [{ op: 'ghostHybrid', enemy: ctx.chosen, uid: g.uid }];
+      return [{ op: 'hauntDead', uid: g.uid, ...modsOf(e) }];
+    };
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: e.prompt ?? 'Choose a minion from the Graveyard', resolve: 'effects', ctx,
+      options: options.map((g) => ({ cardId: g.cardId, label: getCard(g.cardId).name, effects: next(g) })),
+    };
+  },
+
+  // Mirror Haunt: this minion gains another minion's printed keywords and triggered text until it leaves play.
+  // (Its Arrival has already happened, so a copied Arrival does nothing.) { target, cardId }
+  copyText(state, e, ctx) {
+    const src = getCard(e.cardId);
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      for (const k of src.keywords ?? []) addKeyword(m, k, false, state);
+      m.grantedTriggers ??= [];
+      for (const t of src.triggers ?? []) if (t.on !== 'battlecry') m.grantedTriggers.push({ ...t, controller: m.controller });
+      m.copiedText = { cardId: src.id, text: src.text };
+      log(state, `🪞 ${nameOf(state, m)} copies the text of ${src.name}.`);
+    });
+  },
+
+  // Spectral Gene Splicing: a Ghostly Hybrid of an enemy minion and a dead minion is summoned
+  // on your side with the dead minion's stats (the dead one leaves its Graveyard). { enemy, uid }
+  ghostHybrid(state, e, ctx) {
+    const enemy = findCharacter(state, e.enemy);
+    const entry = state.players.flatMap((pl) => pl.graveyard).find((g) => g.uid === e.uid && g.died);
+    if (!entry) return;
+    const dead = getCard(entry.cardId);
+    const living = enemy?.kind === 'minion' ? getCard(enemy.cardId) : null;
+    const grave = state.players[entry.owner].graveyard;
+    grave.splice(grave.indexOf(entry), 1);
+    const card = {
+      id: `ghost_hybrid_${state.nextUid++}`, custom: true, hybrid: true, token: true,
+      name: `Ghostly ${(living ?? dead).name.split(' ').at(-1)}`,
+      faction: 'Ghosts', type: 'minion', tribes: [...new Set(['Ghost', ...(dead.tribes ?? []), ...(living?.tribes ?? [])])],
+      cost: Math.min(10, Math.max(dead.cost, living?.cost ?? 0)), attack: dead.attack, health: dead.health,
+      keywords: [...new Set([...(dead.keywords ?? []), ...(living?.keywords ?? [])])],
+      triggers: [...(dead.triggers ?? []), ...(living?.triggers ?? [])].filter((t) => t.on !== 'battlecry'),
+      text: [living?.text, dead.text].filter(Boolean).join(' '),
+      art: dead.art, artFrom: dead.artFrom ?? dead.id,
+    };
+    registerCustom(state, card);
+    const m = summonMinion(state, ctx.controller, card.id);
+    if (!m) return;
+    log(state, `🧬 ${card.name} rises (${card.attack}/${card.health}).`);
+    enterBattlefield(state, m);
+    emit(state, { type: 'minionHaunted', source: m.uid, player: ctx.controller, cardId: card.id });
+  },
+
+  // Look at the top N cards of your deck and draw the first matching one; shuffle the deck.
+  // { count, filter }
+  drawFromTop(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const top = pl.deck.slice(0, e.count ?? 3);
+    const hit = top.find((c) => cardMatches(getCard(c.cardId), e.filter));
+    if (hit) {
+      pl.deck.splice(pl.deck.indexOf(hit), 1);
+      pl.deck.unshift(hit);
+      drawCards(state, ctx.controller, 1);
+    } else log(state, `No ${e.filter?.tribe ?? 'matching card'} among the top ${top.length} cards.`);
+    shuffle(state, pl.deck);
+  },
+
+  // The enemy card that was just played no longer affects the character it targeted
+  // (Not of This World, Mirror of the Departed). { elusive?: give that character Elusive this turn }
+  counterTarget(state, e, ctx) {
+    const ev = ctx.event;
+    if (!ev?.target) return;
+    for (const step of state.queue) {
+      if (step.ctx?.self === ev.source && step.ctx.chosen === ev.target) step.ctx = { ...step.ctx, chosen: null };
+    }
+    const t = findCharacter(state, ev.target);
+    if (t && e.elusive) addKeyword(t, 'Elusive', true, state);
+    log(state, `${ev.cardId ? getCard(ev.cardId).name : 'The spell'} passes through ${nameOf(state, t)}.`);
+  },
+
+  // Refuse the Grave: the friendly minion that just died comes back as if Reborn (1 Health).
+  rebornNow(state, e, ctx) {
+    const ev = ctx.event;
+    const entry = state.players.flatMap((pl) => pl.graveyard).find((g) => g.uid === ev?.source && g.died);
+    if (!entry) { log(state, 'It cannot return.'); return; }
+    const grave = state.players[entry.owner].graveyard;
+    grave.splice(grave.indexOf(entry), 1);
+    const m = summonMinion(state, ctx.controller, entry.cardId, { silent: true });
+    if (!m) return;
+    m.owner = entry.owner;
+    m.health = state.rules.rebornHealth; m.maxHealth = state.rules.rebornHealth;
+    removeKeyword(m, 'Reborn');
+    m.rebornUsed = true;
+    log(state, `${nameOf(state, m)} refuses the grave and returns.`);
+    enterBattlefield(state, m);
+    emit(state, { type: 'minionReborn', source: m.uid, player: ctx.controller });
   },
 
   // { target } — Resurrection: grant Reborn; a minion can only be chosen once.
