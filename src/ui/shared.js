@@ -103,7 +103,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
       ${ribbonSVG(card.name, card.type)}
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
-      ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass}">${health ?? card.health ?? '?'}</span>` : ''}
+      ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(health ?? card.health ?? '').length > 1 ? 'two-digit' : ''}">${health ?? card.health ?? '?'}</span>` : ''}
       ${card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
