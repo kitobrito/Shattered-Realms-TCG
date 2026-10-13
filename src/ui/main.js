@@ -2402,6 +2402,7 @@ window.addEventListener('resize', () => {
 
 applySettings();
 render();
+document.addEventListener('cardstyle', () => { if (!animating) render(); });
 
 // iPhone: inside a match, a finger drag must never scroll or bounce the page
 // (or the itch.io page around it), and must never start the system's
