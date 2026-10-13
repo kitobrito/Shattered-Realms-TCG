@@ -15,6 +15,7 @@ export const BOARD_ART = {
   Bees: 'art/boards-v2/bees.jpg',
   Ghosts: 'art/boards-v2/ghosts.jpg',
   Ultraterrestrials: 'art/boards-v2/ultraterrestrials.jpg',
+  Sharks: 'art/boards-v2/sharks.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -54,6 +55,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Sharks: { src: 'art/boards-portrait/sharks.jpg', opp: [187, 23, 272, 117, 'arch'], me: [187, 809, 272, 914, 'circle'], field: [130, 800],
+    props: [P([30, 30, 110, 110], 'bob', '#cfefff', { sound: 'splash', glyph: '🦈' }), P([335, 20, 445, 165], 'sway', '#bfe8c8', { sound: 'clink' }),
+      P([30, 880, 160, 1000], 'glow', '#ffffff', { sound: 'knock' }), P([300, 890, 450, 1015], 'glow', '#ff3a4a', { sound: 'splash' })] },
   Ultraterrestrials: { src: 'art/boards-portrait/ultraterrestrials.jpg', opp: [197, 28, 262, 111, 'arch'], me: [199, 820, 260, 895, 'circle'], field: [125, 810],
     props: [P([8, 2, 58, 72], 'sparkle', '#ffe8a8', { sound: 'chime' }), P([402, 2, 457, 72], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' }),
       P([8, 930, 78, 1012], 'sparkle', '#d8c8ff', { sound: 'clink' }), P([388, 922, 457, 1016], 'glow', '#9fd8ff', { sound: 'chime' })] },
@@ -102,6 +106,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Sharks: { src: 'art/boards-v2/sharks.jpg', opp: [464, 21, 558, 127], me: [464, 432, 559, 546], field: [110, 140, 915, 420],
+    props: [P([75, 30, 150, 115], 'bob', '#cfefff', { sound: 'splash', glyph: '🦈' }), P([850, 10, 980, 180], 'sway', '#bfe8c8', { sound: 'clink' }),
+      P([40, 415, 180, 560], 'glow', '#ffffff', { sound: 'knock' }), P([855, 420, 1015, 560], 'glow', '#ff3a4a', { sound: 'splash' })] },
   Ultraterrestrials: { src: 'art/boards-v2/ultraterrestrials.jpg', opp: [468, 34, 554, 140], me: [465, 425, 558, 540], field: [60, 150, 965, 415],
     props: [P([25, 5, 120, 120], 'sparkle', '#ffe8a8', { sound: 'chime' }), P([895, 5, 995, 100], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' }),
       P([25, 420, 130, 548], 'sparkle', '#d8c8ff', { sound: 'clink' }), P([890, 415, 1005, 562], 'glow', '#9fd8ff', { sound: 'chime' })] },
