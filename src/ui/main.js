@@ -1942,6 +1942,7 @@ function flash(msg) {
 // ---- Hover preview (big card beside whatever you point at) ---------------------------
 
 let previewTimer = null;
+let previewFor = null; // the card the hover preview is showing (or about to show)
 function previewEl() {
   let el = document.getElementById('preview');
   if (!el) { el = document.createElement('div'); el.id = 'preview'; document.body.appendChild(el); }
@@ -1949,6 +1950,7 @@ function previewEl() {
 }
 function hidePreview() {
   clearTimeout(previewTimer);
+  previewFor = null;
   previewEl().classList.remove('show');
 }
 function showPreview(target) {
@@ -1981,15 +1983,24 @@ function showPreview(target) {
   fitAllText(el);
 }
 
+// Moving between the parts of one card (art, text, frame) is still hovering that card:
+// only entering a different card (or leaving it) changes or closes the preview.
 document.addEventListener('pointerover', (e) => {
   if (screen !== 'game' || e.pointerType === 'touch') return;
   const t = e.target.closest('[data-preview]');
   if (!t || t.closest('.overlay, .reaction') || drag.busy() || animating) return;
+  if (t === previewFor) return;
+  previewFor = t;
   clearTimeout(previewTimer);
-  previewTimer = setTimeout(() => { if (t.isConnected && !drag.busy()) showPreview(t); }, 280);
+  previewTimer = setTimeout(() => { if (t.isConnected && !drag.busy() && previewFor === t) showPreview(t); }, 280);
 });
 document.addEventListener('pointerout', (e) => {
-  if (e.target.closest?.('[data-preview]')) hidePreview();
+  const t = e.target.closest?.('[data-preview]');
+  if (!t || (e.relatedTarget && t.contains(e.relatedTarget))) return;
+  if (previewFor === t) previewFor = null;
+  // Mouse: a hand card you clicked (lifted) settles back into the hand once you move off it.
+  if (e.pointerType !== 'touch' && t.matches('.my-hand [data-hand].inspect') && !drag.busy()) drag.putBack();
+  hidePreview();
 });
 document.addEventListener('pointerdown', hidePreview);
 
