@@ -3013,3 +3013,15 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
 .minion.rad-hit .hp, .hero-portrait.rad-hit .hp { filter: drop-shadow(0 0 0.12em #7dff4a) drop-shadow(0 0 0.25em #7dff4a99) !important; }
 .big-card.framed .bc-hp { left: 80.9% !important; }
 .big-card.framed .bc-hp.two-digit { left: 78.8% !important; }
+
+/* Phones (portrait): Hero Spells stacked beside the hero with room between them for the cost
+   badge, and never smaller than a comfortable tap target. */
+.arena.portrait .hero-spell { width: max(30px, calc(var(--hero) * 0.5)); height: max(30px, calc(var(--hero) * 0.5)); }
+.arena.portrait .hero-zone .hero-powers { gap: max(12px, calc(var(--hero) * 0.2)) max(10px, calc(var(--hero) * 0.14)); }
+.arena.portrait .hero-zone .hero-powers > .extinction-badge, .arena.portrait .hero-zone .hero-powers > .hive-badge,
+.arena.portrait .hero-zone .hero-powers > .corpse-badge { min-width: 26px; min-height: 26px; }
+/* Keep the enemy's stacked Hero Spells on screen when their hero sits right at the top. */
+.arena.p-board .hero-zone.opp .hero-powers { top: max(calc(var(--oh-y) + var(--oh-h) / 2),
+  calc(max(30px, var(--hero) * 0.5) + max(12px, var(--hero) * 0.2) / 2 + 10px)); }
+/* ...and keep yours clear of the hand below. */
+.arena.p-board .hero-zone.me .hero-powers { top: calc(var(--mh-y) + var(--mh-h) / 2 - max(6px, var(--hero) * 0.22)); }
