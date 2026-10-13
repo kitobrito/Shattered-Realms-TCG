@@ -100,6 +100,12 @@ export const STANDARD_CUTS = {
     'temporal_reversal', 'impossible_blueprint', 'reality_overlap',
     'paradox_mine', 'borrowed_seconds', 'spatial_redirection',
   ],
+  // Keeps: the cheap hunters, the executioners and the board-wide damage.
+  Sharks: [
+    'hammerhead_scout', 'goblin_shark', 'abyssal_bloodhound', 'scarred_leviathan',
+    'echoes_of_blood', 'nothing_escapes_the_current',
+    'beneath_the_sand', 'the_killing_current', 'scent_through_stone', 'intercept',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their

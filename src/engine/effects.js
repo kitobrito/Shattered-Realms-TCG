@@ -21,7 +21,7 @@ import {
   addToHand, allKeywords, dealDamage, drawCards, effectiveAttack, emit, findCharacter, hasKeyword, heal, heroOf,
   hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
   applyBurn, burnCards, isBurning, isDarkOrUndead,
-  applyRadiation, clearRadiation, radiationOf, reduceHealthStat,
+  applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -107,7 +107,7 @@ export function displaceMinion(state, m, opts) {
   if (i < 0) return false;
   pl.board.splice(i, 1);
   // Temporary effects end when it leaves (this-turn Attack, Health and keywords).
-  m.tempAttack = 0; m.tempKeywords = [];
+  m.tempAttack = 0; m.tempKeywords = []; m.prey = false;
   if (m.tempHealth > 0) { m.maxHealth -= m.tempHealth; m.health = Math.min(m.health, m.maxHealth); }
   m.tempHealth = 0;
   if (m.tempControl) { m.controller = m.owner; m.tempControl = null; }
@@ -208,6 +208,8 @@ export function checkCondition(state, cond, ctx) {
   if (cond.deadInGraveyard) return deadEntries(state, ctx, cond.deadInGraveyard.from, cond.deadInGraveyard).length > 0;
   // { noHauntAlive: tag } — none of your minions Haunted by that card is still in play.
   if (cond.noHauntAlive) return !state.players[ctx.controller].board.some((m) => m.hauntTag === cond.noHauntAlive);
+  // Sharks: { enemyPrey: true } — an enemy minion is Marked Prey.
+  if (cond.enemyPrey != null) return state.players[opponentOf(ctx.controller)].board.some((m) => m.prey) === cond.enemyPrey;
   // { ctxFlag } — an earlier effect of this card set the flag (a minion was cleansed).
   if (cond.ctxFlag) return !!ctx[cond.ctxFlag];
   // { myTurn: true } — it is the card controller's turn (Blood Alchemist).
@@ -233,6 +235,7 @@ export function checkCondition(state, cond, ctx) {
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
     if (cond.notKeyword && hasKeyword(c, cond.notKeyword)) return false;
+    if (cond.prey != null && !!c.prey !== cond.prey) return false;
     if (cond.kind && c.kind !== cond.kind) return false;
     if (cond.burning != null && isBurning(c) !== cond.burning) return false;
     if (cond.darkOrUndead != null && isDarkOrUndead(c) !== cond.darkOrUndead) return false;
@@ -335,6 +338,7 @@ function applyBuff(state, c, e) {
   if (c.kind === 'minion' && ((e.attack ?? 0) < 0 || (e.health ?? 0) < 0)) {
     emit(state, { type: 'minionLostStats', target: c.uid, player: c.controller, source: null });
   }
+  if (e.health) checkPrey(state, c, e.health > 0);
   for (const k of e.keywords ?? []) addKeyword(c, k, false, state);
   for (const k of e.temporaryKeywords ?? []) addKeyword(c, k, true, state);
   for (const k of e.lingerKeywords ?? []) addKeyword(c, k, false, state, e.lingerUntil);
@@ -1226,6 +1230,72 @@ export const EFFECT_OPS = {
     });
   },
 
+  // ---- Sharks ----
+  // { target, force? } — mark as Prey (without force, only at 3 Health or less).
+  // lowest: mark the enemy minion with the least Health instead.
+  markPrey(state, e, ctx) {
+    if (e.lowest) {
+      const enemies = state.players[opponentOf(ctx.controller)].board.filter((m) => m.health > 0 && !m.destroyed);
+      if (!enemies.length) return;
+      const low = Math.min(...enemies.map((m) => m.health));
+      markPrey(state, pickRandom(state, enemies.filter((m) => m.health === low)), true);
+      return;
+    }
+    each(state, e.target, ctx, (c) => markPrey(state, c, !!e.force));
+  },
+
+  // { target } — reveal: the targets lose Stealth.
+  revealStealth(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (!hasKeyword(c, 'Stealth')) return;
+      loseKeyword(state, c, 'Stealth');
+      log(state, `👁 ${nameOf(state, c)} is revealed.`);
+    });
+  },
+
+  // Hammerhead Scout: reveal a random card in the enemy hand; a minion with 3 or less
+  // Health is marked as Prey while it stays there.
+  huntHand(state, e, ctx) {
+    const hand = state.players[opponentOf(ctx.controller)].hand;
+    const inst = pickRandom(state, hand);
+    if (!inst) { log(state, 'Their hand is empty.'); return; }
+    const card = getCard(inst.cardId);
+    log(state, `👁 Revealed from ${state.players[opponentOf(ctx.controller)].name}'s hand: ${card.name}.`);
+    if (card.type === 'minion' && (card.health ?? 99) <= (e.maxHealth ?? 3)) { inst.prey = true; log(state, `🩸 ${card.name} is Marked Prey in their hand.`); }
+  },
+
+  // Megalodon / Nothing Escapes the Current: destroy a Marked Prey with at most maxHealth Health;
+  // otherwise deal otherwiseDamage to it. Uses the chosen target, or (auto) the weakest Prey in
+  // play; with none in play, a Prey card in the enemy hand or deck is revealed and destroyed.
+  executePrey(state, e, ctx) {
+    const opp = state.players[opponentOf(ctx.controller)];
+    let m = findCharacter(state, ctx.chosen);
+    if (!(m?.prey) && e.auto) {
+      const prey = opp.board.filter((x) => x.prey && x.health > 0 && !x.destroyed);
+      m = prey.sort((a, b) => a.health - b.health)[0] ?? null;
+    }
+    if (m && m.prey) {
+      if (m.health <= e.maxHealth) { m.destroyed = true; log(state, `🦈 ${nameOf(state, m)} is executed.`); }
+      else if (e.otherwiseDamage) dealDamage(state, ctx.self, m.uid, e.otherwiseDamage);
+      return;
+    }
+    for (const zone of ['hand', 'deck']) {
+      const inst = opp[zone].find((c) => c.prey && (getCard(c.cardId).health ?? 99) <= e.maxHealth);
+      if (!inst) continue;
+      opp[zone].splice(opp[zone].indexOf(inst), 1);
+      opp.graveyard.push(inst);
+      log(state, `🦈 Revealed from ${opp.name}'s ${zone}: ${getCard(inst.cardId).name} is executed.`);
+      if (zone === 'deck') shuffle(state, opp.deck);
+      return;
+    }
+    log(state, 'There is no Marked Prey to execute.');
+  },
+
+  // Frenzy of the Pack: these Sharks may attack Marked Prey this turn even if they just arrived.
+  preyRush(state, e, ctx) {
+    each(state, e.target, ctx, (m) => { if (m.kind === 'minion') m.preyRush = true; });
+  },
+
   // ---- Ultraterrestrials ----
   // { target, until?: 'myNextTurn' | 'theirNextTurn' (the minion's controller's), attack?, health?,
   //   keywords?, exhausted?, ifFriendly?: {...}, ifEnemy?: {...}, toController?: 'me', onReturn?: [effects],
@@ -1290,8 +1360,10 @@ export const EFFECT_OPS = {
   // Impossible Blueprint: Discover a minion of a faction; it costs less (not below minCost).
   // { faction, costMod, minCost }
   discoverFaction(state, e, ctx) {
-    const pool = shuffle(state, collectibleMinions((c) => c.faction === e.faction).map((c) => c.id)).slice(0, 3);
+    const pool = shuffle(state, collectibleMinions((c) => c.faction === e.faction).map((c) => c.id)).slice(0, e.count ?? 3);
     if (!pool.length) return;
+    // random: no choice, just add one (Abyssal Bloodhound without Prey).
+    if (e.random) { addToHand(state, ctx.controller, pool[0], e.costMod ? { costMod: e.costMod } : {}); log(state, `${state.players[ctx.controller].name} gets ${getCard(pool[0]).name}.`); return; }
     state.pending = {
       type: 'choice', player: ctx.controller, prompt: 'Discover a minion', resolve: 'effects', ctx,
       options: pool.map((id) => ({ cardId: id, label: getCard(id).name, effects: [{ op: 'addToHand', cardId: id, costMod: e.costMod, minCost: e.minCost }] })),

@@ -5,7 +5,7 @@ export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Werewolves', 'Aquatic', 'Radioactive', 'Old Gods',
-  'Other Ones', 'Ultraterrestrials',
+  'Other Ones', 'Ultraterrestrials', 'Sharks',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -62,6 +62,7 @@ export const KEYWORD_TEXT = {
   'Spell Ward': 'The next enemy spell that would affect this minion has no effect on it; then Spell Ward is removed.',
   Haunt: "Summon a minion that died this game from either player's Graveyard onto your side. It still belongs to its owner, so if it dies again it goes back to their Graveyard.",
   Graveyard: 'Where minions go when they die. Minions that were Obliterated never get there.',
+  Prey: "Marked Prey: an enemy minion at 3 Health or less, marked by a Shark player (Blood in the Water) or a card. Sharks can reach it through Stealth and Elusive and hit it harder. The mark lasts until it leaves play or is healed above 3 Health.",
   Displace: "Send a minion Beyond Reality for a while. It can't attack, be attacked or be targeted, doesn't take a board space, and its abilities stop until it returns (at the start of the turn named; it waits if its side's board is full).",
   Poisonous: 'When this dies, the enemy that killed it dies too.',
   Venomous: 'Kills any enemy minion it attacks.',
@@ -113,6 +114,7 @@ export const BOARD_EVENTS = [
   'minionHaunted',    // Ghosts: a minion was Haunted from a Graveyard
   'minionDisplaced',  // Ultraterrestrials: a minion went Beyond Reality ({ source, player, by })
   'minionReturned',   // Ultraterrestrials: a Displaced minion came back
+  'preyMarked',       // Sharks: an enemy minion became Marked Prey
   'burnApplied',      // a character's Burn value was set or raised
   'burnDamage',       // a character took Burn damage (end of its controller's turn)
   'cardBurned',       // a card was burned from a hand or deck

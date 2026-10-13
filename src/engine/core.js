@@ -248,6 +248,28 @@ export function pushFront(state, steps) {
 // Events (and self-triggers) raised while a step resolves are buffered and
 // run right after that step finishes, in the order raised, before any
 // follow-up steps the step queued.
+// ---- Sharks: Marked Prey ---------------------------------------------------------
+// Blood in the Water (the Sharks' passive Hero Spell): an enemy minion brought to 3 Health
+// or less becomes Marked Prey. The mark stays until it leaves play or is healed above 3.
+// Cards can also mark minions directly (markPrey with force).
+export const PREY_HEALTH = 3;
+export const isShark = (c) => c?.kind === 'minion' && (c.tribes ?? []).includes('Shark');
+export const huntsPrey = (state, p) => state.players[p]?.factions?.includes('Sharks');
+export function markPrey(state, m, force = false) {
+  if (!m || m.kind !== 'minion' || m.prey || m.health <= 0 || m.destroyed) return false;
+  if (!force && m.health > PREY_HEALTH) return false;
+  m.prey = true;
+  log(state, `🩸 ${nameOf(state, m)} is Marked Prey.`);
+  emit(state, { type: 'preyMarked', source: m.uid, player: m.controller });
+  return true;
+}
+// healed: Health went up (healing or a buff), which can lift the mark; damage never does.
+export function checkPrey(state, m, healed = false) {
+  if (!m || m.kind !== 'minion') return;
+  if (m.prey && healed && m.health > PREY_HEALTH) { m.prey = false; log(state, `${nameOf(state, m)} is no longer Prey.`); return; }
+  if (!m.prey && m.health > 0 && m.health <= PREY_HEALTH && huntsPrey(state, opponentOf(m.controller))) markPrey(state, m);
+}
+
 export function emit(state, event) {
   state.buffer.push({ kind: 'event', event });
 }
@@ -297,6 +319,7 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     t.lastDamagedBy = sourceId;
     t.lastDamagedByController = srcController;
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: sourceId });
+    checkPrey(state, t);
   }
   log(state, `${src ? nameOf(state, src) : opts.burn ? '🔥 Burn' : 'Effect'} deals ${amount} to ${nameOf(state, t)}.`);
   emit(state, { type: 'damageDealt', source: sourceId, target: t.uid, player: t.controller, amount });
@@ -335,6 +358,7 @@ export function heal(state, targetId, amount, opts = {}) {
     t.health += healed;
   }
   log(state, `${nameOf(state, t)} restores ${healed} Health.`);
+  checkPrey(state, t, true);
   emit(state, { type: 'characterHealed', source: opts.source ?? null, target: t.uid, player: t.controller, amount: healed });
   emit(state, { type: 'healthGained', target: t.uid, player: t.controller, amount: healed });
   return healed;

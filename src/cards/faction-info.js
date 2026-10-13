@@ -99,6 +99,13 @@ export const FACTION_INFO = {
     mechanic: "Between Worlds: Displace a minion until your next turn. A friendly one returns with +1/+1; an enemy one returns exhausted.",
     style: 'Tempo · Control',
   },
+  Sharks: {
+    summary: 'Relentless hunters: wound enemies, mark them as Prey, then execute them.',
+    strengths: ['Finishing off damaged minions', 'Prey can\'t hide in Stealth or behind Elusive', 'Board-wide damage that sets up kills'],
+    weaknesses: ['Big, healthy minions shrug off the hunt', 'Healing removes the mark', 'Few ways to protect their own minions'],
+    mechanic: 'Blood in the Water (passive): enemy minions at 3 Health or less become Marked Prey; Sharks get +2 Attack against Prey once per turn.',
+    style: 'Aggro · Removal',
+  },
 };
 
 // Synergy rating (1-5 stars) for each faction pair: how well their mechanics work
@@ -196,6 +203,20 @@ export const SYNERGY = {
   'Radioactive+Ultraterrestrials': [2, 'Displaced minions stop radiating while away.'],
   'Bees+Ultraterrestrials': [3, 'Displace the Hive out of danger.'],
   'Ghosts+Ultraterrestrials': [4, 'Spirits that slip between worlds and graves.'],
+  'Sharks+Vampires': [4, 'Blood everywhere: Lifesteal and executions keep the pressure on.'],
+  'Aliens+Sharks': [3, 'Debuffs and abductions leave enemies weak enough to hunt.'],
+  'Dinosaurs+Sharks': [4, 'Two apex predators: huge Rush minions finishing off Prey.'],
+  'Plants+Sharks': [2, 'Slow Seedlings and fast hunters pull different ways.'],
+  'Fungus+Sharks': [3, 'Mushrooms and nibbles wear the enemy down.'],
+  'Sharks+Zombies': [3, 'Kill Prey, collect Corpses, come back.'],
+  'Dragons+Sharks': [5, 'Burn drags everything into the danger zone for the Sharks.'],
+  'Demons+Sharks': [3, 'Pay Health for big hunters.'],
+  'Divine+Sharks': [2, 'Healing and hunting rarely line up.'],
+  'Robots+Sharks': [3, 'Upgraded Sharks with Rush.'],
+  'Radioactive+Sharks': [5, 'Radiation shrinks every enemy into Prey.'],
+  'Bees+Sharks': [3, 'Swarms of chip damage to set up the hunt.'],
+  'Ghosts+Sharks': [3, 'Dead Prey become your Haunts.'],
+  'Sharks+Ultraterrestrials': [3, 'Displace the big threats and hunt the rest.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;
