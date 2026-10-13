@@ -92,7 +92,7 @@ export const DRAGON_CARDS = [
   },
   {
     ...D, id: 'furnace_dragon', name: 'Furnace Dragon', art: '🏭', cost: 6, attack: 5, health: 6,
-    text: 'Whenever an enemy character takes Burn damage, increase its Burn value by 1. This can trigger only once per turn for each character.',
+    text: "Whenever an enemy character takes Burn damage, its Burn value rises by 1 (once per character per turn).",
     triggers: [{ on: 'burnDamage', filter: { target: 'enemyCharacter' }, effects: [{ op: 'addBurn', target: 'eventTarget', amount: 1, oncePerTurn: 'furnace_dragon' }] }],
   },
   {
@@ -117,7 +117,7 @@ export const DRAGON_CARDS = [
   },
   {
     ...D, id: 'the_worldflame', name: 'The Worldflame', art: '🌍', cost: 10, attack: 8, health: 10,
-    text: "Arrival: Deal 2 damage to all enemy characters. For each enemy character that is Burning, deal 1 additional damage to it. Then burn 2 cards in your opponent's hand, chosen at random.",
+    text: "Arrival: Deal 2 damage to all enemies, +1 to each Burning one. Burn 2 random cards in your opponent's hand.",
     triggers: [{ on: 'battlecry', effects: [
       { op: 'damage', target: ENEMY_CHARACTERS, amount: 2, burningBonus: 1 },
       { op: 'burnCards', from: 'hand', count: 2 },

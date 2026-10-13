@@ -27,7 +27,7 @@ export const DEMON_CARDS = [
   // ---- Hero Spell ----
   {
     ...S, id: 'infernal_summoning', name: 'Infernal Summoning', art: '🕳️', heroSpell: true, cost: 3, needsBoardSpace: true,
-    text: 'Lose Health equal to your Summoning Tier. Summon a random Demon of that Mana Cost. Starts at Tier 1; each use raises the Tier by 1, up to 10.',
+    text: "Lose Health equal to your Summoning Tier to summon a random Demon of that cost. The Tier starts at 1 and rises by 1 per use (max 10).",
     effects: [{ op: 'infernalSummon' }],
   },
 
@@ -181,7 +181,7 @@ export const DEMON_CARDS = [
   },
   {
     ...S, id: 'unleash_the_beast', name: 'Unleash the Beast', art: '🐺', cost: 3, needsBoardSpace: true,
-    text: 'When an enemy minion attacks, lose 3 Health to summon a random Demon that costs 3 Mana or less with Taunt. It can protect your Hero from that attack.',
+    text: "When an enemy minion attacks: lose 3 Health to summon a random Demon (3 Mana or less) with Taunt. It can block that attack on your Hero.",
     // Ruling (Q15): if the attack was aimed at your Hero, the new Demon takes it instead.
     quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
     effects: [
@@ -220,7 +220,7 @@ export const DEMON_CARDS = [
   },
   {
     ...T, id: 'gateway_collapse', name: 'Gateway Collapse', art: '🚪', cost: 5,
-    text: 'When your opponent summons a minion, lose 4 Health to summon a random Demon that costs 4 Mana or less with Taunt. It attacks the triggering minion if able.',
+    text: "When your opponent summons a minion: lose 4 Health to summon a random Demon (4 Mana or less) with Taunt. It attacks that minion if able.",
     // Ruling (Q15): "summons" = plays a minion; the new Demon fights it right away.
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [
       paySummon(4), randomDemon(4, { keywords: ['Taunt'] }), { op: 'fight', attacker: 'summoned', defender: 'eventSource' },

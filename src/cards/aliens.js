@@ -52,7 +52,7 @@ export const ALIEN_CARDS = [
   },
   {
     ...T, id: 'alien_infection', name: 'Alien Infection', art: '🦠', cost: 2,
-    text: 'When an enemy minion attacks, give it a random negative Keyword or effect. A random friendly minion gains a random positive Keyword.',
+    text: "When an enemy minion attacks: it gets a random negative Keyword or effect, and a random friendly minion gets a random positive Keyword.",
     // Q: "gain" = a random friendly minion gains the positive Keyword.
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [
       { op: 'giveRandomKeyword', target: 'eventSource', negative: true },

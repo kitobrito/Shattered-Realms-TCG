@@ -115,7 +115,7 @@ export const ZOMBIE_CARDS = [
   },
   {
     ...S, id: 'zombie_bite', name: 'Zombie Bite', art: '🦷', cost: 2,
-    text: 'Deal 2 damage to a minion. Restore 2 Health to your Hero. Give the target: "Exit: Leave a Corpse on the enemy side and summon a 1/2 Walker or 2/1 Runner."',
+    text: "Deal 2 damage to a minion and restore 2 Health to your Hero. It gains \"Exit: Leave a Corpse on the enemy side and summon a 1/2 Walker or 2/1 Runner.\"",
     target: ANY_MINION,
     // Ruling: "the enemy side" is the caster's opponent; the Walker/Runner is the caster's.
     effects: [
@@ -171,7 +171,7 @@ export const ZOMBIE_CARDS = [
   },
   {
     ...S, id: 'corpse_shield', name: 'Corpse Shield', art: '🛡️', cost: 2,
-    text: 'When a friendly minion would take lethal damage, prevent that damage and give it Reborn. If it is a Zombie, it leaves an extra Corpse if it dies later this turn.',
+    text: "When a friendly minion would take lethal damage: prevent it and give it Reborn. A Zombie leaves an extra Corpse if it dies later this turn.",
     // Designer ruling: a Zombie always leaves a Corpse; this one leaves a second one if it dies this turn.
     quickPlay: { windows: ['wouldTakeDamage'], filter: { target: { side: 'friendly' }, lethal: true } },
     effects: [

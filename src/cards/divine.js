@@ -26,7 +26,7 @@ export const DIVINE_CARDS = [
   // ---- Hero Spell ----
   {
     ...S, id: 'summoners_grace', name: "Summoner's Grace", art: '✨', heroSpell: true, cost: 2,
-    text: 'Restore 2 Health to a friendly character and Cleanse it (remove Burn, Radiation, Frozen and other harmful effects). Overheal: if it is at full Health, its maximum Health increases by 2 instead.',
+    text: "Restore 2 Health to a friendly character and Cleanse it. Overheal: at full Health, it gets +2 maximum Health instead.",
     target: FRIENDLY_CHARACTER,
     effects: [{ op: 'cleanse', target: 'chosen' }, heal('chosen', 2)],
   },
@@ -171,7 +171,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...S, id: 'last_light', name: 'Last Light', art: '🕯️', cost: 2,
-    text: 'When a friendly character would take lethal damage: Prevent that damage and give it 3 Temporary Health. Triggers once per character per turn.',
+    text: "When a friendly character would take lethal damage: prevent it and give it 3 Temporary Health. Once per character per turn.",
     // Ruling (Q16): the 3 Temporary Health lasts until the end of the turn.
     quickPlay: { windows: ['wouldTakeDamage'], filter: { target: 'friendlyCharacter', lethal: true } },
     effects: [
