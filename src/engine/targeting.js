@@ -7,8 +7,11 @@ import { pickRandom } from './rng.js';
 
 // Stealth: enemy cards and abilities cannot choose a Stealthed minion.
 // Elusive: enemy spells cannot choose it.
-export function canBeChosenBy(target, controller, bySpell = false) {
+export function canBeChosenBy(target, controller, bySpell = false, spec = null) {
   if (target.kind !== 'minion' || target.controller === controller) return true;
+  // Sharks: cards that hunt Marked Prey reach it through Stealth and Elusive; some track any hidden minion.
+  if (spec?.prey && target.prey) return true;
+  if (spec?.ignoreStealth && !(bySpell && hasKeyword(target, 'Elusive'))) return true;
   if (hasKeyword(target, 'Stealth')) return false;
   if (bySpell && hasKeyword(target, 'Elusive')) return false;
   return true;
@@ -30,6 +33,10 @@ function minionPasses(m, f) {
   if (f.maxAttack != null && effectiveAttack(m) > f.maxAttack) return false;
   if (f.hasKeyword && !allKeywords(m).length) return false;
   if (f.alive && (m.health <= 0 || m.destroyed)) return false;
+  // Sharks: Marked Prey, at most N Health, in Stealth.
+  if (f.prey && !m.prey) return false;
+  if (f.maxHealth != null && m.health > f.maxHealth) return false;
+  if (f.stealthed && !hasKeyword(m, 'Stealth')) return false;
   if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
   if (f.unresurrected && m.resurrected) return false; // Resurrection: once per minion
   // Attack below its card's printed Attack (Mycelium Lord).
@@ -51,7 +58,7 @@ export function targetCandidates(state, spec, controller, excludeUid = null, byS
   const eggGuarded = (c) => bySpell && c.kind === 'minion' && c.controller !== controller && c.tribes.includes('Egg')
     && state.players[c.controller].board.some((m) => getCard(m.cardId).guardsEggsFromSpells);
   return out
-    .filter((c) => c.uid !== excludeUid && canBeChosenBy(c, controller, bySpell) && !eggGuarded(c))
+    .filter((c) => c.uid !== excludeUid && canBeChosenBy(c, controller, bySpell, spec) && !eggGuarded(c))
     .map((c) => c.uid);
 }
 
@@ -168,6 +175,11 @@ export function matchFilter(state, filter, ctx) {
       if (!ev.cardId || (getCard(ev.cardId).cost ?? 0) < want) return false;
       continue;
     }
+    // Sharks: the minion that died was Marked Prey.
+    if (key === 'deadPrey') {
+      if (!!ev.dead?.prey !== want) return false;
+      continue;
+    }
     if (key === 'killerMinion') {
       if (!!ev.killerMinion !== want) return false;
       continue;
@@ -200,6 +212,8 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.darkOrUndead && !isDarkOrUndead(c)) return false;
     if (want.irradiated != null && (radiationOf(c) > 0) !== want.irradiated) return false;
     if (want.maxAttack != null && effectiveAttack(c) > want.maxAttack) return false;
+    if (want.maxHealth != null && c.health > want.maxHealth) return false;
+    if (want.prey && !c.prey) return false;
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;
     return true;
   }

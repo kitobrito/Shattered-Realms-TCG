@@ -24,6 +24,7 @@ export function keywordClasses(c) {
 
 function cornerIcons(m, s) {
   return [
+    m.prey ? '<i class="prey-mark" title="Marked Prey: Sharks hunt it through Stealth and Elusive">🩸</i>' : '',
     m.tempControl ? '<i title="Controlled temporarily">⛓</i>' : '',
     m.returnAtEndOfTurn ? '<i title="Returns to hand at end of turn">↩</i>' : '',
   ].join('');
@@ -69,7 +70,7 @@ export function minionHTML(m, s, cls = '') {
   const art = artOf(card);
   const kws = allKeywords(m).map(kwSlug);
   return `
-    <div class="minion ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}">
+    <div class="minion ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}</div>

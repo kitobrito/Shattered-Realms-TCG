@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  Sharks: {
+    greetings: "Smell that? Fresh blood.",
+    wellPlayed: "A worthy hunt. Well played.",
+    thanks: "Thanks, chum.",
+    wow: "Now that's a feeding frenzy!",
+    oops: "Missed a bite.",
+    threaten: "You're bleeding. I can tell.",
+  },
   Ultraterrestrials: {
     greetings: "Greetings from every elsewhere.",
     wellPlayed: "In all realities, well played.",

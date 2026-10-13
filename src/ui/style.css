@@ -3072,3 +3072,17 @@ body.reduced-motion .beyond-badge { animation: none; }
 /* Two-faction deck builder: a faction under its minimum, and the hint line. */
 .pick-count.short { color: #ff9a8a; }
 .builder-hint { margin: 6px 0 0; color: #ffcf8a; font-weight: 600; }
+
+/* ---- Sharks ---- */
+.big-card.f-sharks { --frame: #1a3a5a; --frame-hi: #ff4a4a; --body: #06121e; }
+.arena.f-sharks { --felt: #123048; --felt-2: #061220; --rim: #4ab8ff; }
+.big-card.t-spell.f-sharks { --frame: #5a1a1a; --frame-hi: #ff6a5a; --body: #1e0606; }
+.big-card.t-trap.f-sharks  { --frame: #2a3440; --frame-hi: #8ab0c8; --body: #0a0e12; }
+.fx-p.bubble { width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #8ad8ff 40%, transparent 70%); border: 1px solid #cfefff88; }
+.medallion.f-sharks { --fc: #ff4a4a; } .ts-guide.f-sharks { --fc: #ff4a4a; }
+/* Marked Prey: a pulsing blood mark on the minion. */
+.minion .prey-mark { display: inline-grid; place-items: center; font-size: 1.7em; filter: drop-shadow(0 0 4px #ff2a2a) drop-shadow(0 0 2px #000); animation: preyPulse 1.4s ease-in-out infinite; }
+.arena .minion.prey .m-ring { filter: drop-shadow(0 0 0.15em #ff1a1a) drop-shadow(0 0 0.5em #ff2a2acc) !important; }
+.arena .minion.prey .m-art::after { background: radial-gradient(ellipse at 50% 45%, transparent 55%, #b0000088 100%) !important; }
+@keyframes preyPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+body.reduced-motion .minion .prey-mark { animation: none; }

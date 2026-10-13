@@ -10,6 +10,7 @@ import {
   addToHand, costOf, createHero, dealDamage, drawCards, effectiveAttack, emit, findCharacter,
   hasKeyword, hooks, log, loseHealth, minionsInOrder, nameOf, opponentOf, pushFront, removeKeyword,
   summonMinion, isBurning, manaFor, payMana, radiationOf,
+  isShark, huntsPrey, heal, heroOf,
 } from './core.js';
 import { checkCondition, processBeyond, resolveEffect } from './effects.js';
 import { factionHook } from './factions.js';
@@ -152,8 +153,9 @@ function mulligan(state, { player: p, replace }) {
 function canAttack(c) {
   if (c.kind === 'minion' && getCard(c.cardId).cantAttack) return false; // The Living Hive
   if (effectiveAttack(c) <= 0 || hasKeyword(c, 'Frozen') || c.cantAttackThisTurn) return false;
-  if (c.attacksThisTurn >= (hasKeyword(c, 'Twin Strike') ? 2 : 1)) return false;
-  if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush')) return false;
+  if (c.attacksThisTurn >= (hasKeyword(c, 'Twin Strike') ? 2 : 1) + (c.bonusAttacks ?? 0)) return false;
+  // Frenzy of the Pack: a Shark that just arrived may still attack Marked Prey.
+  if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush') && !c.preyRush) return false;
   return true;
 }
 
@@ -170,6 +172,19 @@ export function attackTargets(state, p) {
 // Rush: on the turn it arrives, a minion may attack only minions.
 function defendersFor(state, c) {
   let all = attackTargets(state, c.controller);
+  // Sharks: Marked Prey can't hide in Stealth from a Shark (Blood in the Water); Goblin Shark
+  // sees every Stealthed minion. (Taunt still has to be dealt with first.)
+  if (isShark(c)) {
+    const enemy = state.players[opponentOf(c.controller)];
+    const taunts = enemy.board.some((m) => hasKeyword(m, 'Taunt') && !hasKeyword(m, 'Stealth'));
+    const seesAll = getCard(c.cardId).seesStealth;
+    const hidden = enemy.board.filter((m) => hasKeyword(m, 'Stealth') && (seesAll || (m.prey && huntsPrey(state, c.controller))));
+    if (!taunts) all = [...all, ...hidden.map((m) => m.uid)];
+  }
+  // Frenzy of the Pack: an arriving Shark may only attack Marked Prey.
+  if (c.kind === 'minion' && c.sick && c.preyRush && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush')) {
+    return all.filter((id) => findCharacter(state, id)?.prey);
+  }
   // Feralized Survivor: can't attack Heroes.
   if (c.kind === 'minion' && getCard(c.cardId).cantAttackHeroes) all = all.filter((id) => findCharacter(state, id).kind === 'minion');
   if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge')) {
@@ -422,6 +437,26 @@ function resolveChoice(state, { player: p, index }) {
   }
 }
 
+// Sharks: extra damage when a Shark attacks. Blood in the Water gives +2 against Marked Prey
+// once per turn; Pack Hunters +1 each; Mako Sprinter doubles it; Goblin Shark +1 to wounded minions.
+function huntDamage(state, a, d, dmg) {
+  if (a.kind !== 'minion' || d.kind !== 'minion') return dmg;
+  const card = getCard(a.cardId);
+  if (d.prey && isShark(a)) {
+    const pl = state.players[a.controller];
+    if (huntsPrey(state, a.controller) && pl.preyBonusTurn !== state.turn) {
+      pl.preyBonusTurn = state.turn;
+      dmg += 2;
+      log(state, `🩸 Blood in the Water: +2 Attack against Prey.`);
+    }
+    dmg += pl.board.filter((m) => getCard(m.cardId).packBonus).length;
+    dmg += card.preyAttack ?? 0;
+    if (card.doubleVsPrey) dmg *= 2;
+  }
+  if (card.woundBonus && d.health < d.maxHealth) dmg += 1;
+  return dmg;
+}
+
 function declareAttack(state, { player: p, attacker, defender }) {
   const a = findCharacter(state, attacker);
   a.attacksThisTurn += 1;
@@ -611,8 +646,18 @@ const STEPS = {
       ]);
       return;
     }
-    const dealt = dealDamage(state, a.uid, d.uid, aDmg);
+    const huntDmg = huntDamage(state, a, d, aDmg);
+    const wasPrey = d.kind === 'minion' && d.prey;
+    const dealt = dealDamage(state, a.uid, d.uid, huntDmg);
     dealDamage(state, d.uid, a.uid, dDmg);
+    // Scarred Leviathan: damage to Marked Prey heals your Hero by as much.
+    if (wasPrey && dealt > 0 && a.kind === 'minion' && getCard(a.cardId).leechPrey) heal(state, heroOf(state, a.controller).uid, dealt, { source: a.uid });
+    // Great White: killing Marked Prey lets it attack again this turn (once).
+    if (wasPrey && d.health <= 0 && a.kind === 'minion' && getCard(a.cardId).extraAttackOnPreyKill && a.extraAttackTurn !== state.turn) {
+      a.extraAttackTurn = state.turn;
+      a.bonusAttacks = (a.bonusAttacks ?? 0) + 1;
+      log(state, `${nameOf(state, a)} can attack again!`);
+    }
     // Venomous: kills the enemy minion it attacks (if the hit landed).
     if (dealt > 0 && d.kind === 'minion' && hasKeyword(a, 'Venomous')) {
       d.destroyed = true;
@@ -647,7 +692,7 @@ const STEPS = {
       const event = {
         type: 'minionDied', source: m.uid, player: m.controller, cardId: m.cardId,
         killer: m.lastDamagedBy, killerPlayer: m.lastDamagedByController, killerMinion: killerMinion.get(m.uid), byBurn: !!m.diedToBurn,
-        dead: { kind: 'minion', controller: m.controller, tribes: [...m.tribes], cardId: m.cardId, storedCost: m.storedCost, upgrades: m.upgrades ?? 0, irradiated: radiationOf(m) > 0 },
+        dead: { kind: 'minion', controller: m.controller, prey: !!m.prey, tribes: [...m.tribes], cardId: m.cardId, storedCost: m.storedCost, upgrades: m.upgrades ?? 0, irradiated: radiationOf(m) > 0 },
       };
       // Poisonous: the enemy minion that killed it dies too.
       const killer = findCharacter(state, m.lastDamagedBy);
@@ -783,6 +828,8 @@ const STEPS = {
         m.tempKeywords = [];
         m.cantAttackThisTurn = false;
         m.justReturned = false;
+        m.preyRush = false;
+        m.bonusAttacks = 0;
         if (m.grantedTriggers?.some((t) => t.temporary)) m.grantedTriggers = m.grantedTriggers.filter((t) => !t.temporary);
         if (m.tempHealth > 0) {
           m.maxHealth -= m.tempHealth;
