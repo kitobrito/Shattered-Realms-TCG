@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  Ultraterrestrials: {
+    greetings: "Greetings from every elsewhere.",
+    wellPlayed: "In all realities, well played.",
+    thanks: "Gratitude, across dimensions.",
+    wow: "Impossible!",
+    oops: "That was not supposed to happen… here.",
+    threaten: "You won't exist much longer.",
+  },
   Ghosts: {
     greetings: "Oooo… welcome to the other side.",
     wellPlayed: "Hauntingly well played.",

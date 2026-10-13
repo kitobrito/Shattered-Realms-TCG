@@ -11,7 +11,7 @@ import {
   hasKeyword, hooks, log, loseHealth, minionsInOrder, nameOf, opponentOf, pushFront, removeKeyword,
   summonMinion, isBurning, manaFor, payMana, radiationOf,
 } from './core.js';
-import { checkCondition, resolveEffect } from './effects.js';
+import { checkCondition, processBeyond, resolveEffect } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -782,6 +782,7 @@ const STEPS = {
         m.tempAttack = 0;
         m.tempKeywords = [];
         m.cantAttackThisTurn = false;
+        m.justReturned = false;
         if (m.grantedTriggers?.some((t) => t.temporary)) m.grantedTriggers = m.grantedTriggers.filter((t) => !t.temporary);
         if (m.tempHealth > 0) {
           m.maxHealth -= m.tempHealth;
@@ -840,6 +841,8 @@ const STEPS = {
       enterBattlefield(state, m);
     }
     for (const x of state.players) x.zombieDeathsThisTurn = 0;
+    // Ultraterrestrials: Displaced minions due back now return.
+    processBeyond(state, p);
     state.deathsLastTurn = state.deathsThisTurn ?? 0;
     state.deathsThisTurn = 0;
     pl.turnsTaken += 1;
@@ -863,7 +866,11 @@ const STEPS = {
       }
       c.lingerHealth = (c.lingerHealth ?? []).filter((x) => x.until !== p);
     }
-    for (const m of pl.board) { m.sick = false; m.attacksThisTurn = 0; }
+    for (const m of pl.board) {
+      m.sick = false; m.attacksThisTurn = 0;
+      // Between Worlds: an enemy minion that came back exhausted can't attack this turn.
+      if (m.exhausted) { m.cantAttackThisTurn = true; m.exhausted = false; }
+    }
     log(state, `— Turn ${state.turn}: ${pl.name} (${pl.mana.current} Mana) —`);
     drawCards(state, p, 1);
     emit(state, { type: 'startOfTurn', player: p });

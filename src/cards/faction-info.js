@@ -92,6 +92,13 @@ export const FACTION_INFO = {
     mechanic: "Call Beyond the Veil: Haunt a random minion that died this game from either Graveyard. It enters with Reborn.",
     style: 'Control · Graveyard',
   },
+  Ultraterrestrials: {
+    summary: 'Beings from beyond reality who Displace minions out of the world, then bring them back stronger.',
+    strengths: ['Removes threats for a turn without fighting them', 'Hides your own minions from board wipes', 'Big payoffs when minions return'],
+    weaknesses: ['Displaced enemies always come back', 'Timing-heavy: wasted turns hurt', 'Few ways to finish the game fast'],
+    mechanic: "Between Worlds: Displace a minion until your next turn. A friendly one returns with +1/+1; an enemy one returns exhausted.",
+    style: 'Tempo · Control',
+  },
 };
 
 // Synergy rating (1-5 stars) for each faction pair: how well their mechanics work
@@ -176,6 +183,19 @@ export const SYNERGY = {
   'Ghosts+Robots': [3, 'Upgraded machines are worth stealing back from the Graveyard.'],
   'Ghosts+Radioactive': [2, 'Radiation shrinks the Haunted minions that return weakened.'],
   'Bees+Ghosts': [3, 'Plenty of small Bees die, ready to be Haunted.'],
+  'Ultraterrestrials+Vampires': [3, 'Hide your Lifesteal minions from removal, then drain again.'],
+  'Aliens+Ultraterrestrials': [4, 'Two factions of tricks: abduct, Displace and steal.'],
+  'Dinosaurs+Ultraterrestrials': [5, 'Displace your board before Extinction hits and bring it back after.'],
+  'Plants+Ultraterrestrials': [2, 'Seedlings stop growing while they are away.'],
+  'Fungus+Ultraterrestrials': [3, 'Stall the board while Mushrooms do the damage.'],
+  'Ultraterrestrials+Zombies': [3, 'Hide your Zombies, then flood the board when they return.'],
+  'Dragons+Ultraterrestrials': [3, 'Displace blockers while Burn ticks away.'],
+  'Demons+Ultraterrestrials': [3, 'Protect expensive Demons from removal.'],
+  'Divine+Ultraterrestrials': [4, 'Cleanse and Displace to keep your best minion safe forever.'],
+  'Robots+Ultraterrestrials': [3, 'Hide upgraded Robots from removal.'],
+  'Radioactive+Ultraterrestrials': [2, 'Displaced minions stop radiating while away.'],
+  'Bees+Ultraterrestrials': [3, 'Displace the Hive out of danger.'],
+  'Ghosts+Ultraterrestrials': [4, 'Spirits that slip between worlds and graves.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;
