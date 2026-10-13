@@ -3068,3 +3068,7 @@ body.reduced-motion .beyond-badge { animation: none; }
 /* Long faction names on the menu medallions stay inside their own column (no overlapping). */
 .faction.medallion .medal-name { max-width: 100%; text-align: center; line-height: 1.1; hyphens: manual; overflow-wrap: break-word; }
 .faction.medallion .medal-name.long { font-size: 12px; letter-spacing: 0; }
+
+/* Two-faction deck builder: a faction under its minimum, and the hint line. */
+.pick-count.short { color: #ff9a8a; }
+.builder-hint { margin: 6px 0 0; color: #ffcf8a; font-weight: 600; }
