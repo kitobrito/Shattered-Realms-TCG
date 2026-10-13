@@ -3064,3 +3064,7 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
   background: #3a2a6a; border: 2px solid #b48cff; color: #fff; font-size: clamp(10px, calc(var(--hero) * 0.14), 16px); font-family: 'Card Title', serif; font-weight: 800; }
 @keyframes beyondPulse { 0%, 100% { box-shadow: 0 0 0 2px #1a1030, 0 0 0 4px #b48cff, 0 0 10px #b48cff88; } 50% { box-shadow: 0 0 0 2px #1a1030, 0 0 0 4px #d8c0ff, 0 0 20px #b48cffdd; } }
 body.reduced-motion .beyond-badge { animation: none; }
+
+/* Long faction names on the menu medallions stay inside their own column (no overlapping). */
+.faction.medallion .medal-name { max-width: 100%; text-align: center; line-height: 1.1; hyphens: manual; overflow-wrap: break-word; }
+.faction.medallion .medal-name.long { font-size: 12px; letter-spacing: 0; }
