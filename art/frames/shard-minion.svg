@@ -41,8 +41,8 @@
 <path d="M30,12 L128,12 L128,150 L79,182 L30,150 Z" fill="none" stroke="#000" stroke-width="3"/>
 <circle cx="652" cy="76" r="46" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" filter="url(#shadow)"/>
 <circle cx="652" cy="76" r="37" fill="none" stroke="#000" stroke-width="3"/>
-<path d="M20,604 L58,546 L136,546 L174,604 L136,662 L58,662 Z" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" stroke-linejoin="miter" filter="url(#shadow)"/>
-<path d="M27.700000000000003,604.0 L61.9,551.8 L132.1,551.8 L166.3,604.0 L132.1,656.2 L61.9,656.2 Z" fill="none" stroke="#000" stroke-width="3"/>
+<path d="M20,602 L58,536 L136,536 L174,602 L136,668 L58,668 Z" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" stroke-linejoin="miter" filter="url(#shadow)"/>
+<path d="M27.700000000000003,602.0 L61.9,542.6 L132.1,542.6 L166.3,602.0 L132.1,661.4 L61.9,661.4 Z" fill="none" stroke="#000" stroke-width="3"/>
 <path d="M629.0,665.1 C582.8,632.8 555.1,606.4 555.1,577.1 C555.1,553.6 573.6,538.9 595.1,538.9 C610.5,538.9 622.8,547.7 629.0,559.5 C635.2,547.7 647.5,538.9 662.9,538.9 C684.4,538.9 702.9,553.6 702.9,577.1 C702.9,606.4 675.2,632.8 629.0,665.1 Z" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" filter="url(#shadow)"/>
 <path d="M629.0,657.4 C588.2,629.1 563.7,605.9 563.7,580.1 C563.7,559.5 580.0,546.6 599.1,546.6 C612.7,546.6 623.6,554.3 629.0,564.6 C634.4,554.3 645.3,546.6 658.9,546.6 C678.0,546.6 694.3,559.5 694.3,580.1 C694.3,605.9 669.8,629.1 629.0,657.4 Z" fill="none" stroke="#000" stroke-width="3"/>
 </svg>
