@@ -2,7 +2,7 @@
 // Game state is plain JSON: no classes, Sets, or functions, so it can be
 // cloned (AI search), saved, and sent over the network unchanged.
 
-import { getCard } from './registry.js';
+import { getCard, registerCustom } from './registry.js';
 import { randomInt } from './rng.js';
 import { FACTION_TAGS } from './rules.js';
 
@@ -268,6 +268,129 @@ export function checkPrey(state, m, healed = false) {
   if (!m || m.kind !== 'minion') return;
   if (m.prey && healed && m.health > PREY_HEALTH) { m.prey = false; log(state, `${nameOf(state, m)} is no longer Prey.`); return; }
   if (!m.prey && m.health > 0 && m.health <= PREY_HEALTH && huntsPrey(state, opponentOf(m.controller))) markPrey(state, m);
+}
+
+// ---- Acidic: Corrosion, Dissolve, Acid-coated ---------------------------------------
+// Corrosion X permanently lowers a minion's Attack by X (its Health is untouched). It eats
+// the minion's own Attack first, then any Attack it has this turn. It lasts while the
+// minion stays in play; a minion that leaves and comes back is a fresh copy. At 0 Attack
+// it can't attack until something raises its Attack again.
+// Ruling: Corrosion dissolves Radioactive minions too (their passive only shrugs off buffs).
+// Acid-coated: the next Corrosion on that minion is 1 stronger, then the coating is gone.
+export function corrode(state, m, amount, by = null) {
+  if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed || amount <= 0) return 0;
+  if (m.acidCoated) { amount += 1; m.acidCoated = false; }
+  const before = effectiveAttack(m);
+  let left = amount;
+  const fromBase = Math.min(left, m.attack);
+  m.attack -= fromBase; left -= fromBase;
+  if (left > 0 && m.tempAttack > 0) { const t = Math.min(left, m.tempAttack); m.tempAttack -= t; left -= t; }
+  m.corrosion = (m.corrosion ?? 0) + amount;
+  const after = effectiveAttack(m);
+  const lost = before - after;
+  log(state, `🧪 ${nameOf(state, m)} corrodes (Corrosion ${amount}): ${before} → ${after} Attack.`);
+  emit(state, { type: 'corrosionApplied', target: m.uid, player: m.controller, by, amount, lost, zeroed: before > 0 && after === 0 });
+  return lost;
+}
+
+export function acidCoat(state, m) {
+  if (!m || m.kind !== 'minion' || m.health <= 0) return;
+  m.acidCoated = true;
+  log(state, `🧪 ${nameOf(state, m)} is Acid-coated.`);
+}
+
+// Defensive effects Dissolve strips, the strongest first (Evade is the game's Divine Shield).
+export const DEFENSIVE_KEYWORDS = ['Evade', 'Spell Ward', 'Immune', 'Reborn', 'Taunt', 'Elusive', 'Stealth'];
+// Keywords a minion carries itself (not lent by an aura, which would come straight back).
+const ownKeyword = (m, k) => m.keywords.includes(k) || (m.tempKeywords ?? []).includes(k) || (m.lingerKeywords ?? []).some((x) => x.k === k);
+export const defensiveKeywordOf = (m) => DEFENSIVE_KEYWORDS.find((k) => ownKeyword(m, k)) ?? null;
+
+export function hasTempBuffs(m) {
+  return m.tempAttack > 0 || m.tempHealth > 0 || (m.tempKeywords ?? []).length > 0
+    || (m.lingerAttack ?? []).some((x) => x.amount > 0) || (m.lingerHealth ?? []).some((x) => x.amount > 0) || (m.lingerKeywords ?? []).length > 0;
+}
+
+// Returns what was removed ({ attack, health, keywords }) or null.
+export function removeTempBuffs(state, m) {
+  if (!hasTempBuffs(m)) return null;
+  const taken = {
+    attack: Math.max(0, m.tempAttack) + (m.lingerAttack ?? []).reduce((t, x) => t + Math.max(0, x.amount), 0),
+    keywords: [...new Set([...(m.tempKeywords ?? []), ...(m.lingerKeywords ?? []).map((x) => x.k)])],
+  };
+  if (m.tempAttack > 0) m.tempAttack = 0;
+  m.lingerAttack = (m.lingerAttack ?? []).filter((x) => x.amount < 0);
+  const extra = (m.tempHealth > 0 ? m.tempHealth : 0) + (m.lingerHealth ?? []).reduce((t, x) => t + Math.max(0, x.amount), 0);
+  if (extra > 0) {
+    m.maxHealth -= extra;
+    m.health = Math.max(1, Math.min(m.health, m.maxHealth));
+  }
+  if (m.tempHealth > 0) m.tempHealth = 0;
+  m.lingerHealth = (m.lingerHealth ?? []).filter((x) => x.amount < 0);
+  for (const k of [...(m.tempKeywords ?? []), ...(m.lingerKeywords ?? []).map((x) => x.k)]) emit(state, { type: 'keywordLost', target: m.uid, player: m.controller, keyword: k });
+  m.tempKeywords = [];
+  m.lingerKeywords = [];
+  log(state, `🧪 ${nameOf(state, m)}'s temporary buffs dissolve.`);
+  return { ...taken, health: extra };
+}
+
+// Dissolving an enemy minion distills what was stripped into a 1-Mana spell in the
+// dissolver's hand that gives it to one of their own minions. Ruling: Attack and Health
+// come back for that turn; keywords come back for good.
+function distill(state, by, taken) {
+  if (by == null || (!taken.attack && !taken.health && !taken.keywords.length)) return;
+  const parts = [
+    taken.attack || taken.health ? `+${taken.attack}/+${taken.health} this turn` : '',
+    taken.keywords.join(', '),
+  ].filter(Boolean);
+  const card = {
+    id: `essence_${state.nextUid++}`, custom: true, token: true, faction: 'Acidic', type: 'spell',
+    name: 'Distilled Essence', art: '🧪', artFrom: 'strip_the_plating', cost: 1,
+    text: `Give a friendly minion ${parts.join(' and ')}.`,
+    target: { type: 'minion', side: 'friendly' },
+    effects: [{ op: 'buff', target: 'chosen',
+      ...(taken.attack ? { attack: taken.attack, temporary: true } : {}),
+      ...(taken.health ? { health: taken.health, temporaryHealth: true } : {}),
+      ...(taken.keywords.length ? { keywords: taken.keywords } : {}) }],
+  };
+  registerCustom(state, card);
+  addToHand(state, by, card.id);
+  log(state, `🧪 ${state.players[by].name} distills the stripped power into ${card.name} (${parts.join(', ')}).`);
+}
+
+// Rust-Eater Brute: a minion "has buffs" when it is above its printed stats or carries
+// temporary buffs or keywords its card doesn't print.
+export function isBuffed(m) {
+  const card = getCard(m.cardId);
+  if (hasTempBuffs(m)) return true;
+  if (m.attack > (card.attack ?? 0) || m.maxHealth > (card.health ?? 0)) return true;
+  return m.keywords.some((k) => !(card.keywords ?? []).includes(k));
+}
+
+// Dissolve: strip temporary buffs; failing that, one defensive effect; failing that, Corrosion 1.
+// opts.defenseOnly skips the buffs; opts.fallback sets the Corrosion. Returns what happened.
+export function dissolve(state, m, by = null, opts = {}) {
+  if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed) return null;
+  let result;
+  const enemy = by != null && by !== m.controller;
+  const taken = opts.defenseOnly ? null : removeTempBuffs(state, m);
+  if (taken) {
+    result = 'buffs';
+    if (enemy) distill(state, by, taken);
+  } else {
+    const k = defensiveKeywordOf(m);
+    if (k) {
+      removeKeyword(m, k);
+      if (enemy) distill(state, by, { attack: 0, health: 0, keywords: [k] });
+      emit(state, { type: 'keywordLost', target: m.uid, player: m.controller, keyword: k });
+      log(state, `🧪 ${nameOf(state, m)}'s ${k} dissolves.`);
+      result = 'defense';
+    } else {
+      corrode(state, m, opts.fallback ?? 1, by);
+      result = 'corroded';
+    }
+  }
+  emit(state, { type: 'dissolved', target: m.uid, player: m.controller, by, result });
+  return result;
 }
 
 export function emit(state, event) {

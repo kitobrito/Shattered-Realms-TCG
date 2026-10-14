@@ -1,7 +1,7 @@
 // Targeting: who a card may choose, how effect selectors resolve to
 // characters at resolution time, and how trigger filters match events.
 
-import { allKeywords, effectiveAttack, findCharacter, hasKeyword, heroOf, isBurning, isDarkOrUndead, minionsInOrder, opponentOf, radiationOf } from './core.js';
+import { allKeywords, defensiveKeywordOf, effectiveAttack, findCharacter, hasKeyword, heroOf, isBuffed, isBurning, isDarkOrUndead, minionsInOrder, opponentOf, radiationOf } from './core.js';
 import { getCard } from './registry.js';
 import { pickRandom } from './rng.js';
 
@@ -38,6 +38,10 @@ function minionPasses(m, f) {
   if (f.maxHealth != null && m.health > f.maxHealth) return false;
   if (f.stealthed && !hasKeyword(m, 'Stealth')) return false;
   if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
+  // Acidic: Attack at least N; buffed or holding a defensive keyword (Rust-Eater Brute); corroded.
+  if (f.minAttack != null && effectiveAttack(m) < f.minAttack) return false;
+  if (f.buffedOrDefended && !isBuffed(m) && !defensiveKeywordOf(m)) return false;
+  if (f.corroded && !((m.corrosion ?? 0) > 0)) return false;
   if (f.unresurrected && m.resurrected) return false; // Resurrection: once per minion
   // Attack below its card's printed Attack (Mycelium Lord).
   if (f.reducedAttack && effectiveAttack(m) >= (getCard(m.cardId).attack ?? 0)) return false;
@@ -108,8 +112,15 @@ export function resolveSelector(state, sel, ctx) {
     return minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.minions, ctx)).map((m) => m.uid);
   }
   if (sel.randomOf) {
-    const pick = pickRandom(state, resolveSelector(state, sel.randomOf, ctx));
-    return pick == null ? [] : [pick];
+    // count: up to N different picks (Tri-Maw Hydra).
+    const pool = resolveSelector(state, sel.randomOf, ctx);
+    const out = [];
+    for (let i = 0; i < (sel.count ?? 1) && pool.length; i++) {
+      const pick = pickRandom(state, pool);
+      out.push(pick);
+      pool.splice(pool.indexOf(pick), 1);
+    }
+    return out;
   }
   throw new Error(`Unknown selector: ${JSON.stringify(sel)}`);
 }
@@ -175,6 +186,16 @@ export function matchFilter(state, filter, ctx) {
       if (!ev.cardId || (getCard(ev.cardId).cost ?? 0) < want) return false;
       continue;
     }
+    // Acidic: the Corrosion actually lowered Attack; the player's Nth minion summoned this turn.
+    if (key === 'lostAttack') {
+      if (((ev.lost ?? 0) > 0) !== want) return false;
+      continue;
+    }
+    if (key === 'summonCount') {
+      const pl = state.players[ev.player];
+      if (!pl || pl.summonTurn !== state.turn || pl.summonCount !== want) return false;
+      continue;
+    }
     // Sharks: the minion that died was Marked Prey.
     if (key === 'deadPrey') {
       if (!!ev.dead?.prey !== want) return false;
@@ -212,6 +233,7 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.darkOrUndead && !isDarkOrUndead(c)) return false;
     if (want.irradiated != null && (radiationOf(c) > 0) !== want.irradiated) return false;
     if (want.maxAttack != null && effectiveAttack(c) > want.maxAttack) return false;
+    if (want.minAttack != null && effectiveAttack(c) < want.minAttack) return false;
     if (want.maxHealth != null && c.health > want.maxHealth) return false;
     if (want.prey && !c.prey) return false;
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;

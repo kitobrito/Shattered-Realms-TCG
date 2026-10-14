@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  Acidic: {
+    greetings: "Hello! Mind the drips.",
+    wellPlayed: "Well played. That stung a little.",
+    thanks: "Thanks! You're a solution.",
+    wow: "Wow, that really ate through!",
+    oops: "Oops. Wrong flask.",
+    threaten: "Everything dissolves eventually.",
+  },
   Sharks: {
     greetings: "Smell that? Fresh blood.",
     wellPlayed: "A worthy hunt. Well played.",

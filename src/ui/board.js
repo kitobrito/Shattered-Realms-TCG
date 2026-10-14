@@ -25,6 +25,8 @@ export function keywordClasses(c) {
 function cornerIcons(m, s) {
   return [
     m.prey ? '<i class="prey-mark" title="Marked Prey: Sharks hunt it through Stealth and Elusive">🩸</i>' : '',
+    m.corrosion > 0 ? `<i class="corr-mark" title="Corrosion ${m.corrosion}: its Attack was lowered by ${m.corrosion} for as long as it stays in play">🧪${m.corrosion}</i>` : '',
+    m.acidCoated ? '<i class="coat-mark" title="Acid-coated: its next Corrosion lowers its Attack by 1 more">💧</i>' : '',
     m.tempControl ? '<i title="Controlled temporarily">⛓</i>' : '',
     m.returnAtEndOfTurn ? '<i title="Returns to hand at end of turn">↩</i>' : '',
   ].join('');
@@ -110,7 +112,7 @@ export function minionHTML(m, s, cls = '') {
   if (!taunt) wardSince.delete(m.uid);
   const faction = (card.faction ?? 'neutral').toLowerCase().replace(/\s+/g, '-');
   return `
-    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>

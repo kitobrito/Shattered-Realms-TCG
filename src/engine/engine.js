@@ -338,6 +338,8 @@ function takeFromHand(state, p, uid) {
 function spellSteps(card, ctx, event, p) {
   return [
     { kind: 'event', event },
+    // Acidic: Living Flask listens for spells that apply Corrosion.
+    ...(card.corrodes ? [{ kind: 'event', event: { type: 'corrosiveSpell', player: p, cardId: card.id } }] : []),
     { kind: 'window', name: 'cardPlayed', priority: opponentOf(p), ctx: { event } },
     ...card.effects.map((effect) => ({ kind: 'effect', effect, ctx })),
     { kind: 'deaths' },
@@ -409,6 +411,7 @@ function quickPlay(state, { player: p, card: uid, target, target2 }) {
   pl.graveyard.push(inst);
   const ctx = { self: inst.uid, controller: p, chosen: target ?? null, chosen2: target2 ?? null, cardId: card.id, event: windowState.ctx?.event };
   pushFront(state, [
+    ...(card.corrodes ? [{ kind: 'event', event: { type: 'corrosiveSpell', player: p, cardId: card.id } }] : []),
     ...card.effects.map((effect) => ({ kind: 'effect', effect, ctx })),
     { kind: 'deaths' },
     // Priority passes back: the other player may answer the Quick Play.
@@ -591,7 +594,17 @@ function extinction(state, p) {
 
 const STEPS = {
   event(state, { event }) {
+    // Acidic: count each player's minions summoned this turn (Corrosion Chamber).
+    if (event.type === 'minionSummoned') {
+      const pl = state.players[event.player];
+      if (pl.summonTurn !== state.turn) { pl.summonTurn = state.turn; pl.summonCount = 0; }
+      pl.summonCount += 1;
+    }
     const steps = dispatchEvent(state, event);
+    // Acidic: an enemy minion gaining Attack on its own turn opens a Quick Play window (Reactive Spill).
+    if (event.type === 'attackGained' && event.player === state.activePlayer) {
+      steps.push({ kind: 'window', name: 'enemyBuffed', priority: opponentOf(event.player), ctx: { event } });
+    }
     // Damage and Burn damage open a Quick Play window for the waiting player (Dragons).
     if (event.type === 'damageDealt' || event.type === 'burnDamage') {
       steps.push({ kind: 'window', name: event.type, priority: opponentOf(state.activePlayer), ctx: { event } });
@@ -633,6 +646,7 @@ const STEPS = {
       log(state, 'The attack fizzles.');
       return;
     }
+    if (step.cancelled) return; // Acidic: Rusted Jaws / Emergency Neutralizer stopped it
     const aDmg = effectiveAttack(a);
     const dDmg = d.kind === 'minion' ? effectiveAttack(d) : 0;
     // The defending player may react before their minion takes the hit.
@@ -890,6 +904,12 @@ const STEPS = {
     for (const x of state.players) x.zombieDeathsThisTurn = 0;
     // Ultraterrestrials: Displaced minions due back now return.
     processBeyond(state, p);
+    // Acidic: Caustic Reservoir keeps eating at its minion each turn it survives.
+    if (pl.reservoir != null) {
+      const m = state.players[opponentOf(p)].board.find((x) => x.uid === pl.reservoir);
+      if (m && m.health > 0 && !m.destroyed) resolveEffect(state, { op: 'corrode', target: { uid: m.uid }, amount: 1 }, { self: pl.hero.uid, controller: p });
+      else pl.reservoir = null;
+    }
     state.deathsLastTurn = state.deathsThisTurn ?? 0;
     state.deathsThisTurn = 0;
     pl.turnsTaken += 1;
