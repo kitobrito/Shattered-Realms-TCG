@@ -19,6 +19,14 @@ TEXT = oct_(58, 664, 670, 936, 22)
 TYPE_TAB = [(226,944),(502,944),(478,1004),(250,1004)]
 ATK = [(20,604),(58,546),(136,546),(174,604),(136,662),(58,662)]
 HP = [(W-x, y) for x, y in ATK]
+# Health sits in a heart-shaped socket (100x90 heart, scaled into a box).
+HEART = 'M50,88 C20,66 2,48 2,28 C2,12 14,2 28,2 C38,2 46,8 50,16 C54,8 62,2 72,2 C86,2 98,12 98,28 C98,48 80,66 50,88 Z'
+def heart(x0, y0, w, h):
+    import re
+    nums = iter(float(n) for n in re.findall(r'[\d.]+', HEART))
+    out = re.sub(r'[\d.]+,[\d.]+', lambda m: '{:.1f},{:.1f}'.format(x0 + next(nums) * w / 100, y0 + next(nums) * h / 90), HEART)
+    return out
+HP_HEART = (552, 536, 154, 132)
 def inset_hex(h, d):
     cx = sum(x for x,_ in h)/6; cy = sum(y for _,y in h)/6
     return [(cx+(x-cx)*(1-d), cy+(y-cy)*(1-d)) for x, y in h]
@@ -107,9 +115,11 @@ def frame(kind):
     s.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" filter="url(#shadow)"/>')
     s.append(f'<circle cx="{cx}" cy="{cy}" r="{r-9}" fill="none" stroke="#000" stroke-width="3"/>')
     if kind == 'minion':
-        for h in (ATK, HP):
-            s.append(f'<path d="{poly(h)}" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" stroke-linejoin="miter" filter="url(#shadow)"/>')
-            s.append(f'<path d="{poly(inset_hex(h, .1))}" fill="none" stroke="#000" stroke-width="3"/>')
+        s.append(f'<path d="{poly(ATK)}" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" stroke-linejoin="miter" filter="url(#shadow)"/>')
+        s.append(f'<path d="{poly(inset_hex(ATK, .1))}" fill="none" stroke="#000" stroke-width="3"/>')
+        x, y, w, h = HP_HEART
+        s.append(f'<path d="{heart(x, y, w, h)}" fill="#0b0a0d" stroke="url(#bronze)" stroke-width="8" filter="url(#shadow)"/>')
+        s.append(f'<path d="{heart(x+9, y+8, w-18, h-16)}" fill="none" stroke="#000" stroke-width="3"/>')
     s.append('</svg>')
     return '\n'.join(s)
 
@@ -124,7 +134,9 @@ def accent(kind):
     if kind == 'minion':
         # glowing crack following the art's shattered edge
         s.append(f'<path d="{"M" + " L".join(f"{x},{y+12}" for x, y in MINION_WIN[3:15])}" stroke-width="3"/>')
-        for h in (ATK, HP): s.append(f'<path d="{poly(inset_hex(h, .1))}" stroke-width="3"/>')
+        s.append(f'<path d="{poly(inset_hex(ATK, .1))}" stroke-width="3"/>')
+        x, y, w, h = HP_HEART
+        s.append(f'<path d="{heart(x+9, y+8, w-18, h-16)}" stroke-width="3"/>')
     elif kind == 'spell':
         cx, cy, r = SPELL_C
         s.append(f'<circle cx="{cx}" cy="{cy}" r="{r+24}" stroke-width="3" stroke-dasharray="2 14"/>')
