@@ -297,6 +297,30 @@ function legalForView() {
 
 const charEl = (uid) => app.querySelector(`[data-char="${uid}"]`);
 
+// Marked Prey: a constant thin stream of blood mist from each Prey to every Shark hunting it
+// (to the hunter's Hero if it has no Sharks out). Re-measured a few times a second, so it
+// follows minions as they move and vanishes as soon as either end is gone.
+function updatePreyStreams() {
+  const s = game?.state;
+  if (screen !== 'game' || !s || s.gameOver || document.hidden) return fx.preyStreams([]);
+  const links = [];
+  for (const pl of s.players) for (const m of pl.board) {
+    if (!m.prey || m.health <= 0) continue;
+    const from = charEl(m.uid)?.getBoundingClientRect();
+    if (!from?.width) continue;
+    const hunter = s.players[1 - m.controller];
+    if (!hunter.factions?.includes('Sharks')) continue;
+    const sharks = hunter.board.filter((x) => x.health > 0 && (x.tribes ?? []).includes('Shark'));
+    const targets = sharks.length ? sharks.map((x) => x.uid) : [hunter.hero.uid];
+    for (const t of targets) {
+      const to = charEl(t)?.getBoundingClientRect();
+      if (to?.width) links.push({ key: `${m.uid}>${t}`, from, to });
+    }
+  }
+  fx.preyStreams(links);
+}
+setInterval(updatePreyStreams, 150);
+
 function snapshot(s) {
   const health = new Map();
   const attack = new Map();
@@ -1721,8 +1745,19 @@ function renderBuilder() {
   const tile = (c) => {
     if (isLocked(c.id)) return cardHTML(c, { cuttable: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ');
     const k = draftDeck[c.id] ?? 0;
-    return cardHTML(c, { cuttable: true, isCut: k === 0, cutLabel: 'OUT', isDupe: k === 2 });
+    // In the deck: a ×1 / ×2 badge; both copies in: dimmed (like Hearthstone).
+    return cardHTML(c, { cuttable: true }).replace('class="card ', `class="card draggable ${k >= DEFAULT_RULES.maxCopies ? 'maxed' : ''} `)
+      .replace(/<\/div>\s*$/, `${k ? `<span class="in-deck">×${k}</span>` : ''}</div>`);
   };
+  // The deck list (right side; a tray along the bottom on phones): one row per card, by cost.
+  const rows = Object.entries(draftDeck).filter(([, k]) => k > 0).map(([id, k]) => ({ c: getCard(id), k }))
+    .sort((a, b) => a.c.cost - b.c.cost || a.c.name.localeCompare(b.c.name));
+  const deckPanel = `<aside class="deck-panel" data-deckdrop>
+      <header><b>Your deck</b><span class="${!problem ? 'done' : ''}">${n} / ${need}</span></header>
+      <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${c.faction.toLowerCase()}" data-deckrow="${c.id}" title="Drag out or click to remove one">
+        <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${ART[c.id] ? `<i class="dr-art" style="background-image:url('${ART[c.id]}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
+        : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
+    </aside>`;
   const section = (f) => `<h3>${FACTION_ICONS[f] ?? ''} ${esc(f)} <span class="pick-count ${inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}</span></h3>
       <div class="gallery-grid builder-grid">${pool(f).map(tile).join('')}</div>`;
   const scrollY = window.scrollY;
@@ -1731,7 +1766,7 @@ function renderBuilder() {
       <div class="builder-bar">
         <div>
           <h2>Build your deck</h2>
-          <div class="sub">${esc(picked.join(' + '))} · click a card to add it, again for a second copy, again to take it out ·
+          <div class="sub">${esc(picked.join(' + '))} · drag cards into your deck (hold, then drag on a phone) · drag one out or click it in the list to remove it · click a card to see it full size ·
             ${need} cards, at least ${DEFAULT_RULES.minPerFaction} from each faction, up to ${DEFAULT_RULES.maxCopies} of a card · Hero Spells always included:
             ${heroSpells.map((c) => esc(c.name)).join(', ')}</div>
         </div>
@@ -1744,11 +1779,100 @@ function renderBuilder() {
         </div>
       </div>
       ${problem && n ? `<p class="builder-hint">${esc(problem)}</p>` : ''}
-      ${picked.map(section).join('')}
+      <div class="builder-layout">
+        <div class="builder-cards">${picked.map(section).join('')}</div>
+        ${deckPanel}
+      </div>
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
   window.scrollTo(0, scrollY);
+  // The deck list sticks just under the builder bar, whatever height the bar wraps to.
+  const bar = app.querySelector('.builder-bar');
+  if (bar) app.querySelector('.builder')?.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
+  if (builderFlash) {
+    const row = app.querySelector(`[data-deckrow="${builderFlash}"]`);
+    row?.classList.add('just-added'); row?.scrollIntoView({ block: 'nearest' });
+    builderFlash = null;
+  }
 }
+
+// ---- Deck builder: drag cards into the deck (Hearthstone style) ----------------------
+let builderFlash = null; // the deck row to flash after the next render
+function deckTotal() { return Object.values(draftDeck).reduce((t, x) => t + x, 0); }
+function addToDraft(id) {
+  if (isLocked(id)) return flash('Locked. Win matches to unlock new cards (2 per win).');
+  const k = draftDeck[id] ?? 0;
+  if (k >= DEFAULT_RULES.maxCopies) return flash(`Up to ${DEFAULT_RULES.maxCopies} copies of a card.`);
+  if (deckTotal() >= DEFAULT_RULES.pairDeckSize) return flash(`Your deck has ${DEFAULT_RULES.pairDeckSize} cards. Take one out first.`);
+  draftDeck = { ...draftDeck, [id]: k + 1 };
+  builderFlash = id;
+  sound.play('cardPlay');
+  render();
+}
+function removeFromDraft(id) {
+  const k = draftDeck[id] ?? 0;
+  if (!k) return;
+  draftDeck = { ...draftDeck, [id]: k - 1 };
+  if (!draftDeck[id]) delete draftDeck[id];
+  sound.play('click');
+  render();
+}
+const inBuilder = () => screen === 'builder' && builderMode === 'cut';
+// Mouse: press and move. Touch: hold still for a moment, then drag (so the page still scrolls).
+let bDrag = null;
+document.addEventListener('pointerdown', (e) => {
+  if (!inBuilder() || e.button > 0 || e.target.closest('.card-zoom')) return;
+  const card = e.target.closest('.builder-grid [data-cut]');
+  const row = e.target.closest('[data-deckrow]');
+  if (!card && !row) return;
+  bDrag = { id: card ? card.dataset.cut : row.dataset.deckrow, from: card ? 'collection' : 'deck', src: card ?? row,
+    x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', armed: e.pointerType === 'mouse', ghost: null, moved: false };
+  if (bDrag.touch) bDrag.timer = setTimeout(() => { if (bDrag) { bDrag.armed = true; bDrag.src.classList.add('lift'); navigator.vibrate?.(15); } }, 220);
+});
+function startGhost(e) {
+  const r = bDrag.src.getBoundingClientRect();
+  const g = bDrag.src.cloneNode(true);
+  g.classList.add('builder-ghost'); g.classList.remove('lift');
+  Object.assign(g.style, { width: `${r.width}px`, height: `${r.height}px`, left: `${e.clientX}px`, top: `${e.clientY}px` });
+  document.body.appendChild(g);
+  bDrag.ghost = g;
+  document.body.classList.add('builder-dragging');
+}
+const overDeck = (e) => !!document.elementsFromPoint(e.clientX, e.clientY).some((el) => el.matches?.('[data-deckdrop]'));
+document.addEventListener('pointermove', (e) => {
+  if (!bDrag) return;
+  const dist = Math.hypot(e.clientX - bDrag.x, e.clientY - bDrag.y);
+  if (!bDrag.armed) { if (dist > 10) { clearTimeout(bDrag.timer); bDrag = null; } return; } // a touch that scrolls
+  if (!bDrag.ghost && dist > 6) startGhost(e);
+  if (!bDrag.ghost) return;
+  bDrag.moved = true;
+  Object.assign(bDrag.ghost.style, { left: `${e.clientX}px`, top: `${e.clientY}px` });
+  const panel = app.querySelector('.deck-panel');
+  const over = overDeck(e);
+  panel?.classList.toggle('drop-in', bDrag.from === 'collection' && over);
+  panel?.classList.toggle('drop-out', bDrag.from === 'deck' && !over);
+});
+// While a touch drag is on, the page must not scroll under the finger.
+document.addEventListener('touchmove', (e) => { if (bDrag?.armed) e.preventDefault(); }, { passive: false });
+function endDrag(e, cancelled = false) {
+  if (!bDrag) return;
+  const d = bDrag; bDrag = null;
+  clearTimeout(d.timer);
+  d.src.classList.remove('lift');
+  document.body.classList.remove('builder-dragging');
+  app.querySelector('.deck-panel')?.classList.remove('drop-in', 'drop-out');
+  d.ghost?.remove();
+  if (cancelled) return;
+  if (d.ghost) {
+    builderSuppressClick = true; // the drag isn't also a click (a click, if any, follows straight away)
+    setTimeout(() => { builderSuppressClick = false; }, 0);
+    if (d.from === 'collection' && overDeck(e)) addToDraft(d.id);
+    else if (d.from === 'deck' && !overDeck(e)) removeFromDraft(d.id);
+  }
+}
+let builderSuppressClick = false;
+document.addEventListener('pointerup', (e) => endDrag(e));
+document.addEventListener('pointercancel', (e) => endDrag(e, true));
 
 const FACTION_ORDER = () => Object.keys(FACTION_LISTS);
 function galleryCards(f) {
@@ -2251,6 +2375,10 @@ app.addEventListener('click', (e) => {
     else draftDupes = [...draftDupes, id];
     return render();
   }
+  if (screen === 'builder' && builderMode === 'cut' && builderSuppressClick) { builderSuppressClick = false; return; }
+  const deckRow = e.target.closest('[data-deckrow]');
+  if (deckRow && inBuilder()) return removeFromDraft(deckRow.dataset.deckrow);
+  if (cutCard && inBuilder()) { zoomId = cutCard.dataset.cut; return render(); }
   if (cutCard && screen === 'builder') {
     // Two-faction deck: each click adds a copy (up to 2); one more takes the card out.
     const id = cutCard.dataset.cut;
