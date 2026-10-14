@@ -3368,3 +3368,5 @@ body:not(.classic-cards) .arena .minion.shardm .hp { left: 63.2% !important; top
   padding-bottom: calc(var(--minion-w) * 0.03) !important; }
 body:not(.classic-cards) .arena .minion.shardm .sm-ward { z-index: 5; }
 body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .arena .minion.shardm .hp { font-size: calc(var(--minion-w) * 0.25) !important; overflow: visible; }
+/* Wide picture windows crop the square art; keep heads in frame by cropping mostly from the bottom. */
+.big-card.shard.t-minion .bc-art img, .big-card.shard.t-trap .bc-art img { object-position: 50% 12%; }
