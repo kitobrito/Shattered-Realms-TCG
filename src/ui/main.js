@@ -310,9 +310,16 @@ function snapshot(s) {
     for (const m of pl.board) nameOfUid.set(m.uid, getCard(m.cardId).name);
     for (const m of pl.board) health.set(m.uid, m.health);
   }
+  // Sharks / Acidic: Marked Prey, Corrosion and Acid-coated, to animate what changed.
+  const prey = new Set(), corrosion = new Map(), coated = new Set();
+  for (const pl of s.players) for (const m of pl.board) {
+    if (m.prey) prey.add(m.uid);
+    if (m.acidCoated) coated.add(m.uid);
+    corrosion.set(m.uid, m.corrosion ?? 0);
+  }
   const me = s.players[viewer];
   return {
-    health, attack, ctrl, factionOf, nameOfUid,
+    health, attack, ctrl, factionOf, nameOfUid, prey, corrosion, coated,
     myHealth: s.players[viewer].hero.health,
     hand: new Set(me.hand.map((c) => c.uid)),
     oppHand: s.players[1 - viewer].hand.length,
@@ -766,6 +773,31 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       jobs.push(fx.pulseGem(el.querySelector('.atk')));
       jobs.push(fx.sparkles(el.getBoundingClientRect(), 'buff', 7));
     }
+  }
+  // Corrosion: acid pours over the minion and its Attack gem melts; Acid-coated: a glob lands on it.
+  let corroded = false;
+  for (const pl of s.players) for (const m of pl.board) {
+    const el = charEl(m.uid);
+    if (!el || !before.corrosion.has(m.uid)) continue;
+    const added = (m.corrosion ?? 0) - before.corrosion.get(m.uid);
+    if (added > 0) { corroded = true; jobs.push(fx.corrodeFx(el, added)); }
+    else if (m.acidCoated && !before.coated.has(m.uid)) jobs.push(fx.acidCoatFx(el));
+  }
+  if (corroded) sound.play('squelch');
+  // Marked Prey: blood streams from a newly marked minion to every Shark hunting it (or their Hero);
+  // a Shark biting Prey drinks a stronger stream.
+  for (const pl of s.players) for (const m of pl.board) {
+    if (!m.prey || before.prey.has(m.uid)) continue;
+    const el = charEl(m.uid);
+    const hunter = s.players[1 - m.controller];
+    const sharks = hunter.board.filter((x) => (getCard(x.cardId).tribes ?? []).includes('Shark')).map((x) => charEl(x.uid)).filter(Boolean);
+    const to = sharks.length ? sharks : [charEl(hunter.hero.uid)].filter(Boolean);
+    to.slice(0, 4).forEach((t, i) => jobs.push(fx.bloodTrail(el?.getBoundingClientRect(), t.getBoundingClientRect(), { delay: i * 120 })));
+  }
+  const biter = action.type === 'attack' ? findCharacter(s, action.attacker) : null;
+  if (biter?.kind === 'minion' && before.prey.has(action.defender) && (biter.tribes ?? []).includes('Shark')) {
+    const from = charEl(action.defender)?.getBoundingClientRect() ?? oldMinions.get(action.defender)?.rect;
+    jobs.push(fx.bloodTrail(from, charEl(action.attacker)?.getBoundingClientRect(), { strong: true, delay: 150 }));
   }
   // A spell that hit three or more characters sweeps a shockwave across the board.
   const hitCount = [...before.health].filter(([uid, prev]) => {

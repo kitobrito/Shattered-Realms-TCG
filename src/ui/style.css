@@ -3386,3 +3386,24 @@ body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .a
 .minion .coat-mark { display: inline-grid; place-items: center; font-size: 1.4em; filter: drop-shadow(0 0 4px #c8ff2a); }
 .arena .minion.corroded .m-art::after { background: radial-gradient(ellipse at 50% 100%, #b8ff1a55, transparent 60%) !important; }
 .arena .minion.zeroed .atk { filter: grayscale(0.6) brightness(0.8); }
+
+/* ---- Prey, Corrosion and the newer factions' kill effects ---- */
+.fx-burst.blood { border-color: #ff2a3a; box-shadow: 0 0 24px #ff2a3a, inset 0 0 18px #ff2a3a; }
+.fx-blood-svg { filter: drop-shadow(0 0 4px #ff1a2acc); }
+.fx-blood-drop { position: fixed; z-index: 950; pointer-events: none; width: 9px; height: 11px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 30%, #ff9aa4, #e0102a 50%, #6a0010); box-shadow: 0 0 6px #ff1a2a; }
+.fx-float.corrode { color: #d8ff3a; -webkit-text-stroke: 0.08em #1a2a04; paint-order: stroke fill; text-shadow: 0 0 10px #8aff1a, 0 2px 3px #000; }
+.fx-acid-glob { position: fixed; z-index: 950; pointer-events: none; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 30%, #fbffd0, #c8ff2a 45%, #4a8a06); box-shadow: 0 0 8px #b8ff1a; }
+.fx-acid-drip { position: fixed; z-index: 950; pointer-events: none; width: 3px; opacity: 0.85; border-radius: 0 0 4px 4px; transform-origin: 50% 0;
+  background: linear-gradient(180deg, #c8ff2acc, #a8ff1a 70%, #f4ffb0); box-shadow: 0 0 6px #b8ff1a; }
+.fx-acid-drip::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 9px; height: 10px; transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: radial-gradient(circle at 35% 30%, #fbffd0, #b8ff1a 55%, #4a8a06); }
+.fx-acid-fizz { position: fixed; z-index: 940; pointer-events: none; border-radius: 12%;
+  background: radial-gradient(ellipse at 50% 20%, #c8ff2a66, transparent 65%), repeating-radial-gradient(circle at 30% 70%, #c8ff2a33 0 3px, transparent 3px 9px);
+  mix-blend-mode: screen; }
+.fx-jaw { position: fixed; z-index: 950; pointer-events: none; filter: drop-shadow(0 0 6px #000) drop-shadow(0 0 12px #ff2a3a88); }
+/* Marked Prey: soft puffs of red mist drifting along the blood trail. */
+.fx-blood-mist { position: fixed; z-index: 945; pointer-events: none; filter: blur(9px);
+  border-radius: 46% 54% 52% 48% / 55% 45% 55% 45%;
+  background: radial-gradient(circle at 40% 40%, #ff4a5acc 0%, #d0142eaa 35%, #8a001866 60%, transparent 72%); }
