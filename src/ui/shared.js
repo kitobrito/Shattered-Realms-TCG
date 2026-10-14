@@ -123,7 +123,8 @@ function sigilHTML(card) {
 // The "Shard" card: a chamfered slab of dark stone with bronze trim and shatter-cracks in the
 // faction's colour. Cost hangs from the top-left in a crystal pennant; minions carry Attack and
 // Health in two crystal shards either side of the name plate; the type sits in a tab at the bottom.
-// Frames: art/frames/shard-<type>.svg (+ -accent.svg, the faction-coloured layer).
+// Frames: art/frames/painted-<type>.png (painted; the openings are transparent) and
+// painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const hp = health ?? card.health ?? '?';
@@ -131,12 +132,14 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
     <div class="big-card shard t-${card.type} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
-      <img class="bc-frame" src="art/frames/shard-${type}.svg" alt="" draggable="false">
-      <i class="sh-accent" style="-webkit-mask-image:url('art/frames/shard-${type}-accent.svg');mask-image:url('art/frames/shard-${type}-accent.svg')"></i>
+      <img class="bc-frame" src="art/frames/painted-${type}.png" alt="" draggable="false">
+      <i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>
       ${sigilHTML(card)}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
       <div class="bc-banner"><span>${esc(card.name)}</span></div>
-      ${label ? `<div class="bc-type"><span>${esc(label)}</span></div>` : ''}
+      ${label ? (type === 'minion'
+    ? `<div class="bc-type lines-${label.split(' · ').length}">${label.split(' · ').map((w) => `<span>${esc(w)}</span>`).join('')}</div>`
+    : `<div class="bc-type"><span>${esc(label)}</span></div>`) : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(hp).length > 1 ? 'two-digit' : ''}">${hp}</span>` : ''}
       ${card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
@@ -155,11 +158,11 @@ export function fitText(el, box = el) {
 }
 
 // One-line labels (the big card's name banner) shrink until they fit their width.
-export function fitWidth(el) {
+export function fitWidth(el, min = 0.5) {
   el.style.fontSize = '';
   const start = parseFloat(getComputedStyle(el).fontSize);
   let size = start;
-  while (el.scrollWidth > el.clientWidth + 1 && size > start * 0.5) {
+  while (el.scrollWidth > el.clientWidth + 1 && size > start * min) {
     size -= 0.5;
     el.style.fontSize = `${size}px`;
   }
@@ -168,7 +171,8 @@ export function fitWidth(el) {
 export function fitAllText(root) {
   for (const el of root.querySelectorAll('.card .text')) fitText(el);
   for (const big of root.querySelectorAll('.bc-text span')) fitText(big, big.parentElement);
-  for (const banner of root.querySelectorAll('.bc-banner span, .shard .bc-type span')) fitWidth(banner);
+  for (const banner of root.querySelectorAll('.bc-banner span')) fitWidth(banner);
+  for (const tag of root.querySelectorAll('.shard .bc-type span')) fitWidth(tag, 0.4);
 }
 
 // The engine writes the log in the third person with player names ("You wins!",
