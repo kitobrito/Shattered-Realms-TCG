@@ -3407,3 +3407,87 @@ body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .a
 .fx-blood-mist { position: fixed; z-index: 945; pointer-events: none; filter: blur(9px);
   border-radius: 46% 54% 52% 48% / 55% 45% 55% 45%;
   background: radial-gradient(circle at 40% 40%, #ff4a5acc 0%, #d0142eaa 35%, #8a001866 60%, transparent 72%); }
+
+/* ==== Deck builder: drag cards into the deck list (Hearthstone style) ==== */
+.builder-layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 18px; align-items: start; }
+.builder .builder-grid .card.draggable { cursor: grab; touch-action: pan-y; position: relative; }
+.builder .builder-grid .card.maxed > .big-card { filter: grayscale(0.7) brightness(0.55); }
+.builder .builder-grid .card .in-deck { position: absolute; z-index: 6; left: 50%; bottom: -0.2em; transform: translateX(-50%);
+  padding: 0.1em 0.7em; border-radius: 1em; background: #1a120a; border: 2px solid var(--gold); color: var(--gold);
+  font-family: var(--font-title); font-weight: 900; font-size: 15px; box-shadow: 0 2px 6px #000a; }
+.builder .builder-grid .card.lift { transform: scale(1.06); filter: drop-shadow(0 0 10px #ffd25a); transition: transform 0.12s; }
+.deck-panel { position: sticky; top: 96px; max-height: calc(100vh - 116px); display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #221812f2, #120c08f2); border: 2px solid #8a6a3a; border-radius: 14px; box-shadow: 0 8px 24px #000a;
+  transition: box-shadow 0.15s, border-color 0.15s; }
+.deck-panel header { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid #8a6a3a66;
+  font-family: var(--font-title); font-size: 18px; }
+.deck-panel header span { color: var(--gold); font-weight: 900; } .deck-panel header span.done { color: var(--good); }
+.deck-rows { overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+.deck-empty { margin: 30px 10px; text-align: center; color: var(--muted); font-style: italic; }
+.deck-row { position: relative; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px 0 4px; border-radius: 6px; overflow: hidden;
+  background: #2a2018; border: 1px solid #00000088; cursor: grab; touch-action: pan-y; user-select: none; }
+.deck-row:hover { border-color: #ffd25a88; }
+.deck-row .dr-cost { flex: none; width: 26px; height: 26px; display: grid; place-items: center; z-index: 2; font-family: var(--font-title); font-weight: 900; color: #fff;
+  -webkit-text-stroke: 0.1em #06122e; paint-order: stroke fill; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: radial-gradient(circle at 38% 30%, #e6f2ff, #7fb2ff 22%, #2f6fe0 55%, #163a8a); }
+.deck-row .dr-name { flex: 1; z-index: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-title); font-weight: 800;
+  font-size: 14px; color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.deck-row .dr-art { position: absolute; right: 0; top: 0; bottom: 0; width: 55%; background-size: cover; background-position: center 30%;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 60%); mask: linear-gradient(90deg, transparent, #000 60%); opacity: 0.85; }
+.deck-row .dr-n { z-index: 2; color: var(--gold); font-weight: 900; font-family: var(--font-title); text-shadow: 0 1px 2px #000; min-width: 1.6em; text-align: right; }
+.deck-row.just-added { animation: deckRowIn 0.6s ease-out; }
+@keyframes deckRowIn { 0% { box-shadow: 0 0 0 2px #ffd25a, 0 0 16px #ffd25a; transform: translateX(-10px); } 100% { box-shadow: none; transform: none; } }
+.deck-panel.drop-in { border-color: #57e07a; box-shadow: 0 0 0 3px #57e07a88, 0 0 30px #57e07a88; }
+.deck-panel.drop-out { border-color: #ff6a5a; box-shadow: 0 0 0 3px #ff6a5a66; }
+.builder-ghost { position: fixed; z-index: 3000; pointer-events: none; margin: 0 !important; transform: translate(-50%, -60%) rotate(-4deg) scale(1.05);
+  filter: drop-shadow(0 12px 18px #000c) drop-shadow(0 0 10px #ffd25a); }
+.deck-row.builder-ghost { width: 260px !important; }
+body.builder-dragging, body.builder-dragging * { cursor: grabbing !important; user-select: none; }
+/* Phones: the deck is a tray along the bottom of the screen; drop cards onto it. */
+@media (max-width: 760px) {
+  .builder-layout { display: block; }
+  .builder-cards { padding-bottom: 38vh; }
+  .deck-panel { position: fixed; left: 8px; right: 8px; bottom: 8px; top: auto; max-height: 32vh; z-index: 30; }
+  .deck-panel header { padding: 6px 12px; font-size: 16px; }
+  .deck-row { height: 28px; }
+  .deck-row .dr-name { font-size: 12px; }
+}
+.deck-panel { top: calc(var(--bar-h, 96px) + 12px); max-height: calc(100vh - var(--bar-h, 96px) - 24px); }
+@media (max-width: 760px) {
+  .builder .builder-bar { position: static; gap: 8px; }
+  .builder .builder-bar .sub { font-size: 13px; }
+  .builder .builder-count { display: none; }
+  .builder .builder-buttons button { padding: 6px 10px; font-size: 14px; }
+  .builder-grid { justify-content: center; }
+  .deck-panel { top: auto; max-height: 32vh; }
+}
+/* Constant Prey streams: a thin flowing thread of blood mist. */
+.fx-prey-streams { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 40; overflow: visible; }
+.prey-stream path { fill: none; stroke-linecap: round; }
+.prey-stream .ps-haze { stroke: #8a0016; stroke-width: 7; opacity: 0.22; }
+.prey-stream .ps-core { stroke: #d8102a; stroke-width: 2.4; opacity: 0.45; }
+.prey-stream .ps-flow { stroke: #ff5a6a; stroke-width: 3; opacity: 0.8; stroke-dasharray: 3 16 7 22; animation: preyFlow 1.4s linear infinite; }
+@keyframes preyFlow { from { stroke-dashoffset: 48; } to { stroke-dashoffset: 0; } }
+body.reduced-motion .prey-stream .ps-flow { animation: none; }
+/* ---- Painted effect sprites (art/fx/sprites) ---- */
+.fx-blood-mist { background: url('../../art/fx/sprites/blood-mist.png') center / contain no-repeat !important; filter: blur(1.5px) !important; border-radius: 0 !important; }
+.fx-acid-glob { background: url('../../art/fx/sprites/acid-drip.png') center / contain no-repeat !important; box-shadow: none !important; border-radius: 0 !important;
+  filter: drop-shadow(0 0 4px #b8ff1a); }
+.fx-acid-glob { width: 12px !important; height: 16px !important; }
+.fx-acid-drip::after { background: url('../../art/fx/sprites/acid-drip.png') center / contain no-repeat !important; width: 10px !important; height: 14px !important; border-radius: 0 !important; }
+.fx-p.wisp { background: url('../../art/fx/sprites/ghost-wisp.png') center / contain no-repeat !important; width: 26px !important; height: 13px !important;
+  border-radius: 0 !important; box-shadow: none !important; }
+.fx-p.shard { background: url('../../art/fx/sprites/rift-shard.png') center / contain no-repeat !important; width: 14px !important; height: 16px !important;
+  border-radius: 0 !important; box-shadow: none !important; clip-path: none !important; }
+.fx-p.acid { background: url('../../art/fx/sprites/acid-bubble.png') center / contain no-repeat !important; box-shadow: none !important; }
+/* Constant Prey stream: the painted blood trail laid along the line from Prey to Shark,
+   drifting toward the Shark, faded at both ends. */
+.fx-prey-streams { position: fixed; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
+.prey-stream { position: fixed; height: 26px; transform-origin: 0 50%; pointer-events: none;
+  -webkit-mask: linear-gradient(90deg, transparent 0, #000 22%, #000 78%, transparent 100%); mask: linear-gradient(90deg, transparent 0, #000 22%, #000 78%, transparent 100%); }
+.prey-stream i { position: absolute; inset: 0; background: url('../../art/fx/sprites/blood-trail.png') 0 50% / 220px 100% repeat-x;
+  animation: preyDrift 3s linear infinite var(--ph, 0s); opacity: 0.85; }
+.prey-stream i + i { top: 4px; bottom: -4px; background-size: 300px 80%; animation-duration: 4.2s; opacity: 0.55; transform: scaleY(-1); }
+@keyframes preyDrift { from { background-position-x: 0; } to { background-position-x: 220px; } }
+.prey-stream i + i { animation-name: preyDrift2; } @keyframes preyDrift2 { from { background-position-x: 0; } to { background-position-x: 300px; } }
+body.reduced-motion .prey-stream i { animation: none; }

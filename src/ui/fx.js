@@ -40,6 +40,7 @@ const SPRITES = {
   '🦇': 'bat', '🩸': 'blood', '🌸': 'petal', '🍃': 'leaf', '🪦': 'tombstone', '🪰': 'fly', '🔥': 'flame', '🪙': 'coin',
   '☢️': 'radiation', '☢': 'radiation', '⚙️': 'gear', '🔩': 'bolt', '🪶': 'feather', '✨': 'sparkle', '😈': 'demon',
   '🦴': 'bone', '🐝': 'bee', '🍄': 'mushroom', '💥': 'spore-burst',
+  '🫧': 'acid-bubble', '👻': 'ghost-wisp', '🔷': 'rift-shard', '💧': 'acid-drip',
 };
 // Load them up front so the first bat or feather never pops in late.
 if (typeof Image !== 'undefined') for (const name of new Set(Object.values(SPRITES))) new Image().src = `art/fx/sprites/${name}.png`;
@@ -851,6 +852,7 @@ const KILLS = {
     const jobs = [];
     for (let i = 0; i < 3; i++) jobs.push(ring(c, size * 1.3, i % 2 ? '#ffd76a' : '#b48cff', { from: 1.3, to: 0.05, width: 3, delay: i * 120, duration: 650 }));
     jobs.push(glowBall(c, size * 0.6, '#ffffff', '#b48cff', { delay: 520, duration: 500 }));
+    setTimeout(() => fling(rect, '🔷', 5, { rise: 0.6, spread: 1.3, size: 24, duration: 1100 }), 560);
     jobs.push(particles(rect, 'Ultraterrestrials', Math.max(8, power + 4)));
     return Promise.all(jobs);
   },
@@ -955,6 +957,39 @@ export function acidCoatFx(el) {
   if (!el) return Promise.resolve();
   const rect = el.getBoundingClientRect();
   return acidSplash(center(rect), rect, 6);
+}
+
+// Marked Prey, constantly: while a Marked Prey and a Shark hunting it are both alive, a thin
+// wavering thread of blood mist flows from the Prey to that Shark. links: [{ key, from, to }]
+// (rects). Paths are kept and updated in place, so the flow never restarts as things move.
+let preySvg = null;
+const preyPaths = new Map();
+export function preyStreams(links) {
+  if (!links.length && !preySvg) return;
+  if (!preySvg) {
+    preySvg = document.createElement('div');
+    preySvg.className = 'fx-prey-streams';
+    document.body.appendChild(preySvg); // under the hand and previews, over the board
+  }
+  const keep = new Set();
+  for (const { key, from, to } of links) {
+    keep.add(key);
+    const a = center(from), b = center(to);
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+    let el = preyPaths.get(key);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'prey-stream';
+      el.innerHTML = '<i></i><i></i>';
+      // Each stream starts its flow at a different point, so several never pulse in step.
+      el.style.setProperty('--ph', `${-Math.random() * 3}s`);
+      preySvg.appendChild(el);
+      preyPaths.set(key, el);
+    }
+    Object.assign(el.style, { left: `${a.x}px`, top: `${a.y}px`, width: `${len}px`, transform: `translateY(-50%) rotate(${ang}deg)` });
+  }
+  for (const [key, el] of preyPaths) if (!keep.has(key)) { el.remove(); preyPaths.delete(key); }
 }
 
 // Marked Prey: a gaseous trail of blood drifts from the wounded minion to the hunters that
