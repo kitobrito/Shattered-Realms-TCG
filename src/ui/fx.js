@@ -818,10 +818,198 @@ const KILLS = {
     }, 260 * speed()));
     return Promise.all([lock, zap]);
   },
+  // Swarm: a cloud of bees converges and stings; honey drips where the victim stood.
+  Bees({ c, rect, power }) {
+    const jobs = [];
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * Math.PI * 2, d = Math.max(rect.width, rect.height) * (1.1 + Math.random() * 0.6);
+      const el = addFx('fx-glyph', { left: `${c.x + Math.cos(a) * d}px`, top: `${c.y + Math.sin(a) * d}px`, fontSize: `${14 + Math.random() * 8}px` });
+      setGlyph(el, '🐝');
+      jobs.push(done(el, animate(el, [
+        { transform: 'translate(-50%, -50%) scale(0.6)', opacity: 0 },
+        { transform: `translate(calc(-50% + ${-Math.cos(a) * d * 0.95}px), calc(-50% + ${-Math.sin(a) * d * 0.95}px)) scale(1)`, opacity: 1, offset: 0.7 },
+        { transform: `translate(calc(-50% + ${-Math.cos(a) * d * 0.7}px), calc(-50% + ${-Math.sin(a) * d * 1.3 - 40}px)) scale(0.5)`, opacity: 0 },
+      ], { duration: 900, delay: i * 30, easing: 'ease-in-out' })));
+    }
+    jobs.push(ring(c, rect.width * 1.4, '#ffc21a', { delay: 500, width: 4 }));
+    jobs.push(puddle(c, rect, '#ffb81a', { delay: 600 }));
+    jobs.push(particles(rect, 'Bees', Math.max(6, power + 3)));
+    return Promise.all(jobs);
+  },
+  // Spirit-claim: a ghost rises out of the victim and its soul is pulled up into the light.
+  Ghosts({ c, rect, size, power }) {
+    fling(rect, '👻', 2, { rise: 1.6, spread: 0.3, size: 28, duration: 1400 });
+    return Promise.all([
+      glowBall(c, size * 0.9, '#bff6ff', '#4ab8d8', { duration: 800 }),
+      column(c, rect, ['#bff6ff', '#8ff0ff'], { up: true, duration: 1000 }),
+      ring(c, size, '#8ff0ff', { width: 2, to: 1.4, duration: 900 }),
+      particles(rect, 'Ghosts', Math.max(8, power + 4)),
+    ]);
+  },
+  // Unravel: a rift tears open, folds the victim into a point and snaps shut.
+  Ultraterrestrials({ c, rect, size, power }) {
+    const jobs = [];
+    for (let i = 0; i < 3; i++) jobs.push(ring(c, size * 1.3, i % 2 ? '#ffd76a' : '#b48cff', { from: 1.3, to: 0.05, width: 3, delay: i * 120, duration: 650 }));
+    jobs.push(glowBall(c, size * 0.6, '#ffffff', '#b48cff', { delay: 520, duration: 500 }));
+    jobs.push(particles(rect, 'Ultraterrestrials', Math.max(8, power + 4)));
+    return Promise.all(jobs);
+  },
+  // Jaws: rows of teeth snap shut on the victim; blood sprays and streams to the killer.
+  Sharks({ c, rect, fromRect, power }) {
+    const w = rect.width * 1.5, h = rect.height * 0.55;
+    const jobs = [];
+    for (const top of [true, false]) {
+      const el = addFx(`fx-jaw ${top ? 'top' : 'bottom'}`, { left: `${c.x - w / 2}px`, top: `${top ? c.y - h : c.y}px`, width: `${w}px`, height: `${h}px` });
+    el.innerHTML = JAW_SVG(top);
+      const from = top ? '-90%' : '90%';
+      jobs.push(done(el, animate(el, [
+        { transform: `translateY(${from})`, opacity: 0 },
+        { transform: `translateY(${top ? '-25%' : '25%'})`, opacity: 1, offset: 0.35 },
+        { transform: 'translateY(0)', opacity: 1, offset: 0.5 },
+        { transform: 'translateY(0)', opacity: 1, offset: 0.75 },
+        { transform: `translateY(${top ? '-20%' : '20%'})`, opacity: 0 },
+      ], { duration: 1150, easing: 'cubic-bezier(.6,0,.3,1.4)' })));
+    }
+    setTimeout(() => fling(rect, '🩸', 6, { rise: 0.6, spread: 1.2, size: 16 }), 380);
+    jobs.push(puddle(c, rect, '#c8102a', { delay: 420 }));
+    if (fromRect) jobs.push(drain(c, fromRect, '#ff2a3a', 12));
+    jobs.push(particles(rect, 'Sharks', Math.max(6, power + 3)));
+    return Promise.all(jobs);
+  },
+  // Dissolve: an acid splash; the victim sags and melts into a bubbling green pool.
+  Acidic({ c, rect, size, power }) {
+    setTimeout(() => fling(rect, '🫧', 6, { rise: 1.2, spread: 0.8, size: 16, duration: 1300 }), 250);
+    return Promise.all([
+      acidSplash(c, rect, 16),
+      glowBall(c, size * 0.9, '#f4ffb0', '#8aff1a', { duration: 650 }),
+      puddle(c, rect, '#8aff1a', { delay: 300, duration: 1600 }),
+      particles(rect, 'Acidic', Math.max(8, power + 4)),
+    ]);
+  },
 };
 
+// A row of shark teeth on a curved gum (top or bottom jaw).
+function JAW_SVG(top) {
+  const teeth = [];
+  for (let i = 0; i < 9; i++) {
+    const x = 6 + i * 11, curve = Math.abs(i - 4) * 2.2;
+    const big = i === 2 || i === 6 ? 1.35 : 1;
+    teeth.push(`<path d="M${x - 5},${14 + curve} L${x},${14 + curve + 22 * big} L${x + 5},${14 + curve} Z" fill="url(#jt)" stroke="#3a0a10" stroke-width="0.8"/>`);
+  }
+  return `<svg viewBox="0 0 100 50" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible;${top ? '' : 'transform:scaleY(-1)'}">
+    <defs><linearGradient id="jt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d8cdb8"/></linearGradient></defs>
+    <path d="M0,0 L100,0 L100,10 Q50,26 0,10 Z" fill="#4a0c16"/><path d="M0,10 Q50,26 100,10" fill="none" stroke="#9a1a2a" stroke-width="3"/>${teeth.join('')}</svg>`;
+}
+
+// Acid splash: globs burst out and run down (Acidic kills and Corrosion).
+function acidSplash(c, rect, count = 10, { delay = 0 } = {}) {
+  const jobs = [];
+  for (let i = 0; i < count; i++) {
+    const a = -Math.PI * (0.1 + Math.random() * 0.8);
+    const d = rect.width * (0.35 + Math.random() * 0.5);
+    const s = 5 + Math.random() * 7;
+    const el = addFx('fx-acid-glob', { left: `${c.x}px`, top: `${c.y - rect.height * 0.15}px`, width: `${s}px`, height: `${s * 1.3}px` });
+    const dx = Math.cos(a) * d, dy = Math.sin(a) * d;
+    jobs.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1)`, opacity: 1, offset: 0.4 },
+      { transform: `translate(calc(-50% + ${dx * 1.1}px), calc(-50% + ${dy + rect.height * 0.9}px)) scale(0.6, 1.4)`, opacity: 0 },
+    ], { duration: 900 + Math.random() * 300, delay: delay + Math.random() * 120, easing: 'cubic-bezier(.2,.6,.6,1)' })));
+  }
+  return Promise.all(jobs);
+}
+
+// Corrosion: acid pours over the minion, drips run down it, it sizzles, and its Attack gem
+// melts down (a green "-N" floats off it).
+export function corrodeFx(el, amount = 1) {
+  if (!el) return Promise.resolve();
+  const rect = el.getBoundingClientRect();
+  const c = center(rect);
+  const jobs = [acidSplash({ x: c.x, y: rect.top + rect.height * 0.15 }, rect, 6 + amount * 2)];
+  for (let i = 0; i < 4 + amount * 2; i++) {
+    const x = rect.left + rect.width * (0.15 + Math.random() * 0.7);
+    const len = rect.height * (0.25 + Math.random() * 0.45);
+    const drip = addFx('fx-acid-drip', { left: `${x}px`, top: `${rect.top + rect.height * 0.05}px`, height: `${len}px` });
+    jobs.push(done(drip, animate(drip, [
+      { transform: 'scaleY(0)', opacity: 0.95 }, { transform: 'scaleY(1)', opacity: 0.95, offset: 0.55 }, { transform: 'scaleY(1) translateY(30%)', opacity: 0 },
+    ], { duration: 1000 + Math.random() * 400, delay: 120 + Math.random() * 300, easing: 'ease-in' })));
+  }
+  const fizz = addFx('fx-acid-fizz', { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+  jobs.push(done(fizz, animate(fizz, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.8, offset: 0.7 }, { opacity: 0 }], { duration: 1300 })));
+  setTimeout(() => fling(rect, '🫧', 3 + amount, { rise: 0.9, spread: 0.5, size: 12, duration: 1100 }), 200);
+  const gem = el.querySelector('.atk');
+  if (gem) {
+    jobs.push(animate(gem, [
+      { filter: 'none', transform: 'none' },
+      { filter: 'hue-rotate(60deg) saturate(2) brightness(1.3) drop-shadow(0 0 6px #c8ff2a)', transform: 'scale(1.25, 0.8) translateY(8%)', offset: 0.35 },
+      { filter: 'hue-rotate(60deg) saturate(1.5) drop-shadow(0 0 4px #c8ff2a)', transform: 'scale(0.9, 1.1)', offset: 0.65 },
+      { filter: 'none', transform: 'none' },
+    ], { duration: 1000, delay: 200, fill: 'none' }));
+    floater(gem.getBoundingClientRect(), `-${amount}`, 'corrode');
+  }
+  return Promise.all(jobs);
+}
+
+// Acid-coated: a glob of acid lands on the minion and clings to it.
+export function acidCoatFx(el) {
+  if (!el) return Promise.resolve();
+  const rect = el.getBoundingClientRect();
+  return acidSplash(center(rect), rect, 6);
+}
+
+// Marked Prey: a gaseous trail of blood drifts from the wounded minion to the hunters that
+// smell it — like blood clouding in water: a wavering, blurred haze along a curved path,
+// with soft puffs of red mist that swell, swirl and fade as they travel.
+let bloodGasId = 0;
+export function bloodTrail(fromRect, toRect, { strong = false, delay = 0 } = {}) {
+  if (!fromRect || !toRect) return Promise.resolve();
+  const a = center(fromRect), b = center(toRect);
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const bend = Math.min(110, len * 0.22) * (dx >= 0 ? 1 : -1);
+  const mx = a.x + dx / 2 - (dy / len) * bend, my = a.y + dy / 2 + (dx / len) * bend * 0.4;
+  const pt = (t) => ({ x: (1 - t) ** 2 * a.x + 2 * (1 - t) * t * mx + t * t * b.x, y: (1 - t) ** 2 * a.y + 2 * (1 - t) * t * my + t * t * b.y });
+  const svg = fullSvg('fx-kill-svg fx-blood-svg');
+  const id = `bgas${bloodGasId++}`;
+  // A turbulent, blurred haze: the path is smeared by noise so its edges billow like smoke.
+  svg.innerHTML = `<defs><filter id="${id}" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.011 0.02" numOctaves="4" seed="${bloodGasId}" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="${strong ? 64 : 54}" xChannelSelector="R" yChannelSelector="G"/>
+    <feGaussianBlur stdDeviation="${strong ? 9 : 8}"/></filter></defs>`;
+  const d = `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`;
+  const g = svgEl('g', { filter: `url(#${id})` });
+  svg.appendChild(g);
+  const jobs = [];
+  for (const [sw, col, op] of [[strong ? 60 : 48, '#8a0016', 0.22], [strong ? 30 : 24, '#d8102a', 0.3], [strong ? 10 : 8, '#ff7a8a', 0.22]]) {
+    const p = svgEl('path', { d, fill: 'none', stroke: col, 'stroke-width': sw, 'stroke-linecap': 'round', opacity: op, pathLength: 100, 'stroke-dasharray': '100 100', 'stroke-dashoffset': 100 });
+    g.appendChild(p);
+    jobs.push(animate(p, [
+      { strokeDashoffset: 100, opacity: 0 },
+      { strokeDashoffset: 30, opacity: op, offset: 0.35 },
+      { strokeDashoffset: 0, opacity: op * 0.8, offset: 0.6 },
+      { strokeDashoffset: -60, opacity: 0 },
+    ], { duration: strong ? 1500 : 1800, delay, easing: 'ease-in-out' }));
+  }
+  // A cloud of red mist billows along the whole trail: puffs appear in a wave from the prey
+  // toward the hunter, swell, curl and drift a little further along before thinning out.
+  const puffs = strong ? 30 : 22;
+  for (let i = 0; i < puffs; i++) {
+    const t0 = i / (puffs - 1);
+    const size = (strong ? 80 : 64) * (0.6 + Math.random() * 0.7) * (0.8 + t0 * 0.4);
+    const p0 = pt(t0), p1 = pt(Math.min(1, t0 + 0.12));
+    const jx = (Math.random() - 0.5) * 26, jy = (Math.random() - 0.5) * 26;
+    const el = addFx('fx-blood-mist', { left: `${p0.x + jx}px`, top: `${p0.y + jy}px`, width: `${size}px`, height: `${size}px` });
+    const spin = (Math.random() - 0.5) * 120;
+    jobs.push(done(el, animate(el, [
+      { transform: `translate(-50%, -50%) scale(0.25) rotate(0deg)`, opacity: 0 },
+      { transform: `translate(calc(-50% + ${(p1.x - p0.x) * 0.4}px), calc(-50% + ${(p1.y - p0.y) * 0.4}px)) scale(0.9) rotate(${spin * 0.4}deg)`, opacity: (strong ? 0.6 : 0.48) * (0.6 + Math.random() * 0.6), offset: 0.3 },
+      { transform: `translate(calc(-50% + ${p1.x - p0.x}px), calc(-50% + ${p1.y - p0.y - 8}px)) scale(1.5) rotate(${spin}deg)`, opacity: 0 },
+    ], { duration: 1400 + Math.random() * 500, delay: delay + t0 * 650 + Math.random() * 80, easing: 'ease-out' })));
+  }
+  return Promise.all(jobs).then(() => { svg.remove(); burst(toRect, 'blood'); });
+}
+
 // How the victim breaks apart, by killer faction.
-const KILL_SHATTER = { Dragons: 'burn', Demons: 'down', Aliens: 'up', Radioactive: 'melt', Divine: 'up' };
+const KILL_SHATTER = { Dragons: 'burn', Demons: 'down', Aliens: 'up', Radioactive: 'melt', Divine: 'up', Acidic: 'melt', Ghosts: 'up', Ultraterrestrials: 'down' };
 export const shatterModeFor = (faction) => KILL_SHATTER[faction] ?? 'away';
 
 // The killing blow over the victim. power = the killer's Attack.
