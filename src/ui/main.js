@@ -978,6 +978,7 @@ const TIPS = [
   'Divine: healing a character at full Health raises its maximum Health (Overheal).',
   'Robots: Upgrades stack on one machine. Build one great Robot, or a swarm of Drones.',
   'Bees: protect the Hive. When it falls, the Queen emerges, and if she dies your Hero takes 10 damage.',
+  'Acidic: Corrosion lowers Attack for good. A minion at 0 Attack can\'t attack until something raises it.',
   'Sharks: enemy minions at 3 Health or less become Marked Prey. Heal them above 3 to shake the hunters off.',
   'Ultraterrestrials: a Displaced minion is gone until the turn named, so it dodges attacks, spells and board wipes, and its abilities stop.',
   "Ghosts: Haunt steals minions that died this game from either Graveyard. Kill the enemy's best minion and it may be back on their side.",
@@ -1555,7 +1556,7 @@ function renderMenu() {
       <header class="ts-title">
         <div class="ts-runes"></div>
         <h1 class="ts-logo"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"></h1>
-        <p class="ts-tag">Fifteen realms broke apart. Two of them are yours.</p>
+        <p class="ts-tag">Sixteen realms broke apart. Two of them are yours.</p>
         <img class="ui-divider" src="art/ui/divider.png" alt="" draggable="false">
       </header>
 

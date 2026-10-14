@@ -99,6 +99,13 @@ export const FACTION_INFO = {
     mechanic: "Between Worlds: Displace a minion until your next turn. A friendly one returns with +1/+1; an enemy one returns exhausted.",
     style: 'Tempo · Control',
   },
+  Acidic: {
+    summary: 'The Corrosion Court: dissolve what makes enemies strong, one drop at a time.',
+    strengths: ['Permanently shrinks big attackers', 'Strips buffs, Evade, Taunt and other defenses', 'Traps and Quick Plays that punish attacks'],
+    weaknesses: ['Little direct damage', 'Wide boards of small minions', 'Needs time for Corrosion to build up'],
+    mechanic: 'Corrosion X permanently lowers a minion\'s Attack by X. Caustic Reservoir keeps corroding its target every turn.',
+    style: 'Control · Attrition',
+  },
   Sharks: {
     summary: 'Relentless hunters: wound enemies, mark them as Prey, then execute them.',
     strengths: ['Finishing off damaged minions', 'Prey can\'t hide in Stealth or behind Elusive', 'Board-wide damage that sets up kills'],
@@ -217,6 +224,21 @@ export const SYNERGY = {
   'Bees+Sharks': [3, 'Swarms of chip damage to set up the hunt.'],
   'Ghosts+Sharks': [3, 'Dead Prey become your Haunts.'],
   'Sharks+Ultraterrestrials': [3, 'Displace the big threats and hunt the rest.'],
+  'Acidic+Vampires': [3, 'Drain Health while the enemy dissolves.'],
+  'Acidic+Aliens': [3, 'Strip their keywords, keep your own.'],
+  'Acidic+Dinosaurs': [3, 'Shrink the enemy, stomp them with giants.'],
+  'Acidic+Plants': [4, 'Sturdy Taunt walls behind a slow acid drip.'],
+  'Acidic+Fungus': [4, 'Two slow poisons: Mushrooms and Corrosion.'],
+  'Acidic+Zombies': [3, 'Bodies that burst into acid when they fall.'],
+  'Acidic+Dragons': [4, 'Burn their Health, melt their Attack.'],
+  'Acidic+Demons': [3, 'Pay Health for brutal single-target removal.'],
+  'Acidic+Divine': [4, 'Out-heal and out-last an enemy that can\'t hit back.'],
+  'Acidic+Robots': [3, 'Upgraded machines that etch through anything.'],
+  'Acidic+Radioactive': [4, 'Radiation takes Health, acid takes Attack.'],
+  'Acidic+Bees': [3, 'Stinging swarms that corrode what they touch.'],
+  'Acidic+Ghosts': [3, 'Haunted slimes return to keep dissolving.'],
+  'Acidic+Ultraterrestrials': [3, 'Send threats away and get them back melted.'],
+  'Acidic+Sharks': [4, 'Toothless prey for the pack.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;

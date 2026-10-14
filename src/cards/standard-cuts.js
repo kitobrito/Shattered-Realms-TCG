@@ -100,6 +100,12 @@ export const STANDARD_CUTS = {
     'temporal_reversal', 'impossible_blueprint', 'reality_overlap',
     'paradox_mine', 'borrowed_seconds', 'spatial_redirection',
   ],
+  // Keeps: the Corrosion starters, the Caustic engines, the big Dissolution finishers.
+  Acidic: [
+    'acid_newt', 'armor_leech', 'ooze_mimic', 'living_flask',
+    'strip_the_plating', 'molecular_breakdown',
+    'corrosion_chamber', 'volatile_flask', 'reactive_spill', 'shield_eater',
+  ],
   // Keeps: the cheap hunters, the executioners and the board-wide damage.
   Sharks: [
     'hammerhead_scout', 'goblin_shark', 'abyssal_bloodhound', 'scarred_leviathan',

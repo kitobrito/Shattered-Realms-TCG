@@ -3370,3 +3370,19 @@ body:not(.classic-cards) .arena .minion.shardm .sm-ward { z-index: 5; }
 body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .arena .minion.shardm .hp { font-size: calc(var(--minion-w) * 0.25) !important; overflow: visible; }
 /* Wide picture windows crop the square art; keep heads in frame by cropping mostly from the bottom. */
 .big-card.shard.t-minion .bc-art img, .big-card.shard.t-trap .bc-art img { object-position: 50% 12%; }
+
+/* ---- Acidic ---- */
+.big-card.f-acidic { --frame: #3a5a1a; --frame-hi: #c8ff2a; --body: #121a06; }
+.big-card.t-spell.f-acidic { --frame: #5a5a12; --frame-hi: #ffe23a; --body: #1a1a04; }
+.big-card.t-trap.f-acidic { --frame: #34402a; --frame-hi: #9ab86a; --body: #0e120a; }
+.big-card.shard.f-acidic, .minion.shardm.f-acidic { --accent: #c8ff2a; }
+.arena.f-acidic { --felt: #2a3a14; --felt-2: #0e1406; --rim: #c8ff2a; }
+.medallion.f-acidic { --fc: #c8ff2a; } .ts-guide.f-acidic { --fc: #c8ff2a; }
+.fx-p.acid { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #c8ff2a 45%, #6a9a0a 75%, transparent 80%); box-shadow: 0 0 6px #c8ff2a; }
+/* Corrosion on the board: a dripping acid badge with the total, and Acid-coated sheen. */
+.minion .corr-mark { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding: 0 0.25em; border-radius: 0.8em;
+  background: radial-gradient(circle at 35% 30%, #f4ffb0, #b8ff1a 45%, #4a7a06); color: #0e1404; font-weight: 900; font-size: 1.15em;
+  box-shadow: 0 0 6px #c8ff2a, 0 1px 2px #000; }
+.minion .coat-mark { display: inline-grid; place-items: center; font-size: 1.4em; filter: drop-shadow(0 0 4px #c8ff2a); }
+.arena .minion.corroded .m-art::after { background: radial-gradient(ellipse at 50% 100%, #b8ff1a55, transparent 60%) !important; }
+.arena .minion.zeroed .atk { filter: grayscale(0.6) brightness(0.8); }

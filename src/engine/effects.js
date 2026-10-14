@@ -22,6 +22,7 @@ import {
   hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
   applyBurn, burnCards, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
+  corrode, acidCoat, dissolve, removeTempBuffs,
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -236,6 +237,7 @@ export function checkCondition(state, cond, ctx) {
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
     if (cond.notKeyword && hasKeyword(c, cond.notKeyword)) return false;
     if (cond.prey != null && !!c.prey !== cond.prey) return false;
+    if (cond.corroded != null && ((c.corrosion ?? 0) > 0) !== cond.corroded) return false; // Acidic
     if (cond.kind && c.kind !== cond.kind) return false;
     if (cond.burning != null && isBurning(c) !== cond.burning) return false;
     if (cond.darkOrUndead != null && isDarkOrUndead(c) !== cond.darkOrUndead) return false;
@@ -1228,6 +1230,81 @@ export const EFFECT_OPS = {
       if (hasKeyword(m, e.keyword)) applyBuff(state, m, { attack: e.attackIfHas, temporary: true });
       else applyBuff(state, m, { attack: e.attack, temporary: true, temporaryKeywords: [e.keyword] });
     });
+  },
+
+  // ---- Acidic ----
+  // { target, amount, drawPerZeroed?: max, healHeroByLost? } — apply Corrosion (core corrode).
+  // drawPerZeroed: draw a card per minion this brought to 0 Attack (Caustic Bath).
+  // healHeroByLost: restore your Hero's Health by the Attack lost (Hemolytic Draught).
+  corrode(state, e, ctx) {
+    let zeroed = 0;
+    let lost = 0;
+    each(state, e.target, ctx, (c) => {
+      const before = effectiveAttack(c);
+      lost += corrode(state, c, e.amount, ctx.controller);
+      if (before > 0 && c.kind === 'minion' && effectiveAttack(c) === 0) zeroed++;
+    });
+    if (e.drawPerZeroed && zeroed) drawCards(state, ctx.controller, Math.min(e.drawPerZeroed, zeroed));
+    if (e.healHeroByLost && lost > 0) heal(state, heroOf(state, ctx.controller).uid, lost, { source: ctx.self });
+  },
+  // { target }
+  acidCoat(state, e, ctx) {
+    each(state, e.target, ctx, (c) => acidCoat(state, c));
+  },
+  // { target, defenseOnly?, fallback?, repeatIfAttackAtLeast?, ifDefense?: [effects] }
+  // Dissolve (core dissolve). ifDefense runs when a defensive effect was removed (Shield-Eater).
+  dissolve(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      const times = e.repeatIfAttackAtLeast != null && effectiveAttack(c) >= e.repeatIfAttackAtLeast ? 2 : 1;
+      let defense = false;
+      for (let i = 0; i < times; i++) if (dissolve(state, c, ctx.controller, e) === 'defense') defense = true;
+      if (defense) for (const sub of e.ifDefense ?? []) resolveEffect(state, sub, { ...ctx, chosen: c.uid });
+    });
+  },
+  // { target } — Molecular Breakdown: its temporary buffs are removed.
+  removeTempBuffs(state, e, ctx) {
+    each(state, e.target, ctx, (c) => { if (c.kind === 'minion') removeTempBuffs(state, c); });
+  },
+  // Reactive Spill: take back the Attack the triggering buff gave (event.amount), this turn's first.
+  undoAttackGain(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      let left = ctx.event?.amount ?? 0;
+      const t = Math.min(left, Math.max(0, c.tempAttack)); c.tempAttack -= t; left -= t;
+      if (left > 0) c.attack = Math.max(0, c.attack - left);
+      log(state, `🧪 ${nameOf(state, c)} loses the Attack it just gained.`);
+    });
+  },
+  // Stop the attack that opened this window (Rusted Jaws, Emergency Neutralizer).
+  stopAttack(state, e, ctx) {
+    const step = state.queue.find((s) => s.kind === 'combat' && s.attacker === ctx.event?.source);
+    if (!step) return;
+    step.cancelled = true;
+    log(state, `${nameOf(state, findCharacter(state, step.attacker))}'s attack is stopped.`);
+  },
+  // { amount, attackPer } — Armor Leech: strip Armor from the enemy Hero; +1 Attack per attackPer removed.
+  stripArmor(state, e, ctx) {
+    const hero = heroOf(state, opponentOf(ctx.controller));
+    const n = Math.min(hero.armor ?? 0, e.amount);
+    if (!n) return;
+    hero.armor -= n;
+    log(state, `🧪 ${n} Armor dissolves from ${nameOf(state, hero)}.`);
+    const self = findCharacter(state, ctx.self);
+    const gain = Math.floor(n / (e.attackPer ?? 1));
+    if (self && gain) applyBuff(state, self, { attack: gain });
+  },
+  // { from } — Ooze Mimic: this minion's Attack becomes the chosen minion's Attack.
+  copyAttack(state, e, ctx) {
+    const src = findCharacter(state, resolveSelector(state, e.from, ctx)[0]);
+    const self = findCharacter(state, ctx.self);
+    if (!src || !self) return;
+    self.attack = effectiveAttack(src);
+    self.tempAttack = 0;
+    log(state, `${nameOf(state, self)} copies ${nameOf(state, src)}'s Attack (${self.attack}).`);
+  },
+  // Caustic Reservoir: the chosen minion keeps corroding at the start of each of your turns.
+  setReservoir(state, e, ctx) {
+    const id = resolveSelector(state, e.target, ctx)[0];
+    if (id != null) state.players[ctx.controller].reservoir = id;
   },
 
   // ---- Sharks ----

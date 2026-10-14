@@ -5,7 +5,7 @@ export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Werewolves', 'Aquatic', 'Radioactive', 'Old Gods',
-  'Other Ones', 'Ultraterrestrials', 'Sharks',
+  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -63,6 +63,10 @@ export const KEYWORD_TEXT = {
   Haunt: "Summon a minion that died this game from either player's Graveyard onto your side. It still belongs to its owner, so if it dies again it goes back to their Graveyard.",
   Graveyard: 'Where minions go when they die. Minions that were Obliterated never get there.',
   Prey: "Marked Prey: an enemy minion at 3 Health or less, marked by a Shark player (Blood in the Water) or a card. Sharks can reach it through Stealth and Elusive and hit it harder. The mark lasts until it leaves play or is healed above 3 Health.",
+  Corrosion: "Corrosion X: permanently lower a minion's Attack by X (never its Health). At 0 Attack it can't attack until its Attack rises again. It lasts while the minion stays in play; a minion that leaves and comes back is fresh.",
+  Dissolve: 'Remove a minion\'s temporary buffs. If it has none, remove one defensive effect (Evade, Spell Ward, Immune, Reborn, Taunt, Elusive or Stealth). If it has neither, apply Corrosion 1. Whatever you strip from an enemy is distilled into a 1-Mana Distilled Essence card in your hand that gives it to one of your minions (Attack and Health for that turn, keywords for good).',
+  'Acid-coated': "The next Corrosion on this minion lowers its Attack by 1 more, then the coating is gone.",
+  Caustic: 'An ability that triggers when Corrosion hits an enemy minion.',
   Displace: "Send a minion Beyond Reality for a while. It can't attack, be attacked or be targeted, doesn't take a board space, and its abilities stop until it returns (at the start of the turn named; it waits if its side's board is full).",
   Poisonous: 'When this dies, the enemy that killed it dies too.',
   Venomous: 'Kills any enemy minion it attacks.',
@@ -115,6 +119,9 @@ export const BOARD_EVENTS = [
   'minionDisplaced',  // Ultraterrestrials: a minion went Beyond Reality ({ source, player, by })
   'minionReturned',   // Ultraterrestrials: a Displaced minion came back
   'preyMarked',       // Sharks: an enemy minion became Marked Prey
+  'corrosionApplied', // Acidic: Corrosion hit a minion ({ target, player, by, amount, lost, zeroed })
+  'dissolved',        // Acidic: a minion was Dissolved ({ target, player, by, result })
+  'corrosiveSpell',   // Acidic: a spell that applies Corrosion was played ({ player, cardId })
   'burnApplied',      // a character's Burn value was set or raised
   'burnDamage',       // a character took Burn damage (end of its controller's turn)
   'cardBurned',       // a card was burned from a hand or deck
@@ -132,7 +139,8 @@ export const TRIGGER_EVENTS = [...SELF_TRIGGERS, ...BOARD_EVENTS];
 // damageDealt / burnDamage open only for Quick Plays that name them (Dragons).
 // friendlyAttack / heroLostHealth go to the attacking / Health-losing player, even on their own turn (Demons).
 // enemyIrradiated goes to the opponent of whoever gained Radiation, on either turn (Gamma Reversal).
-export const REACTION_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn', 'wouldTakeDamage', 'damageDealt', 'burnDamage', 'friendlyAttack', 'heroLostHealth', 'enemyIrradiated'];
+// enemyBuffed: an enemy minion gained Attack on its own turn (Reactive Spill).
+export const REACTION_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn', 'wouldTakeDamage', 'damageDealt', 'burnDamage', 'friendlyAttack', 'heroLostHealth', 'enemyIrradiated', 'enemyBuffed'];
 export const DEFAULT_QUICK_PLAY_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn'];
 
 // Dark / Undead (Divine's "holy" targets): a shared tag, not a faction name.

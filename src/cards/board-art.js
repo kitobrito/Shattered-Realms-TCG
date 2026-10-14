@@ -16,6 +16,7 @@ export const BOARD_ART = {
   Ghosts: 'art/boards-v2/ghosts.jpg',
   Ultraterrestrials: 'art/boards-v2/ultraterrestrials.jpg',
   Sharks: 'art/boards-v2/sharks.jpg',
+  Acidic: 'art/boards-v2/acidic.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -55,6 +56,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Acidic: { src: 'art/boards-portrait/acidic.jpg', opp: [198, 22, 261, 98, 'arch'], me: [188, 910, 270, 992, 'circle'], field: [120, 880],
+    props: [P([30, 0, 130, 105], 'steam', '#c8ff2a', { sound: 'bloop', glyph: '🧪' }), P([330, 0, 440, 110], 'glow', '#ff8a5a', { sound: 'clink' }),
+      P([20, 890, 140, 1015], 'steam', '#c8ff2a', { sound: 'bloop' }), P([340, 860, 450, 1015], 'glow', '#d8ff9a', { sound: 'chime' })] },
   Sharks: { src: 'art/boards-portrait/sharks.jpg', opp: [187, 23, 272, 117, 'arch'], me: [187, 809, 272, 914, 'circle'], field: [130, 800],
     props: [P([30, 30, 110, 110], 'bob', '#cfefff', { sound: 'splash', glyph: '🦈' }), P([335, 20, 445, 165], 'sway', '#bfe8c8', { sound: 'clink' }),
       P([30, 880, 160, 1000], 'glow', '#ffffff', { sound: 'knock' }), P([300, 890, 450, 1015], 'glow', '#ff3a4a', { sound: 'splash' })] },
@@ -106,6 +110,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Acidic: { src: 'art/boards-v2/acidic.jpg', opp: [467, 30, 556, 132], me: [460, 431, 558, 535], field: [110, 150, 915, 420],
+    props: [P([55, 10, 200, 140], 'steam', '#c8ff2a', { sound: 'bloop', glyph: '🧪' }), P([850, 10, 990, 170], 'glow', '#ff8a5a', { sound: 'clink' }),
+      P([50, 400, 200, 560], 'steam', '#c8ff2a', { sound: 'bloop' }), P([870, 360, 1010, 560], 'glow', '#d8ff9a', { sound: 'chime' })] },
   Sharks: { src: 'art/boards-v2/sharks.jpg', opp: [464, 21, 558, 127], me: [464, 432, 559, 546], field: [110, 140, 915, 420],
     props: [P([75, 30, 150, 115], 'bob', '#cfefff', { sound: 'splash', glyph: '🦈' }), P([850, 10, 980, 180], 'sway', '#bfe8c8', { sound: 'clink' }),
       P([40, 415, 180, 560], 'glow', '#ffffff', { sound: 'knock' }), P([855, 420, 1015, 560], 'glow', '#ff3a4a', { sound: 'splash' })] },
