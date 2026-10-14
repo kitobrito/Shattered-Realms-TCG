@@ -3312,3 +3312,59 @@ body:not(.classic-cards) .arena .minion.shardm .sm-socket.r { clip-path: none; w
 body:not(.classic-cards) .arena .minion.shardm .atk { width: calc(var(--minion-w) * 0.41) !important; height: calc(var(--minion-w) * 0.36) !important; bottom: -5% !important; }
 body:not(.classic-cards) .arena .minion.shardm .sm-socket.l { width: calc(var(--minion-w) * 0.41 + 7px); height: calc(var(--minion-w) * 0.36 + 7px);
   bottom: calc(-5% - 3.5px); left: calc(-2% - 3.5px); }
+
+/* ==== Painted Shard frames (art/frames/painted-<type>.png, 728x1024) ====
+   Positions measured from the paintings' openings, in % of the card. */
+.big-card.shard .sh-accent { opacity: 0.9; filter: none; }
+.big-card.shard.t-minion .bc-art { left: 12.2% !important; top: 9.4% !important; width: 75% !important; height: 41% !important; }
+.big-card.shard.t-spell .bc-art { left: 19.8% !important; top: 7.6% !important; width: 60.4% !important; height: 43.2% !important; border-radius: 50% !important; }
+.big-card.shard.t-trap .bc-art { left: 12.2% !important; top: 9.5% !important; width: 75.6% !important; height: 41% !important; }
+.big-card.shard .bc-text { left: 10.6% !important; top: 64.2% !important; width: 80% !important; height: 25.3% !important; padding: 3.6% 5% !important; }
+.big-card.shard:not(.t-minion) .bc-text { left: 8.4% !important; top: 65.1% !important; width: 83.3% !important; height: 26% !important; }
+.big-card.shard .bc-banner { left: 26.8% !important; top: 54.9% !important; width: 47.4% !important; height: 6.4% !important; }
+.big-card.shard:not(.t-minion) .bc-banner { left: 9% !important; top: 55.7% !important; width: 82% !important; height: 6.8% !important; }
+.big-card.shard .bc-type { left: 39.6% !important; top: 91.4% !important; width: 21.3% !important; height: 6.6% !important; padding: 0 0.2em !important;
+  background: linear-gradient(180deg, #2c2833, #141118) !important; z-index: 1; font-size: 0.8em !important; }
+.big-card.shard:not(.t-minion) .bc-type { left: 31.9% !important; top: 92.4% !important; width: 36.4% !important; height: 6% !important; background: none !important; z-index: 4; }
+.card .big-card.shard .bc-type { font-size: 0.95em !important; }
+.big-card.shard .sh-sigil { left: 83.52%; top: 4.3%; width: 9.89%; height: 7.03%; }
+.big-card.shard.t-spell .sh-sigil { left: 84.2%; top: 3.71%; width: 10.85%; height: 7.62%; }
+.big-card.shard.t-trap .sh-sigil { left: 84.75%; top: 3.71%; width: 10.71%; height: 7.52%; }
+.big-card.shard .bc-cost { left: 6.18% !important; top: 1.37% !important; width: 13.6% !important; height: 16.6% !important;
+  clip-path: polygon(0 0, 100% 0, 100% 74%, 50% 100%, 0 74%) !important; }
+.big-card.shard.t-spell .bc-cost { left: 3.3% !important; top: 1.17% !important; width: 14.84% !important; height: 17.38% !important; }
+.big-card.shard.t-trap .bc-cost { left: 2.75% !important; top: 0.78% !important; width: 15.25% !important; height: 17.77% !important; }
+.big-card.shard .bc-atk { left: 6.46% !important; top: 52.34% !important; width: 17.58% !important; height: 11.13% !important; }
+.big-card.shard .bc-hp, .big-card.shard .bc-hp.two-digit { left: 77.06% !important; top: 52.44% !important; width: 17.31% !important; height: 10.74% !important; }
+.big-card.shard.t-minion .bc-type { left: 41% !important; width: 18% !important; }
+/* Minion tribe/tags sit in the narrow painted tab, one per line (Vampire / Dark / Undead). */
+.big-card.shard.t-minion .bc-type { left: 39.6% !important; top: 91.2% !important; width: 21.3% !important; height: 7.6% !important;
+  display: flex !important; flex-direction: column; justify-content: center; align-items: center; gap: 0; padding: 0 0.25em !important;
+  background: none !important; z-index: 4; line-height: 0.88; }
+.big-card.shard.t-minion .bc-type span { font-size: 1.2em; max-width: 100%; }
+.big-card.shard.t-minion .bc-type.lines-2 span { font-size: 1.25em; letter-spacing: 0; }
+.big-card.shard.t-minion .bc-type.lines-3 span { font-size: 1.2em; letter-spacing: 0; }
+
+/* ==== Painted board bezel (art/frames/painted-bezel.png) ====
+   The bronze crystal frame with its own Attack and Health sockets; the minion's art fills
+   the six-sided window and glows inside its edge in the faction's colour. */
+body:not(.classic-cards) .arena .minion.shardm .sm-frame { left: 6.1%; right: 6.1%; top: 0; bottom: 0; z-index: 4;
+  background: url('../../art/frames/painted-bezel.png') center / 100% 100% no-repeat; }
+body:not(.classic-cards) .arena .minion.shardm .sm-frame > i, body:not(.classic-cards) .arena .minion.shardm .sm-socket { display: none !important; }
+body:not(.classic-cards) .arena .minion.shardm .m-art, body:not(.classic-cards) .arena .minion.shardm .m-fx { left: 15.2% !important; right: auto !important;
+  width: 69.6% !important; top: 8.8% !important; bottom: auto !important; height: 82.6% !important; }
+body:not(.classic-cards) .arena .minion.shardm .m-art { box-shadow: inset 0 0 calc(var(--minion-w) * 0.07) calc(var(--minion-w) * 0.015) var(--accent, #d8c8a8) !important; }
+body:not(.classic-cards) .arena .minion.shardm.kw-taunt .m-art { box-shadow: inset 0 0 calc(var(--minion-w) * 0.07) calc(var(--minion-w) * 0.015) #ffd76a !important; }
+body:not(.classic-cards) .arena .minion.shardm.can-attack .m-art { box-shadow: inset 0 0 calc(var(--minion-w) * 0.08) calc(var(--minion-w) * 0.02) #57e07a !important; }
+body.colorblind:not(.classic-cards) .arena .minion.shardm.can-attack .m-art { box-shadow: inset 0 0 calc(var(--minion-w) * 0.08) calc(var(--minion-w) * 0.02) #3a9aff !important; }
+body:not(.classic-cards) .arena .minion.shardm.targetable .m-art { box-shadow: inset 0 0 calc(var(--minion-w) * 0.08) calc(var(--minion-w) * 0.02) var(--target) !important; }
+body:not(.classic-cards) .arena .minion.shardm.prey .m-art { box-shadow: inset 0 0 calc(var(--minion-w) * 0.09) calc(var(--minion-w) * 0.025) #ff2a3a !important; }
+body:not(.classic-cards) .arena .minion.shardm .sm-shine { left: 15.2%; width: 69.6%; top: 8.8%; height: 82.6%; inset: auto; z-index: 5; }
+body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .arena .minion.shardm .hp {
+  width: calc(var(--minion-w) * 0.27) !important; height: calc(var(--minion-w) * 0.25) !important; top: 70.2% !important; bottom: auto !important; right: auto !important;
+  font-size: calc(var(--minion-w) * 0.2) !important; padding: 0 !important; }
+body:not(.classic-cards) .arena .minion.shardm .atk { left: 8.6% !important; }
+body:not(.classic-cards) .arena .minion.shardm .hp { left: 63.2% !important; top: 70.7% !important; width: calc(var(--minion-w) * 0.29) !important; height: calc(var(--minion-w) * 0.26) !important;
+  padding-bottom: calc(var(--minion-w) * 0.03) !important; }
+body:not(.classic-cards) .arena .minion.shardm .sm-ward { z-index: 5; }
+body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .arena .minion.shardm .hp { font-size: calc(var(--minion-w) * 0.25) !important; overflow: visible; }
