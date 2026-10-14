@@ -3306,3 +3306,9 @@ body:not(.classic-cards) .arena .minion.shardm .hp { clip-path: none !important;
 body:not(.classic-cards) .arena .minion.shardm .sm-socket.r { clip-path: none; width: calc(var(--minion-w) * 0.41 + 7px); height: calc(var(--minion-w) * 0.36 + 7px);
   bottom: calc(-5% - 3.5px); right: calc(-2% - 3.5px);
   -webkit-mask: var(--heart) center / 100% 100% no-repeat; mask: var(--heart) center / 100% 100% no-repeat; }
+
+/* Attack gems match the Health hearts in size. */
+.big-card.shard .bc-atk { left: 3.8% !important; top: 52.99% !important; width: 19.04% !important; height: 11.6% !important; }
+body:not(.classic-cards) .arena .minion.shardm .atk { width: calc(var(--minion-w) * 0.41) !important; height: calc(var(--minion-w) * 0.36) !important; bottom: -5% !important; }
+body:not(.classic-cards) .arena .minion.shardm .sm-socket.l { width: calc(var(--minion-w) * 0.41 + 7px); height: calc(var(--minion-w) * 0.36 + 7px);
+  bottom: calc(-5% - 3.5px); left: calc(-2% - 3.5px); }
