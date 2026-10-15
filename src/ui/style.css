@@ -3815,3 +3815,45 @@ button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote
 
 /* ==== Screen changes: a veil that lifts off the new screen ==== */
 .screen-veil { position: fixed; inset: 0; z-index: 1250; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, #140d18, #050307 75%); }
+
+/* ==== Character animation ==========================================================
+   Idle: every minion on the board breathes (the separate translate / rotate / scale
+   properties, so it never fights the effects that move the minion itself), each faction
+   in its own way, each minion on its own beat (--idle). The art inside drifts a little. */
+.arena .minion { animation: idle-breathe 4.2s ease-in-out var(--idle, 0s) infinite; }
+.arena .minion .m-art { animation: idle-art 9s ease-in-out var(--idle, 0s) infinite; }
+@keyframes idle-breathe { 0%, 100% { translate: 0 0; scale: 1; } 50% { translate: 0 -2.5px; scale: 1.012; } }
+@keyframes idle-art { 0%, 100% { background-position: 50% 30%; } 50% { background-position: 52% 27%; } }
+/* Ghosts float higher and flicker. */
+.arena .minion.f-ghosts { animation: idle-float 5s ease-in-out var(--idle, 0s) infinite; }
+.arena .minion.f-ghosts .m-art { animation: idle-art 9s ease-in-out var(--idle, 0s) infinite, idle-flicker 3.7s steps(1) var(--idle, 0s) infinite; }
+@keyframes idle-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+@keyframes idle-flicker { 0%, 100% { opacity: 1; } 47% { opacity: 1; } 48% { opacity: 0.55; } 50% { opacity: 0.9; } 51% { opacity: 0.6; } 53% { opacity: 1; } }
+/* Robots: a slow power pulse through the art. */
+.arena .minion.f-robots .m-art { animation: idle-art 9s ease-in-out var(--idle, 0s) infinite, idle-power 2.6s ease-in-out var(--idle, 0s) infinite; }
+@keyframes idle-power { 0%, 100% { filter: none; } 50% { filter: brightness(1.12) saturate(1.15); } }
+/* Plants sway from the roots. */
+.arena .minion.f-plants, .arena .minion.f-fungus { transform-origin: 50% 100%; animation: idle-sway 5.5s ease-in-out var(--idle, 0s) infinite; }
+@keyframes idle-sway { 0%, 100% { rotate: -1.4deg; } 50% { rotate: 1.4deg; } }
+/* Sharks bob as if under water. */
+.arena .minion.f-sharks { animation: idle-swim 3.6s ease-in-out var(--idle, 0s) infinite; }
+@keyframes idle-swim { 0%, 100% { translate: 0 0; rotate: -1deg; } 25% { translate: 2px -3px; } 50% { translate: 0 -4px; rotate: 1deg; } 75% { translate: -2px -2px; } }
+/* Dragons and Demons breathe heavy, with a glow on the in-breath. */
+.arena .minion.f-dragons .m-art, .arena .minion.f-demons .m-art { animation: idle-art 9s ease-in-out var(--idle, 0s) infinite, idle-ember 4.2s ease-in-out var(--idle, 0s) infinite; }
+@keyframes idle-ember { 0%, 100% { filter: none; } 50% { filter: brightness(1.12) saturate(1.2) sepia(0.15); } }
+/* Asleep: slower and lower. */
+.arena .minion.asleep { animation-duration: 7s !important; }
+/* Valid targets keep their pulse over any idle motion. */
+.arena .minion.targetable, .arena .hero-portrait.targetable { animation: target-pulse 0.7s infinite alternate !important; }
+/* In the crosshairs: the target braces, shrinking back a touch with a red rim. */
+.arena .minion.aim-over, .arena .hero-portrait.aim-over { scale: 0.95; filter: drop-shadow(0 0 10px #ff3a3aaa); transition: scale 0.15s, filter 0.15s; }
+.arena .minion.aim-over { animation-play-state: paused; }
+
+/* Heroes: the portrait breathes; below 10 Health it sags, darkens and breathes heavily. */
+.arena .hero-portrait .portrait-img { animation: hero-breathe 5s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes hero-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.02; } }
+.arena .hero-portrait.weary .portrait-img { animation: hero-weary 2.4s ease-in-out infinite; filter: saturate(0.6) brightness(0.85); }
+@keyframes hero-weary { 0%, 100% { scale: 1; translate: 0 2px; rotate: -1deg; } 45% { scale: 1.03; translate: 0 0; rotate: 0deg; } }
+
+body.reduced-motion .arena .minion, body.reduced-motion .arena .minion .m-art, body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .arena .minion, .arena .minion .m-art, .arena .hero-portrait .portrait-img { animation: none !important; } }

@@ -733,11 +733,12 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       const fromRect = rects.get(`c${killer}`) ?? oldMinions.get(killer)?.rect ?? null;
       const power = before.attack.get(killer) ?? 3;
       jobs.push(fx.killFx(old.rect, killerFaction, power, fromRect));
-      jobs.push(fx.shatterCard(old.clone, old.rect, fromRect, fx.shatterModeFor(killerFaction)));
+      // The fallen minion goes its own faction's way where it has one; otherwise it shatters away from the blow.
+      jobs.push(fx.themedDeath(old.clone, old.rect, before.factionOf.get(uid)) ?? fx.shatterCard(old.clone, old.rect, fromRect, fx.shatterModeFor(killerFaction)));
       fx.screenShake(app.querySelector('.arena') ?? app, Math.min(16, 5 + power * 1.4));
       fx.deathFx(old.rect, before.factionOf.get(uid));
     } else {
-      jobs.push(fx.deathGhost(old.clone, old.rect));
+      jobs.push(fx.themedDeath(old.clone, old.rect, before.factionOf.get(uid)) ?? fx.deathGhost(old.clone, old.rect));
       fx.deathFx(old.rect, before.factionOf.get(uid));
     }
   }
@@ -781,17 +782,24 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
         // Bigger hits shake harder and throw more debris.
         hurt = true;
         biggest = Math.max(biggest, -delta + (c.kind === 'hero' ? 1 : 0));
-        jobs.push(fx.shake(el, 4 + -delta * 1.5));
-        if (c.kind === 'hero') jobs.push(fx.heroHit(el.querySelector('.portrait-img') ?? el));
+        if (c.kind === 'hero') {
+          jobs.push(fx.shake(el, 4 + -delta * 1.5));
+          jobs.push(fx.heroHit(el.querySelector('.portrait-img') ?? el));
+          jobs.push(fx.heroWince(el, -delta));
+        }
         // In a fight, each side is hit in the style of whoever struck it (the defender strikes back too).
         let striker = null;
         if (action.type === 'attack' && c.uid === action.defender) striker = action.attacker;
         if (action.type === 'attack' && c.uid === action.attacker) striker = action.defender;
         const hitFaction = striker == null ? before.srcFaction
           : before.factionOf.get(striker) ?? s.players.find((p) => p.hero.uid === striker)?.factions[0] ?? before.srcFaction;
+        if (c.kind === 'minion') jobs.push(fx.flinch(el, striker != null ? rects.get(`c${striker}`) ?? null : null, -delta));
         jobs.push(fx.particles(r, hitFaction, -delta));
         if (striker != null) jobs.push(fx.hitFx(r, hitFaction, -delta, rects.get(`c${striker}`) ?? null));
-      } else { healed = true; fx.burst(r, 'heal'); jobs.push(fx.sparkles(r, 'heal')); }
+      } else {
+        healed = true; fx.burst(r, 'heal'); jobs.push(fx.sparkles(r, 'heal'));
+        if (c.kind === 'hero') jobs.push(fx.heroPerk(el));
+      }
     }
   }
   // Stats that changed: the gem pops, glows green or red and counts to its new value.

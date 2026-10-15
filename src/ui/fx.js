@@ -1558,6 +1558,114 @@ export async function meteor(targetRect, { big = true } = {}) {
 }
 
 // A hero that takes damage flashes red.
+// A minion hit: it recoils away from the blow (harder hits throw it further), tips over a
+// little and flashes white, then settles back. \`from\`: where the blow came from (a rect),
+// or null to be pushed back toward its own side of the board.
+export function flinch(el, from, dmg = 1) {
+  if (!el) return Promise.resolve();
+  const r = el.getBoundingClientRect();
+  const c = center(r);
+  let dx = 0, dy = el.closest('.board.opp, .opp') ? -1 : 1;
+  if (from) { const f = center(from); dx = c.x - f.x; dy = c.y - f.y; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l; }
+  const d = Math.min(18, 5 + dmg * 2.2);
+  const tip = (dx >= 0 ? 1 : -1) * Math.min(9, 3 + dmg);
+  const art = el.querySelector('.m-art');
+  if (art) animate(art, [{ filter: 'brightness(2.8) saturate(0.2)' }, { filter: 'brightness(1.3)', offset: 0.35 }, { filter: 'none' }], { duration: 300, fill: 'none' });
+  return animate(el, [
+    { translate: '0 0', rotate: '0deg' },
+    { translate: `${dx * d}px ${dy * d}px`, rotate: `${tip}deg`, offset: 0.22 },
+    { translate: `${-dx * d * 0.18}px ${-dy * d * 0.18}px`, rotate: `${-tip * 0.3}deg`, offset: 0.6 },
+    { translate: '0 0', rotate: '0deg' },
+  ], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
+}
+
+// Hero reactions. Hit: the portrait winces, squashing and jerking back. Healed: it lifts
+// and brightens with a warm glow.
+export function heroWince(el, dmg = 1) {
+  const img = el?.querySelectorAll('.portrait-img');
+  if (!img?.length) return Promise.resolve();
+  const k = Math.min(1, dmg / 6);
+  return Promise.all([...img].map((i) => animate(i, [
+    { scale: '1', rotate: '0deg', translate: '0 0' },
+    { scale: `${1.05 + k * 0.04} ${0.9 - k * 0.05}`, rotate: `${-3 - k * 3}deg`, translate: `0 ${3 + k * 4}px`, offset: 0.2 },
+    { scale: '0.98 1.02', rotate: '1deg', translate: '0 -1px', offset: 0.55 },
+    { scale: '1', rotate: '0deg', translate: '0 0' },
+  ], { duration: 520, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' })));
+}
+export function heroPerk(el) {
+  const img = el?.querySelectorAll('.portrait-img');
+  if (!img?.length) return Promise.resolve();
+  return Promise.all([...img].map((i) => animate(i, [
+    { scale: '1', translate: '0 0', filter: 'none' },
+    { scale: '1.06', translate: '0 -5px', filter: 'brightness(1.25) drop-shadow(0 0 10px #ffe39a)', offset: 0.35 },
+    { scale: '1', translate: '0 0', filter: 'none' },
+  ], { duration: 760, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' })));
+}
+
+// A minion dying in its own faction's way, or null for the default fade:
+// Ghosts drift up and dissolve, Robots fall apart throwing sparks, Zombies crumble to dust,
+// Plants and Fungus wilt and wither, Acidic melts away, Dragons burn to ash.
+export function themedDeath(clone, rect, faction) {
+  if (faction === 'Acidic') return shatterCard(clone, rect, null, 'melt');
+  if (faction === 'Dragons') return shatterCard(clone, rect, null, 'burn');
+  const host = ghostHost(rect);
+  const base = { position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: '0', zIndex: '900', pointerEvents: 'none', animation: 'none' };
+  const one = () => { const g = clone.cloneNode(true); g.classList.add('fx-ghost'); Object.assign(g.style, base); host.appendChild(g); return g; };
+  const done = (p) => p.then(() => host.remove(), () => host.remove());
+  if (faction === 'Ghosts') {
+    const g = one();
+    return done(animate(g, [
+      { transform: 'translateY(0) scale(1)', filter: 'brightness(1)', opacity: 1 },
+      { transform: 'translateY(-12%) scale(1.04) rotate(-2deg)', filter: 'brightness(1.8) saturate(0.4) blur(0px)', opacity: 0.85, offset: 0.3 },
+      { transform: 'translateY(-70%) scale(1.15) rotate(3deg)', filter: 'brightness(2.4) saturate(0) blur(6px)', opacity: 0 },
+    ], { duration: 1100, easing: 'cubic-bezier(.3,.1,.4,1)' }));
+  }
+  if (faction === 'Plants' || faction === 'Fungus') {
+    const g = one();
+    g.style.transformOrigin = '50% 100%';
+    return done(animate(g, [
+      { transform: 'rotate(0) scale(1, 1)', filter: 'none', opacity: 1 },
+      { transform: 'rotate(6deg) scale(1, 0.92)', filter: 'sepia(0.6) saturate(0.7) brightness(0.85)', opacity: 1, offset: 0.35 },
+      { transform: 'rotate(16deg) scale(0.92, 0.55) translateY(20%)', filter: 'sepia(1) saturate(0.4) brightness(0.45)', opacity: 0 },
+    ], { duration: 1200, easing: 'cubic-bezier(.4,0,.7,1)' }));
+  }
+  if (faction === 'Robots' || faction === 'Zombies') {
+    // Pieces: Robots in a few big plates that drop with a clank; Zombies in many small bits that crumble.
+    const robot = faction === 'Robots';
+    const n = robot ? 3 : 5;
+    const jobs = [];
+    for (let row = 0; row < n; row++) for (let col = 0; col < n; col++) {
+      const g = one();
+      const t = (row / n) * 100, l = (col / n) * 100;
+      g.style.clipPath = `inset(${t}% ${100 - l - 100 / n}% ${100 - t - 100 / n}% ${l}%)`;
+      const delay = robot ? Math.random() * 160 : (n - row) * 70 + Math.random() * 90;
+      const dx = (col - (n - 1) / 2) * rect.width * (robot ? 0.25 : 0.06) + (Math.random() - 0.5) * 10;
+      const fall = rect.height * (robot ? 0.9 + Math.random() * 0.4 : 0.35 + Math.random() * 0.3);
+      const rot = (Math.random() - 0.5) * (robot ? 70 : 30);
+      jobs.push(animate(g, [
+        { transform: 'translate(0,0) rotate(0)', opacity: 1, filter: robot ? 'brightness(1.4)' : 'none' },
+        { transform: `translate(${dx * 0.3}px, ${-rect.height * (robot ? 0.06 : 0.01)}px) rotate(${rot * 0.2}deg)`, opacity: 1, offset: 0.2 },
+        { transform: `translate(${dx}px, ${fall}px) rotate(${rot}deg)`, opacity: 0, filter: robot ? 'brightness(0.5) saturate(0.3)' : 'sepia(0.8) brightness(0.5) blur(1px)' },
+      ], { duration: robot ? 800 : 950, delay, easing: 'cubic-bezier(.5,0,.8,.6)' }));
+    }
+    if (robot) jobs.push(particles(rect, 'Robots', 10));
+    else {
+      for (let i = 0; i < 8; i++) {
+        const p = document.createElement('div');
+        p.className = 'fx-dust';
+        const s0 = rect.width * (0.3 + Math.random() * 0.2);
+        Object.assign(p.style, { left: `${rect.left + rect.width * Math.random()}px`, top: `${rect.bottom - rect.height * 0.15}px`, width: `${s0}px`, height: `${s0}px` });
+        layer().appendChild(p);
+        jobs.push(animate(p, [{ transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0.9 }, { transform: `translate(calc(-50% + ${(Math.random() - 0.5) * 60}px), calc(-50% - ${10 + Math.random() * 30}px)) scale(2)`, opacity: 0 }],
+          { duration: 900, delay: 200 + Math.random() * 300, easing: 'ease-out' }).then(() => p.remove()));
+      }
+    }
+    return done(Promise.all(jobs));
+  }
+  host.remove();
+  return null;
+}
+
 export function heroHit(el) {
   if (!el) return Promise.resolve();
   return animate(el, [
