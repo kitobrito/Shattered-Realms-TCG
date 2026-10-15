@@ -309,8 +309,13 @@ export const VAMPIRE_CARDS = [
     ...V, id: 'queen_of_the_red_veil', name: 'Queen of the Red Veil', art: '👑', extra: true, cost: 8, attack: 6, health: 7,
     text: 'Arrival: Your other Vampires with 2 or less Attack become 3/3 Blood Shades. They keep their other abilities.',
     triggers: [{ on: 'battlecry', effects: [
-      { op: 'setStats', target: { minions: { side: 'friendly', tribe: 'Vampire', maxAttack: 2, excludeSelf: true } }, attack: 3, health: 3, name: 'Blood Shade' },
+      { op: 'setStats', target: { minions: { side: 'friendly', tribe: 'Vampire', maxAttack: 2, excludeSelf: true } }, attack: 3, health: 3, name: 'Blood Shade', look: 'blood_shade' },
     ] }],
+  },
+  // The form the Queen of the Red Veil gives your small Vampires (shown on the board; they keep their abilities).
+  {
+    ...V, id: 'blood_shade', name: 'Blood Shade', art: '🩸', token: true, cost: 3, attack: 3, health: 3,
+    text: 'A Vampire remade by the Queen of the Red Veil. It keeps its other abilities.',
   },
   {
     ...S, id: 'blood_tithe', name: 'Blood Tithe', art: '🩸', extra: true, cost: 1,
