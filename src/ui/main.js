@@ -3,14 +3,14 @@
 // getLegalActions(), so every rule lives in the engine.
 
 import { applyAdvantage, chooseAction } from '../ai/smart.js';
-import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts, standardDuplicates } from '../cards/index.js';
+import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts } from '../cards/index.js';
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
 import { ART } from '../cards/art-manifest.js';
 import { boardArtFor } from '../cards/board-art.js';
 import { applySettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
-import { checkDeck, pairDeckProblem } from '../cards/deck-check.js';
+import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
 import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
@@ -120,12 +120,13 @@ const DECKS_KEY = 'faction-ccg-decks';
 function savedDecks() {
   try { return JSON.parse(localStorage.getItem(DECKS_KEY) ?? '{}'); } catch { return {}; }
 }
-const recommendedDeck = (factions) => buildDeck(factions, cutsFor(factions), savedLineups());
+// One faction: its recommended 30. Two: the standard 20 from each.
+const recommendedDeck = (factions) => (factions.length === 1 ? buildSingleDeck(factions[0], savedLineups()) : buildDeck(factions, cutsFor(factions), savedLineups()));
 function customDeckFor(factions) {
   const d = savedDecks()[pairKey(factions)];
   if (!Array.isArray(d)) return null;
   const pool = new Set(factions.flatMap((f) => FACTION_POOLS[f]));
-  return d.every((id) => pool.has(id) && !isLocked(id)) && !pairDeckProblem(factions, d) ? d : null;
+  return d.every((id) => pool.has(id) && !isLocked(id)) && !deckProblem(factions, d) ? d : null;
 }
 const pairDeckFor = (factions) => customDeckFor(factions) ?? recommendedDeck(factions);
 function storeDeck(factions, deck) {
@@ -134,33 +135,14 @@ function storeDeck(factions, deck) {
   try { localStorage.setItem(DECKS_KEY, JSON.stringify(all)); } catch { flash('Could not save your deck.'); }
 }
 let draftDeck = null; // deck builder: { cardId: copies }
+const deckSizeFor = (factions) => (factions.length === 1 ? DEFAULT_RULES.singleDeckSize : DEFAULT_RULES.pairDeckSize);
 const countsOf = (deck) => deck.reduce((m, id) => ({ ...m, [id]: (m[id] ?? 0) + 1 }), {});
 const deckOf = (counts) => Object.entries(counts).flatMap(([id, n]) => Array(n).fill(id));
 
-// ---- One-faction format: duplicates ------------------------------------------
-// Each faction can have a saved set of 10 duplicates; otherwise the standard set.
-
-const DUPES_KEY = 'faction-ccg-dupes';
-function savedDupes() {
-  try { return JSON.parse(localStorage.getItem(DUPES_KEY) ?? '{}'); } catch { return {}; }
-}
-const customDupesFor = (f) => {
-  const d = savedDupes()[f];
-  const lineup = lineupOf(f, savedLineups());
-  return d && d.every((id) => lineup.includes(id)) ? d : null;
-};
-const dupesFor = (f) => customDupesFor(f) ?? standardDuplicates(f, savedLineups());
-function storeDupes(f, ids) {
-  const all = savedDupes();
-  if (ids) all[f] = ids; else delete all[f];
-  try { localStorage.setItem(DUPES_KEY, JSON.stringify(all)); } catch { flash('Could not save your duplicates.'); }
-}
-
-// 'pair' = two factions, choose 40. 'single' = one faction + 10 duplicates.
+// 'pair' = two factions, choose 40. 'single' = one faction, choose 30.
 const FORMAT_KEY = 'faction-ccg-format';
 let format = (() => { try { return localStorage.getItem(FORMAT_KEY) === 'single' ? 'single' : 'pair'; } catch { return 'pair'; } })();
-let builderMode = 'cut';   // which deck builder is open: 'cut' or 'dupe'
-let draftDupes = null;     // deck builder: card ids chosen as duplicates
+let builderMode = 'cut';   // which deck builder is open: 'cut' (build your deck) or 'swap' (lineup)
 
 // ---- Game flow ------------------------------------------------------------
 
@@ -175,9 +157,8 @@ function setFormat(next) {
   picked = otherPick[format] ?? picked.slice(0, pickNeeded());
   try { localStorage.setItem(FORMAT_KEY, format); } catch { /* storage unavailable */ }
 }
-const deckFor = (factions, mine) => (format === 'single'
-  ? buildSingleDeck(factions[0], mine ? dupesFor(factions[0]) : undefined, mine ? savedLineups() : {})
-  : (mine ? pairDeckFor(factions) : buildDeck(factions)));
+const deckFor = (factions, mine) => (mine ? pairDeckFor(factions)
+  : format === 'single' ? buildSingleDeck(factions[0]) : buildDeck(factions));
 
 // The opponent gets a random pair of playable factions.
 function randomPick() {
@@ -1578,29 +1559,18 @@ function onDesync() {
 
 // ---- Screens --------------------------------------------------------------
 
-// "Swap cards" buttons for picked factions that have expansion cards.
-function swapButtonsHTML() {
-  return picked.filter(hasExtras).map((f) => {
-    const n = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
-    const open = n - lockedCount(f);
-    const mine = customLineupFor(f);
-    const swapped = mine ? mine.filter((id) => !FACTION_LISTS[f].includes(id)).length : 0;
-    const note = swapped ? `${swapped} new in · ${open}/${n} unlocked` : open ? `${open}/${n} new unlocked` : `🔒 win matches to unlock ${n} new`;
-    return `<button data-swap="${esc(f)}" class="ghost swap-btn"><img class="btn-icon" src="art/ui/icon-unlocks.png" alt=""> ${esc(f)} cards <small>${note}</small></button>`;
-  }).join('');
-}
-
 function deckLineHTML() {
   if (picked.length !== pickNeeded()) return `<p class="deck-line sub">Pick ${pickNeeded() === 1 ? 'a faction' : `${pickNeeded()} factions`} to build your deck.</p>`;
   if (format === 'single') {
     const f = picked[0];
-    const custom = customDupesFor(f);
+    const custom = customDeckFor(picked);
+    const deck = pairDeckFor(picked);
+    const doubles = Object.values(countsOf(deck)).filter((n) => n > 1).length;
     return `
     <div class="deck-line">
-      <div><b>Your deck: ${buildSingleDeck(f, dupesFor(f), savedLineups()).length} cards</b> <span class="sub">${esc(f)} · 30 + 10 duplicates (${custom ? 'yours' : 'standard'})</span></div>
-      <button data-act="editDupes">${custom ? 'Edit my duplicates' : 'Choose duplicates'}</button>
-      ${custom ? '<button data-act="resetDupes" class="ghost">Use standard duplicates</button>' : ''}
-      ${swapButtonsHTML()}
+      <div><b>Your deck: ${deck.length} cards</b> <span class="sub">${esc(f)} · ${custom ? 'your deck' : 'recommended deck'}${doubles ? ` · ${doubles} doubled` : ''}</span></div>
+      <button data-act="editCuts">${custom ? 'Edit my deck' : 'Build my deck'}</button>
+      ${custom ? '<button data-act="resetCuts" class="ghost">Use recommended deck</button>' : ''}
     </div>`;
   }
   const custom = customDeckFor(picked);
@@ -1743,43 +1713,11 @@ function renderMenu() {
         ${ready && format !== 'single' ? synergyHTML(picked) : ''}
         ${ready ? factionGuideHTML(picked) : ''}
         ${deckLineHTML()}
-        <p class="sub">${format === 'single' ? 'The rival plays a random faction with its standard duplicates.' : 'The rival plays a random pair with the standard cut.'}</p>
+        <p class="sub">${format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p>
         ${soon.length ? `<p class="ts-soon">Coming soon: ${soon.map(esc).join(' · ')}</p>` : ''}
       </section>
     </div>
     ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}`;
-}
-
-function renderDupeBuilder() {
-  const f = picked[0];
-  const need = DEFAULT_RULES.singleFactionDuplicates;
-  const n = draftDupes.length;
-  const lineup = lineupOf(f, savedLineups());
-  const cards = galleryCards(f).filter((c) => lineup.includes(c.id));
-  galleryOrder = cards.map((c) => c.id);
-  const heroSpells = galleryCards(f).filter((c) => c.heroSpell);
-  const scrollY = window.scrollY;
-  app.innerHTML = `
-    <div class="gallery builder">
-      <div class="builder-bar">
-        <div>
-          <h2>Choose your duplicates</h2>
-          <div class="sub">${esc(f)} · click ${need} cards to play two copies of each (max ${DEFAULT_RULES.maxCopies} per card) · Hero Spell always included:
-            ${heroSpells.map((c) => esc(c.name)).join(', ')}</div>
-        </div>
-        <div class="builder-count ${n === need ? 'done' : ''}">Duplicates <b>${n}</b> / ${need}<span class="sub">Deck ${cards.length + n} cards</span></div>
-        <div class="builder-buttons">
-          <button data-act="dupeStandard" class="ghost">Standard duplicates</button>
-          <button data-act="dupeClear" class="ghost">Clear</button>
-          <button data-act="menu" class="ghost">Cancel</button>
-          <button data-act="dupeSave" ${n === need ? '' : 'disabled'}>Save deck</button>
-        </div>
-      </div>
-      <h3>${crestHTML(f)} ${esc(f)} <span class="pick-count">30 cards · ${n} doubled</span></h3>
-      <div class="gallery-grid builder-grid">${cards.map((c) => cardHTML(c, { cuttable: true, isDupe: draftDupes.includes(c.id) })).join('')}</div>
-    </div>
-    ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
-  window.scrollTo(0, scrollY);
 }
 
 // Choose which 30 of a faction's cards you bring (expansion factions).
@@ -1818,12 +1756,12 @@ function renderSwapBuilder() {
 }
 
 function renderBuilder() {
-  if (builderMode === 'dupe') return renderDupeBuilder();
   if (builderMode === 'swap') return renderSwapBuilder();
-  const need = DEFAULT_RULES.pairDeckSize;
+  const single = picked.length === 1;
+  const need = deckSizeFor(picked);
   const deck = deckOf(draftDeck);
   const n = deck.length;
-  const problem = pairDeckProblem(picked, deck);
+  const problem = deckProblem(picked, deck);
   const pool = (f) => galleryCards(f).filter((c) => FACTION_POOLS[f].includes(c.id));
   galleryOrder = picked.flatMap((f) => pool(f).map((c) => c.id));
   const heroSpells = picked.flatMap((f) => galleryCards(f).filter((c) => c.heroSpell));
@@ -1844,7 +1782,7 @@ function renderBuilder() {
         <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${ART[c.id] ? `<i class="dr-art" style="background-image:url('${ART[c.id]}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
     </aside>`;
-  const section = (f) => `<h3>${crestHTML(f)} ${esc(f)} <span class="pick-count ${inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}</span></h3>
+  const section = (f) => `<h3>${crestHTML(f)} ${esc(f)} <span class="pick-count ${!single && inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${single ? `${inFaction(f)} in deck` : `${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}`}</span></h3>
       <div class="gallery-grid builder-grid">${pool(f).map(tile).join('')}</div>`;
   const scrollY = window.scrollY;
   app.innerHTML = `
@@ -1853,10 +1791,10 @@ function renderBuilder() {
         <div>
           <h2>Build your deck</h2>
           <div class="sub">${esc(picked.join(' + '))} · drag cards into your deck (hold, then drag on a phone) · drag one out or click it in the list to remove it · click a card to see it full size ·
-            ${need} cards, at least ${DEFAULT_RULES.minPerFaction} from each faction, up to ${DEFAULT_RULES.maxCopies} of a card · Hero Spells always included:
+            ${need} cards${single ? '' : `, at least ${DEFAULT_RULES.minPerFaction} from each faction`}, up to ${DEFAULT_RULES.maxCopies} of a card · Hero Spell${heroSpells.length === 1 ? '' : 's'} always included:
             ${heroSpells.map((c) => esc(c.name)).join(', ')}</div>
         </div>
-        <div class="builder-count ${!problem ? 'done' : ''}">Deck <b>${n}</b> / ${need}<span class="sub">${esc(picked.map((f) => `${inFaction(f)} ${f}`).join(' · '))}</span></div>
+        <div class="builder-count ${!problem ? 'done' : ''}">Deck <b>${n}</b> / ${need}${single ? '' : `<span class="sub">${esc(picked.map((f) => `${inFaction(f)} ${f}`).join(' · '))}</span>`}</div>
         <div class="builder-buttons">
           <button data-act="cutStandard" class="ghost">Recommended deck</button>
           <button data-act="cutClear" class="ghost">Clear</button>
@@ -1889,7 +1827,7 @@ function addToDraft(id) {
   if (isLocked(id)) return flash('Locked. Win matches to unlock new cards (2 per win).');
   const k = draftDeck[id] ?? 0;
   if (k >= DEFAULT_RULES.maxCopies) return flash(`Up to ${DEFAULT_RULES.maxCopies} copies of a card.`);
-  if (deckTotal() >= DEFAULT_RULES.pairDeckSize) return flash(`Your deck has ${DEFAULT_RULES.pairDeckSize} cards. Take one out first.`);
+  if (deckTotal() >= deckSizeFor(picked)) return flash(`Your deck has ${deckSizeFor(picked)} cards. Take one out first.`);
   draftDeck = { ...draftDeck, [id]: k + 1 };
   builderFlash = id;
   sound.play('cardPlay');
@@ -2566,14 +2504,7 @@ app.addEventListener('click', (e) => {
     draftLineup = draftLineup.includes(id) ? draftLineup.filter((x) => x !== id) : [...draftLineup, id];
     return render();
   }
-  if (cutCard && screen === 'builder' && builderMode === 'dupe') {
-    const id = cutCard.dataset.cut;
-    const need = DEFAULT_RULES.singleFactionDuplicates;
-    if (draftDupes.includes(id)) draftDupes = draftDupes.filter((x) => x !== id);
-    else if (draftDupes.length >= need) return flash(`You've chosen ${need}. Remove one first.`);
-    else draftDupes = [...draftDupes, id];
-    return render();
-  }
+
   if (screen === 'builder' && builderMode === 'cut' && builderSuppressClick) { builderSuppressClick = false; return; }
   const deckRow = e.target.closest('[data-deckrow]');
   if (deckRow && inBuilder()) return removeFromDraft(deckRow.dataset.deckrow);
@@ -2640,22 +2571,10 @@ function onButton(name) {
     case 'closeArt': zoomArt = false; return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
     case 'editCuts': builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
-    case 'editDupes': builderMode = 'dupe'; draftDupes = [...dupesFor(picked[0])]; zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
-    case 'resetDupes': storeDupes(picked[0], null); flash('Using the standard duplicates.'); return render();
-    case 'dupeStandard': draftDupes = [...standardDuplicates(picked[0], savedLineups())]; return render();
-    case 'dupeClear': draftDupes = []; return render();
-    case 'dupeSave': {
-      const std = standardDuplicates(picked[0], savedLineups());
-      const same = draftDupes.length === std.length && draftDupes.every((id) => std.includes(id));
-      storeDupes(picked[0], same ? null : draftDupes);
-      flash(same ? 'Saved: standard duplicates.' : 'Deck saved.');
-      screen = 'menu';
-      return render();
-    }
     case 'formatPair': setFormat('pair'); return render();
     case 'formatSingle': setFormat('single'); return render();
     case 'resetCuts': storeDeck(picked, null); storeCuts(picked, null); flash('Using the recommended deck.'); return render();
-    case 'cutStandard': draftDeck = countsOf(buildDeck(picked, standardCuts(picked, savedLineups()), savedLineups())); return render();
+    case 'cutStandard': draftDeck = countsOf(recommendedDeck(picked)); return render();
     case 'swapStandard': draftLineup = [...FACTION_DECKS[swapFaction]]; return render();
     case 'swapSave': {
       const std = FACTION_DECKS[swapFaction];
@@ -2668,8 +2587,8 @@ function onButton(name) {
     case 'cutClear': draftDeck = {}; return render();
     case 'cutSave': {
       const deck = deckOf(draftDeck);
-      if (pairDeckProblem(picked, deck)) return flash(pairDeckProblem(picked, deck));
-      const rec = countsOf(buildDeck(picked, standardCuts(picked, savedLineups()), savedLineups()));
+      if (deckProblem(picked, deck)) return flash(deckProblem(picked, deck));
+      const rec = countsOf(recommendedDeck(picked));
       const same = Object.keys(rec).length === Object.keys(draftDeck).length && Object.entries(rec).every(([id, k]) => draftDeck[id] === k);
       storeDeck(picked, same ? null : deck);
       if (same) storeCuts(picked, null);

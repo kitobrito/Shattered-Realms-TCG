@@ -178,7 +178,8 @@ export const DEFAULT_RULES = {
   pairDeckSize: 40,          // two-faction decks: choose exactly 40 cards…
   minPerFaction: 10,         // …at least this many from each faction…
   standardCutPerFaction: 10, // the default cut, used unless the player makes their own
-  singleFactionDuplicates: 10, // One-faction format: the 30 cards + 10 duplicates → 40
+  singleFactionDuplicates: 10, // (older one-faction format: the 30 cards + 10 duplicates)
+  singleDeckSize: 30,        // One-faction format: build your own 30 from that faction (up to 2 copies of a card)
   maxCopies: 2,              // …with no more than 2 copies of any card
   heroSpellUsesPerTurn: 1,
   extinctionEvery: 7,        // Dinosaur Extinction Cycle period (the Dinosaur player's own turns)

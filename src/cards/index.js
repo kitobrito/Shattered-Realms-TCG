@@ -95,6 +95,10 @@ export function standardDuplicates(faction, lineups = {}) {
   return [...fixed, ...rest].slice(0, DEFAULT_RULES.singleFactionDuplicates);
 }
 
-export function buildSingleDeck(faction, duplicates, lineups = {}) {
-  return [...lineupOf(faction, lineups), ...(duplicates ?? standardDuplicates(faction, lineups))];
+// One-faction format: players build their own 30 (up to 2 copies of a card). The recommended
+// deck is the faction's 30 (topped up from its standard duplicates if the list is shorter).
+export function buildSingleDeck(faction, lineups = {}) {
+  const deck = [...lineupOf(faction, lineups)];
+  for (const id of standardDuplicates(faction, lineups)) if (deck.length < DEFAULT_RULES.singleDeckSize) deck.push(id);
+  return deck.slice(0, DEFAULT_RULES.singleDeckSize);
 }
