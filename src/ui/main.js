@@ -510,6 +510,7 @@ async function act(action, meta = {}) {
       const striker = findCharacter(s, action.attacker);
       lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {
         power: striker ? effectiveAttack(striker) : 2, color: fx.factionColor(before.srcFaction), table: app.querySelector('.arena'),
+        style: striker?.kind === 'minion' ? before.srcFaction : null,
       });
     } else if (action.type === 'mulligan' && action.replace?.length && action.player === viewer) {
       await animateMulligan(s, action);
@@ -539,13 +540,22 @@ async function act(action, meta = {}) {
     } else if (playedCard) {
       sound.play(playedCard.type === 'minion' ? 'cardPlay' : playedCard.type === 'trap' ? 'trapSet' : 'spell');
       const hidden = playedCard.type === 'trap' && action.player !== viewer;
-      if (action.player !== viewer && !hidden) await revealPlayed(playedCard.id);
-      else if (meta.from && !meta.dropped && document.body.contains(meta.from)) {
+      // Spells from the hand get a flourish: the card spins to the middle, bursts, and the magic flies on.
+      const flourish = playedCard.type === 'spell' && action.type === 'play';
+      const spellTarget = action.target != null ? charEl(action.target) : null;
+      if (action.player !== viewer && !hidden) {
+        await revealPlayed(playedCard.id);
+        if (flourish) await fx.castFlourish(null, null, before.srcFaction, spellTarget);
+      } else if (flourish) {
+        const from = meta.from && document.body.contains(meta.from) ? meta.from.getBoundingClientRect() : null;
+        if (meta.from) meta.from.style.visibility = 'hidden';
+        await fx.castFlourish(bigCardHTML(playedCard), from, before.srcFaction, spellTarget);
+      } else if (meta.from && !meta.dropped && document.body.contains(meta.from)) {
         const target = playedCard.type === 'minion' ? app.querySelector('.board.me') : app.querySelector('.midline');
         if (target) await fx.fly(meta.from, meta.from.getBoundingClientRect(), target.getBoundingClientRect(), { duration: 260, fade: true, scale: 0.6 });
       }
-      // A targeted spell flies at its target as a bolt in its faction's colour.
-      if (playedCard.type === 'spell' && action.target != null && charEl(action.target)) {
+      // A targeted spell (a Hero Spell here: hand spells already flew) flies at its target as a bolt in its faction's colour.
+      if (!flourish && playedCard.type === 'spell' && action.target != null && charEl(action.target)) {
         const from = action.type === 'heroSpell' ? app.querySelector(`[data-hs="${action.card}"]`) : charEl(s.players[action.player].hero.uid);
         await fx.bolt(from, charEl(action.target), fx.factionColor(before.srcFaction));
       }
@@ -2406,6 +2416,22 @@ document.addEventListener('pointerover', (e) => {
     const d = i - at;
     c.style.setProperty('--push', d === 0 ? '0px' : `${Math.sign(d) * w * Math.max(0.12, 0.42 - Math.abs(d) * 0.1)}px`);
   });
+});
+// The hovered hand card tilts toward the pointer.
+document.addEventListener('pointermove', (e) => {
+  if (screen !== 'game' || e.pointerType !== 'mouse' || drag.busy()) return;
+  const card = e.target.closest?.('.my-hand .card');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+  card.style.setProperty('--tilt-x', `${(x * 16).toFixed(1)}deg`);
+  card.style.setProperty('--tilt-y', `${(-y * 12).toFixed(1)}deg`);
+  card.style.setProperty('--glare-x', `${((x + 0.5) * 100).toFixed(0)}%`);
+  card.style.setProperty('--glare-y', `${((y + 0.5) * 100).toFixed(0)}%`);
+});
+document.addEventListener('pointerout', (e) => {
+  const card = e.target.closest?.('.my-hand .card');
+  if (card && !card.contains(e.relatedTarget)) { card.style.removeProperty('--tilt-x'); card.style.removeProperty('--tilt-y'); }
 });
 document.addEventListener('pointerout', (e) => {
   const hand = e.target.closest?.('.my-hand');
