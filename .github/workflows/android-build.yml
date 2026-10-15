@@ -3,6 +3,7 @@
 # Download: https://github.com/kitobrito/Shattered-Realms-TCG/releases/download/android-latest/shattered-realms.apk
 # It is signed with tools/android/debug.keystore (a test key, not for the Play Store),
 # so each new APK installs as an update over the last one.
+# With the BUTLER_API_KEY secret and ITCH_GAME variable set, it is also pushed to itch.io (channel "android").
 name: android build
 on:
   push:
@@ -51,3 +52,18 @@ jobs:
             --title "Android APK (latest, for testing)" \
             --notes "Install on an Android phone for testing (allow installs from unknown sources). Offline play. Rebuilt automatically from main ($GITHUB_SHA)." \
             --target "$GITHUB_SHA"
+      - name: Push to itch.io with butler (android)
+        # Sends only what changed since the last upload. Turns on once the repo has
+        # the BUTLER_API_KEY secret and the ITCH_GAME variable (e.g. yourname/shattered-realms);
+        # until then this step just says so and the build still succeeds.
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_GAME: ${{ vars.ITCH_GAME }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ] || [ -z "$ITCH_GAME" ]; then
+            echo "::notice::itch.io publishing is off: add the BUTLER_API_KEY secret and the ITCH_GAME variable to turn it on."
+            exit 0
+          fi
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q -o butler.zip -d butler-bin && chmod +x butler-bin/butler
+          ./butler-bin/butler push shattered-realms.apk "$ITCH_GAME:android" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
