@@ -26,6 +26,7 @@ function cornerIcons(m, s) {
   return [
     m.prey ? '<i class="prey-mark" title="Marked Prey: Sharks hunt it through Stealth and Elusive">🩸</i>' : '',
     m.corrosion > 0 ? `<i class="corr-mark" title="Corrosion ${m.corrosion}: its Attack was lowered by ${m.corrosion} for as long as it stays in play">🧪${m.corrosion}</i>` : '',
+    m.infected != null ? `<i class="infect-mark" title="Infected: when it dies, ${m.infected === s.players[m.controller]?.index ? 'its own side' : 'the other side'} summons a 2/1 Rage Runner">🦠</i>` : '',
     m.acidCoated ? '<i class="coat-mark" title="Acid-coated: its next Corrosion lowers its Attack by 1 more">💧</i>' : '',
     m.tempControl ? '<i title="Controlled temporarily">⛓</i>' : '',
     m.returnAtEndOfTurn ? '<i title="Returns to hand at end of turn">↩</i>' : '',
@@ -35,7 +36,8 @@ function cornerIcons(m, s) {
 // Bottom-centre badges, like Hearthstone's Exit / trigger / Lifesteal / Poisonous icons.
 function badges(m) {
   if (hasKeyword(m, 'Silenced')) return '';
-  const triggers = [...(getCard(m.cardId).triggers ?? []), ...(m.grantedTriggers ?? [])];
+  // (An Infection's Rage Runner shows as the 🦠 mark, not as an Exit.)
+  const triggers = [...(getCard(m.cardId).triggers ?? []), ...(m.grantedTriggers ?? []).filter((t) => !t.infection)];
   return [
     // Robots: installed Upgrades and the Weapon.
     m.upgrades ? `<i class="b-upgrade" title="${m.upgrades} Upgrade${m.upgrades === 1 ? '' : 's'} installed">⚙${m.upgrades}</i>` : '',

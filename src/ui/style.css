@@ -3898,3 +3898,4 @@ body.reduced-motion .arena .minion.can-attack, body.reduced-motion .arena .minio
 @keyframes portrait-figure { 0%, 100% { translate: -1px 0; scale: 1.04; } 50% { translate: 1px -1.5px; scale: 1.065; } }
 .arena .hero-portrait.weary .portrait-front { animation: hero-weary 2.4s ease-in-out infinite; }
 body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }
+.minion .infect-mark { display: inline-grid; place-items: center; font-size: 1.5em; filter: drop-shadow(0 0 4px #ff2a2a) drop-shadow(0 0 2px #000); }

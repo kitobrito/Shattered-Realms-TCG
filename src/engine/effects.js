@@ -234,6 +234,7 @@ export function checkCondition(state, cond, ctx) {
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
+    if (cond.infected != null && (c.infected != null) !== cond.infected) return false;
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
     if (cond.notKeyword && hasKeyword(c, cond.notKeyword)) return false;
     if (cond.prey != null && !!c.prey !== cond.prey) return false;
@@ -949,7 +950,10 @@ export const EFFECT_OPS = {
       if (e.distinct && !fixed && !pool.length) break;
       const cardId = fixed ?? pickRandom(state, pool);
       if (e.distinct && !fixed) pool = pool.filter((id) => id !== cardId);
-      const m = summonMinion(state, p, cardId, { attack: e.attack, health: e.health, keywords: e.keywords });
+      // bonusIfControls: { cardId, attack, health } — bigger while you control that card (The Outbreak).
+      const bonus = e.bonusIfControls && state.players[p].board.some((x) => x.cardId === e.bonusIfControls.cardId && x.health > 0 && !x.destroyed) ? e.bonusIfControls : null;
+      const base = bonus ? getCard(cardId) : null;
+      const m = summonMinion(state, p, cardId, { attack: bonus ? base.attack + bonus.attack : e.attack, health: bonus ? base.health + bonus.health : e.health, keywords: e.keywords });
       if (m) ctx.summoned = m.uid;
       if (m && e.loseKeywords) for (const k of e.loseKeywords) removeKeyword(m, k);
       if (m && e.randomKeywords) {
@@ -1180,6 +1184,21 @@ export const EFFECT_OPS = {
 
   // { target, trigger: { on, filter?, effects } } — attach an ability to minions
   // (Fungal Infection, Consume Decay). It acts for the player who granted it.
+  // { target } — Infect (Zombies): mark enemy minions; when an Infected minion dies, whoever
+  // Infected it summons a 2/1 Rage Runner with Rush (+2/+2 while they control The Outbreak).
+  // A minion is Infected once; Infecting it again does nothing.
+  infect(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.health <= 0 || m.destroyed || m.infected != null) return;
+      m.infected = ctx.controller;
+      m.grantedTriggers ??= [];
+      m.grantedTriggers.push({ on: 'deathrattle', controller: ctx.controller, infection: true,
+        effects: [{ op: 'summon', cardId: 'rage_runner', bonusIfControls: { cardId: 'the_outbreak', attack: 2, health: 2 } }] });
+      log(state, `🦠 ${nameOf(state, m)} is Infected.`);
+      emit(state, { type: 'infected', target: m.uid, player: m.controller, by: ctx.controller });
+    });
+  },
+
   grantTrigger(state, e, ctx) {
     each(state, e.target, ctx, (m) => {
       if (m.kind !== 'minion') return;
