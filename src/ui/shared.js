@@ -9,6 +9,10 @@ export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '�
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Per-card nudges for where the wide picture window crops the square art (CSS object-position Y;
+// the default is 12%, i.e. crop mostly from the bottom). Higher shows more of the lower part.
+const ART_FOCUS_Y = { bubble_slime: '58%' };
+const artFocus = (card) => (ART_FOCUS_Y[card.id] ? ` style="object-position: 50% ${ART_FOCUS_Y[card.id]}"` : '');
 // Image for a card; Hybrids and other created cards use their source card's art.
 export const artOf = (card) => ART[card.id] ?? (card.artFrom ? ART[card.artFrom] : undefined);
 
@@ -130,7 +134,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   const hp = health ?? card.health ?? '?';
   return `
     <div class="big-card shard t-${card.type} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
-      <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
+      <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       <img class="bc-frame" src="art/frames/painted-${type}.png" alt="" draggable="false">
       <i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>
