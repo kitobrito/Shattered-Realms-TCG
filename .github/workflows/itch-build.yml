@@ -35,11 +35,11 @@ jobs:
             --target "$GITHUB_SHA"
       - name: Push to itch.io with butler (html5)
         # Sends only what changed since the last upload. Turns on once the repo has
-        # the BUTLER_API_KEY secret and the ITCH_GAME variable (e.g. yourname/shattered-realms);
+        # the BUTLER_API_KEY secret (the page is fadeawaytoday/shattered-realms-tcg unless the ITCH_GAME variable says otherwise);
         # until then this step just says so and the build still succeeds.
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-          ITCH_GAME: ${{ vars.ITCH_GAME }}
+          ITCH_GAME: ${{ vars.ITCH_GAME || 'fadeawaytoday/shattered-realms-tcg' }}
         run: |
           if [ -z "$BUTLER_API_KEY" ] || [ -z "$ITCH_GAME" ]; then
             echo "::notice::itch.io publishing is off: add the BUTLER_API_KEY secret and the ITCH_GAME variable to turn it on."
