@@ -246,7 +246,15 @@ button.ghost:hover { background: var(--panel); }
 .gallery-grid .card .text { font-size: 12px; }
 .gallery-grid .card:hover { transform: translateY(-6px); box-shadow: 0 10px 24px #000a; }
 
-.zoom-overlay { position: fixed; inset: 0; z-index: 60; background: #000d; display: grid; place-items: center; padding: 2vh 16px; cursor: zoom-out; }
+.zoom-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(8, 5, 7, 0.88); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+  display: grid; place-items: safe center; padding: 2vh 16px; cursor: zoom-out;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.zoom-mnav { display: none; }
+.zoom-artbtn { align-self: stretch; padding: 8px 12px; }
+.art-view { position: fixed; inset: 0; z-index: 70; background: #000f; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 16px; cursor: zoom-out; }
+.art-view img { max-width: 100%; max-height: calc(100% - 48px); object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px #000; }
+.art-view-cap { font-family: var(--font-title); font-weight: 700; text-align: center; }
 .zoom-wrap { display: flex; align-items: center; gap: 18px; cursor: default; max-width: 100%; }
 
 /* The card is sized from one length (--h); everything inside scales with it via em. */
@@ -316,21 +324,52 @@ button.ghost:hover { background: var(--panel); }
 .bc-atk { bottom: -0.25em; left: -0.25em; background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a33a 60%, #8a5a12); }
 .bc-hp { bottom: -0.25em; right: -0.25em; background: radial-gradient(circle at 35% 30%, #ff8a9a, #d23b4f 60%, #7a1424); border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; }
 
-.zoom-side { position: relative; width: 260px; max-height: var(--h, 88vh); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 44px; }
-.zoom-faction { font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
-.zoom-term { font-size: 13px; color: #e6d6dd; background: #1b0f15e6; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-.zoom-term b { display: block; color: var(--gold); margin-bottom: 2px; }
+.zoom-side { position: relative; width: 280px; max-height: var(--h, 88vh); overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  padding: 16px; border-radius: 14px; background: linear-gradient(180deg, #1d151a, #120c10); border: 1px solid #c9a96e55;
+  box-shadow: 0 18px 40px #000a, inset 0 1px 0 #ffffff12; }
+.zoom-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #c9a96e33; }
+.zoom-faction { display: inline-flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-family: var(--font-title); font-weight: 700; font-size: 17px;
+  color: #f1e3c4; letter-spacing: 0.02em; }
+.zoom-faction .crest { width: 28px; height: 28px; }
+.zoom-count { font-size: 13px; color: #b9a58a; font-variant-numeric: tabular-nums; }
+.zoom-close { padding: 2px 10px; font-size: 14px; }
+.zoom-kind { font-size: 13px; color: #b9a58a; letter-spacing: 0.06em; text-transform: uppercase; }
+.zoom-sub { margin-top: 4px; font-family: var(--font-title); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #8f7d66; }
+.zoom-term { font-size: 14px; line-height: 1.4; color: #e6d6dd; background: #ffffff08; border: 1px solid #c9a96e2e; border-left: 3px solid var(--gold);
+  border-radius: 8px; padding: 9px 12px; }
+.zoom-term b { display: block; color: var(--gold); margin-bottom: 3px; font-size: 13px; letter-spacing: 0.04em; }
 .zoom-term.pending { border-color: var(--gold); }
-.zoom-close { position: absolute; top: 0; right: 0; padding: 4px 12px; }
+
+/* Foil on the zoomed card: a glint sweeps across when it opens / pages, then follows the mouse. */
+.zoom-foil { position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit; mix-blend-mode: screen; opacity: 0;
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #ffffff2a, transparent 45%),
+    linear-gradient(105deg, transparent 43%, #ffffff66 48.5%, #fff0c855 51%, #bfe8ff33 53.5%, transparent 57%) var(--fx, 50%) 0 / 260% 100% no-repeat;
+  transition: opacity 0.35s ease; }
+.big-card.foil-lit .zoom-foil { opacity: 0.85; }
+.big-card.foil-sweep .zoom-foil { animation: foil-sweep 1.3s 0.2s ease-in-out; }
+@keyframes foil-sweep {
+  0% { opacity: 0; background-position: 0 0, 100% 0; }
+  20% { opacity: 0.95; }
+  80% { opacity: 0.95; }
+  100% { opacity: 0; background-position: 0 0, 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) { .big-card.foil-sweep .zoom-foil { animation: none; } }
 .zoom-arrow { font-size: 40px; line-height: 1; padding: 6px 14px 12px; background: #0008; border-color: var(--line); flex: none; }
 .zoom-arrow:hover:not(:disabled) { background: #1b0f15; }
 
 @media (max-width: 860px) {
   .zoom-wrap { flex-direction: column; gap: 10px; }
   .big-card { --h: min(78vh, 125vw); }
-  .zoom-side { width: min(92vw, 420px); padding-top: 0; max-height: none; }
-  .zoom-close { position: static; align-self: flex-end; }
+  .zoom-overlay { place-items: start center; padding: 10px 16px 28px; }
+  .zoom-side { width: min(92vw, 420px); max-height: none; overflow: visible; }
+  .zoom-close, .zoom-count { display: none; }
   .zoom-arrow { display: none; }
+  .zoom-mnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: min(92vw, 420px);
+    position: sticky; top: 0; z-index: 3; padding: 6px 0; background: #000d; }
+  .zoom-mnav button { padding: 8px 12px; min-height: 40px; }
+  .zoom-mnav .sub { flex: 1; text-align: center; }
+  .zoom-mnav button:disabled { opacity: 0.35; }
   .gallery-grid .card { width: 150px; height: 250px; }
 }
 /* ---- Typography: Cinzel for names/titles/numbers, Alegreya Sans for text ---- */
@@ -1552,7 +1591,12 @@ body:not(.in-game) { background:
 .book-tab { display: flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; border-radius: 10px 0 0 10px; min-width: 150px; text-align: left;
   background: linear-gradient(90deg, #3a2414, #5a3a20); border: 2px solid #8a6d3e; border-right: none; color: #e8d6b0; font-family: var(--font-title);
   box-shadow: -4px 4px 10px #000a; transform: translateX(10px); transition: transform 0.15s; }
-.book-tab span { font-size: 22px; }
+.crest { display: inline-block; flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; vertical-align: -0.38em; font-style: normal;
+  background-size: 175% auto; background-position: 50% 45%; background-repeat: no-repeat; background-color: #15121a;
+  border: 2px solid #c9a96e; box-shadow: 0 1px 4px #0009; }
+.crest-fusion { background: conic-gradient(from 45deg, #ff8a4a, #ffd76a, #7ad0ff, #c88aff, #ff8a4a); }
+.book-tab .crest { width: 30px; height: 30px; }
+.zoom-faction > span { display: inline-flex; align-items: center; gap: 8px; }
 .book-tab:hover { transform: translateX(4px); }
 .book-tab.on { transform: translateX(0); background: linear-gradient(90deg, #6a4424, #e8d6a8 98%); color: #2a1a0a; }
 .book-page { flex: 1; min-height: 70vh; padding: 22px 26px 30px; border-radius: 6px 18px 18px 6px;
@@ -1568,8 +1612,11 @@ body:not(.in-game) { background:
 @media (max-width: 860px) {
   .book-body { flex-direction: column; }
   .book-tabs { position: static; flex-direction: row; flex-wrap: wrap; padding-top: 0; margin: 0 0 -2px; }
-  .book-tab { min-width: 0; border-radius: 10px 10px 0 0; transform: none; border-right: 2px solid #8a6d3e; border-bottom: none; }
-  .book-tab b { display: none; }
+  .book-tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px; margin: 0 0 8px; align-self: stretch; }
+  .book-tab { min-width: 0; padding: 6px; gap: 5px; border-radius: 10px; transform: none; border-right: 2px solid #8a6d3e; }
+  .book-tab:hover { transform: none; }
+  .book-tab .crest { width: 22px; height: 22px; }
+  .book-tab b { font-size: 10px; line-height: 1.1; min-width: 0; hyphens: manual; }
 }
 
 /* ==== EMOTES ============================================================ */
@@ -3491,3 +3538,10 @@ body.reduced-motion .prey-stream .ps-flow { animation: none; }
 @keyframes preyDrift { from { background-position-x: 0; } to { background-position-x: 220px; } }
 .prey-stream i + i { animation-name: preyDrift2; } @keyframes preyDrift2 { from { background-position-x: 0; } to { background-position-x: 300px; } }
 body.reduced-motion .prey-stream i { animation: none; }
+/* Keep the foil on the card: the painted frame plus the inside of the card (not the cut corners). */
+.big-card.shard .zoom-foil { border-radius: 0;
+  -webkit-mask: var(--foil-frame) 0 0 / 100% 100% no-repeat, linear-gradient(#000 0 0) 50% 50% / 86% 91% no-repeat;
+  mask: var(--foil-frame) 0 0 / 100% 100% no-repeat, linear-gradient(#000 0 0) 50% 50% / 86% 91% no-repeat; }
+.big-card.shard.t-minion .zoom-foil { --foil-frame: url('../../art/frames/painted-minion.png'); }
+.big-card.shard.t-spell .zoom-foil { --foil-frame: url('../../art/frames/painted-spell.png'); }
+.big-card.shard.t-trap .zoom-foil { --foil-frame: url('../../art/frames/painted-trap.png'); }
