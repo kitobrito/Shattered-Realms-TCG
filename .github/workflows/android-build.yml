@@ -23,8 +23,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Copy the game into a Capacitor web folder
-        run: mkdir -p build/www build/assets && cp -r index.html art src build/www/ && cp art/app/icon-1024.png build/assets/icon-only.png
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build the game into a Capacitor web folder (card art as WebP, bundled into packs)
+        run: |
+          pip install --quiet pillow
+          python3 tools/build-dist.py build/www
+          mkdir -p build/assets && cp art/app/icon-1024.png build/assets/icon-only.png
       - name: Create the Android project
         working-directory: build
         run: |

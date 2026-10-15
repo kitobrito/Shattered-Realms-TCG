@@ -3,6 +3,7 @@
 
 import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
+import { artSrc } from './art-packs.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
 
 export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Ghosts: '👻', Ultraterrestrials: '🔺', Sharks: '🦈', Acidic: '🧪', Fusion: '🌀' };
@@ -32,14 +33,14 @@ export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&am
 const ART_FOCUS_Y = { bubble_slime: '58%' };
 const artFocus = (card) => (ART_FOCUS_Y[card.id] ? ` style="object-position: 50% ${ART_FOCUS_Y[card.id]}"` : '');
 // Image for a card; Hybrids and other created cards use their source card's art.
-export const artOf = (card) => ART[card.id] ?? (card.artFrom ? ART[card.artFrom] : undefined);
+export const artOf = (card) => { const path = ART[card.id] ?? (card.artFrom ? ART[card.artFrom] : undefined); return path && artSrc(path); };
 
 // Hero portrait for a faction (designer-provided art), if there is one yet.
-export const heroArtOf = (faction) => HERO_ART?.[faction];
+export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[faction]);
 
 // Card back for a faction (a player's back matches their first faction).
 const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic'];
-export const backArtOf = (faction) => (BACKS.includes(faction) ? `art/backs/${faction.toLowerCase()}.jpg` : undefined);
+export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${faction.toLowerCase()}.jpg`) : undefined);
 export const backStyle = (faction) => (backArtOf(faction) ? `style="--back:url('${new URL(backArtOf(faction), document.baseURI).href}')"` : '');
 
 // A normal-size card (hand, collection, builder, choices). It is the same
