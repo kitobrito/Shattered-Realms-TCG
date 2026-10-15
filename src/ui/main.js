@@ -1903,7 +1903,7 @@ function renderGallery() {
       <div class="book-head"><h2>Card collection</h2><button data-act="menu" class="ghost">Back</button></div>
       <div class="book-body">
         <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${x.toLowerCase()} ${x === f ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
-          ${crestHTML(x)}<b>${esc(x)}</b></button>`).join('')}</nav>
+          ${crestHTML(x)}<b>${esc(x).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</b></button>`).join('')}</nav>
         <section class="book-page f-${f.toLowerCase()} ${bookTurned ? 'turn' : ''}">
           <header class="page-title">${art ? `<img src="${art}" alt="">` : ''}<div><h3>${esc(f)}</h3>
             <span class="sub">${f === 'Fusion'
@@ -1923,6 +1923,31 @@ function renderGallery() {
 // A faction's crest: the emblem from the middle of its card back (Fusion gets a split of colours).
 const crestHTML = (f) => (backArtOf(f) ? `<i class="crest" style="background-image:url('${backArtOf(f)}')"></i>` : '<i class="crest crest-fusion"></i>');
 
+// "3-Mana Minion", "Hero Spell", "Fusion Hero Spell" … for the zoom panel.
+const kindOf = (card) => card.fusion ? 'Fusion Hero Spell' : card.heroSpell ? 'Hero Spell'
+  : `${card.cost}-Mana ${card.token ? 'Token ' : ''}${card.type === 'minion' ? 'Minion' : card.type === 'trap' ? 'Trap' : card.quickPlay ? 'Quick Play Spell' : 'Spell'}`;
+
+// Opening / paging animations for the zoom: set just before render(), played right after it.
+let zoomAnim = null;
+const calmMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function playZoomAnim(a) {
+  const card = app.querySelector('.zoom-overlay .big-card');
+  if (!card || calmMotion()) return;
+  const ease = 'cubic-bezier(.2,.8,.2,1)';
+  if (a.from) {
+    // Grow out of the card that was clicked, while the backdrop fades in.
+    const to = card.getBoundingClientRect();
+    const dx = a.from.left + a.from.width / 2 - (to.left + to.width / 2), dy = a.from.top + a.from.height / 2 - (to.top + to.height / 2);
+    card.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${a.from.width / to.width})`, opacity: 0.7 }, { transform: 'none', opacity: 1 }], { duration: 340, easing: ease });
+    app.querySelector('.zoom-overlay').animate([{ backgroundColor: 'rgba(0,0,0,0)', backdropFilter: 'blur(0px)' }, { backgroundColor: 'rgba(8,5,7,0.88)', backdropFilter: 'blur(7px)' }], { duration: 300, easing: 'ease-out' });
+  } else if (a.dir) {
+    card.animate([{ transform: `translateX(${a.dir * 70}px) rotate(${a.dir * 2}deg)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: ease });
+  }
+  app.querySelector('.zoom-side')?.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: a.from ? 140 : 60, easing: ease, fill: 'backwards' });
+  card.classList.add('foil-sweep');
+}
+const zoomFrom = (el) => { const r = (el.closest('.card') ?? el).getBoundingClientRect(); return r.width ? { from: r } : {}; };
+
 // The collection / builder zoom: the big card plus its keyword glossary. On phones the side
 // arrows give way to a nav bar above the card (and swiping), and the whole view scrolls.
 function zoomHTML(card) {
@@ -1939,12 +1964,16 @@ function zoomHTML(card) {
           <button class="ghost" data-act="closeZoom" title="Close">✕</button>
         </div>
         <button class="zoom-arrow" data-act="zoomPrev" ${first ? 'disabled' : ''} title="Previous (←)">‹</button>
-        ${bigCardHTML(card)}
+        ${bigCardHTML(card).replace(/<\/div>\s*$/, '<i class="zoom-foil"></i></div>')}
         <aside class="zoom-side">
-          <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
-          <div class="zoom-faction"><span>${crestHTML(card.faction)} ${esc(card.faction)}</span> <span class="sub">${i + 1} / ${galleryOrder.length}</span></div>
+          <header class="zoom-head">
+            <span class="zoom-faction">${crestHTML(card.faction)}<span>${esc(card.faction)}</span></span>
+            <span class="zoom-count">${i + 1} / ${galleryOrder.length}</span>
+            <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
+          </header>
+          <div class="zoom-kind">${esc(kindOf(card))}</div>
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
-          ${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b> ${esc(KEYWORD_TEXT[t])}</div>`).join('')}
+          ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}
         </aside>
         <button class="zoom-arrow" data-act="zoomNext" ${last ? 'disabled' : ''} title="Next (→)">›</button>
       </div>
@@ -2102,6 +2131,7 @@ function render() {
   fitAllText(app);
   syncReactionTimer();
   syncTurnTimer();
+  if (zoomAnim) { const a = zoomAnim; zoomAnim = null; if (zoomId) playZoomAnim(a); }
 }
 
 // A human Quick Play window auto-passes after quickPlaySeconds.
@@ -2373,7 +2403,7 @@ app.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-act]');
   if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   const zoom = e.target.closest('[data-zoom]');
-  if (zoom && (screen === 'gallery' || screen === 'builder' || screen === 'menu')) { zoomId = zoom.dataset.zoom; return render(); }
+  if (zoom && (screen === 'gallery' || screen === 'builder' || screen === 'menu')) { zoomId = zoom.dataset.zoom; zoomAnim = zoomFrom(zoom); return render(); }
   const swapBtn = e.target.closest('[data-swap]');
   if (swapBtn && screen === 'menu') {
     builderMode = 'swap'; swapFaction = swapBtn.dataset.swap; draftLineup = [...lineupOf(swapFaction, savedLineups())];
@@ -2397,7 +2427,7 @@ app.addEventListener('click', (e) => {
   if (screen === 'builder' && builderMode === 'cut' && builderSuppressClick) { builderSuppressClick = false; return; }
   const deckRow = e.target.closest('[data-deckrow]');
   if (deckRow && inBuilder()) return removeFromDraft(deckRow.dataset.deckrow);
-  if (cutCard && inBuilder()) { zoomId = cutCard.dataset.cut; return render(); }
+  if (cutCard && inBuilder()) { zoomId = cutCard.dataset.cut; zoomAnim = zoomFrom(cutCard); return render(); }
   if (cutCard && screen === 'builder') {
     // Two-faction deck: each click adds a copy (up to 2); one more takes the card out.
     const id = cutCard.dataset.cut;
@@ -2497,8 +2527,11 @@ function onButton(name) {
       screen = 'menu';
       return render();
     }
-    case 'zoomPrev': zoomId = galleryOrder[Math.max(0, galleryOrder.indexOf(zoomId) - 1)]; return render();
-    case 'zoomNext': zoomId = galleryOrder[Math.min(galleryOrder.length - 1, galleryOrder.indexOf(zoomId) + 1)]; return render();
+    case 'zoomPrev': case 'zoomNext': {
+      const next = galleryOrder[Math.max(0, Math.min(galleryOrder.length - 1, galleryOrder.indexOf(zoomId) + (name === 'zoomNext' ? 1 : -1)))];
+      if (next === zoomId) return;
+      zoomId = next; zoomAnim = { dir: name === 'zoomNext' ? 1 : -1 }; return render();
+    }
     case 'menu': clearTimeout(aiTimer); drag.cancel(); hidePreview(); if (game?.mode === 'online' || screen === 'online') leaveOnline(); screen = 'menu'; return render();
     case 'online':
       if (!BUILD.online) return;
@@ -2569,6 +2602,20 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') onButton('zoomPrev');
     if (e.key === 'ArrowRight') onButton('zoomNext');
   }
+});
+
+// The zoomed card's foil follows the mouse: a glint band plus a soft glare where the light hits.
+document.addEventListener('pointermove', (e) => {
+  if (!zoomId || e.pointerType !== 'mouse') return;
+  const card = app.querySelector('.zoom-overlay .big-card');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  const near = x > -0.3 && x < 1.3 && y > -0.2 && y < 1.2;
+  card.style.setProperty('--fx', `${(100 - x * 100).toFixed(1)}%`);
+  card.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`);
+  card.style.setProperty('--my', `${(y * 100).toFixed(1)}%`);
+  card.classList.toggle('foil-lit', near);
 });
 
 // Swipe left / right on the zoomed card (or its full art) to page through the collection.
