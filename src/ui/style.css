@@ -3857,3 +3857,44 @@ button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote
 
 body.reduced-motion .arena .minion, body.reduced-motion .arena .minion .m-art, body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .arena .minion, .arena .minion .m-art, .arena .hero-portrait .portrait-img { animation: none !important; } }
+
+/* ==== Ready to attack: your minions that can attack lean forward with a pulse; sleepers slump ==== */
+.arena .minion.can-attack { animation: ready-lean 1.6s ease-in-out var(--idle, 0s) infinite; }
+@keyframes ready-lean { 0%, 100% { translate: 0 -3px; scale: 1.03; } 50% { translate: 0 -7px; scale: 1.055; } }
+body:not(.classic-cards) .arena .minion.shardm.can-attack .sm-glow { animation: ready-glow 1.6s ease-in-out var(--idle, 0s) infinite; }
+@keyframes ready-glow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.6) drop-shadow(0 0 4px #57e07a); } }
+.arena .minion.asleep { animation: asleep-slump 6s ease-in-out var(--idle, 0s) infinite !important; }
+@keyframes asleep-slump { 0%, 100% { translate: 0 3px; rotate: -2deg; scale: 0.985; } 50% { translate: 0 4px; rotate: -2.6deg; scale: 0.975; } }
+.arena .minion.asleep .m-art { filter: brightness(0.8) saturate(0.75); }
+.arena .minion.targetable { animation: target-pulse 0.7s infinite alternate !important; }
+body.reduced-motion .arena .minion.can-attack, body.reduced-motion .arena .minion.asleep { animation: none !important; }
+
+/* ==== Attack styles: fire cone, laser, vine, bite ==== */
+.fx-fire-cone { position: fixed; transform-origin: 0 50%; pointer-events: none; z-index: 7; mix-blend-mode: screen; filter: blur(2px);
+  background: radial-gradient(ellipse 60% 50% at 0% 50%, #fff6c0, transparent 70%),
+    linear-gradient(90deg, #fff2a0 0%, #ffb03a 25%, #ff5a1a 60%, #a01a0a88 100%); }
+.fx-laser { position: fixed; height: 8px; margin-top: -4px; transform-origin: 0 50%; pointer-events: none; z-index: 7; border-radius: 4px;
+  background: linear-gradient(180deg, transparent, #9ad8ff 25%, #fff 50%, #9ad8ff 75%, transparent); box-shadow: 0 0 12px #4ab0ff, 0 0 26px #4ab0ff; }
+.fx-vine { position: fixed; inset: 0; pointer-events: none; z-index: 7; overflow: visible; filter: drop-shadow(0 2px 3px #0008); }
+.fx-bite { position: fixed; pointer-events: none; z-index: 8; }
+.fx-bite .jaw { position: absolute; left: 0; right: 0; height: 52%; }
+.fx-bite .jaw.top { top: 0; } .fx-bite .jaw.bot { bottom: 0; }
+
+/* ==== Hand cards tilt toward the pointer, with a glare where the light catches ==== */
+.arena .my-hand .card > .big-card { transition: transform 0.12s ease-out; transform-style: preserve-3d; }
+.arena .my-hand .card:hover:not(.drag-src) > .big-card { transform: perspective(700px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); }
+.arena .my-hand .card:hover:not(.drag-src) > .big-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 30;
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), #ffffff40, transparent 45%); mix-blend-mode: screen; }
+
+/* ==== Spell cast flourish ==== */
+.fx-cast { position: fixed; left: 50%; top: 46%; z-index: 9; pointer-events: none; transform-style: preserve-3d; filter: drop-shadow(0 20px 30px #000c); }
+
+/* ==== Living portraits: the figure layer breathes and drifts against the scene ==== */
+.hero-portrait .portrait-front { position: absolute !important; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none;
+  -webkit-mask: radial-gradient(ellipse 34% 46% at 50% 46%, #000 55%, transparent 100%); mask: radial-gradient(ellipse 34% 46% at 50% 46%, #000 55%, transparent 100%); }
+.arena .hero-portrait .portrait-img:not(.portrait-front) { animation: portrait-scene 9s ease-in-out infinite; }
+.arena .hero-portrait .portrait-front { animation: portrait-figure 5s ease-in-out infinite; transform-origin: 50% 85%; }
+@keyframes portrait-scene { 0%, 100% { translate: 1.5px 0; scale: 1.04; } 50% { translate: -1.5px 1px; scale: 1.05; } }
+@keyframes portrait-figure { 0%, 100% { translate: -1px 0; scale: 1.04; } 50% { translate: 1px -1.5px; scale: 1.065; } }
+.arena .hero-portrait.weary .portrait-front { animation: hero-weary 2.4s ease-in-out infinite; }
+body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }

@@ -147,9 +147,12 @@ function portraitHTML(pl) {
   const art = heroArtOf(pl.factions[0]);
   const second = pl.factions[1] ? heroArtOf(pl.factions[1]) : null;
   if (!art) return `<div class="portrait-placeholder f-${pl.factions[0].toLowerCase()}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
-  if (!second || second === art) return `<img class="portrait-img" src="${art}" alt="" draggable="false">`;
-  return `<img class="portrait-img split-a" src="${art}" alt="" draggable="false">`
-    + `<img class="portrait-img split-b" src="${second}" alt="" draggable="false"><i class="portrait-seam"></i>`;
+  // Each portrait is drawn twice: the scene behind, and the figure (a soft cut-out of the middle)
+  // in front; they drift a little against each other so the hero seems to stand out and breathe.
+  const layers = (src, cls = '') => `<img class="portrait-img ${cls}" src="${src}" alt="" draggable="false">`
+    + `<img class="portrait-img portrait-front ${cls}" src="${src}" alt="" draggable="false" aria-hidden="true">`;
+  if (!second || second === art) return layers(art);
+  return layers(art, 'split-a') + layers(second, 'split-b') + '<i class="portrait-seam"></i>';
 }
 
 // Fusion Hero Spell: charges with each Hero Spell use; at full charge it blazes so it can't be missed.

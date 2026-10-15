@@ -107,8 +107,10 @@ export async function fly(el, from, to, { duration = 320, fade = false, scale = 
 // strikes along a streak of light in its faction's colour, and the game holds still for a beat
 // on impact (hit-stop) while a flash bursts at the point of contact, the target is knocked back
 // and the table shakes, more for harder hitters. Returns the offset for returnFromLunge.
-export async function lunge(attackerEl, targetEl, { power = 2, color = '#ffe39a', table = null } = {}) {
+export async function lunge(attackerEl, targetEl, { power = 2, color = '#ffe39a', table = null, style = null } = {}) {
   if (!attackerEl || !targetEl) return null;
+  const special = STRIKES[style];
+  if (special) return special(attackerEl, targetEl, { power, color, table });
   const ar = attackerEl.getBoundingClientRect();
   const tr = targetEl.getBoundingClientRect();
   const a = center(ar);
@@ -154,6 +156,135 @@ export async function lunge(attackerEl, targetEl, { power = 2, color = '#ffe39a'
   return { dx, dy };
 }
 
+// ---- Attack styles by faction (minions only) --------------------------------------------
+// Ranged styles stay put (they return null: nothing to spring back from).
+const heavyOf = (power) => Math.min(1, Math.max(0, (power - 1) / 7));
+function impact(attackerEl, targetEl, at, { power, color, table }, kb = 1) {
+  const tr = targetEl.getBoundingClientRect();
+  const h = heavyOf(power);
+  impactFlash(at, Math.max(tr.width, tr.height) * (0.9 + h * 0.6), color);
+  const c = center(tr);
+  const a = center(attackerEl.getBoundingClientRect());
+  let dx = c.x - a.x, dy = c.y - a.y; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+  const d = (6 + h * 10) * kb;
+  animate(targetEl, [{ transform: 'none' }, { transform: `translate(${dx * d}px, ${dy * d}px) scale(0.96)`, offset: 0.25 }, { transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
+  if (table) screenShake(table, 2 + h * 9);
+}
+// Rear back (shared wind-up for the ranged styles).
+function rear(el, dx, dy, ms = 240) {
+  return animate(el, [{ transform: 'none' }, { transform: `translate(${-dx * 0.06}px, ${-dy * 0.06}px) scale(1.12)`, filter: 'brightness(1.2)' }], { duration: ms, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+const settle = (el) => animate(el, [{ transform: 'scale(1.12)', filter: 'brightness(1.2)' }, { transform: 'none', filter: 'none' }], { duration: 260, easing: 'ease-out', fill: 'none' });
+const STRIKES = {
+  // Dragons breathe a cone of fire at the target.
+  async Dragons(el, target, o) {
+    const a = center(el.getBoundingClientRect()), t = center(target.getBoundingClientRect());
+    const dx = t.x - a.x, dy = t.y - a.y, len = Math.hypot(dx, dy);
+    await rear(el, dx, dy, 260);
+    const cone = document.createElement('div');
+    cone.className = 'fx-fire-cone';
+    const w = target.getBoundingClientRect().width * 1.5;
+    Object.assign(cone.style, { left: `${a.x}px`, top: `${a.y}px`, width: `${len * 1.08}px`, height: `${w}px`, marginTop: `${-w / 2}px`, transform: `rotate(${Math.atan2(dy, dx)}rad)` });
+    layer().appendChild(cone);
+    const burn = animate(cone, [
+      { clipPath: 'polygon(0 50%, 0 50%, 0 50%)', opacity: 1 },
+      { clipPath: 'polygon(0 46%, 100% 0, 100% 100%, 0 54%)', opacity: 1, offset: 0.3 },
+      { clipPath: 'polygon(0 46%, 100% 0, 100% 100%, 0 54%)', opacity: 0.9, offset: 0.75 },
+      { clipPath: 'polygon(0 46%, 100% 0, 100% 100%, 0 54%)', opacity: 0 },
+    ], { duration: 620, easing: 'ease-out' }).then(() => cone.remove());
+    await wait(200);
+    impact(el, target, t, { ...o, color: '#ff7a1a' }, 0.6);
+    particles(target.getBoundingClientRect(), 'Dragons', 6);
+    await wait(120);
+    settle(el);
+    await burn;
+    return null;
+  },
+  // Robots fire a laser.
+  async Robots(el, target, o) {
+    const a = center(el.getBoundingClientRect()), t = center(target.getBoundingClientRect());
+    const dx = t.x - a.x, dy = t.y - a.y, len = Math.hypot(dx, dy);
+    await rear(el, dx, dy, 200);
+    const beam = document.createElement('div');
+    beam.className = 'fx-laser';
+    Object.assign(beam.style, { left: `${a.x}px`, top: `${a.y}px`, width: `${len}px`, transform: `rotate(${Math.atan2(dy, dx)}rad)` });
+    layer().appendChild(beam);
+    animate(el, [{ transform: 'scale(1.12)' }, { transform: `translate(${-dx / len * 8}px, ${-dy / len * 8}px) scale(1.08)`, offset: 0.2 }, { transform: 'none' }], { duration: 380, easing: 'ease-out', fill: 'none' });
+    const shot = animate(beam, [{ clipPath: 'inset(0 100% 0 0)', opacity: 1 }, { clipPath: 'inset(0 0 0 0)', opacity: 1, offset: 0.2 }, { clipPath: 'inset(0 0 0 0)', opacity: 1, offset: 0.6 }, { clipPath: 'inset(0 0 0 100%)', opacity: 0 }], { duration: 480, easing: 'linear' }).then(() => beam.remove());
+    await wait(100);
+    impact(el, target, t, { ...o, color: '#4ab0ff' }, 0.7);
+    await shot;
+    return null;
+  },
+  // Plants lash a vine across to the target.
+  async Plants(el, target, o) {
+    const a = center(el.getBoundingClientRect()), t = center(target.getBoundingClientRect());
+    const dx = t.x - a.x, dy = t.y - a.y;
+    await rear(el, dx, dy, 220);
+    const svg = fullSvg('fx-vine');
+    const mx = (a.x + t.x) / 2 - dy * 0.25, my = (a.y + t.y) / 2 + dx * 0.25;
+    for (const [w, col] of [[9, '#2f6a1e'], [4, '#7dff6a']]) {
+      const path = svgEl('path', { d: `M${a.x},${a.y} Q${mx},${my} ${t.x},${t.y}`, fill: 'none', stroke: col, 'stroke-width': w, 'stroke-linecap': 'round', pathLength: 1, 'stroke-dasharray': 1 });
+      svg.appendChild(path);
+      animate(path, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0, offset: 0.4 }, { strokeDashoffset: 0, offset: 0.7 }, { strokeDashoffset: -1 }], { duration: 640, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    }
+    animate(el, [{ transform: 'scale(1.12)' }, { transform: `rotate(${dx > 0 ? 8 : -8}deg) scale(1.06)`, offset: 0.3 }, { transform: 'none' }], { duration: 500, easing: 'ease-out', fill: 'none' });
+    await wait(240);
+    impact(el, target, t, { ...o, color: '#7dff6a' }, 1);
+    await wait(420);
+    svg.remove();
+    return null;
+  },
+  // Sharks dive under and come up biting.
+  async Sharks(el, target, o) {
+    const a = center(el.getBoundingClientRect()), t = center(target.getBoundingClientRect());
+    const dx = (t.x - a.x) * 0.8, dy = (t.y - a.y) * 0.8;
+    el.style.zIndex = '60';
+    await animate(el, [
+      { transform: 'none', opacity: 1, filter: 'none' },
+      { transform: 'translateY(10px) scale(0.85)', opacity: 0.45, filter: 'brightness(0.6) hue-rotate(10deg) blur(1px)', offset: 0.4 },
+      { transform: `translate(${dx * 0.6}px, ${dy * 0.6 + 14}px) scale(0.8)`, opacity: 0.3, filter: 'brightness(0.5) blur(2px)' },
+    ], { duration: 320, easing: 'ease-in' });
+    await animate(el, [
+      { transform: `translate(${dx * 0.6}px, ${dy * 0.6 + 14}px) scale(0.8)`, opacity: 0.3, filter: 'brightness(0.5) blur(2px)' },
+      { transform: `translate(${dx}px, ${dy}px) scale(1.15)`, opacity: 1, filter: 'brightness(1.3)' },
+    ], { duration: 150, easing: 'cubic-bezier(.3,0,.5,1.4)' });
+    const tr = target.getBoundingClientRect();
+    const jaws = document.createElement('div');
+    jaws.className = 'fx-bite';
+    Object.assign(jaws.style, { left: `${tr.left - tr.width * 0.15}px`, top: `${tr.top}px`, width: `${tr.width * 1.3}px`, height: `${tr.height}px` });
+    jaws.innerHTML = `<div class="jaw top">${JAW_SVG(true)}</div><div class="jaw bot">${JAW_SVG(false)}</div>`;
+    layer().appendChild(jaws);
+    const [top, bot] = jaws.children;
+    animate(top, [{ transform: 'translateY(-40%)' }, { transform: 'translateY(8%)', offset: 0.45 }, { transform: 'translateY(-10%)' }], { duration: 380, easing: 'cubic-bezier(.6,0,.4,1)' });
+    animate(bot, [{ transform: 'translateY(40%)' }, { transform: 'translateY(-8%)', offset: 0.45 }, { transform: 'translateY(10%)' }], { duration: 380, easing: 'cubic-bezier(.6,0,.4,1)' })
+      .then(() => animate(jaws, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 })).then(() => jaws.remove());
+    await wait(170);
+    impact(el, target, center(tr), { ...o, color: '#ff3a3a' }, 1.2);
+    await wait(90);
+    return { dx, dy };
+  },
+  // Ghosts pass straight through the target and fade back in at home.
+  async Ghosts(el, target, o) {
+    const a = center(el.getBoundingClientRect()), t = center(target.getBoundingClientRect());
+    const dx = t.x - a.x, dy = t.y - a.y;
+    el.style.zIndex = '60';
+    await animate(el, [{ transform: 'none', opacity: 1, filter: 'none' }, { transform: `translate(${-dx * 0.05}px, ${-dy * 0.05}px) scale(1.08)`, opacity: 0.75, filter: 'brightness(1.6) saturate(0.4)' }], { duration: 220, easing: 'ease-out' });
+    const pass = animate(el, [
+      { transform: `translate(${-dx * 0.05}px, ${-dy * 0.05}px) scale(1.08)`, opacity: 0.75, filter: 'brightness(1.6) saturate(0.4)' },
+      { transform: `translate(${dx}px, ${dy}px) scale(1.1)`, opacity: 0.55, filter: 'brightness(2) saturate(0.2) blur(1px)', offset: 0.55 },
+      { transform: `translate(${dx * 1.45}px, ${dy * 1.45}px) scale(0.9)`, opacity: 0, filter: 'brightness(2.4) saturate(0) blur(4px)' },
+    ], { duration: 520, easing: 'cubic-bezier(.4,0,.6,1)' });
+    await wait(260);
+    impact(el, target, t, { ...o, color: '#8ff0ff' }, 0.5);
+    const art = target.querySelector('.m-art, .portrait-img');
+    if (art) animate(art, [{ filter: 'none' }, { filter: 'brightness(0.6) saturate(0) hue-rotate(160deg)', offset: 0.3 }, { filter: 'none' }], { duration: 500, fill: 'none' });
+    await pass;
+    return { ghost: true };
+  },
+};
+STRIKES.Fungus = STRIKES.Plants;
+
 // The streak of light an attacker leaves as it strikes.
 function streak(from, to, color, reach = 1) {
   const el = document.createElement('div');
@@ -187,6 +318,7 @@ function impactFlash(at, size, color) {
 // The attacker springs back to its place, overshooting a touch.
 export function returnFromLunge(el, offset) {
   if (!el || !offset) return Promise.resolve();
+  if (offset.ghost) return animate(el, [{ opacity: 0, transform: 'scale(0.9)', filter: 'brightness(2) blur(3px)' }, { opacity: 1, transform: 'none', filter: 'none' }], { duration: 420, easing: 'ease-out', fill: 'none' });
   return animate(el, [
     { transform: `translate(${offset.dx}px, ${offset.dy}px) scale(1.05)` },
     { transform: `translate(${-offset.dx * 0.04}px, ${-offset.dy * 0.04}px) scale(0.98)`, offset: 0.7 },
@@ -572,6 +704,49 @@ const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
+// Casting a spell: the card spins up out of the hand (or appears, for the rival's) to the
+// middle of the table, flares and bursts into its faction's particles with a ring of light,
+// and the magic flies on at its target as a bolt. \`html\`: the card (null = burst only).
+export async function castFlourish(html, fromRect, faction, targetEl) {
+  const color = FACTION_COLOR[faction] ?? '#ffe39a';
+  const mid = { x: window.innerWidth / 2, y: window.innerHeight * 0.46 };
+  if (html) {
+    const holder = document.createElement('div');
+    holder.className = 'fx-cast';
+    holder.innerHTML = html;
+    holder.querySelector('.big-card')?.style.setProperty('--h', `${Math.min(300, window.innerHeight * 0.36)}px`);
+    layer().appendChild(holder);
+    const from = fromRect ? center(fromRect) : { x: mid.x, y: window.innerHeight };
+    await animate(holder, [
+      { transform: `translate(calc(-50% + ${from.x - mid.x}px), calc(-50% + ${from.y - mid.y}px)) scale(0.35) rotateY(0deg)`, opacity: 0.9 },
+      { transform: 'translate(-50%, -50%) scale(1.02) rotateY(360deg)', opacity: 1, offset: 0.75 },
+      { transform: 'translate(-50%, -50%) scale(1) rotateY(360deg)', opacity: 1 },
+    ], { duration: 560, easing: 'cubic-bezier(.3,.7,.3,1)' });
+    await wait(160);
+    animate(holder, [
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, filter: 'brightness(1)' },
+      { transform: 'translate(-50%, -50%) scale(1.12)', opacity: 1, filter: 'brightness(2.6)', offset: 0.4 },
+      { transform: 'translate(-50%, -50%) scale(1.35)', opacity: 0, filter: 'brightness(3) blur(6px)' },
+    ], { duration: 360, easing: 'ease-out' }).then(() => holder.remove());
+  }
+  const rect = { left: mid.x - 90, top: mid.y - 90, width: 180, height: 180 };
+  particles(rect, faction, 12);
+  const ring = document.createElement('div');
+  ring.className = 'fx-arrive-ring';
+  ring.style.setProperty('--c', color);
+  Object.assign(ring.style, { left: `${mid.x}px`, top: `${mid.y}px`, width: '200px', height: '200px' });
+  layer().appendChild(ring);
+  animate(ring, [{ transform: 'translate(-50%, -50%) scale(0.4)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(2)', opacity: 0 }], { duration: 600, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => ring.remove());
+  if (targetEl) {
+    const dot = document.createElement('div');
+    Object.assign(dot.style, { position: 'fixed', left: `${mid.x}px`, top: `${mid.y}px`, width: '1px', height: '1px' });
+    layer().appendChild(dot);
+    await wait(120);
+    await bolt(dot, targetEl, color);
+    dot.remove();
+  } else await wait(300);
+}
+
 export async function bolt(fromEl, toEl, color = '#ffe39a') {
   if (!fromEl || !toEl) return;
   const a = center(fromEl.getBoundingClientRect());
@@ -1668,11 +1843,12 @@ export function themedDeath(clone, rect, faction) {
 
 export function heroHit(el) {
   if (!el) return Promise.resolve();
-  return animate(el, [
+  const layers = el.classList?.contains('portrait-img') ? [...el.parentElement.querySelectorAll('.portrait-img')] : [el];
+  return Promise.all(layers.map((l) => animate(l, [
     { filter: 'none' },
     { filter: 'brightness(1.5) sepia(1) saturate(6) hue-rotate(-50deg)', offset: 0.25 },
     { filter: 'none' },
-  ], { duration: 420, fill: 'none' });
+  ], { duration: 420, fill: 'none' })));
 }
 
 // ---- Mushrooms (Fungus) ----------------------------------------------------------------
