@@ -447,6 +447,7 @@ export const ART = {
   purifying_spores: 'art/fusion/purifying_spores.jpg',
   qu_bio_engineer: 'art/aliens/qu_bio_engineer.jpg',
   queen_of_the_red_veil: 'art/vampires/queen_of_the_red_veil.jpg',
+  blood_shade: 'art/vampires/blood_shade.jpg',
   rad_mine: 'art/radioactive/rad_mine.jpg',
   rad_tortoise: 'art/radioactive/rad_tortoise.jpg',
   radiation_leak: 'art/radioactive/radiation_leak.jpg',

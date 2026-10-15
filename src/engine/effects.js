@@ -996,6 +996,7 @@ export const EFFECT_OPS = {
       c.attack = e.attack;
       c.maxHealth = e.health;
       c.health = e.health;
+      if (e.look) c.look = e.look; // drawn as that card on the board (Blood Shades)
       log(state, `${nameOf(state, c)} becomes a ${e.attack}/${e.health}${e.name ? ` ${e.name}` : ''}.`);
     });
   },

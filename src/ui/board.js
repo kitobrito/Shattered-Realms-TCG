@@ -111,7 +111,8 @@ export function crackTier(m) {
 export function minionHTML(m, s, cls = '') {
   const card = getCard(m.cardId);
   const atk = effectiveAttack(m);
-  const art = artOf(card);
+  // A minion remade into another form (Blood Shade) wears that form's art.
+  const art = artOf(m.look ? getCard(m.look) ?? card : card);
   const kws = allKeywords(m).map(kwSlug);
   const taunt = kws.includes('taunt');
   if (wardGame !== s) { wardGame = s; wardSince.clear(); }
