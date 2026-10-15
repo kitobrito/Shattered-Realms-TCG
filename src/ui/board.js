@@ -227,9 +227,11 @@ function hiveHTML(pl) {
   if (!pl.factions.includes('Bees')) return '';
   const hive = pl.board.find((m) => m.cardId === 'the_hive');
   const queen = pl.board.find((m) => m.cardId === 'the_queen');
-  const state = hive ? ['🐝', 'The Hive stands'] : queen ? ['👑', 'The Queen is out: if she dies, your Hero takes 10 damage'] : ['✖', 'The Hive and the Queen are gone'];
+  const under = !!pl.queenUnderground;
+  const state = under ? ['🕳️', 'The Queen is Underground in the Hidden Nest: she is safe until the Nest dies']
+    : hive ? ['🐝', 'The Hive stands'] : queen ? ['👑', 'The Queen is out: if she dies, your Hero takes 10 damage'] : ['✖', 'The Hive and the Queen are gone'];
   const art = artOf(getCard('hive_mind'));
-  return `<div class="hive-badge ${queen ? 'queen' : ''} ${!hive && !queen ? 'gone' : ''}" title="The Living Hive · ${state[1]}" data-preview="hive_mind">
+  return `<div class="hive-badge ${queen ? 'queen' : ''} ${under ? 'under' : ''} ${!hive && !queen && !under ? 'gone' : ''}" title="The Living Hive · ${state[1]}" data-preview="hive_mind">
     ${art ? `<img src="${art}" alt="" draggable="false">` : '<span>🐝</span>'}<b>${state[0]}</b></div>`;
 }
 

@@ -72,6 +72,8 @@ export const KEYWORD_TEXT = {
   Venomous: 'Kills any enemy minion it attacks.',
   Rage: 'Whenever this takes damage and survives, it gains +1 Attack.',
   Infect: 'Mark an enemy minion as Infected. When an Infected minion dies, the player who Infected it summons a 2/1 Rage Runner with Rush.',
+  Underground: "Bees (Hornet expansion): your Queen is hiding in your Hidden Nest. She can't be hurt there; when the Nest dies she comes back out with +2/+2.",
+  'Hidden Nest': "A 0/5 Bee Hive with Stealth that can't attack. At the end of your turn it summons a 1/1 Hornet Drone with Rush. Exit: your Queen comes back out with +2/+2.",
   Infected: 'When this dies, the player who Infected it summons a 2/1 Rage Runner with Rush.',
   Charge: 'Can attack the turn it is played.',
   Rush: 'Can attack minions the turn it is played.',

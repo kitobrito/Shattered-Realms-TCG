@@ -213,6 +213,8 @@ export function checkCondition(state, cond, ctx) {
   if (cond.enemyPrey != null) return state.players[opponentOf(ctx.controller)].board.some((m) => m.prey) === cond.enemyPrey;
   // { ctxFlag } — an earlier effect of this card set the flag (a minion was cleansed).
   if (cond.ctxFlag) return !!ctx[cond.ctxFlag];
+  // Bees: { queenUnderground: true } — your Queen is hiding in your Hidden Nest (Hornet expansion).
+  if (cond.queenUnderground != null) return !!state.players[ctx.controller].queenUnderground === cond.queenUnderground;
   // { myTurn: true } — it is the card controller's turn (Blood Alchemist).
   if (cond.myTurn != null) return (state.activePlayer === ctx.controller) === cond.myTurn;
   // { heroLostHealthThisTurn: true } — your Hero lost Health this turn (Crimson Oracle).
@@ -967,6 +969,7 @@ export const EFFECT_OPS = {
   // The Living Hive's Exit: the Queen emerges, with any Health Royal Chambers stored up.
   queenEmerges(state, e, ctx) {
     const pl = state.players[ctx.controller];
+    if (pl.queenUnderground) { log(state, '🕳️ The Hive falls, but it is empty: the Queen is safe Underground.'); return; }
     pl.queenEmerged = true;
     const m = summonMinion(state, ctx.controller, 'the_queen');
     if (!m) return;
@@ -977,11 +980,58 @@ export const EFFECT_OPS = {
     enterBattlefield(state, m);
   },
 
+  // Burrow the Queen (Hornet expansion): dig a Hidden Nest and move the Queen into it, from the
+  // board (keeping her stats and keywords) or from inside the Living Hive (she hasn't emerged yet).
+  // If she is gone for good, the Nest is dug empty.
+  burrowQueen(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const queen = pl.board.find((m) => m.cardId === 'the_queen');
+    if (queen) {
+      pl.queenUnderground = { attack: queen.attack, health: queen.health, maxHealth: queen.maxHealth, keywords: [...queen.keywords] };
+      pl.board.splice(pl.board.indexOf(queen), 1);
+      log(state, '👑 The Queen retreats Underground.');
+    } else if (!pl.queenEmerged && !(pl.uniquesDead ?? []).includes('the_queen')) {
+      pl.queenUnderground = { fromHive: true };
+      log(state, '👑 The Queen is carried out of the Hive and Underground.');
+    }
+    const nest = summonMinion(state, ctx.controller, 'hidden_nest');
+    if (!nest) {
+      // No room for the Nest: she stays where she was.
+      if (queen) { pl.board.push(queen); }
+      pl.queenUnderground = null;
+      return;
+    }
+    ctx.summoned = nest.uid;
+    enterBattlefield(state, nest);
+  },
+
+  // The Queen comes back out of the Hidden Nest with { attack, health, keywords? } more
+  // (the Nest's Exit, The Hornet Empress).
+  queenResurfaces(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const under = pl.queenUnderground;
+    if (!under) return;
+    const card = getCard('the_queen');
+    const base = under.fromHive
+      ? { attack: card.attack, health: card.health + (pl.queenBonusHealth ?? 0), keywords: [] }
+      : { ...under, health: under.health, keywords: under.keywords };
+    const m = summonMinion(state, ctx.controller, 'the_queen', { attack: base.attack + (e.attack ?? 0), health: base.health + (e.health ?? 0), keywords: [...base.keywords, ...(e.keywords ?? [])] });
+    if (!m) return; // board full: she stays Underground
+    pl.queenUnderground = null;
+    pl.queenEmerged = true;
+    if (!under.fromHive) m.maxHealth = Math.max(m.health, under.maxHealth + (e.health ?? 0));
+    ctx.summoned = m.uid;
+    log(state, `👑 The Queen bursts out of the Hidden Nest (+${e.attack ?? 0}/+${e.health ?? 0})!`);
+    enterBattlefield(state, m);
+  },
+
   // Royal Chamber: the Queen has +1 Health (now if she's in play, otherwise when she emerges).
   royalChamber(state, e, ctx) {
     const pl = state.players[ctx.controller];
     const queen = pl.board.find((m) => m.cardId === 'the_queen');
+    const under = pl.queenUnderground;
     if (queen) applyBuff(state, queen, { health: e.amount ?? 1 });
+    else if (under && !under.fromHive) { under.health += e.amount ?? 1; under.maxHealth += e.amount ?? 1; }
     else if (!pl.queenEmerged) pl.queenBonusHealth = (pl.queenBonusHealth ?? 0) + (e.amount ?? 1);
   },
 
