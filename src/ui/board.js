@@ -440,7 +440,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
   const art = heroArtOf(mp.factions[0]);
   const won = ctx.unlocked?.length ?? 0;
   const rewards = outcome === 'win' && won
-    ? `<div class="go-reward" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>${won} new card${won === 1 ? '' : 's'} unlocked</b><small>Add them to your deck with Swap cards on the menu.</small></span></div>`
+    ? `<div class="go-reward" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>${won} new card${won === 1 ? '' : 's'} unlocked</b><small>Add them with Build my deck on the menu.</small></span></div>`
     : outcome !== 'win' && (ctx.mode === 'ai' || ctx.mode === 'online')
       ? `<div class="go-reward muted" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>Win a match to unlock new cards</b><small>Every victory unlocks 2.</small></span></div>` : '';
   const ash = outcome === 'loss' ? `<div class="go-ash">${Array.from({ length: 18 }, (_, k) => `<i style="--x:${(k * 53) % 100}%;--d:${(k * 0.37) % 4}s;--t:${5 + (k % 5)}s;--s:${3 + (k % 4)}px"></i>`).join('')}</div>` : '';
