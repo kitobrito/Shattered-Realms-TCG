@@ -38,14 +38,26 @@ jobs:
         # the BUTLER_API_KEY secret (the page is fadeawaytoday/shattered-realms-tcg unless the ITCH_GAME variable says otherwise);
         # until then this step just says so and the build still succeeds.
         env:
+          GH_TOKEN: ${{ github.token }}
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
           ITCH_GAME: ${{ vars.ITCH_GAME || 'fadeawaytoday/shattered-realms-tcg' }}
         run: |
           if [ -z "$BUTLER_API_KEY" ] || [ -z "$ITCH_GAME" ]; then
             echo "::notice::itch.io publishing is off: add the BUTLER_API_KEY secret and the ITCH_GAME variable to turn it on."
+            echo "BUTLER_API_KEY is missing from the repository's Actions secrets, so nothing was pushed." > butler-report.txt
+            gh release upload itch-latest butler-report.txt --clobber
             exit 0
           fi
           curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
           unzip -q -o butler.zip -d butler-bin && chmod +x butler-bin/butler
           mkdir -p itch-dir && unzip -q -o shattered-realms-itch.zip -d itch-dir
-          ./butler-bin/butler push itch-dir "$ITCH_GAME:html5" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
+          # Keep butler's report (no secrets in it) on the release, so problems can be read without the Actions logs.
+          {
+            echo "target: $ITCH_GAME:html5"
+            ./butler-bin/butler -V 2>&1 || true
+            rc=0; ./butler-bin/butler push itch-dir "$ITCH_GAME:html5" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}" 2>&1 || rc=$?
+            echo "push exit code: $rc"
+            ./butler-bin/butler status "$ITCH_GAME" 2>&1 || true
+          } | tee butler-report.txt
+          gh release upload itch-latest butler-report.txt --clobber
+          grep -q "push exit code: 0" butler-report.txt
