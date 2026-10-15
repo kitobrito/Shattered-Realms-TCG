@@ -1,6 +1,8 @@
 # Builds the itch.io upload (index.html, art/, src/ at the top of the zip) and
 # publishes it on the "itch-latest" release every time main changes.
 # Download: https://github.com/kitobrito/Shattered-Realms-TCG/releases/download/itch-latest/shattered-realms-itch.zip
+# With the BUTLER_API_KEY secret and ITCH_GAME variable set, it also pushes the game to itch.io
+# (channel "html5") with butler, which uploads only the files that changed.
 name: itch build
 on:
   push:
@@ -31,3 +33,19 @@ jobs:
             --title "itch.io build (latest)" \
             --notes "Ready to upload to itch.io: index.html, art and src are at the top of the zip. Rebuilt automatically from main ($GITHUB_SHA)." \
             --target "$GITHUB_SHA"
+      - name: Push to itch.io with butler (html5)
+        # Sends only what changed since the last upload. Turns on once the repo has
+        # the BUTLER_API_KEY secret and the ITCH_GAME variable (e.g. yourname/shattered-realms);
+        # until then this step just says so and the build still succeeds.
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_GAME: ${{ vars.ITCH_GAME }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ] || [ -z "$ITCH_GAME" ]; then
+            echo "::notice::itch.io publishing is off: add the BUTLER_API_KEY secret and the ITCH_GAME variable to turn it on."
+            exit 0
+          fi
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q -o butler.zip -d butler-bin && chmod +x butler-bin/butler
+          mkdir -p itch-dir && unzip -q -o shattered-realms-itch.zip -d itch-dir
+          ./butler-bin/butler push itch-dir "$ITCH_GAME:html5" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
