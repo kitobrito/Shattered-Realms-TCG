@@ -57,6 +57,7 @@ function drawArrow(from, to, locked) {
 }
 
 function hideArrow() {
+  for (const el of document.querySelectorAll('.aim-over')) el.classList.remove('aim-over');
   document.getElementById('arrow-layer')?.classList.remove('show');
 }
 
@@ -300,6 +301,9 @@ function onMove(e) {
     const set = targetSet();
     const locked = over && set.has(Number(over.dataset.char));
     drawArrow(aim.from, locked ? centerOf(over) : { x: e.clientX, y: e.clientY }, locked);
+    // The character in the crosshairs braces itself.
+    for (const el of api.root().querySelectorAll('.aim-over')) if (el !== over || !locked) el.classList.remove('aim-over');
+    if (locked) over.classList.add('aim-over');
   }
 }
 
