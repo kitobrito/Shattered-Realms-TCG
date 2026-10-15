@@ -15,12 +15,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Zip the game
-        # itch.io refuses zips with more than 1000 entries, so leave out folder
-        # entries (-D) and art the game never loads (old boards, app-store icons).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build the game (card art as WebP, bundled into packs)
         run: |
-          zip -qrD shattered-realms-itch.zip index.html art src \
-            -x 'art/boards/*' 'art/boards-portrait-old/*' 'art/app/*'
+          pip install --quiet pillow
+          python3 tools/build-dist.py dist
+      - name: Zip the game
+        # itch.io refuses zips with more than 1000 entries; the art packs keep us far under
+        # that, and -D leaves out folder entries.
+        run: |
+          (cd dist && zip -qrD ../shattered-realms-itch.zip .)
           n=$(unzip -Z1 shattered-realms-itch.zip | wc -l)
           echo "Files in zip: $n"
           if [ "$n" -gt 1000 ]; then echo "::error::itch.io allows at most 1000 files; this zip has $n"; exit 1; fi

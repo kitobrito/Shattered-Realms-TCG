@@ -5,7 +5,8 @@
 import { applyAdvantage, chooseAction } from '../ai/smart.js';
 import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts } from '../cards/index.js';
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
-import { ART } from '../cards/art-manifest.js';
+import { ART, HERO_ART } from '../cards/art-manifest.js';
+import { artSrc, ensureArt } from './art-packs.js';
 import { boardArtFor } from '../cards/board-art.js';
 import { applySettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
@@ -1088,12 +1089,14 @@ async function showLoader() {
   fx.layer().appendChild(el);
   const urls = new Set();
   for (const pl of s.players) {
-    const hero = heroArtOf(pl.factions[0]);
+    const hero = HERO_ART[pl.factions[0]];
     if (hero) urls.add(hero);
     for (const c of [...pl.deck, ...pl.hand]) if (ART[c.cardId]) urls.add(ART[c.cardId]);
   }
   const board = boardArtFor(s.players[viewer].factions[0]);
   if (board) urls.add(board);
+  // Packed art (shipped builds) arrives a pack at a time; then each picture is decoded.
+  const packs = ensureArt(urls);
   const list = [...urls];
   let done = 0;
   const bar = el.querySelector('.loader-bar i');
@@ -1103,7 +1106,7 @@ async function showLoader() {
     bar.style.width = `${Math.round(k * 100)}%`;
     status.textContent = STEPS.filter(([at]) => k >= at).pop()[1];
   };
-  const load = (u) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = () => { done++; progress(done / list.length); res(); }; i.src = u; });
+  const load = (u) => packs.then(() => new Promise((res) => { const i = new Image(); i.onload = i.onerror = () => { done++; progress(done / list.length); res(); }; i.src = artSrc(u); }));
   // A new tip every few seconds if loading takes a while.
   const tipEl = el.querySelector('.loader-tip');
   let t = 0;
@@ -1779,7 +1782,7 @@ function renderBuilder() {
   const deckPanel = `<aside class="deck-panel" data-deckdrop>
       <header><b>Your deck</b><span class="${!problem ? 'done' : ''}">${n} / ${need}</span></header>
       <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${c.faction.toLowerCase()}" data-deckrow="${c.id}" title="Drag out or click to remove one">
-        <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${ART[c.id] ? `<i class="dr-art" style="background-image:url('${ART[c.id]}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
+        <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${artOf(c) ? `<i class="dr-art" style="background-image:url('${artOf(c)}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
     </aside>`;
   const section = (f) => `<h3>${crestHTML(f)} ${esc(f)} <span class="pick-count ${!single && inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${single ? `${inFaction(f)} in deck` : `${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}`}</span></h3>
