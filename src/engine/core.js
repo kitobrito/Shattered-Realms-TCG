@@ -443,6 +443,8 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     t.lastDamagedByController = srcController;
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: sourceId });
     checkPrey(state, t);
+    // Rage: damage it survives makes it angrier.
+    if (amount > 0 && t.health > 0 && !t.destroyed && hasKeyword(t, 'Rage')) { t.attack += 1; log(state, `😡 ${nameOf(state, t)} rages (+1 Attack).`); }
   }
   log(state, `${src ? nameOf(state, src) : opts.burn ? '🔥 Burn' : 'Effect'} deals ${amount} to ${nameOf(state, t)}.`);
   emit(state, { type: 'damageDealt', source: sourceId, target: t.uid, player: t.controller, amount });

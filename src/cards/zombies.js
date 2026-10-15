@@ -19,6 +19,8 @@ const FRIENDLY_ZOMBIE = { side: 'friendly', tribe: 'Zombie' };
 // Ruling: "1/2 Walker" / "2/1 Runner" summons are the Walker and Runner cards (Walkers keep Reborn).
 const walkers = (count, extra = {}) => ({ op: 'summon', cardId: 'walker', count, ...extra });
 const walkerOrRunner = { op: 'summon', pool: ['walker', 'runner'] };
+const infect = (target) => ({ op: 'infect', target });
+const RANDOM_ENEMY = { randomOf: { minions: { side: 'enemy', alive: true } } };
 
 export const ZOMBIE_CARDS = [
   // ---- Hero Spell ----
@@ -207,6 +209,92 @@ export const ZOMBIE_CARDS = [
       effects: [{ op: 'consumeCorpses', count: 3, effects: [walkers(3)] }] },
   },
 
+  // ---- The Rage Outbreak (unlockable) ----
+  // Infect: mark an enemy minion; when it dies, the infector summons a 2/1 Rage Runner with Rush.
+  // Rage: whenever it takes damage and survives, it gains +1 Attack.
+  {
+    ...Z, id: 'patient_zero', name: 'Patient Zero', art: '🧪', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Infect an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [infect('chosen')] }],
+  },
+  {
+    ...Z, id: 'rage_chimpanzee', name: 'Rage Chimpanzee', art: '🐒', extra: true, tribes: ['Zombie', 'Beast'], cost: 2, attack: 2, health: 1, keywords: ['Rush', 'Rage'],
+    text: 'Rush. Rage. Whenever this attacks a minion, Infect it.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [infect('eventTarget')] }],
+  },
+  {
+    ...Z, id: 'lab_escapee', name: 'Lab Escapee', art: '🥼', extra: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'],
+    text: 'Rush. Exit: Infect a random enemy minion.',
+    triggers: [{ on: 'deathrattle', effects: [infect(RANDOM_ENEMY)] }],
+  },
+  {
+    ...Z, id: 'sprinting_infected', name: 'Sprinting Infected', art: '🏃', extra: true, cost: 4, attack: 3, health: 2, keywords: ['Charge', 'Rage'],
+    text: 'Charge. Rage.',
+  },
+  {
+    ...Z, id: 'blood_vomiter', name: 'Blood Vomiter', art: '🤮', extra: true, cost: 3, attack: 2, health: 4,
+    text: 'Whenever this attacks a minion, Infect it.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [infect('eventTarget')] }],
+  },
+  {
+    ...Z, id: 'infected_rat_swarm', name: 'Infected Rat Swarm', art: '🐀', extra: true, tribes: ['Zombie', 'Beast'], cost: 2, attack: 1, health: 1,
+    text: 'Exit: Summon two 1/1 Plague Rats with Rush.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'summon', cardId: 'plague_rat', count: 2 }] }],
+  },
+  {
+    ...Z, id: 'rage_hound', name: 'Rage Hound', art: '🐕', extra: true, tribes: ['Zombie', 'Beast'], cost: 5, attack: 4, health: 3, keywords: ['Rush', 'Rage'],
+    text: 'Rush. Rage. Whenever this destroys an enemy minion, gain +1/+1.',
+    triggers: [{ on: 'minionDied', filter: { source: 'enemyMinion', killer: 'self' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1, if: { subject: 'self', alive: true } }] }],
+  },
+  {
+    ...S, id: 'quarantine_breach', name: 'Quarantine Breach', art: '🚧', extra: true, cost: 3,
+    text: 'Infect all enemy minions with 3 or less Health.',
+    effects: [infect({ minions: { side: 'enemy', maxHealth: 3 } })],
+  },
+  {
+    ...S, id: 'contaminated_blood', name: 'Contaminated Blood', art: '🩸', extra: true, cost: 1,
+    text: "Infect an enemy minion. If it's already Infected, destroy it instead.",
+    target: ENEMY_MINION,
+    effects: [
+      { op: 'destroy', target: 'chosen', if: { subject: 'chosen', infected: true } },
+      infect('chosen'),
+    ],
+  },
+  {
+    ...S, id: 'rage_virus', name: 'Rage Virus', art: '🦠', extra: true, cost: 4,
+    text: 'Give your Zombies Rage. Infect a random enemy minion.',
+    effects: [{ op: 'buff', target: FRIENDLY_ZOMBIES, keywords: ['Rage'] }, infect(RANDOM_ENEMY)],
+  },
+  {
+    ...Z, id: 'infected_crows', name: 'Infected Crows', art: '🐦‍⬛', extra: true, tribes: ['Zombie', 'Beast'], cost: 5, attack: 2, health: 2,
+    text: 'Arrival: Deal 1 damage to all enemy minions, then Infect them.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damageAll', side: 'enemy', amount: 1 }, infect({ minions: { side: 'enemy', alive: true } })] }],
+  },
+  {
+    ...Z, id: 'hazmat_husk', name: 'Hazmat Husk', art: '☢️', extra: true, cost: 5, attack: 3, health: 7, keywords: ['Taunt', 'Rage'],
+    text: 'Taunt. Rage. Exit: Create 2 Corpses.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'addCorpses', count: 2 }] }],
+  },
+  {
+    ...T, id: 'sealed_ward', name: 'Sealed Ward', art: '🚪', extra: true, cost: 2,
+    text: 'When an enemy minion attacks, Infect it and give it -2 Attack this turn.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' },
+      effects: [infect('eventSource'), { op: 'buff', target: 'eventSource', attack: -2, temporary: true }] },
+  },
+  {
+    ...Z, id: 'silverback_abomination', name: 'Silverback Abomination', art: '🦍', extra: true, tribes: ['Zombie', 'Beast'], cost: 7, attack: 6, health: 5, keywords: ['Rush', 'Rage'],
+    text: 'Rush. Rage. Arrival: Consume up to 3 friendly Corpses. Gain +1/+1 for each.',
+    triggers: [{ on: 'battlecry', effects: [1, 2, 3].map(() => ({ op: 'consumeCorpses', count: 1, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] })) }],
+  },
+  {
+    ...Z, id: 'the_outbreak', name: 'The Outbreak', art: '☣️', extra: true, cost: 9, attack: 6, health: 6,
+    text: 'Arrival: Infect all enemy minions. While you control this, your Rage Runners from Infections have +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [infect({ minions: { side: 'enemy', alive: true } })] }],
+  },
+
   // ---- Tokens ----
   { ...Z, id: 'zombie', name: 'Zombie', art: '🧟', token: true, cost: 1, attack: 1, health: 1, text: '' },
+  { ...Z, id: 'rage_runner', name: 'Rage Runner', art: '😡', token: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'], text: 'Rush. Risen from an Infected minion.' },
+  { ...Z, id: 'plague_rat', name: 'Plague Rat', art: '🐀', token: true, tribes: ['Zombie', 'Beast'], cost: 1, attack: 1, health: 1, keywords: ['Rush'], text: 'Rush.' },
 ];

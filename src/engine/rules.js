@@ -37,7 +37,7 @@ export const POSITIVE_KEYWORDS = [
 //   Burned    loses 1 Health at the end of its controller's turn
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
-export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', ...NEGATIVE_KEYWORDS];
+export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', ...NEGATIVE_KEYWORDS];
 
 // Player-facing rules text for keywords and card terms (collection glossary, tooltips).
 export const KEYWORD_TEXT = {
@@ -70,6 +70,9 @@ export const KEYWORD_TEXT = {
   Displace: "Send a minion Beyond Reality for a while. It can't attack, be attacked or be targeted, doesn't take a board space, and its abilities stop until it returns (at the start of the turn named; it waits if its side's board is full).",
   Poisonous: 'When this dies, the enemy that killed it dies too.',
   Venomous: 'Kills any enemy minion it attacks.',
+  Rage: 'Whenever this takes damage and survives, it gains +1 Attack.',
+  Infect: 'Mark an enemy minion as Infected. When an Infected minion dies, the player who Infected it summons a 2/1 Rage Runner with Rush.',
+  Infected: 'When this dies, the player who Infected it summons a 2/1 Rage Runner with Rush.',
   Charge: 'Can attack the turn it is played.',
   Rush: 'Can attack minions the turn it is played.',
   'Twin Strike': 'Can attack twice each turn.',
