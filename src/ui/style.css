@@ -246,7 +246,14 @@ button.ghost:hover { background: var(--panel); }
 .gallery-grid .card .text { font-size: 12px; }
 .gallery-grid .card:hover { transform: translateY(-6px); box-shadow: 0 10px 24px #000a; }
 
-.zoom-overlay { position: fixed; inset: 0; z-index: 60; background: #000d; display: grid; place-items: center; padding: 2vh 16px; cursor: zoom-out; }
+.zoom-overlay { position: fixed; inset: 0; z-index: 60; background: #000d; display: grid; place-items: safe center; padding: 2vh 16px; cursor: zoom-out;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.zoom-mnav { display: none; }
+.zoom-artbtn { align-self: stretch; padding: 8px 12px; }
+.art-view { position: fixed; inset: 0; z-index: 70; background: #000f; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 16px; cursor: zoom-out; }
+.art-view img { max-width: 100%; max-height: calc(100% - 48px); object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px #000; }
+.art-view-cap { font-family: var(--font-title); font-weight: 700; text-align: center; }
 .zoom-wrap { display: flex; align-items: center; gap: 18px; cursor: default; max-width: 100%; }
 
 /* The card is sized from one length (--h); everything inside scales with it via em. */
@@ -328,9 +335,15 @@ button.ghost:hover { background: var(--panel); }
 @media (max-width: 860px) {
   .zoom-wrap { flex-direction: column; gap: 10px; }
   .big-card { --h: min(78vh, 125vw); }
-  .zoom-side { width: min(92vw, 420px); padding-top: 0; max-height: none; }
-  .zoom-close { position: static; align-self: flex-end; }
+  .zoom-overlay { place-items: start center; padding: 10px 16px 28px; }
+  .zoom-side { width: min(92vw, 420px); padding-top: 0; max-height: none; overflow: visible; }
+  .zoom-close { display: none; }
   .zoom-arrow { display: none; }
+  .zoom-mnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: min(92vw, 420px);
+    position: sticky; top: 0; z-index: 3; padding: 6px 0; background: #000d; }
+  .zoom-mnav button { padding: 8px 12px; min-height: 40px; }
+  .zoom-mnav .sub { flex: 1; text-align: center; }
+  .zoom-mnav button:disabled { opacity: 0.35; }
   .gallery-grid .card { width: 150px; height: 250px; }
 }
 /* ---- Typography: Cinzel for names/titles/numbers, Alegreya Sans for text ---- */
@@ -1552,7 +1565,12 @@ body:not(.in-game) { background:
 .book-tab { display: flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; border-radius: 10px 0 0 10px; min-width: 150px; text-align: left;
   background: linear-gradient(90deg, #3a2414, #5a3a20); border: 2px solid #8a6d3e; border-right: none; color: #e8d6b0; font-family: var(--font-title);
   box-shadow: -4px 4px 10px #000a; transform: translateX(10px); transition: transform 0.15s; }
-.book-tab span { font-size: 22px; }
+.crest { display: inline-block; flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; vertical-align: -0.38em; font-style: normal;
+  background-size: 175% auto; background-position: 50% 45%; background-repeat: no-repeat; background-color: #15121a;
+  border: 2px solid #c9a96e; box-shadow: 0 1px 4px #0009; }
+.crest-fusion { background: conic-gradient(from 45deg, #ff8a4a, #ffd76a, #7ad0ff, #c88aff, #ff8a4a); }
+.book-tab .crest { width: 30px; height: 30px; }
+.zoom-faction > span { display: inline-flex; align-items: center; gap: 8px; }
 .book-tab:hover { transform: translateX(4px); }
 .book-tab.on { transform: translateX(0); background: linear-gradient(90deg, #6a4424, #e8d6a8 98%); color: #2a1a0a; }
 .book-page { flex: 1; min-height: 70vh; padding: 22px 26px 30px; border-radius: 6px 18px 18px 6px;
@@ -1568,8 +1586,11 @@ body:not(.in-game) { background:
 @media (max-width: 860px) {
   .book-body { flex-direction: column; }
   .book-tabs { position: static; flex-direction: row; flex-wrap: wrap; padding-top: 0; margin: 0 0 -2px; }
-  .book-tab { min-width: 0; border-radius: 10px 10px 0 0; transform: none; border-right: 2px solid #8a6d3e; border-bottom: none; }
-  .book-tab b { display: none; }
+  .book-tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px; margin: 0 0 8px; align-self: stretch; }
+  .book-tab { min-width: 0; padding: 6px 8px; gap: 6px; border-radius: 10px; transform: none; border-right: 2px solid #8a6d3e; }
+  .book-tab:hover { transform: none; }
+  .book-tab .crest { width: 24px; height: 24px; }
+  .book-tab b { font-size: 10.5px; line-height: 1.1; min-width: 0; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
 }
 
 /* ==== EMOTES ============================================================ */

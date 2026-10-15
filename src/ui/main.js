@@ -17,7 +17,7 @@ import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLay
 import { canPokeBoard, hideBoard, pokeBoard, showBoard } from './board-layer.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
-import { backArtOf, bigCardHTML, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, heroArtOf, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
+import { artOf, backArtOf, bigCardHTML, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, heroArtOf, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { FACTION_INFO, synergyFor } from '../cards/faction-info.js';
 import * as sound from './sound.js';
@@ -39,6 +39,7 @@ let aiTimer = null;
 let animating = false;     // input is locked while an action animates
 let reactionTimer = null;  // Quick Play countdown: { key, deadline, interval }
 let zoomId = null;         // card id expanded in the collection / deck builder
+let zoomArt = false;       // showing the zoomed card's full, uncropped art
 let mullMarked = [];       // mulligan: hand uids marked to swap
 let galleryOrder = [];     // card ids in collection order (for arrow-key paging)
 let history = [];          // play-history strip entries
@@ -1583,7 +1584,7 @@ function factionGuideHTML(factions) {
     const info = FACTION_INFO[f];
     if (!info) return '';
     return `<article class="ts-guide f-${f.toLowerCase()}">
-      <header>${FACTION_ICONS[f] ?? '✦'} <b>${esc(f)}</b> <span class="ts-style">${esc(info.style)}</span></header>
+      <header>${crestHTML(f)} <b>${esc(f)}</b> <span class="ts-style">${esc(info.style)}</span></header>
       <p class="ts-summary">${esc(info.summary)}</p>
       <div class="ts-good">Good at:</div>
       <ul>${info.strengths.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
@@ -1689,7 +1690,7 @@ function renderDupeBuilder() {
           <button data-act="dupeSave" ${n === need ? '' : 'disabled'}>Save deck</button>
         </div>
       </div>
-      <h3>${FACTION_ICONS[f] ?? ''} ${esc(f)} <span class="pick-count">30 cards · ${n} doubled</span></h3>
+      <h3>${crestHTML(f)} ${esc(f)} <span class="pick-count">30 cards · ${n} doubled</span></h3>
       <div class="gallery-grid builder-grid">${cards.map((c) => cardHTML(c, { cuttable: true, isDupe: draftDupes.includes(c.id) })).join('')}</div>
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
@@ -1724,7 +1725,7 @@ function renderSwapBuilder() {
       </div>
       <h3><img class="h-icon" src="art/ui/icon-dino-egg.png" alt=""> New cards <span class="pick-count">${cards.filter((c) => c.extra && draftLineup.includes(c.id)).length} of ${extras} in</span></h3>
       ${grid(cards.filter((c) => c.extra))}
-      <h3>${FACTION_ICONS[f] ?? ''} Original cards <span class="pick-count">${cards.filter((c) => !c.extra && draftLineup.includes(c.id)).length} of ${FACTION_LISTS[f].length} in</span></h3>
+      <h3>${crestHTML(f)} Original cards <span class="pick-count">${cards.filter((c) => !c.extra && draftLineup.includes(c.id)).length} of ${FACTION_LISTS[f].length} in</span></h3>
       ${grid(cards.filter((c) => !c.extra))}
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
@@ -1758,7 +1759,7 @@ function renderBuilder() {
         <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${ART[c.id] ? `<i class="dr-art" style="background-image:url('${ART[c.id]}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
     </aside>`;
-  const section = (f) => `<h3>${FACTION_ICONS[f] ?? ''} ${esc(f)} <span class="pick-count ${inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}</span></h3>
+  const section = (f) => `<h3>${crestHTML(f)} ${esc(f)} <span class="pick-count ${inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}</span></h3>
       <div class="gallery-grid builder-grid">${pool(f).map(tile).join('')}</div>`;
   const scrollY = window.scrollY;
   app.innerHTML = `
@@ -1902,7 +1903,7 @@ function renderGallery() {
       <div class="book-head"><h2>Card collection</h2><button data-act="menu" class="ghost">Back</button></div>
       <div class="book-body">
         <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${x.toLowerCase()} ${x === f ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
-          <span>${FACTION_ICONS[x] ?? '✦'}</span><b>${esc(x)}</b></button>`).join('')}</nav>
+          ${crestHTML(x)}<b>${esc(x)}</b></button>`).join('')}</nav>
         <section class="book-page f-${f.toLowerCase()} ${bookTurned ? 'turn' : ''}">
           <header class="page-title">${art ? `<img src="${art}" alt="">` : ''}<div><h3>${esc(f)}</h3>
             <span class="sub">${f === 'Fusion'
@@ -1919,21 +1920,38 @@ function renderGallery() {
   window.scrollTo(0, scrollY);
 }
 
-// The collection / builder zoom: the big card plus its keyword glossary.
+// A faction's crest: the emblem from the middle of its card back (Fusion gets a split of colours).
+const crestHTML = (f) => (backArtOf(f) ? `<i class="crest" style="background-image:url('${backArtOf(f)}')"></i>` : '<i class="crest crest-fusion"></i>');
+
+// The collection / builder zoom: the big card plus its keyword glossary. On phones the side
+// arrows give way to a nav bar above the card (and swiping), and the whole view scrolls.
 function zoomHTML(card) {
   const i = galleryOrder.indexOf(card.id);
+  const first = i <= 0, last = i >= galleryOrder.length - 1;
+  const art = artOf(card);
   return `
     <div class="zoom-overlay" data-act="closeZoom">
       <div class="zoom-wrap" data-stop>
-        <button class="zoom-arrow" data-act="zoomPrev" ${i <= 0 ? 'disabled' : ''} title="Previous (←)">‹</button>
+        <div class="zoom-mnav">
+          <button class="ghost" data-act="zoomPrev" ${first ? 'disabled' : ''}>‹ Prev</button>
+          <span class="sub">${i + 1} / ${galleryOrder.length}</span>
+          <button class="ghost" data-act="zoomNext" ${last ? 'disabled' : ''}>Next ›</button>
+          <button class="ghost" data-act="closeZoom" title="Close">✕</button>
+        </div>
+        <button class="zoom-arrow" data-act="zoomPrev" ${first ? 'disabled' : ''} title="Previous (←)">‹</button>
         ${bigCardHTML(card)}
         <aside class="zoom-side">
           <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
-          <div class="zoom-faction">${FACTION_ICONS[card.faction] ?? ''} ${esc(card.faction)} <span class="sub">${i + 1} / ${galleryOrder.length}</span></div>
+          <div class="zoom-faction"><span>${crestHTML(card.faction)} ${esc(card.faction)}</span> <span class="sub">${i + 1} / ${galleryOrder.length}</span></div>
+          ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
           ${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b> ${esc(KEYWORD_TEXT[t])}</div>`).join('')}
         </aside>
-        <button class="zoom-arrow" data-act="zoomNext" ${i >= galleryOrder.length - 1 ? 'disabled' : ''} title="Next (→)">›</button>
+        <button class="zoom-arrow" data-act="zoomNext" ${last ? 'disabled' : ''} title="Next (→)">›</button>
       </div>
+      ${zoomArt && art ? `<div class="art-view" data-act="closeArt" title="Tap to go back">
+        <img src="${art}" alt="${esc(card.name)}" draggable="false">
+        <div class="art-view-cap">${esc(card.name)} <span class="sub">· tap to go back${galleryOrder.length > 1 ? ' · swipe for the next card' : ''}</span></div>
+      </div>` : ''}
     </div>`;
 }
 
@@ -2351,6 +2369,7 @@ drag.init({
 
 app.addEventListener('click', (e) => {
   // Clicks inside the zoomed card panel don't close it (only its own buttons act).
+  if (suppressZoomClick && e.target.closest('.zoom-overlay')) return; // the tap that ended a swipe
   const btn = e.target.closest('[data-act]');
   if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   const zoom = e.target.closest('[data-zoom]');
@@ -2436,7 +2455,9 @@ function onButton(name) {
     case 'continue': game = loadSaved(); return game ? enterGame() : render();
     case 'gallery': screen = 'gallery'; zoomId = null; window.scrollTo(0, 0); return render();
     case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; window.scrollTo(0, 0); return render();
-    case 'closeZoom': zoomId = null; return render();
+    case 'closeZoom': zoomId = null; zoomArt = false; return render();
+    case 'zoomArt': zoomArt = true; return render();
+    case 'closeArt': zoomArt = false; return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
     case 'editCuts': builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
     case 'editDupes': builderMode = 'dupe'; draftDupes = [...dupesFor(picked[0])]; zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
@@ -2544,11 +2565,27 @@ function onButton(name) {
 
 document.addEventListener('keydown', (e) => {
   if ((screen === 'gallery' || screen === 'builder' || screen === 'menu') && zoomId) {
-    if (e.key === 'Escape') onButton('closeZoom');
+    if (e.key === 'Escape') onButton(zoomArt ? 'closeArt' : 'closeZoom');
     if (e.key === 'ArrowLeft') onButton('zoomPrev');
     if (e.key === 'ArrowRight') onButton('zoomNext');
   }
 });
+
+// Swipe left / right on the zoomed card (or its full art) to page through the collection.
+let zoomSwipe = null;
+document.addEventListener('touchstart', (e) => {
+  zoomSwipe = zoomId && e.touches.length === 1 && e.target.closest('.zoom-overlay') ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+}, { passive: true });
+document.addEventListener('touchend', (e) => {
+  if (!zoomSwipe || !zoomId) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - zoomSwipe.x, dy = t.clientY - zoomSwipe.y;
+  zoomSwipe = null;
+  if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  suppressZoomClick = true; setTimeout(() => { suppressZoomClick = false; }, 400);
+  onButton(dx < 0 ? 'zoomNext' : 'zoomPrev');
+}, { passive: true });
+let suppressZoomClick = false;
 
 const layoutKey = () => `${paintedBoards()}|${portraitLayout()}`;
 let wideBoard = layoutKey();
