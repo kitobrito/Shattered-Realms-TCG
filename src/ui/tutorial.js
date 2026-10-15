@@ -2,7 +2,7 @@
 // Tips appear once each (remembered in this browser), one at a time, the first
 // time something comes up in a match. They can be switched off in Settings.
 
-import { esc } from './shared.js';
+import { esc, icon } from './shared.js';
 import { getSettings } from './settings.js';
 
 const SEEN_KEY = 'shattered-tips-seen';
@@ -100,7 +100,7 @@ function showTip(id) {
   const [title, text] = TIPS[id];
   const el = document.createElement('div');
   el.className = 'coach-tip';
-  el.innerHTML = `<b>💡 ${esc(title)}</b><p>${esc(text)}</p><div class="coach-btns"><button class="coach-ok">Got it</button><button class="coach-off ghost">Turn off tips</button></div>`;
+  el.innerHTML = `<b>${icon('bulb')} ${esc(title)}</b><p>${esc(text)}</p><div class="coach-btns"><button class="coach-ok">Got it</button><button class="coach-off ghost">Turn off tips</button></div>`;
   document.body.appendChild(el);
   current = { id, el };
   const close = (off) => {

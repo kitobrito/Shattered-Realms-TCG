@@ -103,31 +103,95 @@ export async function fly(el, from, to, { duration = 320, fade = false, scale = 
 }
 
 // Attacker lunges most of the way to its target; returns the offset reached.
-export async function lunge(attackerEl, targetEl) {
+// An attack, with weight: the attacker rears back and swells (trembling as it gathers itself),
+// strikes along a streak of light in its faction's colour, and the game holds still for a beat
+// on impact (hit-stop) while a flash bursts at the point of contact, the target is knocked back
+// and the table shakes, more for harder hitters. Returns the offset for returnFromLunge.
+export async function lunge(attackerEl, targetEl, { power = 2, color = '#ffe39a', table = null } = {}) {
   if (!attackerEl || !targetEl) return null;
-  const a = center(attackerEl.getBoundingClientRect());
-  const t = center(targetEl.getBoundingClientRect());
+  const ar = attackerEl.getBoundingClientRect();
+  const tr = targetEl.getBoundingClientRect();
+  const a = center(ar);
+  const t = center(tr);
   const dx = (t.x - a.x) * 0.78;
   const dy = (t.y - a.y) * 0.78;
+  const tilt = dx > 0 ? -5 : 5;
+  const heavy = Math.min(1, Math.max(0, (power - 1) / 7));   // 0 for a 1-Attack poke, 1 for 8+
+  const back = 0.14 + heavy * 0.08;
+  const lift = 1.14 + heavy * 0.08;
+  const reared = `translate(${-dx * back}px, ${-dy * back}px) scale(${lift}) rotate(${tilt}deg)`;
   attackerEl.style.zIndex = '60';
-  // Wind-up: rear back and swell…
+  // Wind-up: rear back and swell, with a shadow that grows as it lifts…
   await animate(attackerEl, [
-    { transform: 'translate(0,0) scale(1) rotate(0deg)' },
-    { transform: `translate(${-dx * 0.14}px, ${-dy * 0.14}px) scale(1.14) rotate(${dx > 0 ? -4 : 4}deg)` },
-  ], { duration: 190, easing: 'cubic-bezier(.2,.8,.3,1)' });
-  // …then strike…
+    { transform: 'translate(0,0) scale(1) rotate(0deg)', filter: 'drop-shadow(0 4px 4px #0008)' },
+    { transform: reared, filter: 'brightness(1.15) drop-shadow(0 18px 14px #000a)' },
+  ], { duration: 220 + heavy * 90, easing: 'cubic-bezier(.2,.8,.3,1)' });
+  // …tremble for a moment as it gathers itself (harder hitters tremble longer)…
+  const j = 1.5 + heavy * 2;
   await animate(attackerEl, [
-    { transform: `translate(${-dx * 0.14}px, ${-dy * 0.14}px) scale(1.14) rotate(${dx > 0 ? -4 : 4}deg)` },
-    { transform: `translate(${dx}px, ${dy}px) scale(1.05) rotate(0deg)` },
-  ], { duration: 150, easing: 'cubic-bezier(.6,0,1,.6)' });
-  // …and hang on the impact for a beat (hit-stop).
-  await wait(75);
+    { transform: reared }, { transform: `${reared} translate(${j}px, ${-j / 2}px)` }, { transform: `${reared} translate(${-j}px, ${j / 2}px)` },
+    { transform: `${reared} translate(${j / 2}px, 0)` }, { transform: reared },
+  ], { duration: 70 + heavy * 90, easing: 'linear' });
+  // …then strike, leaving a streak of light behind it…
+  streak(a, t, color, 0.78);
+  await animate(attackerEl, [
+    { transform: reared, filter: 'brightness(1.15) drop-shadow(0 18px 14px #000a)' },
+    { transform: `translate(${dx}px, ${dy}px) scale(1.05) rotate(0deg)`, filter: 'brightness(1.4) drop-shadow(0 4px 4px #0008)' },
+  ], { duration: 130, easing: 'cubic-bezier(.7,0,1,.5)' });
+  // …impact: a flash at the point of contact, the target knocked back, the table shakes,
+  // and everything hangs still for a beat (hit-stop).
+  const hit = { x: a.x + dx * 1.02, y: a.y + dy * 1.02 };
+  impactFlash(hit, Math.max(tr.width, tr.height) * (0.9 + heavy * 0.6), color);
+  const len = Math.hypot(dx, dy) || 1;
+  const kb = 6 + heavy * 10;
+  animate(targetEl, [
+    { transform: 'none' },
+    { transform: `translate(${(dx / len) * kb}px, ${(dy / len) * kb}px) rotate(${-tilt * 0.6}deg) scale(0.96)`, offset: 0.25 },
+    { transform: 'none' },
+  ], { duration: 340, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
+  if (table) screenShake(table, 2 + heavy * 9);
+  await wait(80 + heavy * 70);
   return { dx, dy };
 }
 
+// The streak of light an attacker leaves as it strikes.
+function streak(from, to, color, reach = 1) {
+  const el = document.createElement('div');
+  el.className = 'fx-streak';
+  el.style.setProperty('--c', color);
+  const dx = (to.x - from.x) * reach, dy = (to.y - from.y) * reach;
+  const len = Math.hypot(dx, dy);
+  Object.assign(el.style, { left: `${from.x}px`, top: `${from.y}px`, width: `${len}px`, transform: `rotate(${Math.atan2(dy, dx)}rad)` });
+  layer().appendChild(el);
+  animate(el, [
+    { clipPath: 'inset(0 100% 0 0)', opacity: 1 },
+    { clipPath: 'inset(0 0 0 0)', opacity: 1, offset: 0.35 },
+    { clipPath: 'inset(0 0 0 100%)', opacity: 0 },
+  ], { duration: 380, easing: 'ease-out' }).then(() => el.remove());
+}
+
+// A white-hot star of light where two characters collide.
+function impactFlash(at, size, color) {
+  const el = document.createElement('div');
+  el.className = 'fx-impact';
+  el.style.setProperty('--c', color);
+  Object.assign(el.style, { left: `${at.x}px`, top: `${at.y}px`, width: `${size}px`, height: `${size}px` });
+  layer().appendChild(el);
+  animate(el, [
+    { transform: 'translate(-50%, -50%) scale(0.2) rotate(0deg)', opacity: 1 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(20deg)', opacity: 1, offset: 0.25 },
+    { transform: 'translate(-50%, -50%) scale(1.3) rotate(30deg)', opacity: 0 },
+  ], { duration: 360, easing: 'ease-out' }).then(() => el.remove());
+}
+
+// The attacker springs back to its place, overshooting a touch.
 export function returnFromLunge(el, offset) {
   if (!el || !offset) return Promise.resolve();
-  return animate(el, [{ transform: `translate(${offset.dx}px, ${offset.dy}px)` }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  return animate(el, [
+    { transform: `translate(${offset.dx}px, ${offset.dy}px) scale(1.05)` },
+    { transform: `translate(${-offset.dx * 0.04}px, ${-offset.dy * 0.04}px) scale(0.98)`, offset: 0.7 },
+    { transform: 'none' },
+  ], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' });
 }
 
 export function shake(el, strength = 6) {
@@ -164,6 +228,16 @@ export function burst(rect, kind = 'summon') {
   animate(el, [{ transform: 'scale(0.3)', opacity: 0.9 }, { transform: 'scale(1.3)', opacity: 0 }], { duration: 500, easing: 'ease-out' }).then(() => el.remove());
 }
 
+// Copies of board minions drawn in the effects layer sit in a stand-in for the arena, so they
+// keep their board look (the shard frame is styled as \`.arena .minion\`), sized like the original.
+function ghostHost(rect) {
+  const host = document.createElement('div');
+  host.className = 'arena fx-ghost-host';
+  host.style.setProperty('--minion-w', `${rect.width}px`);
+  layer().appendChild(host);
+  return host;
+}
+
 // A minion that died: its last picture cracks, sinks and fades.
 export async function deathGhost(clone, rect) {
   const g = clone;
@@ -172,22 +246,84 @@ export async function deathGhost(clone, rect) {
     position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`,
     margin: '0', zIndex: '900', pointerEvents: 'none',
   });
-  layer().appendChild(g);
+  const host = ghostHost(rect);
+  host.appendChild(g);
   await animate(g, [
     { transform: 'scale(1) rotate(0)', filter: 'brightness(1)', opacity: 1 },
     { transform: 'scale(1.06) rotate(-2deg)', filter: 'brightness(1.8) saturate(0)', opacity: 1, offset: 0.25 },
     { transform: 'scale(0.7) translateY(20%) rotate(4deg)', filter: 'brightness(0.3) saturate(0)', opacity: 0 },
   ], { duration: 650, easing: 'ease-in' });
-  g.remove();
+  host.remove();
 }
 
-// Pop-in for a newly summoned minion.
-export function summonIn(el) {
-  return animate(el, [
-    { transform: 'translateY(-30px) scale(1.25)', opacity: 0, filter: 'brightness(2)' },
-    { transform: 'translateY(4px) scale(0.96)', opacity: 1, filter: 'brightness(1.3)', offset: 0.6 },
+// A minion arrives: it drops onto the board and squashes a little on landing; at the moment
+// it lands a ring of light in its faction's colour flares out, a soft flash lights it from
+// below, dust puffs out sideways from under it and a few motes of light drift up.
+// \`thump\`: the table to nudge on impact (a tiny shake).
+export async function arrival(el, faction, thump = null) {
+  if (!el) return;
+  const color = FACTION_COLOR[faction] ?? '#ffe39a';
+  const fall = 300;
+  const drop = animate(el, [
+    { transform: 'translateY(-46px) scale(1.32) rotate(-3deg)', opacity: 0, filter: 'brightness(2.2) drop-shadow(0 26px 14px #0008)' },
+    { transform: 'translateY(-10px) scale(1.08) rotate(-1deg)', opacity: 1, filter: 'brightness(1.6) drop-shadow(0 12px 8px #0008)', offset: 0.55 },
+    { transform: 'translateY(3px) scale(1.07, 0.9)', filter: 'brightness(1.5)', offset: 0.68 },
+    { transform: 'translateY(-2px) scale(0.98, 1.03)', filter: 'brightness(1.15)', offset: 0.84 },
     { transform: 'none', opacity: 1, filter: 'none' },
-  ], { duration: 380, easing: 'ease-out' });
+  ], { duration: fall / 0.68, easing: 'cubic-bezier(.45,0,.7,1)', fill: 'none' });
+  await wait(fall);
+  if (!el.isConnected) return drop;
+  const rect = el.getBoundingClientRect();
+  const c = center(rect);
+  const jobs = [drop];
+  // Ring of light and the flash under the card.
+  const ring = document.createElement('div');
+  ring.className = 'fx-arrive-ring';
+  const size = Math.max(rect.width, rect.height) * 1.15;
+  Object.assign(ring.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${size}px`, height: `${size}px` });
+  ring.style.setProperty('--c', color);
+  const glow = document.createElement('div');
+  glow.className = 'fx-arrive-glow';
+  Object.assign(glow.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${size * 1.4}px`, height: `${size * 1.4}px` });
+  glow.style.setProperty('--c', color);
+  layer().append(glow, ring);
+  jobs.push(animate(ring, [
+    { transform: 'translate(-50%, -50%) scale(0.55)', opacity: 1, borderWidth: '6px' },
+    { transform: 'translate(-50%, -50%) scale(2.1)', opacity: 0, borderWidth: '1px' },
+  ], { duration: 620, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => ring.remove()));
+  jobs.push(animate(glow, [
+    { transform: 'translate(-50%, -50%) scale(0.6)', opacity: 0.5 },
+    { transform: 'translate(-50%, -50%) scale(1.15)', opacity: 0 },
+  ], { duration: 480, easing: 'ease-out' }).then(() => glow.remove()));
+  // Dust: soft puffs rolling out from under the bottom edge, both ways.
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'fx-dust';
+    const side = i % 2 ? 1 : -1;
+    const s0 = rect.width * (0.26 + Math.random() * 0.18);
+    Object.assign(p.style, { left: `${c.x + side * rect.width * (0.1 + Math.random() * 0.25)}px`, top: `${rect.bottom - rect.height * 0.08}px`, width: `${s0}px`, height: `${s0}px` });
+    layer().appendChild(p);
+    const dx = side * rect.width * (0.45 + Math.random() * 0.5), dy = -rect.height * (0.04 + Math.random() * 0.16);
+    jobs.push(animate(p, [
+      { transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0.95 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${1.6 + Math.random()})`, opacity: 0 },
+    ], { duration: 650 + Math.random() * 350, easing: 'cubic-bezier(.15,.7,.3,1)' }).then(() => p.remove()));
+  }
+  // Motes of light in the faction's colour drifting up.
+  for (let i = 0; i < 7; i++) {
+    const m = document.createElement('div');
+    m.className = 'fx-mote';
+    m.style.setProperty('--c', color);
+    Object.assign(m.style, { left: `${rect.left + rect.width * (0.15 + Math.random() * 0.7)}px`, top: `${rect.bottom - rect.height * 0.2}px` });
+    layer().appendChild(m);
+    jobs.push(animate(m, [
+      { transform: 'translate(-50%, -50%) scale(0.6)', opacity: 0 },
+      { transform: `translate(-50%, ${-rect.height * 0.25}px) scale(1)`, opacity: 1, offset: 0.25 },
+      { transform: `translate(calc(-50% + ${(Math.random() - 0.5) * 20}px), ${-rect.height * (0.8 + Math.random() * 0.5)}px) scale(0.4)`, opacity: 0 },
+    ], { duration: 900 + Math.random() * 500, delay: Math.random() * 120, easing: 'ease-out' }).then(() => m.remove()));
+  }
+  if (thump) jobs.push(shakeOne(thump, 2.5));
+  return Promise.all(jobs);
 }
 
 // Shards bursting outward (Evade bubble popping, ice melting, Taunt shield breaking).
@@ -256,42 +392,103 @@ export function particles(rect, faction, power = 1) {
 }
 
 // A defeated hero: the portrait trembles, flares, then bursts into pieces.
+// A defeated Hero: glowing cracks split the portrait in three jolts (light leaking through
+// them, the portrait shuddering harder each time), then it bursts: a white flash, a
+// shockwave, and the shards of the portrait tumble away.
 export async function heroExplode(el) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
   const img = el.querySelector('.portrait-img')?.getAttribute('src');
-  await animate(el, [
-    { transform: 'translate(0,0)', filter: 'brightness(1)' },
-    { transform: 'translate(-4px,2px)', filter: 'brightness(1.4)', offset: 0.2 },
-    { transform: 'translate(4px,-2px)', filter: 'brightness(1.8)', offset: 0.4 },
-    { transform: 'translate(-5px,-1px)', filter: 'brightness(2.4)', offset: 0.6 },
-    { transform: 'translate(5px,2px) scale(1.06)', filter: 'brightness(3.2)', offset: 0.85 },
-    { transform: 'scale(1.1)', filter: 'brightness(4)' },
-  ], { duration: 900, easing: 'ease-in', fill: 'none' });
+  const c = center(rect);
+  // Cracks of light, drawn over the portrait.
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 100 100');
+  svg.setAttribute('class', 'fx-hero-cracks');
+  Object.assign(svg.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+  layer().appendChild(svg);
+  const crackPath = (ang, len, from = [50, 46]) => {
+    const pts = [from];
+    let [x, y] = from;
+    const steps = 4 + Math.floor(Math.random() * 3);
+    for (let k = 1; k <= steps; k++) {
+      const a = ang + (Math.random() - 0.5) * 0.7;
+      x += Math.cos(a) * (len / steps); y += Math.sin(a) * (len / steps);
+      pts.push([x, y]);
+    }
+    return { d: `M${pts.map((q) => q.map((v) => v.toFixed(1)).join(',')).join(' L')}`, end: pts[pts.length - 1] };
+  };
+  const addCracks = (n, len, from) => {
+    const ends = [];
+    for (let k = 0; k < n; k++) {
+      const ang = (k / n) * Math.PI * 2 + Math.random() * 0.8;
+      const { d, end } = crackPath(ang, len * (0.7 + Math.random() * 0.5), from);
+      ends.push(end);
+      for (const cls of ['glow', 'core']) {
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class', cls);
+        path.setAttribute('pathLength', '1');
+        svg.appendChild(path);
+        animate(path, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.3,1)' });
+      }
+    }
+    return ends;
+  };
+  const shudder = (k) => animate(el, [
+    { transform: 'translate(0,0)', filter: `brightness(${1 + k * 0.4})` },
+    { transform: `translate(${-3 - k * 2}px, ${1 + k}px) rotate(${-1 - k}deg)`, filter: `brightness(${1.3 + k * 0.5})`, offset: 0.25 },
+    { transform: `translate(${3 + k * 2}px, ${-1 - k}px) rotate(${1 + k}deg)`, offset: 0.55 },
+    { transform: 'translate(0,0)', filter: `brightness(${1.1 + k * 0.4})` },
+  ], { duration: 240, easing: 'ease-out', fill: 'forwards' });
+  let ends = addCracks(4, 26);
+  await shudder(0); await wait(160);
+  ends = ends.flatMap((e) => addCracks(1, 18, e)).concat(addCracks(3, 34));
+  await shudder(1); await wait(140);
+  ends.slice(0, 6).forEach((e) => addCracks(1, 16, e));
+  addCracks(5, 44);
+  await shudder(2);
+  svg.classList.add('blazing');
+  await wait(180);
+  // Burst.
   el.style.visibility = 'hidden';
-  burst(rect, 'summon');
-  const n = 12;
-  const jobs = [];
+  svg.remove();
+  const flash = document.createElement('div');
+  flash.className = 'fx-hero-flash';
+  const size = Math.max(rect.width, rect.height);
+  Object.assign(flash.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${size * 3}px`, height: `${size * 3}px` });
+  const ring = document.createElement('div');
+  ring.className = 'fx-hero-ring';
+  Object.assign(ring.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${size}px`, height: `${size}px` });
+  layer().append(flash, ring);
+  const jobs = [
+    animate(flash, [{ transform: 'translate(-50%, -50%) scale(0.2)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(1)', opacity: 0 }], { duration: 600, easing: 'ease-out' }).then(() => flash.remove()),
+    animate(ring, [{ transform: 'translate(-50%, -50%) scale(0.4)', opacity: 1, borderWidth: '10px' }, { transform: 'translate(-50%, -50%) scale(4)', opacity: 0, borderWidth: '1px' }], { duration: 800, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => ring.remove()),
+  ];
+  const n = 16;
   for (let i = 0; i < n; i++) {
-    const a0 = (i / n) * 360;
-    const a1 = ((i + 1) / n) * 360;
+    const a0 = (i / n) * 360 + (Math.random() - 0.5) * 8;
+    const a1 = ((i + 1) / n) * 360 + (Math.random() - 0.5) * 8;
     const pt = (deg, r) => `${50 + Math.cos((deg * Math.PI) / 180) * r}% ${50 + Math.sin((deg * Math.PI) / 180) * r}%`;
     const piece = document.createElement('div');
     piece.className = 'fx-hero-piece';
     Object.assign(piece.style, {
       left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`,
       backgroundImage: img ? `url('${img}')` : 'none',
-      clipPath: `polygon(50% 50%, ${pt(a0, 75)}, ${pt((a0 + a1) / 2, 60 + Math.random() * 20)}, ${pt(a1, 75)})`,
+      clipPath: `polygon(${pt((a0 + a1) / 2, 4 + Math.random() * 8)}, ${pt(a0, 75)}, ${pt((a0 + a1) / 2, 55 + Math.random() * 25)}, ${pt(a1, 75)})`,
     });
     layer().appendChild(piece);
     const mid = (((a0 + a1) / 2) * Math.PI) / 180;
-    const d = rect.width * (1.2 + Math.random() * 1.2);
+    const d = rect.width * (1.3 + Math.random() * 1.5);
     jobs.push(animate(piece, [
-      { transform: 'translate(0,0) rotate(0)', opacity: 1, filter: 'brightness(2)' },
-      { transform: `translate(${Math.cos(mid) * d}px, ${Math.sin(mid) * d + rect.height * 0.8}px) rotate(${(Math.random() - 0.5) * 540}deg)`, opacity: 0, filter: 'brightness(0.6)' },
-    ], { duration: 1200, easing: 'cubic-bezier(.2,.6,.4,1)' }).then(() => piece.remove()));
+      { transform: 'translate(0,0) rotate(0) scale(1)', opacity: 1, filter: 'brightness(2.6)' },
+      { transform: `translate(${Math.cos(mid) * d * 0.35}px, ${Math.sin(mid) * d * 0.35}px) rotate(${(Math.random() - 0.5) * 120}deg) scale(1.02)`, opacity: 1, filter: 'brightness(1.4)', offset: 0.2 },
+      { transform: `translate(${Math.cos(mid) * d}px, ${Math.sin(mid) * d + rect.height * 1.1}px) rotate(${(Math.random() - 0.5) * 600}deg) scale(0.8)`, opacity: 0, filter: 'brightness(0.5)' },
+    ], { duration: 1300 + Math.random() * 300, easing: 'cubic-bezier(.2,.6,.4,1)' }).then(() => piece.remove()));
   }
-  jobs.push(particles(rect, null, 10));
+  jobs.push(particles(rect, null, 12));
+  const arena = el.closest('.arena');
+  if (arena) jobs.push(screenShake(arena, 14));
   await Promise.all(jobs);
 }
 
@@ -307,6 +504,43 @@ export async function banner(text, kind = '') {
     { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: 0.75 },
     { opacity: 0, transform: 'translate(-50%, -50%) scale(1.1)' },
   ], { duration: 1200, easing: 'ease-out' });
+  el.remove();
+}
+
+// The start of a turn: a dark band sweeps across the screen with gold rules above and below,
+// the words slide in out of a wide letter-spacing as a glint runs across them and a flare
+// blooms behind, then the band sweeps on out. The rival's turn: the same, in red, quicker.
+export async function turnBanner(text, mine = true, sub = '') {
+  const el = document.createElement('div');
+  el.className = `fx-turn ${mine ? 'mine' : 'theirs'}`;
+  el.innerHTML = `<div class="ft-band"></div><i class="ft-flare"></i><div class="ft-words"><span class="ft-main">${text}</span>${sub ? `<span class="ft-sub">${sub}</span>` : ''}</div>`;
+  layer().appendChild(el);
+  const band = el.querySelector('.ft-band'), flare = el.querySelector('.ft-flare'), main = el.querySelector('.ft-main'), words = el.querySelector('.ft-words');
+  const hold = mine ? 760 : 420;
+  const ease = 'cubic-bezier(.2,.8,.2,1)';
+  const jobs = [
+    animate(band, [
+      { transform: 'translateY(-50%) scaleX(0)', transformOrigin: '0 50%', opacity: 1 },
+      { transform: 'translateY(-50%) scaleX(1)', transformOrigin: '0 50%', opacity: 1, offset: 0.22 },
+      { transform: 'translateY(-50%) scaleX(1)', transformOrigin: '100% 50%', opacity: 1, offset: 0.78 },
+      { transform: 'translateY(-50%) scaleX(0)', transformOrigin: '100% 50%', opacity: 1 },
+    ], { duration: hold + 760, easing: 'cubic-bezier(.65,0,.35,1)' }),
+    animate(words, [
+      { transform: 'translate(-50%, -50%) translateX(-70px)', opacity: 0, letterSpacing: '0.6em' },
+      { transform: 'translate(-50%, -50%) translateX(-50px)', opacity: 0, letterSpacing: '0.45em', offset: 0.12 },
+      { transform: 'translate(-50%, -50%)', opacity: 1, letterSpacing: '0.08em', offset: 0.32 },
+      { transform: 'translate(-50%, -50%) translateX(10px)', opacity: 1, letterSpacing: '0.1em', offset: 0.7 },
+      { transform: 'translate(-50%, -50%) translateX(70px)', opacity: 0, letterSpacing: '0.2em', offset: 0.86 },
+      { transform: 'translate(-50%, -50%) translateX(70px)', opacity: 0, letterSpacing: '0.2em' },
+    ], { duration: hold + 760, easing: 'linear' }),
+    animate(main, [{ backgroundPosition: '140% 0, 0 0' }, { backgroundPosition: '-40% 0, 0 0' }], { duration: 900, delay: 260, easing: 'ease-in-out' }),
+    animate(flare, [
+      { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: mine ? 0.9 : 0.6, offset: 0.3 },
+      { transform: 'translate(-50%, -50%) scale(1.5)', opacity: 0 },
+    ], { duration: hold + 400, delay: 120, easing: 'ease-out' }),
+  ];
+  await Promise.all(jobs);
   el.remove();
 }
 
@@ -391,14 +625,65 @@ export function shockwave(rect, color = '#ffe39a') {
   return animate(el, [{ transform: 'scale(0.1)', opacity: 1 }, { transform: 'scale(1.6)', opacity: 0 }], { duration: 650, easing: 'ease-out' }).then(() => el.remove());
 }
 
-// A stat gem flashes when it goes up.
-export function pulseGem(el) {
+// ---- Stats that react ---------------------------------------------------------------
+// An Attack or Health number that changed: it pops, glows green (up) or red (down), and
+// counts from the old value to the new one. A soft ring of the same colour flares behind it.
+// Uses the separate \`scale\` property so it never fights the gem's own positioning transform.
+export function statChange(el, from, to, { delay = 0 } = {}) {
+  if (!el || from === to || from == null) return Promise.resolve();
+  const up = to > from;
+  const color = up ? '#5dff8a' : '#ff4a4a';
+  const steps = Math.abs(to - from);
+  const total = Math.min(900, 260 + steps * 90) * speed();
+  const startDelay = delay * speed();
+  el.textContent = String(from);
+  // The ring behind the number.
+  const r = el.getBoundingClientRect();
+  if (r.width) {
+    const ring = document.createElement('div');
+    ring.className = `fx-statring ${up ? 'up' : 'down'}`;
+    const c = center(r);
+    const size = Math.max(r.width, r.height) * 1.6;
+    Object.assign(ring.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${size}px`, height: `${size}px` });
+    layer().appendChild(ring);
+    animate(ring, [
+      { transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.95, offset: 0.3 },
+      { transform: 'translate(-50%, -50%) scale(1.5)', opacity: 0 },
+    ], { duration: 700, delay: delay, easing: 'ease-out' }).then(() => ring.remove());
+  }
+  const pop = animate(el, [
+    { scale: '1', filter: 'none' },
+    { scale: '1.5', filter: `brightness(1.5) drop-shadow(0 0 6px ${color}) drop-shadow(0 0 2px ${color})`, offset: 0.25 },
+    { scale: '1.12', filter: `brightness(1.2) drop-shadow(0 0 4px ${color})`, offset: 0.7 },
+    { scale: '1', filter: 'none' },
+  ], { duration: Math.max(560, total / speed() + 260), delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
+  // Count one step at a time (big jumps count faster); a hidden tab just shows the end value.
+  const count = new Promise((res) => {
+    if (document.hidden || reduced()) { el.textContent = String(to); return res(); }
+    const t0 = performance.now() + startDelay;
+    let shown = from;
+    const tick = (now) => {
+      if (!el.isConnected) return res();
+      const k = Math.min(1, Math.max(0, (now - t0) / total));
+      const eased = 1 - (1 - k) ** 2;
+      const v = Math.round(from + (to - from) * eased);
+      if (v !== shown) { shown = v; el.textContent = String(v); }
+      if (k < 1) requestAnimationFrame(tick); else { el.textContent = String(to); res(); }
+    };
+    requestAnimationFrame(tick);
+  });
+  return Promise.all([pop, count]);
+}
+
+// New cracks run outward from the point of impact, with a pale flash along them.
+export function crackSpread(el, delay = 0) {
   if (!el) return Promise.resolve();
   return animate(el, [
-    { transform: 'scale(1)', filter: 'brightness(1)' },
-    { transform: 'scale(1.7)', filter: 'brightness(1.8) drop-shadow(0 0 6px #ffe39a)', offset: 0.35 },
-    { transform: 'scale(1)', filter: 'brightness(1)' },
-  ], { duration: 520, easing: 'ease-out', fill: 'none' });
+    { clipPath: 'circle(0% at 57% 34%)', filter: 'brightness(3) drop-shadow(0 0 2px #fff)' },
+    { clipPath: 'circle(45% at 57% 34%)', filter: 'brightness(2) drop-shadow(0 0 2px #fff)', offset: 0.45 },
+    { clipPath: 'circle(110% at 57% 34%)', filter: 'drop-shadow(0 0 1px #0008)' },
+  ], { duration: 520, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
 }
 
 // ---- Big entrance (expensive minions) ------------------------------------------------
@@ -1073,13 +1358,17 @@ export function killFx(rect, faction, power = 3, fromRect = null) {
 // char and drift up as ash), 'down' (dragged into a portal), 'up' (lifted by a beam),
 // 'melt' (it sags into a puddle).
 export async function shatterCard(clone, rect, fromRect = null, mode = 'away') {
+  const host = ghostHost(rect);
+  try { await shatterInto(host, clone, rect, fromRect, mode); } finally { host.remove(); }
+}
+async function shatterInto(host, clone, rect, fromRect, mode) {
   const c = center(rect);
   const base = { position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: '0', zIndex: '900', pointerEvents: 'none' };
   if (mode === 'melt') {
     const g = clone.cloneNode(true);
     g.classList.add('fx-ghost', 'fx-piece');
     Object.assign(g.style, base, { transformOrigin: '50% 100%' });
-    layer().appendChild(g);
+    host.appendChild(g);
     return animate(g, [
       { transform: 'scale(1, 1)', filter: 'brightness(1)', opacity: 1 },
       { transform: 'scale(1.05, 0.9)', filter: 'brightness(1.6) sepia(1) hue-rotate(50deg) saturate(4)', opacity: 1, offset: 0.25 },
@@ -1096,7 +1385,7 @@ export async function shatterCard(clone, rect, fromRect = null, mode = 'away') {
       const top = (row / n) * 100;
       const left = (col / n) * 100;
       Object.assign(piece.style, base, { clipPath: `inset(${top}% ${100 - left - 100 / n}% ${100 - top - 100 / n}% ${left}%)` });
-      layer().appendChild(piece);
+      host.appendChild(piece);
       const rot = (Math.random() - 0.5) * 120;
       const pcx = rect.width * ((col + 0.5) / n - 0.5);   // piece centre, relative to the card centre
       const pcy = rect.height * ((row + 0.5) / n - 0.5);
