@@ -7,6 +7,24 @@ import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
 
 export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Ghosts: '👻', Ultraterrestrials: '🔺', Sharks: '🦈', Acidic: '🧪', Fusion: '🌀' };
 
+// Small line icons for buttons (they take the button's text colour).
+const ICON_PATHS = {
+  log: '<path d="M7 3h11a2 2 0 0 1 2 2v13a3 3 0 0 1-3 3H7"/><path d="M7 3a3 3 0 0 0-3 3v1h3"/><path d="M7 3v15a3 3 0 0 0 3 3"/><path d="M10 8h7M10 12h7M10 16h4"/>',
+  sound: '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+  muted: '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/>',
+  save: '<path d="M5 3h12l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v6h9V3M7 21v-7h10v7"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="7"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  book: '<path d="M3 5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H3z"/><path d="M21 5a2 2 0 0 0-2-2h-5a2 2 0 0 0-2 2v15a2 2 0 0 1 2-2h7z"/>',
+  players: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6"/>',
+  search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/>',
+  bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+};
+export const icon = (name) => `<svg class="ui-ico" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name] ?? ''}</svg>`;
+
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Per-card nudges for where the wide picture window crops the square art (CSS object-position Y;
@@ -38,7 +56,7 @@ export function cardHTML(card, { uid, playable, selected, back, choice, zoom, co
          data-preview="${card.id}" ${data}>
       ${bigCardHTML(card, { cost, costClass, small: true })}
       ${incomplete.length ? '<span class="pending-tag">pending</span>' : ''}
-      ${cuttable ? `<button class="card-zoom ghost" data-zoom="${card.id}" title="See full size">🔍</button>` : ''}
+      ${cuttable ? `<button class="card-zoom ghost" data-zoom="${card.id}" title="See full size">${icon('search')}</button>` : ''}
       ${isCut ? `<span class="cut-tag">${cutLabel}</span>` : ''}
       ${isDupe ? '<span class="dupe-tag">×2</span>' : ''}
     </div>`;

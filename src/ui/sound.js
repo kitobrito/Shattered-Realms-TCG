@@ -114,7 +114,13 @@ const SOUNDS = {
   click: (ac) => { tone(ac, { freq: 900, dur: 0.05, gain: 0.05, type: 'square' }); },
 };
 
+// The same sound twice within a few frames (a button that plays its own click, plus the
+// click every button makes) plays once.
+const lastPlayed = new Map();
 export function play(name) {
+  const now = performance.now();
+  if (now - (lastPlayed.get(name) ?? -1e9) < 70) return;
+  lastPlayed.set(name, now);
   const ac = audio();
   if (ac && SOUNDS[name]) SOUNDS[name](ac);
 }

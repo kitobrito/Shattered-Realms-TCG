@@ -13,13 +13,13 @@ import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, lega
 import { checkDeck, pairDeckProblem } from '../cards/deck-check.js';
 import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
-import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout } from './board.js';
+import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { canPokeBoard, hideBoard, pokeBoard, showBoard } from './board-layer.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
-import { artOf, backArtOf, bigCardHTML, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, heroArtOf, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
+import { artOf, backArtOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, heroArtOf, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
-import { FACTION_INFO, synergyFor } from '../cards/faction-info.js';
+import { DECK_TYPES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
 import * as sound from './sound.js';
 import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
@@ -335,6 +335,9 @@ function snapshot(s) {
     for (const m of pl.board) nameOfUid.set(m.uid, getCard(m.cardId).name);
     for (const m of pl.board) health.set(m.uid, m.health);
   }
+  // The numbers shown on the gems (a Hero's Health gem shows Health; Armor sits beside it).
+  const shown = new Map();
+  for (const pl of s.players) for (const c of [pl.hero, ...pl.board]) shown.set(c.uid, { atk: effectiveAttack(c), hp: c.health, armor: c.armor ?? 0 });
   // Sharks / Acidic: Marked Prey, Corrosion and Acid-coated, to animate what changed.
   const prey = new Set(), corrosion = new Map(), coated = new Set();
   for (const pl of s.players) for (const m of pl.board) {
@@ -344,7 +347,7 @@ function snapshot(s) {
   }
   const me = s.players[viewer];
   return {
-    health, attack, ctrl, factionOf, nameOfUid, prey, corrosion, coated,
+    health, attack, ctrl, factionOf, nameOfUid, prey, corrosion, coated, shown,
     myHealth: s.players[viewer].hero.health,
     hand: new Set(me.hand.map((c) => c.uid)),
     oppHand: s.players[1 - viewer].hand.length,
@@ -504,7 +507,10 @@ async function act(action, meta = {}) {
   try {
     if (action.type === 'attack') {
       sound.play('attack');
-      lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender));
+      const striker = findCharacter(s, action.attacker);
+      lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {
+        power: striker ? effectiveAttack(striker) : 2, color: fx.factionColor(before.srcFaction), table: app.querySelector('.arena'),
+      });
     } else if (action.type === 'mulligan' && action.replace?.length && action.player === viewer) {
       await animateMulligan(s, action);
     } else if (playedCard && action.type === 'quickPlay') {
@@ -749,7 +755,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       const m = findCharacter(s, Number(el.dataset.char));
       const card = m && getCard(m.cardId);
       if (card && card.cost >= 7) { bigEntrance = true; jobs.push(fx.entrance(el, esc(card.name), card.faction)); }
-      else { fx.burst(el.getBoundingClientRect(), 'summon'); jobs.push(fx.summonIn(el)); }
+      else jobs.push(fx.arrival(el, card?.faction, app.querySelector('.arena')));
     }
     else if (Number(el.dataset.char) !== action.attacker) moving.add(key);
   }
@@ -788,15 +794,23 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       } else { healed = true; fx.burst(r, 'heal'); jobs.push(fx.sparkles(r, 'heal')); }
     }
   }
-  // Attack that went up: the gem flashes and gold sparkles rise.
+  // Stats that changed: the gem pops, glows green or red and counts to its new value.
+  // Attack that went up also throws a few gold sparkles.
   for (const pl of s.players) {
     for (const c of [pl.hero, ...pl.board]) {
-      const prev = before.attack.get(c.uid);
-      if (prev == null || effectiveAttack(c) <= prev) continue;
+      const prev = before.shown.get(c.uid);
       const el = charEl(c.uid);
-      if (!el) continue;
-      jobs.push(fx.pulseGem(el.querySelector('.atk')));
-      jobs.push(fx.sparkles(el.getBoundingClientRect(), 'buff', 7));
+      if (!prev || !el) continue;
+      const atk = effectiveAttack(c);
+      const hitDelay = action.type === 'attack' ? 60 : 120;
+      if (atk !== prev.atk) jobs.push(fx.statChange(el.querySelector('.atk'), prev.atk, atk, { delay: hitDelay }));
+      if (c.health !== prev.hp) jobs.push(fx.statChange(el.querySelector('.hp'), prev.hp, c.health, { delay: hitDelay }));
+      if ((c.armor ?? 0) !== prev.armor && c.armor) jobs.push(fx.statChange(el.querySelector('.armor'), prev.armor, c.armor, { delay: hitDelay }));
+      if (atk > prev.atk) jobs.push(fx.sparkles(el.getBoundingClientRect(), 'buff', 7));
+      // A minion that took enough damage to crack further: the new cracks spread out from the impact.
+      if (c.kind === 'minion' && c.health < prev.hp && crackTier(c) && crackTier(c) !== crackTier({ health: prev.hp, maxHealth: c.maxHealth })) {
+        jobs.push(fx.crackSpread(el.querySelector('.m-cracks'), hitDelay));
+      }
     }
   }
   // Corrosion: acid pours over the minion and its Attack gem melts; Acid-coated: a glob lands on it.
@@ -984,7 +998,9 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   } else if (s.activePlayer !== before.active || s.turn !== before.turn) {
     const mine = s.activePlayer === viewer || game.mode === 'hotseat';
     sound.play(mine ? 'turnStart' : 'click');
-    await fx.banner(mine && game.mode !== 'hotseat' ? 'Your turn' : `${esc(s.players[s.activePlayer].name)}'s turn`, mine ? 'yours' : 'theirs');
+    const ownTurn = mine && game.mode !== 'hotseat';
+    await fx.turnBanner(ownTurn ? 'Your Turn' : `${esc(s.players[s.activePlayer].name)}'s Turn`, mine,
+      ownTurn ? `${s.players[viewer].mana.max} Mana` : '');
   }
 }
 
@@ -1024,7 +1040,7 @@ function deny(el, kind, uid) {
 // Loading screen: a tip while the board, portraits and card art load.
 const TIPS = [
   'Drag a minion between two others to choose exactly where it lands.',
-  'Cards with ⚡ can be played on your opponent\'s turn, right after they act.',
+  'Quick Play spells can be played on your opponent\'s turn, right after they act.',
   'Hover any minion or card to see it full size.',
   'Right-click your hero to send an emote.',
   'Dinosaurs: every 7 turns, Extinction wipes your board, but Eggs hatch when they die.',
@@ -1046,12 +1062,30 @@ const TIPS = [
   'Going second, you choose a Mana Potion or a Health Potion.',
   'Traps stay hidden until their condition happens. Watch the ? tokens.',
 ];
+// Tips about the factions in this match come first; the rest are general.
+function tipsFor(factions) {
+  const mine = TIPS.filter((t) => factions.some((f) => t.startsWith(`${f}:`) || t.includes(` ${f} `)));
+  const general = TIPS.filter((t) => !/^[A-Z][a-z]+:/.test(t));
+  const shuffle = (a) => a.map((t) => [Math.random(), t]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+  return [...shuffle(mine), ...shuffle(general)];
+}
+
+// The loading screen: your two realms' emblems, a tip (it changes if loading runs long),
+// a line saying what is being prepared, and a bronze bar whose glowing edge leads the way.
 async function showLoader() {
   const s = game.state;
   const el = document.createElement('div');
   el.className = 'loader';
-  el.innerHTML = `<div class="loader-box"><img class="loader-logo" src="art/ui/logo.png" alt="Shattered Realms"><div class="loader-sigil"></div>
-    <p class="loader-tip">${esc(TIPS[Math.floor(Math.random() * TIPS.length)])}</p><div class="loader-bar"><i></i></div></div>`;
+  const mineF = s.players[viewer].factions;
+  const tips = tipsFor([...new Set(s.players.flatMap((pl) => pl.factions))]);
+  const crest = (f) => (backArtOf(f) ? `<i class="crest" style="background-image:url('${backArtOf(f)}')"></i>` : '<i class="crest crest-fusion"></i>');
+  el.innerHTML = `<div class="loader-box">
+      <img class="loader-logo" src="art/ui/logo.png" alt="Shattered Realms">
+      <div class="loader-realms">${mineF.map((f) => `<span>${crest(f)}<b>${esc(f)}</b></span>`).join('<i class="loader-plus">+</i>')}</div>
+      <div class="loader-sigil"><i></i><i></i></div>
+      <div class="loader-tipbox"><span class="loader-tiphead">Tip</span><p class="loader-tip">${esc(tips[0] ?? '')}</p></div>
+      <div class="loader-status">Shuffling the decks…</div>
+      <div class="loader-bar"><i></i></div></div>`;
   fx.layer().appendChild(el);
   const urls = new Set();
   for (const pl of s.players) {
@@ -1064,10 +1098,26 @@ async function showLoader() {
   const list = [...urls];
   let done = 0;
   const bar = el.querySelector('.loader-bar i');
-  const load = (u) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = () => { done++; bar.style.width = `${(100 * done) / list.length}%`; res(); }; i.src = u; });
+  const status = el.querySelector('.loader-status');
+  const STEPS = [[0, 'Shuffling the decks…'], [0.35, 'Summoning the Heroes…'], [0.7, 'Painting the battlefield…'], [1, 'Ready!']];
+  const progress = (k) => {
+    bar.style.width = `${Math.round(k * 100)}%`;
+    status.textContent = STEPS.filter(([at]) => k >= at).pop()[1];
+  };
+  const load = (u) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = () => { done++; progress(done / list.length); res(); }; i.src = u; });
+  // A new tip every few seconds if loading takes a while.
+  const tipEl = el.querySelector('.loader-tip');
+  let t = 0;
+  const rotate = setInterval(() => {
+    if (tips.length < 2) return;
+    t = (t + 1) % tips.length;
+    fx.animate(tipEl, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }).then(() => { tipEl.textContent = tips[t]; fx.animate(tipEl, [{ opacity: 0 }, { opacity: 1 }], { duration: 250 }); });
+  }, 3200);
   // At least a moment to read the tip; never more than 4 seconds.
-  await Promise.all([Promise.race([Promise.all(list.map(load)), fx.wait(4000)]), fx.wait(1100)]);
-  bar.style.width = '100%';
+  await Promise.all([Promise.race([Promise.all(list.map(load)), fx.wait(4000)]), fx.wait(1400)]);
+  clearInterval(rotate);
+  progress(1);
+  await fx.wait(220);
   await fx.animate(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
   el.remove();
 }
@@ -1139,7 +1189,7 @@ function accountHTML() {
     return `<div class="acct-card">
       <div class="acct-who"><b>${esc(u.name)}</b> ${rankBadgeHTML(u)} ${rankProgressHTML(u)}${u.place ? ` <span class="sub">#${u.place}</span>` : ''}</div>
       <div class="sub">Ranked ${u.rankedWins}–${u.rankedLosses} · All games ${u.wins}–${u.losses}</div>
-      <div class="acct-links"><button data-act="leaderboard" class="ghost">🏆 Leaderboard</button><button data-act="signOut" class="ghost">Sign out</button><button data-act="deleteAccount" class="ghost danger-link">Delete account</button></div>
+      <div class="acct-links"><button data-act="leaderboard" class="ghost">${icon('trophy')} Leaderboard</button><button data-act="signOut" class="ghost">Sign out</button><button data-act="deleteAccount" class="ghost danger-link">Delete account</button></div>
     </div>
     <div class="lobby-choices modes">
       <div class="lobby-box mode-card"><div class="mode-icon">⚡</div><h3>Quick Match</h3><p class="sub">Play anyone who's online. Your rank doesn't change.</p><button data-act="quickMatch">Find a game</button></div>
@@ -1557,9 +1607,16 @@ function showMenuBackdrop(on) {
     menuBg.id = 'menu-bg';
     // The shattered realms drifting in the void (slow pan and zoom).
     menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg.jpg\')"></div>'
+      + '<div class="mbg-mist m1"></div><div class="mbg-mist m2"></div>'
       + '<div class="mbg-shade"></div><div class="mbg-rays"></div>'
       + Array.from({ length: 28 }, () => `<i class="mbg-ember" style="left:${Math.random() * 100}%;--d:${(6 + Math.random() * 8).toFixed(1)}s;--delay:${(-Math.random() * 14).toFixed(1)}s;--x:${(Math.random() * 120 - 60).toFixed(0)}px;--s:${(0.6 + Math.random() * 1.2).toFixed(2)}"></i>`).join('');
     document.body.prepend(menuBg);
+    // Depth: the backdrop drifts a little against the mouse (the mist more than the islands).
+    document.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse' || !menuBg.classList.contains('show')) return;
+      menuBg.style.setProperty('--px', ((e.clientX / window.innerWidth) - 0.5).toFixed(3));
+      menuBg.style.setProperty('--py', ((e.clientY / window.innerHeight) - 0.5).toFixed(3));
+    });
   }
   menuBg.classList.toggle('show', on);
 }
@@ -1595,6 +1652,14 @@ function factionGuideHTML(factions) {
   }).join('')}</div>`;
 }
 
+// The playable factions grouped by deck type; any not listed land in an "Other" group.
+function deckGroups(playable) {
+  const groups = DECK_TYPES.map((g) => ({ ...g, factions: g.factions.filter((f) => playable.includes(f)) })).filter((g) => g.factions.length);
+  const rest = playable.filter((f) => !DECK_TYPES.some((g) => g.factions.includes(f)));
+  if (rest.length) groups.push({ name: 'Other', blurb: 'Their own way to win.', factions: rest });
+  return groups;
+}
+
 function renderMenu() {
   const saved = loadSaved();
   showMenuBackdrop(true);
@@ -1612,7 +1677,7 @@ function renderMenu() {
     <div class="menu tavern title-screen">
       <header class="ts-title">
         <div class="ts-runes"></div>
-        <h1 class="ts-logo"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"></h1>
+        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
         <p class="ts-tag">Sixteen realms broke apart. Two of them are yours.</p>
         <img class="ui-divider" src="art/ui/divider.png" alt="" draggable="false">
       </header>
@@ -1622,13 +1687,13 @@ function renderMenu() {
         ${difficultySliderHTML()}
         <div class="ts-row">
           ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
-          <button data-act="hotseat">👥 Hot-seat</button>
+          <button data-act="hotseat">${icon('players')} Hot-seat</button>
           ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
         </div>
         <div class="ts-row small">
-          <button data-act="howto" class="ghost ${howToOpened() ? '' : 'new-player'}">📘 How to play${howToOpened() ? '' : ' <small>New? Start here</small>'}</button>
+          <button data-act="howto" class="ghost ${howToOpened() ? '' : 'new-player'}">${icon('book')} How to play${howToOpened() ? '' : ' <small>New? Start here</small>'}</button>
           <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Card collection</button>
-          <button data-act="settings" class="ghost">⚙ Settings</button>
+          <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
         </div>
       </nav>
 
@@ -1640,15 +1705,17 @@ function renderMenu() {
             <button data-act="formatSingle" class="${format === 'single' ? 'on' : 'ghost'}">One faction</button>
           </div>
         </div>
-        <div class="factions">
-          ${playable.map((f) => {
+        <div class="faction-groups">
+          ${deckGroups(playable).map((g) => `<div class="fg">
+            <div class="fg-head"><b>${esc(g.name)}</b><span>${esc(g.blurb)}</span></div>
+            <div class="factions">${g.factions.map((f) => {
             const art = heroArtOf(f);
             const on = picked.includes(f);
-            return `<span class="faction medallion f-${f.toLowerCase()} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}">
+            return `<span class="faction medallion f-${f.toLowerCase()} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}">
               <span class="medal-ring"></span>
               <span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
               <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span>${on ? '<span class="medal-check">✓</span>' : ''}</span>`;
-          }).join('')}
+          }).join('')}</div></div>`).join('')}
         </div>
         ${ready ? `<div class="ts-matchup">
           ${picked.map(heroCard).join('<span class="vs-plus">+</span>')}
@@ -1929,7 +1996,7 @@ const kindOf = (card) => card.fusion ? 'Fusion Hero Spell' : card.heroSpell ? 'H
 
 // Opening / paging animations for the zoom: set just before render(), played right after it.
 let zoomAnim = null;
-const calmMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const calmMotion = () => document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
 function playZoomAnim(a) {
   const card = app.querySelector('.zoom-overlay .big-card');
   if (!card || calmMotion()) return;
@@ -2033,6 +2100,26 @@ function pokeProp(el) {
   sound.play(el.dataset.sound || 'click');
 }
 
+// Each [data-count] number climbs from 0 to its value, a row at a time.
+function countUp(root) {
+  if (calmMotion()) return;
+  for (const el of root.querySelectorAll('[data-count]')) {
+    const to = Number(el.dataset.count);
+    if (!to) continue;
+    const row = Number(el.closest('[style*="--i"]')?.style.getPropertyValue('--i') || 0);
+    const start = performance.now() + 700 + row * 140;
+    const dur = Math.min(900, 300 + to * 25);
+    el.textContent = '0';
+    const tick = (now) => {
+      if (!el.isConnected) return;
+      const k = Math.min(1, Math.max(0, (now - start) / dur));
+      el.textContent = String(Math.round(to * (1 - (1 - k) ** 3)));
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+
 function renderGame() {
   const s = game.state;
   // A win (vs the AI or online) unlocks expansion cards, once per match.
@@ -2043,13 +2130,18 @@ function renderGame() {
   app.innerHTML = boardHTML({
     s, me: viewer, legal: legalForView(), mode: game.mode, handoff, isAI, history, logOpen, mullMarked, shattered: heroesShattered, rope: ropeState(),
     endArmed: endArmed === s.turn, concedeAsk, stats: game.stats, online: game.online, result: game.result,
+    unlocked: game.unlocked, fresh: s.gameOver && heroesShattered && !game.summaryShown,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
   });
   if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0]); else hideBoard();
   layoutPortraitBoard(app);
   layoutHands(app);
+  // The results panel's numbers count up the first time it appears.
+  const summary = app.querySelector('.game-over.fresh');
+  if (summary) { game.summaryShown = true; countUp(summary); }
   if (game.unlocked?.length && !game.unlockSeen) {
-    app.insertAdjacentHTML('beforeend', unlockPopupHTML(game.unlocked));
+    // Fresh results first: the pop-up waits until the panel has played in.
+    app.insertAdjacentHTML('beforeend', unlockPopupHTML(game.unlocked).replace('class="overlay unlock-overlay"', `class="overlay unlock-overlay ${summary ? 'after-results' : ''}"`));
     fitAllText(app.querySelector('.unlock-overlay'));
   }
   markFreshTraps();
@@ -2116,6 +2208,23 @@ function forceEndTurn() {
   if (end) act(end);
 }
 
+// Moving between screens: a dark veil lifts off the new screen as it settles into place
+// (the collection turns in like a page; a match rises out of the dark).
+let shownScreen = null;
+function screenChange(from, to) {
+  if (calmMotion() || !from) return;
+  const veil = document.createElement('div');
+  veil.className = 'screen-veil';
+  document.body.appendChild(veil);
+  fx.animate(veil, [{ opacity: 1 }, { opacity: 0 }], { duration: to === 'game' ? 520 : 380, easing: 'ease-out' }).then(() => veil.remove());
+  const frames = to === 'gallery' || to === 'builder'
+    ? [{ opacity: 0, transform: 'perspective(1600px) rotateY(-10deg) translateX(-30px)', transformOrigin: '0 50%' }, { opacity: 1, transform: 'none', transformOrigin: '0 50%' }]
+    : to === 'game' ? [{ opacity: 0.4, transform: 'scale(1.03)' }, { opacity: 1, transform: 'none' }]
+      : [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }];
+  const root = app.firstElementChild;
+  if (root && !root.classList.contains('arena')) fx.animate(root, frames, { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
+}
+
 function render() {
   document.body.classList.toggle('in-game', screen === 'game');
   if (screen !== 'game') hideBoard();
@@ -2131,6 +2240,7 @@ function render() {
   fitAllText(app);
   syncReactionTimer();
   syncTurnTimer();
+  if (screen !== shownScreen) { screenChange(shownScreen, screen); shownScreen = screen; }
   if (zoomAnim) { const a = zoomAnim; zoomAnim = null; if (zoomId) playZoomAnim(a); }
 }
 
@@ -2396,6 +2506,12 @@ drag.init({
   deny,
   notMyTurn: () => screen === 'game' && !!game && !animating && !handoff && !game.state.gameOver && !game.state.pending && game.state.activePlayer !== viewer,
 });
+
+// Every button makes the same soft click (the game's own buttons, End Turn and the like, have theirs).
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b && !b.disabled && !b.matches('.end-turn, .hero-spell, .play-art, .emote-btn, .qp-option')) sound.play('click');
+}, true);
 
 app.addEventListener('click', (e) => {
   // Clicks inside the zoomed card panel don't close it (only its own buttons act).

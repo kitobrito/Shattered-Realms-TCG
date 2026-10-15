@@ -7,7 +7,7 @@ import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
 import { BOARD_ART, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { isMuted, play as playSound } from './sound.js';
-import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, youText, rankBadgeHTML, rankProgressHTML } from './shared.js';
+import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
 // ---- Pieces ------------------------------------------------------------------
 
@@ -102,6 +102,12 @@ function wardHTML(m) {
   </svg><i></i><i></i><i></i><b class="burst"></b></div>`;
 }
 
+// How cracked a damaged minion looks: t1 / t2 / t3 as it loses up to a third, two thirds, or more of its Health.
+export function crackTier(m) {
+  const lost = m.maxHealth > 0 ? (m.maxHealth - m.health) / m.maxHealth : 0;
+  return lost <= 0 ? '' : lost < 0.34 ? 't1' : lost < 0.67 ? 't2' : 't3';
+}
+
 export function minionHTML(m, s, cls = '') {
   const card = getCard(m.cardId);
   const atk = effectiveAttack(m);
@@ -116,7 +122,7 @@ export function minionHTML(m, s, cls = '') {
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>
-      <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}</div>
+      <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}<i class="m-cracks ${crackTier(m)}"></i></div>
       <i class="sm-shine"></i>
       <div class="m-ring"></div>
       ${burnHTML(m)}
@@ -408,27 +414,49 @@ function onlineResultHTML(ctx) {
   return `<p class="online-result">Ranked${why}: ${rp}${line} ${rankBadgeHTML(you)} ${rankProgressHTML(you)}</p>`;
 }
 
+// The results: a title that stamps in (gold rays behind a Victory, falling ash behind a
+// Defeat), your Hero's medallion, the match in numbers (they count up, row by row), your best
+// play, what the match earned you, and the way back. \`ctx.fresh\`: the first time it is shown
+// (later re-renders show it without replaying the entrance).
 function gameOverHTML(s, me, stats, ctx = {}) {
-  const result = s.winner == null ? 'Draw!' : s.winner === me ? 'Victory!' : 'Defeat';
+  const outcome = s.winner == null ? 'draw' : s.winner === me ? 'win' : 'loss';
+  const result = { win: 'Victory', loss: 'Defeat', draw: 'Draw' }[outcome];
   const mp = s.players[me];
   const op = s.players[1 - me];
   const st = stats ?? {};
-  const row = (label, a, b) => `<tr><th>${label}</th><td>${a ?? 0}</td><td>${b ?? 0}</td></tr>`;
-  const best = st.bestPlay ? `<p class="best-play">Best play: <b>${esc(st.bestPlay.text)}</b></p>` : '';
+  const rounds = Math.ceil(s.turn / 2);
+  let i = 0;
+  const row = (label, a, b) => {
+    const x = a ?? 0, y = b ?? 0;
+    return `<div class="go-row" style="--i:${i++}"><span class="go-n ${x > y ? 'lead' : ''}" data-count="${x}">${x}</span><span class="go-label">${label}</span><span class="go-n ${y > x ? 'lead' : ''}" data-count="${y}">${y}</span></div>`;
+  };
+  const best = st.bestPlay ? `<div class="go-best" style="--i:${i + 1}"><span>Best play</span><b>${esc(st.bestPlay.text)}</b></div>` : '';
   const art = heroArtOf(mp.factions[0]);
-  return `<div class="overlay game-over ${s.winner === me ? 'win' : s.winner == null ? 'draw' : 'loss'}"><div class="panel summary">
-    ${art ? `<img class="summary-hero" src="${art}" alt="">` : ''}
-    <h2>${result}</h2>
-    <p class="sub">${s.winner == null ? '' : esc(youText(`${s.players[s.winner].name} wins`))} · ${Math.ceil(s.turn / 2)} round${Math.ceil(s.turn / 2) === 1 ? '' : 's'} (${s.turn} turn${s.turn === 1 ? '' : 's'})</p>
-    <table class="summary-table"><tr><th></th><td>${esc(mp.name)}</td><td>${esc(op.name)}</td></tr>
-      ${row('Damage to heroes', st.heroDamage?.[me], st.heroDamage?.[1 - me])}
-      ${row('Minions destroyed', st.kills?.[me], st.kills?.[1 - me])}
-      ${row('Cards played', st.cardsPlayed?.[me], st.cardsPlayed?.[1 - me])}
-      ${row('Healing', st.healing?.[me], st.healing?.[1 - me])}
-      ${row('Hero Health left', Math.max(0, mp.hero.health), Math.max(0, op.hero.health))}</table>
-    ${best}
-    ${onlineResultHTML(ctx)}
-    <button data-act="rematch">${ctx.online?.server ? 'Play again' : 'Rematch'}</button> <button data-act="menu" class="ghost">Menu</button></div></div>`;
+  const won = ctx.unlocked?.length ?? 0;
+  const rewards = outcome === 'win' && won
+    ? `<div class="go-reward" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>${won} new card${won === 1 ? '' : 's'} unlocked</b><small>Add them to your deck with Swap cards on the menu.</small></span></div>`
+    : outcome !== 'win' && (ctx.mode === 'ai' || ctx.mode === 'online')
+      ? `<div class="go-reward muted" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>Win a match to unlock new cards</b><small>Every victory unlocks 2.</small></span></div>` : '';
+  const ash = outcome === 'loss' ? `<div class="go-ash">${Array.from({ length: 18 }, (_, k) => `<i style="--x:${(k * 53) % 100}%;--d:${(k * 0.37) % 4}s;--t:${5 + (k % 5)}s;--s:${3 + (k % 4)}px"></i>`).join('')}</div>` : '';
+  return `<div class="overlay game-over ${outcome} ${ctx.fresh ? 'fresh' : ''}">
+    ${outcome === 'win' ? '<div class="go-rays"></div>' : ''}${ash}
+    <div class="panel summary">
+      ${art ? `<div class="go-medal"><img src="${art}" alt=""></div>` : ''}
+      <h2 class="go-title"><span>${result}</span></h2>
+      <p class="go-sub">${s.winner == null ? 'Nobody wins' : esc(youText(`${s.players[s.winner].name} wins`))} · ${rounds} round${rounds === 1 ? '' : 's'}</p>
+      <div class="go-stats">
+        <div class="go-row go-head"><span>${esc(mp.name)}</span><span></span><span>${esc(op.name)}</span></div>
+        ${row('Damage to Heroes', st.heroDamage?.[me], st.heroDamage?.[1 - me])}
+        ${row('Minions destroyed', st.kills?.[me], st.kills?.[1 - me])}
+        ${row('Cards played', st.cardsPlayed?.[me], st.cardsPlayed?.[1 - me])}
+        ${row('Healing', st.healing?.[me], st.healing?.[1 - me])}
+        ${row('Health left', Math.max(0, mp.hero.health), Math.max(0, op.hero.health))}
+      </div>
+      ${best}
+      ${rewards}
+      ${onlineResultHTML(ctx)}
+      <div class="go-actions" style="--i:${i + 3}"><button data-act="rematch">${ctx.online?.server ? 'Play again' : 'Rematch'}</button><button data-act="menu" class="ghost">Main menu</button></div>
+    </div></div>`;
 }
 
 // ---- The whole table ---------------------------------------------------------------
@@ -553,12 +581,12 @@ export function boardHTML(ctx) {
         ${deckHTML(mp, true)}
       </div>
       <div class="corner-buttons">
-        <button class="ghost" data-act="toggleLog" title="Game log">📜</button>
-        <button class="ghost" data-act="mute" title="Sound">${isMuted() ? '🔇' : '🔊'}</button>
-        <button class="ghost" data-act="save" title="Save">💾</button>
-        <button class="ghost" data-act="settings" title="Settings">⚙</button>
-        ${s.gameOver ? '' : '<button class="ghost" data-act="concede" title="Concede">🏳</button>'}
-        <button class="ghost" data-act="menu" title="Menu">☰</button>
+        <button class="ghost" data-act="toggleLog" title="Game log">${icon('log')}</button>
+        <button class="ghost" data-act="mute" title="Sound">${icon(isMuted() ? 'muted' : 'sound')}</button>
+        <button class="ghost" data-act="save" title="Save">${icon('save')}</button>
+        <button class="ghost" data-act="settings" title="Settings">${icon('gear')}</button>
+        ${s.gameOver ? '' : `<button class="ghost" data-act="concede" title="Concede">${icon('flag')}</button>`}
+        <button class="ghost" data-act="menu" title="Menu">${icon('menu')}</button>
       </div>
       ${ctx.concedeAsk ? `<div class="overlay"><div class="panel concede-panel"><h2>Concede this game?</h2>
         <p class="sub">${esc(s.players[actor].name)} loses the match.</p>

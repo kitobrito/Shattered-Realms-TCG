@@ -242,3 +242,13 @@ export const SYNERGY = {
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;
+
+// The faction picker groups the realms by the kind of deck they bring to the table.
+export const DECK_TYPES = [
+  { name: 'Aggro', blurb: 'Hit hard, hit fast, end it early.', factions: ['Demons', 'Sharks'] },
+  { name: 'Swarm', blurb: 'Flood the board with many small minions.', factions: ['Zombies', 'Plants', 'Bees'] },
+  { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs'] },
+  { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials'] },
+  { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts'] },
+  { name: 'Attrition', blurb: 'Protect, outlast and wear them down.', factions: ['Divine', 'Fungus', 'Acidic'] },
+];
