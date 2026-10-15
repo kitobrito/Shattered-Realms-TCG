@@ -1985,6 +1985,8 @@ body.reduced-motion .hero-spell.fusion-spell.ready, body.reduced-motion .fusion-
   display: grid; place-items: center; font-size: 13px; border: 2px solid #000; }
 .hive-badge.queen { border-color: #ffe08a; box-shadow: 0 0 0 2px #000, 0 0 14px #ffe08a; }
 .hive-badge.gone img { filter: grayscale(1) brightness(0.6); }
+.hive-badge.under { border-color: #8f7bd8; box-shadow: 0 0 0 2px #000, 0 0 14px #6d5bd0; }
+.hive-badge.under img { filter: brightness(0.7) saturate(0.8); }
 .arena.has-board .hive-badge { width: calc(var(--hero) * 0.48); height: calc(var(--hero) * 0.48); }
 .arena.portrait .hive-badge { width: calc(var(--hero) * 0.46); height: calc(var(--hero) * 0.46); }
 

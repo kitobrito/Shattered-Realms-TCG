@@ -23,6 +23,10 @@ const QUEEN_ALIVE = { controls: { cardId: 'the_queen' } };
 const FRIENDLY_INSECT = { type: 'minion', side: 'friendly', tribe: 'Insect' };
 const FRIENDLY_INSECTS = { minions: { side: 'friendly', tribe: 'Insect' } };
 const IS_QUEEN = { subject: 'chosen', cardId: 'the_queen' };
+// Hornet expansion: the Hidden Nest, an underground Hive with Stealth the Queen can move into.
+const NEST = { minions: { side: 'friendly', cardId: 'hidden_nest' } };
+const UNDERGROUND = { queenUnderground: true };
+const drones = (count = 1, extra = {}) => ({ op: 'summon', cardId: 'hornet_drone', count, ...extra });
 const workers = (count = 1, extra = {}) => ({ op: 'summon', cardId: 'worker_bee', count, ...extra });
 const soldiers = (count = 1, extra = {}) => ({ op: 'summon', cardId: 'soldier_wasp', count, ...extra });
 
@@ -242,10 +246,106 @@ export const BEE_CARDS = [
     ],
   },
 
+  // ---- Hornet expansion: The Hidden Nest (unlockable) ----
+  // Burrow the Queen digs a Hidden Nest (Stealth, so it can't be attacked or targeted) and moves
+  // the Queen into it, from the board or from inside the Living Hive. While she is there she is
+  // "Underground": she can't be hurt, and many of these cards get stronger. When the Nest dies she
+  // comes back out with +2/+2.
+  {
+    ...HORNET, id: 'tunnel_digger', name: 'Tunnel Digger', art: '⛏️', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Give your Hidden Nest +0/+2.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: NEST, health: 2 }] }],
+  },
+  {
+    ...HORNET, id: 'burrow_scout', name: 'Burrow Scout', art: '🐝', extra: true, cost: 2, attack: 2, health: 1, keywords: ['Stealth'],
+    text: 'Stealth. Arrival: If your Queen is Underground, draw a card.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'draw', count: 1, if: UNDERGROUND }] }],
+  },
+  {
+    ...HORNET, id: 'ashwing_hornet', name: 'Ashwing Hornet', art: '🐝', extra: true, cost: 2, attack: 2, health: 2, keywords: ['Rush'],
+    text: 'Rush. While your Queen is Underground, this has +1 Attack.',
+    aura: { if: UNDERGROUND, target: 'self', attack: 1 },
+  },
+  {
+    ...S, id: 'vanishing_swarm', name: 'Vanishing Swarm', art: '💨', extra: true, cost: 2,
+    text: 'Give your Insects Stealth until your next turn.',
+    effects: [{ op: 'buff', target: FRIENDLY_INSECTS, lingerKeywords: ['Stealth'], untilYourNextTurn: true }],
+  },
+  {
+    ...T, id: 'shifting_tunnels', name: 'Shifting Tunnels', art: '🕳️', extra: true, cost: 2,
+    text: 'When an enemy minion attacks while your Queen is Underground: Return it to its owner\'s hand.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', queenUnderground: true }, effects: [{ op: 'returnToHand', target: 'eventSource' }] },
+  },
+  {
+    ...S, id: 'burrow_the_queen', name: 'Burrow the Queen', art: '👑', extra: true, cost: 3,
+    text: 'Dig a 0/5 Hidden Nest with Stealth and move your Queen into it (from the board or from inside your Hive). If she is already Underground, give the Nest +0/+5 instead.',
+    effects: [{ op: 'buff', target: NEST, health: 5, if: UNDERGROUND, else: [{ op: 'burrowQueen' }] }],
+  },
+  {
+    ...HORNET, id: 'soil_sentry', name: 'Soil Sentry', art: '🛡️', extra: true, cost: 3, attack: 2, health: 4, keywords: ['Taunt'],
+    text: 'Taunt. While your Queen is Underground, this has +1 Attack.',
+    aura: { if: UNDERGROUND, target: 'self', attack: 1 },
+  },
+  {
+    ...HORNET, id: 'hornet_ambusher', name: 'Hornet Ambusher', art: '🗡️', extra: true, cost: 4, attack: 3, health: 1, keywords: ['Stealth', 'Venomous'],
+    text: 'Stealth. Venomous.',
+  },
+  {
+    ...S, id: 'brood_chamber', name: 'Brood Chamber', art: '🪺', extra: true, cost: 2, needsBoardSpace: true,
+    text: 'Summon two 1/1 Hornet Drones with Rush. If your Queen is Underground, they also have Stealth.',
+    effects: [{ ...drones(2, { keywords: ['Stealth'] }), if: UNDERGROUND, else: [drones(2)] }],
+  },
+  {
+    ...HORNET, id: 'royal_tunneler', name: 'Royal Tunneler', art: '⛏️', extra: true, cost: 4, attack: 3, health: 4,
+    text: 'Arrival: Give your Hidden Nest +0/+3 and a random other friendly minion Stealth.',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'buff', target: NEST, health: 3 },
+      { op: 'buff', target: { randomOf: { minions: { side: 'friendly', excludeSelf: true, notTribe: 'Hive' } } }, keywords: ['Stealth'] },
+    ] }],
+  },
+  {
+    ...HORNET, id: 'hornet_assassin', name: 'Hornet Assassin', art: '🗡️', extra: true, cost: 5, attack: 4, health: 2, keywords: ['Stealth'],
+    text: 'Stealth. Whenever this destroys a minion, gain +1/+1.',
+    triggers: [{ on: 'minionDied', filter: { killer: 'self' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...HORNET, id: 'black_brood_mother', name: 'Black Brood Mother', art: '🐝', extra: true, cost: 6, attack: 4, health: 6,
+    text: 'At the end of your turn, if your Queen is Underground, summon a 1/1 Hornet Drone with Rush.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ ...drones(1), if: UNDERGROUND }] }],
+  },
+  {
+    ...S, id: 'collapse_the_tunnels', name: 'Collapse the Tunnels', art: '🪨', extra: true, cost: 5,
+    text: 'Deal 2 damage to all enemy minions. If your Queen is Underground, give your Hidden Nest +0/+3.',
+    effects: [
+      { op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 },
+      { op: 'buff', target: NEST, health: 3, if: UNDERGROUND },
+    ],
+  },
+  {
+    ...HORNET, id: 'nest_warden', name: 'Nest Warden', art: '🛡️', extra: true, cost: 7, attack: 5, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Exit: If your Queen is Underground, give your Hidden Nest +0/+5.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'buff', target: NEST, health: 5, if: UNDERGROUND }] }],
+  },
+  {
+    ...HORNET, id: 'the_hornet_empress', name: 'The Hornet Empress', art: '👑', extra: true, cost: 8, attack: 6, health: 6,
+    text: 'Arrival: If your Queen is Underground, she bursts out of the Nest with +4/+4 and Rush.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'queenResurfaces', attack: 4, health: 4, keywords: ['Rush'], if: UNDERGROUND }] }],
+  },
+
   // ---- Tokens ----
   { ...BEE, id: 'worker_bee', name: 'Worker Bee', art: '🐝', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...WASP, id: 'soldier_wasp', name: 'Soldier Wasp', art: '🐝', token: true, cost: 2, attack: 2, health: 2, text: '' },
   { ...HORNET, id: 'hornet_guard', name: 'Hornet Guard', art: '🐝', token: true, cost: 3, attack: 3, health: 3, keywords: ['Taunt'], text: 'Taunt.' },
+  {
+    faction: 'Bees', type: 'minion', tribes: ['Hive'], id: 'hidden_nest', name: 'Hidden Nest', art: '🪹', token: true,
+    cost: 3, attack: 0, health: 5, cantAttack: true, keywords: ['Stealth'],
+    text: "Stealth. Can't attack. At the end of your turn, summon a 1/1 Hornet Drone with Rush. Exit: Your Queen comes back out with +2/+2.",
+    triggers: [
+      { on: 'endOfTurn', filter: { player: 'friendly' }, effects: [drones(1)] },
+      { on: 'deathrattle', effects: [{ op: 'queenResurfaces', attack: 2, health: 2 }] },
+    ],
+  },
+  { ...HORNET, id: 'hornet_drone', name: 'Hornet Drone', art: '🐝', token: true, cost: 1, attack: 1, health: 1, keywords: ['Rush'], text: 'Rush.' },
   {
     faction: 'Bees', type: 'minion', tribes: ['Hive'], id: 'hive_decoy', name: 'Hive Decoy', art: '🪹', token: true,
     cost: 1, attack: 0, health: 3,

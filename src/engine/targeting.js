@@ -138,6 +138,11 @@ export function matchFilter(state, filter, ctx) {
       if (want === 'enemy' && (val == null || val === ctx.controller)) return false;
       continue;
     }
+    // Bees: the trap's owner has their Queen Underground (Shifting Tunnels).
+    if (key === 'queenUnderground') {
+      if (!!state.players[ctx.controller].queenUnderground !== want) return false;
+      continue;
+    }
     if (key === 'cardType') {
       if (ev.cardType !== want) return false;
       continue;
