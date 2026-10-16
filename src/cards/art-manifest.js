@@ -253,6 +253,7 @@ export const ART = {
   false_nest: 'art/dinosaurs/false_nest.jpg',
   feed_the_flames: 'art/dragons/feed_the_flames.jpg',
   feeding_frenzy: 'art/sharks/feeding_frenzy.jpg',
+  zombie_feeding_frenzy: 'art/zombies/feeding_frenzy.jpg',
   feral_ambush: 'art/radioactive/feral_ambush.jpg',
   feral_ghoul: 'art/radioactive/feral_ghoul.jpg',
   feralized_survivor: 'art/radioactive/feralized_survivor.jpg',
