@@ -117,10 +117,21 @@ const SOUNDS = {
 // The same sound twice within a few frames (a button that plays its own click, plus the
 // click every button makes) plays once.
 const lastPlayed = new Map();
+// Haptics (phones): a light buzz for the moments that should feel physical.
+// Milliseconds, or a [buzz, pause, buzz…] pattern. Off in Settings → Vibration.
+const HAPTICS = {
+  cardPlay: 12, minionLand: 18, trapReveal: 25, quickPlay: 25, attack: 10, hit: 22, bigHit: 40,
+  heroExplode: [70, 40, 140], victory: [30, 50, 30, 50, 90], defeat: [160], turnStart: 15,
+};
+let haptics = true;
+export const canVibrate = () => typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function' && matchMedia('(pointer: coarse)').matches;
+export function setHaptics(on) { haptics = !!on; }
+
 export function play(name) {
   const now = performance.now();
   if (now - (lastPlayed.get(name) ?? -1e9) < 70) return;
   lastPlayed.set(name, now);
+  if (haptics && HAPTICS[name] && canVibrate()) { try { navigator.vibrate(HAPTICS[name]); } catch { /* not allowed here */ } }
   const ac = audio();
   if (ac && SOUNDS[name]) SOUNDS[name](ac);
 }

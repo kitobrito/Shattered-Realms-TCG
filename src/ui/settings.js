@@ -7,7 +7,7 @@ import { setMusicVolume } from './music.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true };
 
 // AI difficulty, easiest first (keys match DIFFICULTIES in ai/smart.js).
 export const DIFFICULTY_LEVELS = [
@@ -66,6 +66,7 @@ export function applySettings(settings = getSettings()) {
   document.body.classList.toggle('reduced-motion', settings.reducedMotion);
   document.body.classList.toggle('colorblind', settings.colorBlind);
   document.body.classList.toggle('classic-cards', settings.classicCards);
+  sound.setHaptics(settings.vibration);
 }
 
 export function openSettings() {
@@ -86,6 +87,7 @@ export function openSettings() {
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>
       <label class="set-row"><span>Colour-blind mode</span><input type="checkbox" data-set="colorBlind" ${st.colorBlind ? 'checked' : ''}><i>Blue / orange instead of green / red</i></label>
       <label class="set-row"><span>Classic card frames</span><input type="checkbox" data-set="classicCards" ${st.classicCards ? 'checked' : ''}><i>The older painted frames instead of the Shard frames</i></label>
+      ${sound.canVibrate() ? `<label class="set-row"><span>Vibration</span><input type="checkbox" data-set="vibration" ${st.vibration ? 'checked' : ''}><i>A light buzz when cards land and blows hit</i></label>` : ''}
       <label class="set-row"><span>Tips for new players</span><input type="checkbox" data-set="tips" ${st.tips ? 'checked' : ''}><i>Short hints the first time things happen</i></label>
       <div class="set-row"><span></span><button class="ghost tips-reset">Show all tips again</button></div>
       <button class="settings-close">Done</button>

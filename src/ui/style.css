@@ -1,3 +1,11 @@
+/* ---- Game fonts, bundled so the app looks right offline (were loaded from Google Fonts) ---- */
+@font-face { font-family: 'Alegreya Sans'; font-style: italic; font-weight: 400; font-display: swap; src: url('../../art/fonts/alegreya-sans-400-italic.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Alegreya Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('../../art/fonts/alegreya-sans-400.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Alegreya Sans'; font-style: normal; font-weight: 500; font-display: swap; src: url('../../art/fonts/alegreya-sans-500.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Alegreya Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('../../art/fonts/alegreya-sans-700.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Cinzel'; font-style: normal; font-weight: 600 900; font-display: swap; src: url('../../art/fonts/cinzel.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+
 :root {
   --bg: #120b10;
   --felt: #1d1218;
@@ -1760,7 +1768,7 @@ body.reduced-motion .arena *, body.reduced-motion #board-layer * { animation-dur
 /* ---- Touch devices (iPhone): no system image drag, no callout, normal scrolling outside a match ---- */
 img { -webkit-user-drag: none; user-drag: none; -webkit-touch-callout: none; }
 .card, .minion, .hero-portrait, .big-card, .medallion { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-tap-highlight-color: transparent; }
-body:not(.in-game) { touch-action: pan-x pan-y; overscroll-behavior-y: auto; }
+body:not(.in-game) { touch-action: pan-x pan-y; overscroll-behavior: none; }
 body:not(.in-game) .card, body:not(.in-game) .big-card { touch-action: pan-x pan-y; }
 body.in-game, html:has(body.in-game) { overscroll-behavior: none; touch-action: none; position: fixed; inset: 0; width: 100%; height: 100%; }
 /* Bigger stat numbers: the digits grow, the gems keep their size (gem sizes are re-expressed in the new em). */
@@ -3901,3 +3909,20 @@ body.reduced-motion .arena .minion.can-attack, body.reduced-motion .arena .minio
 .arena .hero-portrait.weary .portrait-front { animation: hero-weary 2.4s ease-in-out infinite; }
 body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }
 .minion .infect-mark { display: inline-grid; place-items: center; font-size: 1.5em; filter: drop-shadow(0 0 4px #ff2a2a) drop-shadow(0 0 2px #000); }
+
+/* ---- App shell: the game is a fixed screen, not a web page ----
+   The page itself never scrolls, bounces, zooms or pulls to refresh; menus scroll inside #app.
+   No text selection, long-press menus or tap flashes (except where you type or copy a room code). */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+* { -webkit-tap-highlight-color: transparent; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+input, textarea, select, .room-code { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+#app { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+body.in-game #app { overflow: hidden; }
+/* Touch screens: no visible scrollbars, like a game. Mouse: a slim bronze one. */
+@media (pointer: coarse) { #app, #app * { scrollbar-width: none; } #app::-webkit-scrollbar, #app *::-webkit-scrollbar { display: none; } }
+@media (pointer: fine) {
+  #app { scrollbar-width: thin; scrollbar-color: #8a6a3a #0000; }
+  #app::-webkit-scrollbar { width: 10px; } #app::-webkit-scrollbar-track { background: transparent; }
+  #app::-webkit-scrollbar-thumb { background: linear-gradient(#b08a4a, #6a4a22); border-radius: 6px; border: 2px solid #0000; background-clip: padding-box; }
+}
