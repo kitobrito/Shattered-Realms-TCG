@@ -133,7 +133,7 @@ export const ZOMBIE_CARDS = [
     effects: [{ op: 'consumeCorpses', count: 2, effects: [{ op: 'summon', fromDeadZombies: true }] }],
   },
   {
-    ...S, id: 'feeding_frenzy', name: 'Feeding Frenzy', art: '🍽️', cost: 4, requiresCorpses: 1,
+    ...S, id: 'zombie_feeding_frenzy', name: 'Feeding Frenzy', art: '🍽️', cost: 4, requiresCorpses: 1,
     text: 'Consume a friendly Corpse. Give all friendly Zombies +2 Attack this turn.',
     effects: [{ op: 'consumeCorpses', count: 1, effects: [{ op: 'buff', target: FRIENDLY_ZOMBIES, attack: 2, temporary: true }] }],
   },

@@ -43,7 +43,7 @@ export const STANDARD_CUTS = {
   // Keeps: Walkers / Reborn core, the Corpse engine (Corpse Eater, Raise the Dead, Apocalypse), big Exits.
   Zombies: [
     'rage_sprinter', 'zombie_shambler', 'rotting_walker',
-    'zombification', 'feeding_frenzy',
+    'zombification', 'zombie_feeding_frenzy',
     'sudden_hunger', 'zombie_surge', 'corpse_shield',
     'zombie_ambush', 'endless_horde',
   ],
