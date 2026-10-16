@@ -4158,3 +4158,23 @@ body.reduced-motion .minion.burrowed .m-sand { animation: none; }
 .wait-banner button { padding: 3px 10px; font-size: 12px; }
 .wait-banner .wb-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e7b55244; border-top-color: #ffd76a; animation: wb-spin 0.9s linear infinite; }
 @keyframes wb-spin { to { transform: rotate(360deg); } }
+
+/* ---- Online screen: change format, realms and deck before you queue (main.js lobbySetupHTML) ---- */
+.lobby-setup { width: min(940px, 94%); margin: 0 auto 12px; padding: 12px 14px; border-radius: 18px; background: #0a0712c4;
+  border: 1px solid #e7b55244; box-shadow: 0 8px 24px #0009; display: flex; flex-direction: column; gap: 10px; }
+.lobby-setup .ls-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.lobby-setup .lobby-deck { background: transparent; padding: 0; }
+.lobby-setup .format-toggle { margin: 0; }
+.lobby-setup .ls-realms { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 6px; }
+.ls-realm { width: 64px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; user-select: none; }
+.ls-realm .ls-face { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #1a1220;
+  border: 2px solid #6a5530; box-shadow: 0 3px 8px #000a; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+.ls-realm .ls-face img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; filter: saturate(0.75) brightness(0.8); transition: filter 0.15s; }
+.ls-realm small { font-size: 10.5px; line-height: 1.1; color: #c9b896; text-align: center; hyphens: manual; }
+.ls-realm:hover .ls-face { transform: translateY(-2px); border-color: #e7b552; }
+.ls-realm.on .ls-face { border-color: #ffd76a; box-shadow: 0 0 0 2px #000, 0 0 14px var(--fc, #ffd25a); transform: scale(1.08); }
+.ls-realm.on .ls-face img { filter: none; }
+.ls-realm.on small { color: #ffe3a0; font-weight: 700; }
+.lobby-setup .deck-line { margin-top: 0; background: #2a1a10cc; border: 2px solid #6a4a2a; }
+/* The deck line is already a boosted note: its inner note mustn't be boosted again. */
+body:not(.in-game) #app .lobby-setup .deck-line .sub { font-size: 1em; }

@@ -1486,6 +1486,34 @@ function leaderboardHTML(rows) {
     ${rows.map((r) => `<tr class="${r.name === me ? 'me' : ''}"><td>${r.place}</td><td>${esc(r.name)}</td><td>${rankBadgeHTML(r)}</td><td>${rankProgressHTML(r)}</td><td>${r.wins}–${r.losses}</td></tr>`).join('')}</table>`;
 }
 
+// Before you queue or host, the online screen lets you change the format, your realms and your
+// deck (the same choices as the main menu). While you're queued or hosting it just shows them.
+const lobbyEditable = () => !['queued', 'hosting', 'joining'].includes(lobby?.status);
+const pickedReady = () => picked.length === pickNeeded();
+let builderFrom = null;  // 'online' when the deck builder was opened from the online screen
+
+function lobbySetupHTML(heroes, editable) {
+  const summary = `<div class="lobby-deck">${heroes}<div><b>${picked.length ? esc(picked.join(' + ')) : 'Pick your realms'}</b><span class="sub">${format === 'single' ? 'One faction' : 'Two factions'} · your opponent uses the same format</span></div></div>`;
+  if (!editable) return summary;
+  const open = availableFactions();
+  const realms = PLAYABLE_FACTIONS.filter((f) => open.includes(f)).map((f) => {
+    const art = heroArtOf(f);
+    return `<span class="ls-realm f-${f.toLowerCase()} ${picked.includes(f) ? 'on' : ''}" data-faction="${esc(f)}" role="button" tabindex="0" title="${esc(f)}">
+      <span class="ls-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span><small>${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</small></span>`;
+  }).join('');
+  const need = pickNeeded();
+  return `<section class="lobby-setup">
+      <div class="ls-head">${summary}
+        ${pairUnlocked() ? `<div class="format-toggle">
+          <button data-act="formatPair" class="${format === 'pair' ? 'on' : 'ghost'}">Two factions</button>
+          <button data-act="formatSingle" class="${format === 'single' ? 'on' : 'ghost'}">One faction</button>
+        </div>` : ''}
+      </div>
+      <div class="ls-realms">${realms}</div>
+      ${pickedReady() ? deckLineHTML() : `<p class="deck-line sub">Pick ${need === 1 ? 'a faction' : `${need} factions`} to play online.</p>`}
+    </section>`;
+}
+
 function renderLobby() {
   const st = lobby ?? { status: 'choose' };
   if (st.status !== 'queued') stopQueueTicker();
@@ -1523,7 +1551,7 @@ function renderLobby() {
         <div class="tavern-sign"><h1>Play Online</h1></div>
         <p class="ts-tag">Test your realms against the world.</p>
       </header>
-      <div class="lobby-deck">${heroes}<div><b>${esc(picked.join(' + '))}</b><span class="sub">${format === 'single' ? 'One faction' : 'Two factions'} · your opponent uses the same format</span></div></div>
+      ${lobbySetupHTML(heroes, lobbyEditable())}
       ${st.msg ? `<p class="lobby-error">${esc(st.msg)}</p>` : ''}
       <section class="ts-panel lobby-panel">${body}</section>
       <nav class="ts-actions"><div class="ts-row small"><button data-act="menu" class="ghost">← Main menu</button></div></nav>
@@ -1571,6 +1599,7 @@ function netHandlers(role) {
 }
 
 async function hostOnline() {
+  if (!pickedReady()) return flash(`Pick ${pickNeeded()} factions first.`);
   lobby = { status: 'hosting' };
   render();
   netHandlers('host');
@@ -1580,6 +1609,7 @@ async function hostOnline() {
 async function joinOnline() {
   const code = net.cleanCode(app.querySelector('#room-input')?.value);
   if (code.length !== net.CODE_LENGTH) { flash(`Codes are ${net.CODE_LENGTH} characters.`); return; }
+  if (!pickedReady()) { flash(`Pick ${pickNeeded()} factions first.`); return; }
   lobby = { status: 'joining', code };
   render();
   netHandlers('guest');
@@ -1698,6 +1728,7 @@ function submitAccount() {
 
 function queueMatch(mode) {
   if (!srv.user) return flash('Sign in first.');
+  if (!pickedReady()) return flash(`Pick ${pickNeeded()} factions first.`);
   const friend = mode === 'private' ? app.querySelector('#friend-input')?.value.trim() : undefined;
   if (mode === 'private' && !friend) return flash("Type your friend's name.");
   link = srv;
@@ -2886,7 +2917,7 @@ app.addEventListener('click', (e) => {
   }
   if (e.target.closest('[data-sealed]') && screen === 'menu') return flash('This realm opens as you play: two more after every match.');
   const chip = e.target.closest('[data-faction]');
-  if (chip && screen === 'menu') {
+  if (chip && (screen === 'menu' || (screen === 'online' && lobbyEditable()))) {
     const f = chip.dataset.faction;
     picked = picked.includes(f) ? picked.filter((x) => x !== f) : [...picked, f].slice(-pickNeeded());
     return render();
@@ -2932,7 +2963,7 @@ function onButton(name) {
     case 'milestoneOk': { const m = milestone; milestone = null; sound.play('click'); if (m?.kind === 'fusion') setFormat('pair'); return render(); }
     case 'journeySkip': unlockEverything(); sound.play('click'); flash('Everything is unlocked: all realms, two-faction decks, traps and Quick Plays.'); return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
-    case 'editCuts': builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
+    case 'editCuts': builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
     case 'formatPair': setFormat('pair'); return render();
     case 'formatSingle': setFormat('single'); return render();
     case 'resetCuts': storeDeck(picked, null); storeCuts(picked, null); flash('Using the recommended deck.'); return render();
@@ -2955,7 +2986,8 @@ function onButton(name) {
       storeDeck(picked, same ? null : deck);
       if (same) storeCuts(picked, null);
       flash(same ? 'Saved: recommended deck.' : 'Deck saved.');
-      screen = 'menu';
+      screen = builderFrom === 'online' ? 'online' : 'menu';
+      builderFrom = null;
       return render();
     }
     case 'zoomPrev': case 'zoomNext': {
@@ -2967,6 +2999,8 @@ function onButton(name) {
       clearTimeout(aiTimer); drag.cancel(); hidePreview();
       // From a bot game played while queued: back to the queue (still searching).
       if (screen === 'game' && waitingInQueue()) { screen = 'online'; return render(); }
+      // The deck builder opened from the online screen goes back there.
+      if (screen === 'builder' && builderFrom === 'online') { builderFrom = null; screen = 'online'; return render(); }
       if (game?.mode === 'online' || screen === 'online') leaveOnline();
       screen = 'menu';
       return render();
