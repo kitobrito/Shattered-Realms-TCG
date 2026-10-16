@@ -714,6 +714,10 @@ const STEPS = {
         killer.destroyed = true;
         log(state, `${nameOf(state, killer)} is poisoned.`);
       }
+      // Plants (Carnivorous Garden): Devour — the enemy minion that destroyed it gains +1/+1.
+      if (killer?.kind === 'minion' && killer.controller !== m.controller && hasKeyword(killer, 'Devour') && killer.health > 0 && !killer.destroyed) {
+        steps.push({ kind: 'effect', effect: { op: 'devour' }, ctx: { self: killer.uid, controller: killer.controller, event } });
+      }
       // Zombies: a friendly Zombie that dies leaves a Corpse.
       if (m.tribes.includes('Zombie')) {
         const zp = state.players[m.controller];

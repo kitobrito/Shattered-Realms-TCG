@@ -994,7 +994,7 @@ export const EFFECT_OPS = {
       pl.queenUnderground = { fromHive: true };
       log(state, '👑 The Queen is carried out of the Hive and Underground.');
     }
-    const nest = summonMinion(state, ctx.controller, 'hidden_nest');
+    const nest = summonMinion(state, ctx.controller, 'underground_nest');
     if (!nest) {
       // No room for the Nest: she stays where she was.
       if (queen) { pl.board.push(queen); }
@@ -1023,6 +1023,31 @@ export const EFFECT_OPS = {
     ctx.summoned = m.uid;
     log(state, `👑 The Queen bursts out of the Hidden Nest (+${e.attack ?? 0}/+${e.health ?? 0})!`);
     enterBattlefield(state, m);
+  },
+
+  // ---- Plants: Carnivorous Garden ----
+  // Devour: the minion that just destroyed an enemy gains +1/+1.
+  devour(state, e, ctx) {
+    const c = findCharacter(state, ctx.self);
+    if (!c || c.kind !== 'minion' || c.health <= 0 || c.destroyed) return;
+    applyBuff(state, c, { attack: 1, health: 1 });
+    log(state, `🌿 ${nameOf(state, c)} devours its prey (+1/+1).`);
+    emit(state, { type: 'devoured', source: c.uid, player: c.controller });
+  },
+
+  // Titan Arum: destroy the enemy minion with the highest Attack and gain its Attack and Health.
+  devourStrongest(state, e, ctx) {
+    const me = findCharacter(state, ctx.self);
+    const foes = state.players[opponentOf(ctx.controller)].board.filter((m) => m.health > 0 && !m.destroyed);
+    if (!foes.length) return;
+    const top = Math.max(...foes.map((m) => effectiveAttack(m)));
+    const prey = pickRandom(state, foes.filter((m) => effectiveAttack(m) === top));
+    const atk = effectiveAttack(prey), hp = Math.max(0, prey.health);
+    prey.destroyed = true;
+    prey.lastDamagedBy = ctx.self;
+    prey.lastDamagedByController = ctx.controller;
+    log(state, `🌺 ${nameOf(state, me ?? prey)} devours ${nameOf(state, prey)}!`);
+    if (me && me.health > 0) applyBuff(state, me, { attack: atk, health: hp });
   },
 
   // Royal Chamber: the Queen has +1 Health (now if she's in play, otherwise when she emerges).

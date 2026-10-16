@@ -24,7 +24,7 @@ const FRIENDLY_INSECT = { type: 'minion', side: 'friendly', tribe: 'Insect' };
 const FRIENDLY_INSECTS = { minions: { side: 'friendly', tribe: 'Insect' } };
 const IS_QUEEN = { subject: 'chosen', cardId: 'the_queen' };
 // Hornet expansion: the Hidden Nest, an underground Hive with Stealth the Queen can move into.
-const NEST = { minions: { side: 'friendly', cardId: 'hidden_nest' } };
+const NEST = { minions: { side: 'friendly', cardId: 'underground_nest' } };
 const UNDERGROUND = { queenUnderground: true };
 const drones = (count = 1, extra = {}) => ({ op: 'summon', cardId: 'hornet_drone', count, ...extra });
 const workers = (count = 1, extra = {}) => ({ op: 'summon', cardId: 'worker_bee', count, ...extra });
@@ -337,7 +337,7 @@ export const BEE_CARDS = [
   { ...WASP, id: 'soldier_wasp', name: 'Soldier Wasp', art: '🐝', token: true, cost: 2, attack: 2, health: 2, text: '' },
   { ...HORNET, id: 'hornet_guard', name: 'Hornet Guard', art: '🐝', token: true, cost: 3, attack: 3, health: 3, keywords: ['Taunt'], text: 'Taunt.' },
   {
-    faction: 'Bees', type: 'minion', tribes: ['Hive'], id: 'hidden_nest', name: 'Hidden Nest', art: '🪹', token: true,
+    faction: 'Bees', type: 'minion', tribes: ['Hive'], id: 'underground_nest', name: 'Hidden Nest', art: '🪹', token: true,
     cost: 3, attack: 0, health: 5, cantAttack: true, keywords: ['Stealth'],
     text: "Stealth. Can't attack. At the end of your turn, summon a 1/1 Hornet Drone with Rush. Exit: Your Queen comes back out with +2/+2.",
     triggers: [

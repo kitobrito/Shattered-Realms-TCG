@@ -69,7 +69,7 @@ function test(name, fn, ...args) {
 const atkOf = (m) => effectiveAttack(m);
 const foe = (atk = 3, hp = 4, p = 1) => { const m = put(p, 'vampire_gargoyle'); m.keywords = []; m.attack = atk; m.health = hp; m.maxHealth = hp; return m; };
 const hive = () => find(0, 'the_hive');
-const nest = () => find(0, 'hidden_nest');
+const nest = () => find(0, 'underground_nest');
 const queen = () => find(0, 'the_queen');
 const under = () => !!pl(0).queenUnderground;
 const refill = () => { for (const p of s.players) p.mana.current = 10; };
@@ -139,7 +139,7 @@ test('The Nest summons a 1/1 Rush Hornet Drone at the end of your turn', () => {
 test('Burrow the Queen while she is already Underground gives the Nest +0/+5 instead', () => {
   burrow();
   burrow();
-  if (count(0, 'hidden_nest') !== 1) return 'a second nest';
+  if (count(0, 'underground_nest') !== 1) return 'a second nest';
   if (nest().health !== 10) return `nest health ${nest().health}`;
 });
 
@@ -303,7 +303,7 @@ test('A Queen who came back out still costs 10 Health when she dies', () => {
 
 test('Every new card and token has art and is an unlockable extra', () => {
   const ids = ['tunnel_digger', 'burrow_scout', 'ashwing_hornet', 'vanishing_swarm', 'shifting_tunnels', 'burrow_the_queen', 'soil_sentry', 'hornet_ambusher', 'brood_chamber', 'royal_tunneler', 'hornet_assassin', 'black_brood_mother', 'collapse_the_tunnels', 'nest_warden', 'the_hornet_empress'];
-  const missing = [...ids, 'hidden_nest', 'hornet_drone'].filter((id) => !ART[id]);
+  const missing = [...ids, 'underground_nest', 'hornet_drone'].filter((id) => !ART[id]);
   if (missing.length) return `no art: ${missing}`;
   const notExtra = ids.filter((id) => !getCard(id).extra);
   if (notExtra.length) return `not extra: ${notExtra}`;
