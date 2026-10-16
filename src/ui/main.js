@@ -18,7 +18,7 @@ import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLay
 import { canPokeBoard, hideBoard, pokeBoard, showBoard } from './board-layer.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
-import { artOf, backArtOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, heroArtOf, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
+import { artOf, backArtOf, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
 import * as sound from './sound.js';
@@ -27,7 +27,7 @@ import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
 import { awardUnlocks, isLocked, lockedCount, unlockPopupHTML } from './unlocks.js';
-import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
+import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
 const SAVE_VERSION = 2;
@@ -216,21 +216,168 @@ function enterGame(isNew = false) {
   if (!isNew) { render(); scheduleAI(); return; }
   animating = true; // nothing moves until the intro is over
   render();
-  showLoader().then(playIntro).finally(() => { animating = false; render(); scheduleAI(); });
+  showLoader().then(fuseHeroes).then(playIntro).finally(() => { animating = false; render(); scheduleAI(); });
 }
 
 // Old saves predate random seats: the human was always seat 0.
 const humanSeat = () => game?.human ?? 0;
 
+// ---- Hero fusion: a two-faction deck's heroes collide and fuse into its pair's hero -------
+// Plays as a match starts (before the versus screen and the mulligan) when your pair has a
+// fused portrait: the two heroes fly in, charge up with arcing lightning and streams of
+// sparks, smash together in a white-hot flash and shockwaves, and the fused hero rises out
+// of the light. A tap skips it. Returns the finished scene (still on screen) for the versus
+// screen to cover, so the board never flashes between the two.
+// `behind`: the match loader, still up; it goes once this scene covers it (or is handed on).
+async function fuseHeroes(behind = null) {
+  const pl = game.state.players[humanSeat()];
+  const fused = playerHeroArt(pl.factions);
+  const [fa, fb] = pl.factions;
+  if (pl.factions.length !== 2 || !fusionHeroPath(pl.factions) || !heroArtOf(fa) || !heroArtOf(fb)) return behind;
+  const ca = fx.factionColor(fa), cb = fx.factionColor(fb);
+  const first = revealHero(pl.factions); // the menu shows "?" until now
+  const el = document.createElement('div');
+  el.className = `hero-fuse ${first ? 'first' : ''}`;
+  el.style.setProperty('--ca', ca);
+  el.style.setProperty('--cb', cb);
+  const hero = (f, cls) => `<div class="hf-hero ${cls}"><span class="hf-face"><img src="${heroArtOf(f)}" alt=""></span><b>${esc(f)}</b></div>`;
+  el.innerHTML = `<div class="hf-veil"></div><div class="hf-rays"></div><div class="hf-core"></div>
+    <svg class="hf-arcs" aria-hidden="true"><polyline class="a"/><polyline class="b"/><polyline class="c"/></svg>
+    ${hero(fa, 'a')}${hero(fb, 'b')}
+    <div class="hf-result"><i class="hf-ring"></i><i class="hf-ring two"></i><span class="hf-face">${livingPortraitHTML(fused)}</span></div>
+    <div class="hf-title"><small>${esc(fa)} <i>✦</i> ${esc(fb)}</small><span>${first ? 'A new hero awakens' : 'Your hero awakens'}</span><em>Two realms. One hero.</em></div>
+    <div class="hf-white"></div><p class="hf-skip">Tap to skip</p>`;
+  fx.layer().appendChild(el);
+  behind?.remove();
+  const q = (sel) => el.querySelector(sel);
+  const A = q('.hf-hero.a'), B = q('.hf-hero.b');
+  let skipped = false, skip;
+  const skipP = new Promise((r) => { skip = r; });
+  el.addEventListener('pointerdown', () => { skipped = true; skip(); });
+  const SKIP = {};
+  const step = async (p) => { await Promise.race([p, skipP]); if (skipped) throw SKIP; };
+  const timers = [];
+  const every = (ms, fn) => { const t = setInterval(fn, ms); timers.push(t); return t; };
+  const mid = (node) => { const r = node.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, r }; };
+  // Jagged lightning between the two heroes, redrawn every frame or two.
+  const arcs = [...el.querySelectorAll('.hf-arcs polyline')];
+  const drawArcs = (on = true) => {
+    const a = mid(A.querySelector('.hf-face')), b = mid(B.querySelector('.hf-face'));
+    for (const [i, line] of arcs.entries()) {
+      if (!on) { line.setAttribute('points', ''); continue; }
+      const pts = [], n = 9, jag = Math.min(60, Math.abs(b.x - a.x) * 0.12);
+      for (let k = 0; k <= n; k++) {
+        const t = k / n, edge = k === 0 || k === n;
+        pts.push(`${a.x + (b.x - a.x) * t + (edge ? 0 : (Math.random() - 0.5) * jag * 0.5)},${a.y + (b.y - a.y) * t + (edge ? 0 : (Math.random() - 0.5) * jag * (i + 1) * 0.7)}`);
+      }
+      line.setAttribute('points', pts.join(' '));
+    }
+  };
+  // Sparks streaming off each hero into the core.
+  const stream = (from, color) => {
+    const a = mid(from.querySelector('.hf-face')), c = mid(q('.hf-core'));
+    const sp = document.createElement('i');
+    sp.className = 'hf-spark';
+    sp.style.background = color;
+    sp.style.boxShadow = `0 0 10px 3px ${color}`;
+    const ang = Math.random() * Math.PI * 2, rad = a.r.width * 0.45;
+    const sx = a.x + Math.cos(ang) * rad, sy = a.y + Math.sin(ang) * rad;
+    Object.assign(sp.style, { left: `${sx}px`, top: `${sy}px` });
+    el.appendChild(sp);
+    const bend = (Math.random() - 0.5) * 160;
+    fx.animate(sp, [
+      { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 0 },
+      { transform: `translate(calc(-50% + ${(c.x - sx) * 0.5}px), calc(-50% + ${(c.y - sy) * 0.5 + bend}px)) scale(1)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(calc(-50% + ${c.x - sx}px), calc(-50% + ${c.y - sy}px)) scale(0.3)`, opacity: 0.2 },
+    ], { duration: 520 + Math.random() * 260, easing: 'cubic-bezier(.5,0,.9,.6)' }).then(() => sp.remove());
+  };
+  const clamp = (n) => Math.max(1, Math.min(4, n));
+  try {
+    // 1. Darkness falls; the two heroes fly in from the edges.
+    sound.play('whoosh');
+    await step(Promise.all([
+        fx.animate(A, [{ transform: 'translate(calc(-50% - 70vw), -50%) rotate(-20deg)', opacity: 0 }, { transform: 'translate(calc(-50% - var(--gap)), -50%)', opacity: 1 }], { duration: 750, easing: 'cubic-bezier(.15,.9,.3,1.1)' }),
+      fx.animate(B, [{ transform: 'translate(calc(-50% + 70vw), -50%) rotate(20deg)', opacity: 0 }, { transform: 'translate(calc(-50% + var(--gap)), -50%)', opacity: 1 }], { duration: 750, easing: 'cubic-bezier(.15,.9,.3,1.1)' }),
+    ]));
+    fx.screenShake(el, 6);
+    sound.play('minionLand');
+    await step(fx.wait(250));
+    // 2. They charge: lightning arcs between them, sparks pour into a swelling core, they creep together, shaking.
+    el.classList.add('charging');
+    sound.play('beam');
+    every(55, () => drawArcs());
+    every(45, () => { stream(A, ca); stream(B, cb); });
+    const CHARGE = 1700;
+    const shake = (side) => Array.from({ length: 13 }, (_, k) => {
+      const t = k / 12, j = 2 + t * 9;
+      const dx = `calc(-50% ${side} var(--gap) * ${1 - t * 0.45} + ${((k % 2) * 2 - 1) * j}px)`;
+      return { transform: `translate(${dx}, calc(-50% + ${((k % 3) - 1) * j}px)) scale(${1 + t * 0.06})` };
+    });
+    fx.animate(q('.hf-core'), [{ transform: 'translate(-50%, -50%) scale(0.1)', opacity: 0 }, { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }], { duration: CHARGE, easing: 'ease-in' });
+    fx.animate(q('.hf-rays'), [{ opacity: 0, transform: 'translate(-50%, -50%) scale(0.6) rotate(0deg)' }, { opacity: 0.9, transform: 'translate(-50%, -50%) scale(1) rotate(60deg)' }], { duration: CHARGE, easing: 'ease-in' });
+    setTimeout(() => !skipped && sound.play('rumble'), 500 * fx.speedFactor());
+    await step(Promise.all([
+      fx.animate(A, shake('-'), { duration: CHARGE, easing: 'linear' }),
+      fx.animate(B, shake('+'), { duration: CHARGE, easing: 'linear' }),
+    ]));
+    // 3. Collision.
+    sound.play('whoosh');
+    for (const name of el.querySelectorAll('.hf-hero b')) fx.animate(name, [{ opacity: 1 }, { opacity: 0 }], { duration: 150 });
+    await step(Promise.all([
+      fx.animate(A, [{ transform: 'translate(calc(-50% - var(--gap) * 0.55), -50%) scale(1.06)', filter: 'brightness(1)' }, { transform: 'translate(-50%, -50%) scale(0.7)', filter: 'brightness(4) saturate(0)' }], { duration: 260, easing: 'cubic-bezier(.7,0,1,.6)' }),
+      fx.animate(B, [{ transform: 'translate(calc(-50% + var(--gap) * 0.55), -50%) scale(1.06)', filter: 'brightness(1)' }, { transform: 'translate(-50%, -50%) scale(0.7)', filter: 'brightness(4) saturate(0)' }], { duration: 260, easing: 'cubic-bezier(.7,0,1,.6)' }),
+    ]));
+    timers.forEach(clearInterval);
+    drawArcs(false);
+    el.classList.remove('charging');
+    el.classList.add('impact');
+    A.style.opacity = B.style.opacity = '0';
+    sound.play('bigHit');
+    sound.play('versus');
+    fx.animate(q('.hf-white'), [{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-out' });
+    fx.screenShake(el, 18);
+    const core = q('.hf-core').getBoundingClientRect();
+    const ring = new DOMRect(core.left - core.width, core.top - core.height, core.width * 3, core.height * 3);
+    fx.shockwave(ring, ca);
+    setTimeout(() => fx.shockwave(ring, cb), 140 * fx.speedFactor());
+    setTimeout(() => fx.shockwave(ring, '#fff6d8'), 280 * fx.speedFactor());
+    fx.particles(core, fa, clamp(8));
+    fx.particles(core, fb, clamp(8));
+    fx.animate(q('.hf-core'), [{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(2.6)', opacity: 0 }], { duration: 700, easing: 'ease-out' });
+    // 4. The fused hero rises out of the light.
+    await step(Promise.all([
+      fx.animate(q('.hf-result'), [
+        { transform: 'translate(-50%, -50%) scale(1.7)', opacity: 0, filter: 'brightness(5) blur(12px)' },
+        { transform: 'translate(-50%, -50%) scale(0.94)', opacity: 1, filter: 'brightness(1.6) blur(0)', offset: 0.6 },
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, filter: 'brightness(1) blur(0)' },
+      ], { duration: 1000, easing: 'cubic-bezier(.2,.8,.3,1)' }),
+      fx.animate(q('.hf-rays'), [{ opacity: 0.9, transform: 'translate(-50%, -50%) scale(1) rotate(60deg)' }, { opacity: 0.75, transform: 'translate(-50%, -50%) scale(1.5) rotate(110deg)' }], { duration: 1000, easing: 'ease-out' }),
+    ]));
+    el.classList.add('revealed');
+    q('.hf-rays').animate([{ transform: 'translate(-50%, -50%) scale(1.5) rotate(110deg)', opacity: 0.75 }, { transform: 'translate(-50%, -50%) scale(1.5) rotate(470deg)', opacity: 0.75 }], { duration: 16000, iterations: Infinity });
+    sound.play('spell');
+    sound.play('chime');
+    await step(fx.animate(q('.hf-title'), [{ opacity: 0, transform: 'translate(-50%, 16px) scale(0.9)', letterSpacing: '0.4em' }, { opacity: 1, transform: 'translate(-50%, 0) scale(1)' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.3,1)' }));
+    await step(fx.wait(1700));
+  } catch (err) {
+    el.remove();
+    if (err !== SKIP) throw err;
+    return null;
+  } finally {
+    timers.forEach(clearInterval);
+  }
+  return el;
+}
+
 // ---- Intro: versus screen, then the coin flip ---------------------------------------
 
-async function playIntro() {
+async function playIntro(behind = null) {
   const s = game.state;
   const hs = humanSeat();
   const side = (pl, cls) => {
-    const art = heroArtOf(pl.factions[0]);
+    const art = playerHeroArt(pl.factions);
     return `<div class="intro-side ${cls}">
-      <div class="intro-portrait">${art ? `<img src="${art}" alt="">` : `<span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span>`}</div>
+      <div class="intro-portrait">${art ? playerPortraitHTML(pl.factions) : `<span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span>`}</div>
       <b>${esc(pl.name)}</b><small>${pl.factions.map(esc).join(' · ')}</small></div>`;
   };
   const text = game.mode !== 'hotseat'
@@ -243,6 +390,8 @@ async function playIntro() {
   fx.layer().appendChild(el);
   const q = (sel) => el.querySelector(sel);
   try {
+    // Coming from the hero fusion: fade in over it, then clear it away.
+    if (behind) fx.animate(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 350 }).then(() => behind.remove());
     await Promise.all([
       fx.animate(q('.intro-side.me'), [{ transform: 'translateX(-120%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 650, easing: 'cubic-bezier(.2,.9,.3,1)' }),
       fx.animate(q('.intro-side.opp'), [{ transform: 'translateX(120%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 650, easing: 'cubic-bezier(.2,.9,.3,1)' }),
@@ -266,6 +415,7 @@ async function playIntro() {
     await fx.animate(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 });
   } finally {
     el.remove();
+    behind?.remove();
   }
 }
 
@@ -929,7 +1079,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   // Cards drawn from the deck are swiped off the top, shown big for a moment, then put in
   // the hand (fx.drawShow). Cards made by effects (or a big batch) just fly in from the pile.
   const pile = app.querySelector('.deck-pile.me');
-  const back = backArtOf(s.players[viewer].factions[0]);
+  const back = backsOf(s.players[viewer].factions);
   const fresh = pile ? [...app.querySelectorAll('.my-hand [data-hand]')].filter((el) => !before.hand.has(Number(el.dataset.hand))) : [];
   const fromDeck = Math.min(fresh.length, Math.max(0, before.myDeck - s.players[viewer].deck.length));
   const showBig = fromDeck > 0 && fromDeck <= 3 && s.pending?.type !== 'mulligan';
@@ -1151,7 +1301,7 @@ async function showLoader() {
   fx.layer().appendChild(el);
   const urls = new Set();
   for (const pl of s.players) {
-    const hero = HERO_ART[pl.factions[0]];
+    const hero = playerHeroPath(pl.factions);
     if (hero) urls.add(hero);
     for (const c of [...pl.deck, ...pl.hand]) if (ART[c.cardId]) urls.add(ART[c.cardId]);
   }
@@ -1182,8 +1332,8 @@ async function showLoader() {
   clearInterval(rotate);
   progress(1);
   await fx.wait(220);
-  await fx.animate(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
-  el.remove();
+  // Left up for the next scene (hero fusion or versus screen) to cover, so the board never flashes.
+  return el;
 }
 
 // Concede: the conceding player's hero explodes and the match ends.
@@ -1725,6 +1875,14 @@ function renderMenu() {
   const ready = picked.length === pickNeeded();
   const fusion = format !== 'single' && ready ? fusionFor(picked) : null;
   galleryOrder = fusion ? [fusion.id] : []; // the full-size view holds just this card
+  // The pair's fused hero; a mystery until you've played a match with this pair.
+  const fusedHeroHTML = (pair) => {
+    if (pair.length !== 2 || !fusionHeroPath(pair)) return '';
+    if (!heroRevealed(pair)) {
+      return `<span class="vs-plus">=</span><div class="vs-hero fused mystery" title="Play a match with this pair to meet your hero"><i class="vs-mystery">?</i><span>Your hero</span><small>Play to reveal</small></div>`;
+    }
+    return `<span class="vs-plus">=</span><div class="vs-hero fused">${livingPortraitHTML(artSrc(fusionHeroPath(pair)))}<span>Your hero</span></div>`;
+  };
   const heroCard = (f) => {
     const art = heroArtOf(f);
     return `<div class="vs-hero f-${f.toLowerCase()}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}<span>${esc(f)}</span></div>`;
@@ -1780,7 +1938,7 @@ function renderMenu() {
           }).join('')}</div></div>`).join('')}
         </div>
         ${ready ? `<div class="ts-matchup">
-          ${picked.map(heroCard).join('<span class="vs-plus">+</span>')}
+          ${picked.map(heroCard).join('<span class="vs-plus">+</span>')}${fusedHeroHTML(picked)}
           ${fusion ? `<div class="vs-fusion">🌀 Fusion: <b>${esc(fusion.name)}</b></div>
           <div class="vs-fusion-card" title="Click to see it full size">${cardHTML(fusion, { zoom: true })}</div>` : ''}
         </div>` : ''}

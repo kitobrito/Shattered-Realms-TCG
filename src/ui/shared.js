@@ -1,7 +1,7 @@
 // Rendering helpers shared by every screen: card markup, the big card,
 // keyword glossary, art lookup and text fitting.
 
-import { ART, HERO_ART } from '../cards/art-manifest.js';
+import { ART, FUSION_HERO_ART, HERO_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
 import { artSrc } from './art-packs.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
@@ -37,11 +37,37 @@ export const artOf = (card) => { const path = ART[card.id] ?? (card.artFrom ? AR
 
 // Hero portrait for a faction (designer-provided art), if there is one yet.
 export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[faction]);
+// Art path of the fused hero for a two-faction deck (either order), if there is one.
+export const fusionHeroPath = (factions) => {
+  if (factions?.length !== 2) return undefined;
+  const [a, b] = factions.map((f) => f.toLowerCase());
+  return FUSION_HERO_ART[`${a}-${b}`] ?? FUSION_HERO_ART[`${b}-${a}`];
+};
+// The portrait path a player shows: their pair's fused hero, else their first faction's hero.
+export const playerHeroPath = (factions) => fusionHeroPath(factions) ?? HERO_ART?.[factions[0]];
+export const playerHeroArt = (factions) => { const p = playerHeroPath(factions); return p && artSrc(p); };
+// A fused hero comes alive: the scene drifts slowly, the figure (a soft cut-out of the middle)
+// breathes in front of it, and a glint of light sweeps across now and then. Fills its box.
+export const livingPortraitHTML = (src) => `<span class="living"><img class="lv-scene" src="${src}" alt="" draggable="false">`
+  + `<img class="lv-figure" src="${src}" alt="" draggable="false" aria-hidden="true"><i class="lv-glint"></i></span>`;
+// A player's portrait as an <img>, or alive when it is their pair's fused hero.
+export const playerPortraitHTML = (factions) => {
+  const src = playerHeroArt(factions);
+  if (!src) return '';
+  return fusionHeroPath(factions) ? livingPortraitHTML(src) : `<img src="${src}" alt="">`;
+};
 
 // Card back for a faction (a player's back matches their first faction).
 const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${faction.toLowerCase()}.jpg`) : undefined);
-export const backStyle = (faction) => (backArtOf(faction) ? `style="--back:url('${new URL(backArtOf(faction), document.baseURI).href}')"` : '');
+// A two-faction deck's backs are half and half: the first faction's back, with the second's
+// over its right half past a slanted gold seam (CSS: --back and --back2).
+export const backsOf = (factions) => {
+  const [a, b] = (Array.isArray(factions) ? factions : [factions]).map(backArtOf);
+  return a ? (b && b !== a ? [a, b] : [a]) : [];
+};
+export const backVars = (factions) => backsOf(factions).map((u, i) => `--back${i ? 2 : ''}:url('${new URL(u, document.baseURI).href}')`).join(';');
+export const backStyle = (factions) => (backsOf(factions).length ? `style="${backVars(factions)}"` : '');
 
 // A normal-size card (hand, collection, builder, choices). It is the same
 // Hearthstone-style card as the big preview (bigCardHTML), drawn small: the

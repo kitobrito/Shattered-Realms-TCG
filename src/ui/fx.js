@@ -890,6 +890,11 @@ export async function entrance(el, name, faction) {
 // ---- Drawing cards ---------------------------------------------------------------------
 
 // A drawn card leaves the deck face-down and turns over as it reaches the hand.
+// A card back's picture(s): one URL, or [first, second] for a two-faction deck's half-and-half back.
+function setBacks(el, urls) {
+  [urls].flat().filter(Boolean).forEach((u, i) => el.style.setProperty(i ? '--back2' : '--back', `url('${new URL(u, document.baseURI).href}')`));
+}
+
 export async function drawFlip(el, from, to, backUrl) {
   const wrap = document.createElement('div');
   wrap.className = 'fx-drawflip';
@@ -900,7 +905,7 @@ export async function drawFlip(el, from, to, backUrl) {
   front.style.cssText = 'position:absolute;inset:0;margin:0;transform:none;visibility:visible;width:100%;height:100%;';
   const back = document.createElement('div');
   back.className = 'df-back';
-  if (backUrl) back.style.setProperty('--back', `url('${new URL(backUrl, document.baseURI).href}')`);
+  setBacks(back, backUrl);
   wrap.append(front, back);
   layer().appendChild(wrap);
   const dx = from.left + from.width / 2 - (to.left + to.width / 2);
@@ -918,6 +923,10 @@ export async function drawFlip(el, from, to, backUrl) {
 export async function oppDraw(el, from, to, delay = 0) {
   const ghost = el.cloneNode(true);
   ghost.classList.add('fx-opp-draw');
+  // Keep the hand's faction card back(s) on the copy flying outside it.
+  const host = el.closest('[style*="--back"]');
+  for (const v of ['--back', '--back2']) if (host?.style.getPropertyValue(v)) ghost.style.setProperty(v, host.style.getPropertyValue(v));
+  if (host) ghost.querySelector(':scope > span')?.remove();
   Object.assign(ghost.style, {
     position: 'fixed', left: `${to.left}px`, top: `${to.top}px`, width: `${to.width}px`, height: `${to.height}px`,
     margin: '0', transform: 'none', visibility: 'visible', bottom: 'auto',
@@ -1928,13 +1937,13 @@ export async function drawShow(items, from, backUrl, { hold = 2000 } = {}) {
   if (w > fit) { w = fit; h = w / 0.711; }
   const total = items.length * w + (items.length - 1) * gap;
   const top = vh * 0.46 - h / 2;
-  const back = backUrl ? `url('${new URL(backUrl, document.baseURI).href}')` : '';
+
   const wraps = items.map((it, i) => {
     const wrap = document.createElement('div');
     wrap.className = 'fx-draw-show';
     Object.assign(wrap.style, { left: `${(vw - total) / 2 + i * (w + gap)}px`, top: `${top}px`, width: `${w}px`, height: `${h}px` });
     wrap.innerHTML = `<div class="card df-front" style="width:100%;height:100%;margin:0">${it.html}</div><div class="df-back"></div>`;
-    if (back) wrap.querySelector('.df-back').style.setProperty('--back', back);
+    setBacks(wrap.querySelector('.df-back'), backUrl);
     layer().appendChild(wrap);
     fitAllText(wrap);
     return wrap;

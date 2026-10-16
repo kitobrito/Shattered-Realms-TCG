@@ -70,7 +70,7 @@ export function availableFactions() {
 
 // Start the new-player path again (to try it, or to show someone); decks and unlocked cards stay.
 export function restartJourney() {
-  state = { games: 0, done: false, seen: state.seen ?? [] };
+  state = { games: 0, done: false, seen: state.seen ?? [], heroes: state.heroes ?? [] };
   save();
 }
 
@@ -116,6 +116,17 @@ export function progressLine() {
   if (state.games < REACTIVE_AT) return `Starter decks · ${REACTIVE_AT - state.games} more ${REACTIVE_AT - state.games === 1 ? 'match' : 'matches'} until traps and Quick Plays join your deck`;
   if (!pairUnlocked()) return `${FUSION_AT - state.games} more ${FUSION_AT - state.games === 1 ? 'match' : 'matches'} until you can combine two realms and unleash a Fusion`;
   return `${availableFactions().length} of ${PLAYABLE_FACTIONS.length} realms open · ${PER_MATCH} more after every match`;
+}
+
+// Fused heroes stay a mystery (a "?" on the menu) until you play a match with that pair:
+// the match-start fusion is where you first meet them.
+const pairKey = (factions) => [...factions].map((f) => f.toLowerCase()).sort().join('+');
+export const heroRevealed = (factions) => (state.heroes ?? []).includes(pairKey(factions));
+export function revealHero(factions) {
+  if (heroRevealed(factions)) return false;
+  (state.heroes ??= []).push(pairKey(factions));
+  save();
+  return true;
 }
 
 // "Have you seen this?" flags for one-time moments (the first Fusion cinematic...).
