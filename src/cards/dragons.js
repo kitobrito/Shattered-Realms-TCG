@@ -18,6 +18,7 @@ const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const ENEMY_CHARACTER = { type: 'character', side: 'enemy' };
 const ENEMY_MINIONS = { minions: { side: 'enemy' } };
 const ENEMY_CHARACTERS = { characters: { side: 'enemy' } };
+const FREEZE = (target) => ({ op: 'buff', target, keywords: ['Frozen'] });
 const burn = (target, amount, extra = {}) => ({ op: 'applyBurn', target, amount, ...extra });
 
 export const DRAGON_CARDS = [
@@ -213,5 +214,89 @@ export const DRAGON_CARDS = [
     trap: { on: 'minionDied', filter: { source: 'enemyMinion', byBurn: true }, effects: [
       { op: 'damage', target: ENEMY_MINIONS, amount: 2 }, burn(ENEMY_MINIONS, 1),
     ] },
+  },
+
+  // ---- Frost Dragons expansion (unlockable) ----
+  // Freeze your enemies, then punish them while they're stuck: Frozen minions take double damage
+  // from Rimescale Hatchling, Shatterclaw Dragon and Shatter destroy them, and while Glacius lives
+  // they don't thaw at all (engine.js thaw step; targeting.js `frozen` filter and `adjacent` selector).
+  {
+    ...D, id: 'frost_whelp', name: 'Frost Whelp', art: '❄️', extra: true, cost: 1, attack: 1, health: 1,
+    text: 'Arrival: Freeze an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [FREEZE('chosen')] }],
+  },
+  {
+    ...D, id: 'rimescale_hatchling', name: 'Rimescale Hatchling', art: '🧊', extra: true, cost: 2, attack: 2, health: 2, doubleVsFrozen: true,
+    text: 'Deals double damage when it attacks a Frozen minion.',
+  },
+  {
+    ...D, id: 'glacier_wyrmling', name: 'Glacier Wyrmling', art: '🧊', extra: true, cost: 2, attack: 1, health: 3, keywords: ['Taunt'],
+    text: 'Taunt. Whenever an enemy minion attacks this, Freeze it.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [FREEZE('eventSource')] }],
+  },
+  {
+    ...D, id: 'snowdrift_drake', name: 'Snowdrift Drake', art: '🌨️', extra: true, cost: 3, attack: 2, health: 3, keywords: ['Stealth'],
+    text: 'Stealth. Arrival: Freeze a random enemy minion.',
+    triggers: [{ on: 'battlecry', effects: [FREEZE({ randomOf: { minions: { side: 'enemy', frozen: false } } })] }],
+  },
+  {
+    ...D, id: 'frostbreath_drake', name: 'Frostbreath Drake', art: '🌬️', extra: true, cost: 4, attack: 2, health: 3,
+    text: 'Arrival: Freeze an enemy minion and the minions next to it.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [FREEZE({ adjacent: 'chosen', includeSelf: true })] }],
+  },
+  {
+    ...D, id: 'shatterclaw_dragon', name: 'Shatterclaw Dragon', art: '💎', extra: true, cost: 4, attack: 4, health: 4,
+    text: 'Arrival: Destroy a Frozen enemy minion.',
+    target: { type: 'minion', side: 'enemy', frozen: true },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'destroy', target: 'chosen' }] }],
+  },
+  {
+    ...D, id: 'blizzard_wyvern', name: 'Blizzard Wyvern', art: '🌪️', extra: true, cost: 5, attack: 4, health: 4, keywords: ['Evade'],
+    text: 'Evade. Arrival: Freeze all enemy minions with 2 or less Attack.',
+    triggers: [{ on: 'battlecry', effects: [FREEZE({ minions: { side: 'enemy', maxAttack: 2 } })] }],
+  },
+  {
+    ...D, id: 'permafrost_behemoth', name: 'Permafrost Behemoth', art: '🏔️', extra: true, cost: 6, attack: 4, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Whenever an enemy minion becomes Frozen, gain +1 Attack.',
+    triggers: [{ on: 'keywordGained', filter: { keyword: 'Frozen', player: 'enemy' }, effects: [{ op: 'buff', target: 'self', attack: 1 }] }],
+  },
+  {
+    ...D, id: 'avalanche_dragon', name: 'Avalanche Dragon', art: '🏔️', extra: true, cost: 8, attack: 5, health: 5,
+    text: 'Arrival: Deal 2 damage to all enemy minions and Freeze them.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: ENEMY_MINIONS, amount: 2, freeze: true }] }],
+  },
+  {
+    ...D, id: 'glacius_the_winter_queen', name: 'Glacius, the Winter Queen', art: '👑', extra: true, cost: 9, attack: 7, health: 7, holdsFrost: true,
+    text: "Arrival: Freeze 2 random enemy minions. While she lives, Frozen enemy minions don't thaw.",
+    triggers: [{ on: 'battlecry', effects: [FREEZE({ randomOf: { minions: { side: 'enemy', frozen: false } }, count: 2 })] }],
+  },
+  {
+    ...S, id: 'ice_shard_barrage', name: 'Ice Shard Barrage', art: '🧊', extra: true, cost: 2,
+    text: 'Deal 1 damage to 3 random enemy minions and Freeze them.',
+    effects: [{ op: 'damage', target: { randomOf: ENEMY_MINIONS, count: 3 }, amount: 1, freeze: true }],
+  },
+  {
+    ...S, id: 'shatter', name: 'Shatter', art: '💥', extra: true, cost: 3,
+    text: 'Destroy a Frozen minion. Draw a card.',
+    target: { type: 'minion', side: 'any', frozen: true },
+    effects: [{ op: 'destroy', target: 'chosen' }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, id: 'winters_breath', name: "Winter's Breath", art: '🌬️', extra: true, cost: 5,
+    text: 'Freeze all enemy minions.',
+    effects: [FREEZE(ENEMY_MINIONS)],
+  },
+  {
+    ...S, id: 'frostbite', name: 'Frostbite', art: '🥶', extra: true, cost: 2,
+    text: 'Quick Play: When an enemy minion attacks, deal 2 damage to it and Freeze it.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
+    effects: [{ op: 'damage', target: 'eventSource', amount: 2, freeze: true }],
+  },
+  {
+    ...T, id: 'ice_trap', name: 'Ice Trap', art: '🧊', extra: true, cost: 2,
+    text: 'Trap: When an enemy minion attacks your Hero, Freeze it and the minions next to it.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [FREEZE({ adjacent: 'eventSource', includeSelf: true })] },
   },
 ];

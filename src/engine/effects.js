@@ -469,11 +469,13 @@ export const EFFECT_OPS = {
       if (!e.windowed && c.controller === responder && hooks.hasReaction(state, responder, 'wouldTakeDamage', { event })) {
         deferred.push(
           { kind: 'window', name: 'wouldTakeDamage', priority: responder, ctx: { event } },
-          { kind: 'effect', effect: { op: 'damage', target: { uid: c.uid }, amount, lifesteal: e.lifesteal, windowed: true }, ctx },
+          { kind: 'effect', effect: { op: 'damage', target: { uid: c.uid }, amount, lifesteal: e.lifesteal, freeze: e.freeze, windowed: true }, ctx },
         );
         return;
       }
       dealDamage(state, ctx.self, c.uid, amount, { sourceController: ctx.controller, lifesteal: e.lifesteal });
+      // freeze: the survivors are Frozen too (Frost Dragons: Ice Shard Barrage, Avalanche Dragon, Frostbite).
+      if (e.freeze && c.kind === 'minion' && c.health > 0 && !c.destroyed) addKeyword(c, 'Frozen', false, state);
       // obliterateKilled: a minion this destroys is removed from the game (Reactor Meltdown, Ground Zero).
       if (e.obliterateKilled && c.kind === 'minion' && c.health <= 0) c.obliterate = true;
     });
