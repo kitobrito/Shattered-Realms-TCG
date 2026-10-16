@@ -335,6 +335,7 @@ function takeFromHand(state, p, uid) {
   const [inst] = pl.hand.splice(idx, 1);
   payMana(pl, getCard(inst.cardId), costOf(state, inst));
   if (getCard(inst.cardId).upgrade) pl.upgradeDiscount = 0; // Chief Engineer's discount is used up
+  if ((getCard(inst.cardId).tribes ?? []).includes('Demon')) pl.demonDiscount = null; // Infernal Contract's is too
   return { inst, card: getCard(inst.cardId) };
 }
 
