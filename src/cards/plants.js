@@ -66,9 +66,8 @@ export const PLANT_CARDS = [
   },
   {
     ...P, id: 'venus_flytrap', name: 'Venus Flytrap', art: '🪴',
-    cost: 2, attack: 2, health: 2,
-    text: 'Whenever this destroys an enemy minion, gain +1/+1.',
-    triggers: [{ on: 'minionDied', filter: { killer: 'self', player: 'enemy' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+    cost: 2, attack: 2, health: 2, keywords: ['Devour'],
+    text: 'Devour.',
   },
   {
     ...P, id: 'growing_vine', name: 'Growing Vine', art: '🍃',
