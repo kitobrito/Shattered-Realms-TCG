@@ -266,6 +266,14 @@ function canAct() {
 }
 
 // Moves you can drag/aim right now (none while a prompt is open).
+// It's your move but the last one is still animating: you may already pick up your next card.
+function canPlan() {
+  const s = game?.state;
+  if (screen !== 'game' || !s || s.gameOver || handoff || !animating) return false;
+  if (isAI(actingPlayer(s)) || (game.mode !== 'hotseat' && actingPlayer(s) !== viewer)) return false;
+  return !s.pending;
+}
+
 const legalNow = () => (canAct() ? getLegalActions(game.state) : []);
 
 // What the screen should offer: free moves, or the open prompt's options
@@ -2478,6 +2486,7 @@ drag.init({
   root: () => app,
   legal: legalNow,
   canAct,
+  canPlan,
   act,
   inspect: (el) => (el ? showPreview(el) : hidePreview()),
   deny,
