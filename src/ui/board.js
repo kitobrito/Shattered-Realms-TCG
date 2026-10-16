@@ -7,7 +7,7 @@ import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
 import { BOARD_ART, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { isMuted, play as playSound } from './sound.js';
-import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
+import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
 // ---- Pieces ------------------------------------------------------------------
 
@@ -143,17 +143,18 @@ export function minionHTML(m, s, cls = '') {
     </div>`;
 }
 
-// Two-faction decks show both heroes, split down a slanted seam (first faction on the
-// left, second on the right), so you can tell at a glance which pair, and so which
-// Fusion, each player has.
+// Two-faction decks show their pair's fused hero; a pair without one shows both heroes,
+// split down a slanted seam (first faction on the left, second on the right), so you can
+// tell at a glance which pair, and so which Fusion, each player has.
 function portraitHTML(pl) {
-  const art = heroArtOf(pl.factions[0]);
-  const second = pl.factions[1] ? heroArtOf(pl.factions[1]) : null;
+  const art = playerHeroArt(pl.factions);
+  const second = pl.factions[1] && art === heroArtOf(pl.factions[0]) ? heroArtOf(pl.factions[1]) : null;
   if (!art) return `<div class="portrait-placeholder f-${pl.factions[0].toLowerCase()}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
   // Each portrait is drawn twice: the scene behind, and the figure (a soft cut-out of the middle)
   // in front; they drift a little against each other so the hero seems to stand out and breathe.
   const layers = (src, cls = '') => `<img class="portrait-img ${cls}" src="${src}" alt="" draggable="false">`
     + `<img class="portrait-img portrait-front ${cls}" src="${src}" alt="" draggable="false" aria-hidden="true">`;
+  if (pl.factions.length === 2 && !second) return layers(art, 'fused') + '<i class="portrait-glint"></i>';
   if (!second || second === art) return layers(art);
   return layers(art, 'split-a') + layers(second, 'split-b') + '<i class="portrait-seam"></i>';
 }
@@ -314,7 +315,7 @@ function pileLayers(n) {
 function deckHTML(pl, mine) {
   const shrooms = mushroomsIn(pl.deck);
   const tip = `${pl.deck.length} cards left${shrooms ? ` · ${shrooms} Mushroom${shrooms === 1 ? '' : 's'} hidden in this deck` : ''}`;
-  return `<div class="deck-pile ${mine ? 'me' : 'opp'}" title="${tip}" ${backStyle(pl.factions[0])}>
+  return `<div class="deck-pile ${mine ? 'me' : 'opp'}" title="${tip}" ${backStyle(pl.factions)}>
     <div class="pile ${pl.deck.length ? '' : 'empty'}">${pileLayers(pl.deck.length)}${shrooms ? `<i class="shroom-count">🍄${shrooms}</i>` : ''}</div><b>${pl.deck.length}</b></div>`;
 }
 
@@ -439,7 +440,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
     return `<div class="go-row" style="--i:${i++}"><span class="go-n ${x > y ? 'lead' : ''}" data-count="${x}">${x}</span><span class="go-label">${label}</span><span class="go-n ${y > x ? 'lead' : ''}" data-count="${y}">${y}</span></div>`;
   };
   const best = st.bestPlay ? `<div class="go-best" style="--i:${i + 1}"><span>Best play</span><b>${esc(st.bestPlay.text)}</b></div>` : '';
-  const art = heroArtOf(mp.factions[0]);
+  const art = playerHeroArt(mp.factions);
   const won = ctx.unlocked?.length ?? 0;
   const rewards = outcome === 'win' && won
     ? `<div class="go-reward" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>${won} new card${won === 1 ? '' : 's'} unlocked</b><small>Add them with Build my deck on the menu.</small></span></div>`
@@ -449,7 +450,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
   return `<div class="overlay game-over ${outcome} ${ctx.fresh ? 'fresh' : ''}">
     ${outcome === 'win' ? '<div class="go-rays"></div>' : ''}${ash}
     <div class="panel summary">
-      ${art ? `<div class="go-medal"><img src="${art}" alt=""></div>` : ''}
+      ${art ? `<div class="go-medal">${playerPortraitHTML(mp.factions)}</div>` : ''}
       <h2 class="go-title"><span>${result}</span></h2>
       <p class="go-sub">${s.winner == null ? 'Nobody wins' : esc(youText(`${s.players[s.winner].name} wins`))} · ${rounds} round${rounds === 1 ? '' : 's'}</p>
       <div class="go-stats">
@@ -569,7 +570,7 @@ export function boardHTML(ctx) {
       ${lethal ? '<div class="lethal-tag">Lethal!</div>' : ''}
       ${historyHTML(ctx.history)}
       <div class="table-oval"></div>
-      <div class="opp-hand" ${backStyle(op.factions[0])}>${op.hand.map(() => '<div class="card back"><span>✦</span></div>').join('')}</div>
+      <div class="opp-hand" ${backStyle(op.factions)}>${op.hand.map(() => '<div class="card back"><span>✦</span></div>').join('')}</div>
       ${heroZoneHTML(op, s, [], false, `${charCls(op.hero.uid)} ${lethal ? 'lethal' : ''}`, ctx.shattered)}
       <div class="board opp" data-board="opp">${op.board.map((m) => minionHTML(m, s, charCls(m.uid))).join('')}</div>
       <div class="midline"></div>
