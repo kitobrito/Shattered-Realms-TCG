@@ -27,8 +27,25 @@ let retryTimer = null;
 let outbox = [];
 export let user = null;  // the signed-in account: { name, rating, tier, wins, losses, rankedWins, rankedLosses, rank }
 
-export const token = () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } };
-const setToken = (t) => { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch { /* storage unavailable */ } };
+// "Remember me": the sign-in token is kept in localStorage (it survives closing the game). Without
+// it, the token lives in sessionStorage and is gone when the tab or app is closed.
+const REMEMBER_KEY = 'shattered-remember';
+const store = (kind) => { try { return kind === 'local' ? localStorage : sessionStorage; } catch { return null; } };
+export const remembering = () => { try { return localStorage.getItem(REMEMBER_KEY) !== '0'; } catch { return true; } };
+export function setRemember(on) {
+  try { localStorage.setItem(REMEMBER_KEY, on ? '1' : '0'); } catch { /* storage unavailable */ }
+  const t = token();
+  if (t) setToken(t); // move an existing sign-in to the matching storage
+}
+export const token = () => { try { return store('local')?.getItem(TOKEN_KEY) || store('session')?.getItem(TOKEN_KEY) || null; } catch { return null; } };
+function setToken(t) {
+  for (const kind of ['local', 'session']) {
+    try {
+      const st = store(kind);
+      if (t && (kind === 'local') === remembering()) st?.setItem(TOKEN_KEY, t); else st?.removeItem(TOKEN_KEY);
+    } catch { /* storage unavailable */ }
+  }
+}
 export const hasSavedLogin = () => !!token();
 export const isOpen = () => ws?.readyState === 1;
 

@@ -10,6 +10,9 @@ const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const FRIENDLY_MINION = { type: 'minion', side: 'friendly' };
 const RANDOM_FRIENDLY = { randomOf: { minions: { side: 'friendly' } } };
 const MY_TURN_END = { on: 'endOfTurn', filter: { player: 'friendly' } };
+// Hive Brood expansion.
+const IMPLANT_RANDOM = { op: 'implant', target: { randomOf: { minions: { side: 'enemy', implanted: false } } } };
+const XENO = { ...M, art: '👽', token: true, cost: 4, evolvedXeno: true };
 
 export const ALIEN_CARDS = [
   // ---- Hero Spell ----
@@ -219,6 +222,111 @@ export const ALIEN_CARDS = [
     text: 'Summon: Choose 3 times: grant one allied minion a random keyword or one enemy minion a random negative keyword.',
     triggers: [{ on: 'summon', effects: [{ op: 'boonOrBane', times: 3 }] }],
   },
+
+  // ---- Hive Brood expansion (unlockable) ----
+  // Implant: a parasite in an enemy minion; when it dies, a 1/1 Chestburster bursts out on your
+  // side, remembering its host's realm. After 2 of your turns it Evolves into that realm's Xeno
+  // (effects.js implant / chestburst / tickChestbursters).
+  {
+    ...M, id: 'facehugger_swarmling', name: 'Facehugger Swarmling', art: '🦀', extra: true, cost: 1, attack: 1, health: 1,
+    text: 'Arrival: Implant a random enemy minion.',
+    triggers: [{ on: 'battlecry', effects: [IMPLANT_RANDOM] }],
+  },
+  {
+    ...M, id: 'ovomorph_clutch', name: 'Ovomorph Clutch', art: '🥚', extra: true, cost: 3, attack: 0, health: 4, keywords: ['Taunt'],
+    text: "Taunt. At the start of your turn, Implant a random enemy minion that isn't Implanted.",
+    triggers: [{ on: 'startOfTurn', filter: { player: 'friendly' }, effects: [IMPLANT_RANDOM] }],
+  },
+  {
+    ...M, id: 'parasite_carrier', name: 'Parasite Carrier', art: '🐛', extra: true, cost: 2, attack: 1, health: 2,
+    text: 'Exit: Implant a random enemy minion.',
+    triggers: [{ on: 'deathrattle', effects: [IMPLANT_RANDOM] }],
+  },
+  {
+    ...M, id: 'acid_blood_drone', name: 'Acid-Blood Drone', art: '🧪', extra: true, cost: 3, attack: 3, health: 2,
+    text: 'Whenever this takes damage, deal 2 damage to whatever damaged it.',
+    triggers: [{ on: 'damageDealt', filter: { target: 'self' }, effects: [{ op: 'damage', target: 'eventSource', amount: 2 }] }],
+  },
+  {
+    ...M, id: 'hive_stalker', name: 'Hive Stalker', art: '👽', extra: true, cost: 3, attack: 3, health: 3, keywords: ['Stealth'],
+    text: 'Stealth. Arrival: Implant an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'implant', target: 'chosen' }] }],
+  },
+  {
+    ...M, id: 'brood_tender', name: 'Brood Tender', art: '🍼', extra: true, cost: 3, attack: 2, health: 4, fasterEvolve: true,
+    text: 'Your Chestbursters Evolve 1 turn sooner.',
+  },
+  {
+    ...M, id: 'hive_brute', name: 'Hive Brute', art: '👽', extra: true, cost: 4, attack: 4, health: 3,
+    text: 'Whenever an Implanted enemy minion dies, gain +1/+1.',
+    triggers: [{ on: 'minionDied', filter: { player: 'enemy', deadImplanted: true }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...M, id: 'xeno_runner', name: 'Xeno Runner', art: '👽', extra: true, cost: 4, attack: 4, health: 2, keywords: ['Rush'], implantAttack: 3,
+    text: 'Rush. Has +3 Attack while attacking an Implanted minion.',
+  },
+  {
+    ...M, id: 'hive_warrior', name: 'Hive Warrior', art: '👽', extra: true, cost: 6, attack: 4, health: 4,
+    text: 'Arrival: Implant 2 random enemy minions.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'implant', target: { randomOf: { minions: { side: 'enemy', implanted: false } }, count: 2 } }] }],
+  },
+  {
+    ...M, id: 'praetorian_guard', name: 'Praetorian Guard', art: '🛡️', extra: true, cost: 6, attack: 5, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Your Evolved Xenos have +1 Attack.',
+    aura: { target: { minions: { side: 'friendly', evolved: true } }, attack: 1 },
+  },
+  {
+    ...M, id: 'hive_queen_xaral', name: "Hive Queen Xa'ral", art: '👑', extra: true, cost: 9, attack: 5, health: 7, instantEvolve: true,
+    text: 'Arrival: Implant all enemy minions. While she lives, Chestbursters burst out already Evolved.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'implant', target: { minions: { side: 'enemy' } } }] }],
+  },
+  {
+    ...S, id: 'gestation', name: 'Gestation', art: '🫃', extra: true, cost: 2,
+    text: 'Implant an enemy minion. Draw a card.',
+    target: { type: 'minion', side: 'enemy', implanted: false },
+    effects: [{ op: 'implant', target: 'chosen' }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, id: 'it_bursts_out', name: 'It Bursts Out', art: '💥', extra: true, cost: 3,
+    text: 'Destroy an Implanted enemy minion.',
+    target: { type: 'minion', side: 'enemy', implanted: true },
+    effects: [{ op: 'destroy', target: 'chosen' }],
+  },
+  {
+    ...S, id: 'acid_blood_spray', name: 'Acid Blood Spray', art: '🧪', extra: true, cost: 2,
+    text: 'Quick Play: When a friendly Alien dies, deal 3 damage to whatever killed it.',
+    quickPlay: { windows: ['minionDied'], filter: { source: { side: 'friendly', tribe: 'Alien' } } },
+    effects: [{ op: 'damage', target: 'killer', amount: 3 }],
+  },
+  {
+    ...T, id: 'egg_chamber', name: 'Egg Chamber', art: '🥚', extra: true, cost: 2,
+    text: 'Trap: When your opponent plays a minion, Implant it.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [{ op: 'implant', target: 'eventSource' }] },
+  },
+
+  // ---- Hive Brood tokens: the Chestburster and the Xenos it Evolves into ----
+  { ...M, id: 'chestburster', name: 'Chestburster', art: '🐍', token: true, cost: 1, attack: 1, health: 1,
+    text: 'After 2 of your turns, Evolves into the Xeno of the realm it burst from.' },
+  { ...XENO, id: 'xeno_nosferatu', name: 'Xeno Nosferatu', attack: 3, health: 4, keywords: ['Lifesteal'], text: 'Lifesteal. (Evolved from a Vampire.)' },
+  { ...XENO, id: 'xeno_warrior', name: 'Xeno Warrior', attack: 4, health: 5, text: '(Evolved from an Alien: the pure strain.)' },
+  { ...XENO, id: 'xeno_raptor', name: 'Xeno Raptor', attack: 4, health: 3, keywords: ['Rush'], text: 'Rush. (Evolved from a Dinosaur.)' },
+  { ...XENO, id: 'xeno_thornback', name: 'Xeno Thornback', attack: 2, health: 5, keywords: ['Taunt', 'Devour'], text: 'Taunt. Devour. (Evolved from a Plant.)' },
+  { ...XENO, id: 'spore_xeno', name: 'Spore Xeno', attack: 3, health: 4, text: 'Exit: Implant a random enemy minion. (Evolved from a Fungus.)',
+    triggers: [{ on: 'deathrattle', effects: [IMPLANT_RANDOM] }] },
+  { ...XENO, id: 'xeno_revenant', name: 'Xeno Revenant', attack: 3, health: 3, keywords: ['Reborn'], text: 'Reborn. (Evolved from a Zombie.)' },
+  { ...XENO, id: 'deep_xeno', name: 'Deep Xeno', attack: 3, health: 4, keywords: ['Stealth'], text: 'Stealth. (Evolved from a Shark.)' },
+  { ...XENO, id: 'xeno_drake', name: 'Xeno Drake', attack: 3, health: 4, keywords: ['Charge'], text: 'Charge. (Evolved from a Dragon.)' },
+  { ...XENO, id: 'xeno_fiend', name: 'Xeno Fiend', attack: 4, health: 4, keywords: ['Poisonous'], text: 'Poisonous. (Evolved from a Demon.)' },
+  { ...XENO, id: 'xeno_seraph', name: 'Xeno Seraph', attack: 3, health: 4, keywords: ['Evade'], text: 'Evade. (Evolved from a Divine minion.)' },
+  { ...XENO, id: 'xeno_mech', name: 'Xeno Mech', attack: 3, health: 6, keywords: ['Taunt'], text: 'Taunt. (Evolved from a Robot.)' },
+  { ...XENO, id: 'glowing_xeno', name: 'Glowing Xeno', attack: 3, health: 4, text: 'Radiation 1. (Evolved from a Radioactive minion.)',
+    triggers: [{ on: 'summon', effects: [{ op: 'radiate', target: 'self', amount: 1 }] }] },
+  { ...XENO, id: 'xeno_hornet', name: 'Xeno Hornet', attack: 2, health: 3, keywords: ['Twin Strike'], text: 'Twin Strike. (Evolved from a Bee.)' },
+  { ...XENO, id: 'phantom_xeno', name: 'Phantom Xeno', attack: 3, health: 4, keywords: ['Elusive'], text: 'Elusive. (Evolved from a Ghost.)' },
+  { ...XENO, id: 'void_xeno', name: 'Void Xeno', attack: 3, health: 4, keywords: ['Elusive', 'Evade'], text: 'Elusive. Evade. (Evolved from an Ultraterrestrial.)' },
+  { ...XENO, id: 'acid_xeno', name: 'Acid Xeno', attack: 3, health: 4, keywords: ['Venomous'], text: 'Venomous. (Evolved from an Acidic minion.)' },
+  { ...XENO, id: 'xeno_drone', name: 'Xeno Drone', attack: 2, health: 3, text: '(Evolved from a minion with no realm.)' },
 
   // ---- Tokens ----
   // Ruling: Facehugger is a token (made by Xeno-Hive Mother), not a deck card.
