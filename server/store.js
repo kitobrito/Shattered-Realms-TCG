@@ -18,9 +18,12 @@ const rankedGames = (a) => (a.rankedWins ?? 0) + (a.rankedLosses ?? 0);
 
 async function postgresStore(url) {
   const { default: pg } = await import('pg');
-  // Hosted databases want TLS; a database on the same machine usually doesn't.
-  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
-  const pool = new pg.Pool({ connectionString: url, ssl: local ? false : { rejectUnauthorized: false }, max: 5 });
+  // Databases across the internet (Neon, Supabase, Render's external address) want TLS; one on
+  // the same machine or on Render's private network (a host name with no dots) doesn't.
+  let host = '';
+  try { host = new URL(url).hostname; } catch { /* odd URL: let pg parse it */ }
+  const plain = /sslmode=disable/.test(url) || host === 'localhost' || host === '127.0.0.1' || (host && !host.includes('.'));
+  const pool = new pg.Pool({ connectionString: url, ssl: plain ? false : { rejectUnauthorized: false }, max: 5 });
   await pool.query(`CREATE TABLE IF NOT EXISTS accounts (
     key text PRIMARY KEY, data jsonb NOT NULL, score integer NOT NULL DEFAULT 0, ranked integer NOT NULL DEFAULT 0)`);
   await pool.query('CREATE INDEX IF NOT EXISTS accounts_board ON accounts (ranked, score DESC)');

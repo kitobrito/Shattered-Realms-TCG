@@ -10,18 +10,17 @@ It checks every move with the game's own engine, and also serves the game itself
 
 Without `DATABASE_URL` accounts are saved in `server/data/accounts.json`.
 
-## Put it online (Render + a free Neon database)
+## Put it online (Render)
 
-1. **Database:** sign up at neon.com (free), create a project, and copy its connection string
-   (it starts with `postgresql://`).
-2. **Server:** in Render, *New + → Blueprint*, pick this GitHub repository. Render reads
-   `render.yaml`, asks for `DATABASE_URL`: paste the Neon string. Create it.
-3. When it's live, Render shows its address, like `https://shattered-realms.onrender.com`.
-   Put `wss://<that address>/ws` into `SERVER_URL` in `src/ui/server-link.js` and set
-   `online: true` in `src/build.js`; the next itch and Android builds connect to it.
+In Render: *New + → Blueprint*, pick this GitHub repository, and create it. `render.yaml` sets up
+an always-on web service and a Postgres database for it (accounts, ranks, leaderboard), already
+connected. When it's live, Render shows its address, like `https://shattered-realms.onrender.com`:
+put `wss://<that address>/ws` into `SERVER_URL` in `src/ui/server-link.js` and set
+`online: true` in `src/build.js`; the next itch and Android builds connect to it.
 
-On Render's free plan the server sleeps after about 15 minutes with nobody online; the first
-player to connect waits up to a minute while it wakes (the game says so).
+Any other Postgres works too (e.g. a free Neon database): set `DATABASE_URL` to its connection
+string instead. Without a database the server keeps accounts in a file, which Render wipes on
+every deploy.
 
 ## Tests
 
