@@ -6,10 +6,9 @@ import { stateHash } from './net.js';
 export { stateHash };
 export const PROTOCOL = 2;
 
-// Where the server lives. Leave empty to use the site the game was loaded from
-// (when the server hosts the game itself). Set it after deploying, e.g.
-// 'wss://shattered-realms.onrender.com/ws'.
-export const SERVER_URL = '';
+// Where the server lives (on Render; see server/README.md). Empty means the site the game was
+// loaded from (when the server hosts the game itself).
+export const SERVER_URL = 'wss://shattered-realms.onrender.com/ws';
 
 const TOKEN_KEY = 'shattered-token';
 

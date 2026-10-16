@@ -1,2 +1,2 @@
 // itch.io build (written by tools/build-itch.js).
-export const BUILD = { online: false, hiresBoards: false };
+export const BUILD = { online: true, hiresBoards: false };
