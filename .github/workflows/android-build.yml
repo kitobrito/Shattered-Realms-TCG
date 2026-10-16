@@ -11,6 +11,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+# One run at a time: itch.io takes a new build only after the last one has processed.
+concurrency:
+  group: itch-push-android
+  cancel-in-progress: false
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -83,4 +87,12 @@ jobs:
           fi
           curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
           unzip -q -o butler.zip -d butler-bin && chmod +x butler-bin/butler
-          ./butler-bin/butler push shattered-realms.apk "$ITCH_GAME:android" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
+          # itch.io refuses a new build while the previous one is still processing: wait and retry (up to ~25 min).
+          for try in $(seq 1 25); do
+            rc=0; out=$(./butler-bin/butler push shattered-realms.apk "$ITCH_GAME:android" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}" 2>&1) || rc=$?
+            echo "$out"
+            if [ "$rc" = 0 ] || ! grep -q "still processing" <<<"$out"; then break; fi
+            echo "itch.io is still processing the previous build; trying again in 60 s ($try/25)"
+            sleep 60
+          done
+          exit "$rc"
