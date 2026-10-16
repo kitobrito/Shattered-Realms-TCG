@@ -28,7 +28,7 @@ import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
 import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL } from './rules.js';
 import { resolveSelector, targetCandidates } from './targeting.js';
-import { enterBattlefield, selfTriggerSteps } from './triggers.js';
+import { enterBattlefield, queueSelfTrigger, selfTriggerSteps } from './triggers.js';
 
 const each = (state, sel, ctx, fn) => {
   for (const id of resolveSelector(state, sel, ctx)) {
@@ -151,6 +151,44 @@ export function surfaceMinion(state, m, opts = {}) {
   if (steps.length) pushFront(state, steps);
   emit(state, { type: 'minionSurfaced', source: m.uid, player: m.controller });
   return true;
+}
+
+// ---- Aliens (Hive Brood): Implant, Chestbursters and Evolving ----------------------
+// An Implanted enemy minion carries a parasite (a granted Exit for the Implanter). When it dies,
+// a 1/1 Chestburster bursts out on the Implanter's side, remembering its host's faction. At the
+// start of its controller's turns it grows; after EVOLVE_TURNS of them (1 with a Brood Tender) it
+// Evolves into the Xeno of that faction. With Hive Queen Xa'ral it bursts out already Evolved.
+export const EVOLVE_TURNS = 2;
+export const XENO_FORMS = {
+  Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
+  Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
+  Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno',
+};
+const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
+export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
+
+export function evolveChestburster(state, m) {
+  if (!m || m.cardId !== 'chestburster') return false;
+  const into = XENO_FORMS[m.hostFaction] ?? 'xeno_drone';
+  const sick = m.sick;
+  EFFECT_OPS.transform(state, { target: { uid: m.uid }, into }, { controller: m.controller, self: m.uid });
+  m.sick = sick;
+  delete m.evolveProgress;
+  log(state, `👽 It Evolves: ${getCard(into).name}!`);
+  queueSelfTrigger(state, m, 'summon');
+  emit(state, { type: 'minionEvolved', source: m.uid, player: m.controller });
+  return true;
+}
+
+// Start of player p's turn: their Chestbursters grow one turn; ready ones Evolve.
+export function tickChestbursters(state, p) {
+  const need = evolveTurnsFor(state, p);
+  for (const m of [...state.players[p].board]) {
+    if (m.cardId !== 'chestburster' || m.health <= 0 || m.destroyed) continue;
+    m.evolveProgress = (m.evolveProgress ?? 0) + 1;
+    if (m.evolveProgress >= need) evolveChestburster(state, m);
+  }
 }
 
 // Brings a Displaced minion back (now, or as soon as its controller has room).
@@ -1440,6 +1478,28 @@ export const EFFECT_OPS = {
       return;
     }
     each(state, e.target, ctx, (c) => markPrey(state, c, !!e.force));
+  },
+
+  // Aliens (Hive Brood). { target } — Implant the targets (enemy minions without an Implant yet).
+  implant(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.health <= 0 || m.destroyed || m.implanted != null) return;
+      m.implanted = ctx.controller;
+      (m.grantedTriggers ??= []).push({ on: 'deathrattle', controller: ctx.controller, implant: true, effects: [{ op: 'chestburst' }] });
+      log(state, `🥚 ${nameOf(state, m)} is Implanted.`);
+      emit(state, { type: 'implanted', target: m.uid, player: m.controller, by: ctx.controller });
+    });
+  },
+  // An Implanted minion died (ctx.cardId: the host): a Chestburster bursts out for ctx.controller.
+  chestburst(state, e, ctx) {
+    const m = summonMinion(state, ctx.controller, 'chestburster');
+    if (!m) return;
+    m.hostFaction = getCard(ctx.cardId)?.faction ?? null;
+    m.evolveProgress = 0;
+    log(state, `👽 A Chestburster bursts out of ${getCard(ctx.cardId)?.name ?? 'its host'}!`);
+    enterBattlefield(state, m);
+    emit(state, { type: 'chestburst', source: m.uid, player: ctx.controller });
+    if (controls(state, ctx.controller, 'instantEvolve')) evolveChestburster(state, m);
   },
 
   // Sand Sharks. { target } — Burrow the targets (Dig In, Duck Under, Sandstorm Stalker).

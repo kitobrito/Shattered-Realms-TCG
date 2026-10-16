@@ -219,11 +219,41 @@ export function fitWidth(el, min = 0.5) {
   }
 }
 
+// Fitting one box at a time makes the browser re-measure the page after every step, and the
+// board redraws often, so fitAllText works in batches: clear every size, measure everything
+// once, then shrink only the boxes that overflow. The size a given text needs in a given box
+// is remembered, so the same card in the same spot is fitted without measuring again.
+const fitCache = new Map();
+const overflows = (f) => (f.wide ? f.box.scrollWidth > f.box.clientWidth + 1 : f.box.scrollHeight > f.box.clientHeight + 1);
 export function fitAllText(root) {
-  for (const el of root.querySelectorAll('.card .text')) fitText(el);
-  for (const big of root.querySelectorAll('.bc-text span')) fitText(big, big.parentElement);
-  for (const banner of root.querySelectorAll('.bc-banner span')) fitWidth(banner);
-  for (const tag of root.querySelectorAll('.shard .bc-type span')) fitWidth(tag, 0.4);
+  const items = [];
+  for (const el of root.querySelectorAll('.card .text')) items.push({ el, box: el, min: 0.4 });
+  for (const el of root.querySelectorAll('.bc-text span')) items.push({ el, box: el.parentElement, min: 0.4 });
+  for (const el of root.querySelectorAll('.bc-banner span')) items.push({ el, box: el, min: 0.5, wide: true });
+  for (const el of root.querySelectorAll('.shard .bc-type span')) items.push({ el, box: el, min: 0.4, wide: true });
+  if (!items.length) return;
+  for (const f of items) f.el.style.fontSize = '';
+  const todo = [];
+  for (const f of items) {
+    if (!overflows(f)) continue;
+    f.start = parseFloat(getComputedStyle(f.el).fontSize);
+    f.key = `${f.wide ? 'w' : 'h'}|${f.start}|${f.box.clientWidth}x${f.box.clientHeight}|${f.el.innerHTML}`;
+    todo.push(f);
+  }
+  const fresh = [];
+  for (const f of todo) {
+    const size = fitCache.get(f.key);
+    if (size) f.el.style.fontSize = `${size}px`; else fresh.push(f);
+  }
+  for (const f of fresh) {
+    let size = f.start;
+    while (overflows(f) && size > f.start * f.min) {
+      size -= 0.5;
+      f.el.style.fontSize = `${size}px`;
+    }
+    if (fitCache.size > 3000) fitCache.clear();
+    fitCache.set(f.key, size);
+  }
 }
 
 // The engine writes the log in the third person with player names ("You wins!",

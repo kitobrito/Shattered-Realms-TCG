@@ -38,6 +38,8 @@ function minionPasses(m, f) {
   if (f.maxHealth != null && m.health > f.maxHealth) return false;
   if (f.stealthed && !hasKeyword(m, 'Stealth')) return false;
   if (f.burrowed != null && !!m.burrowed !== f.burrowed) return false; // Sand Sharks
+  if (f.implanted != null && (m.implanted != null) !== f.implanted) return false; // Aliens (Hive Brood)
+  if (f.evolved && !getCard(m.cardId).evolvedXeno) return false;
   if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
   // Acidic: Attack at least N; buffed or holding a defensive keyword (Rust-Eater Brute); corroded.
   if (f.minAttack != null && effectiveAttack(m) < f.minAttack) return false;
@@ -144,6 +146,11 @@ export function matchFilter(state, filter, ctx) {
       if (!!state.players[ctx.controller].queenUnderground !== want) return false;
       continue;
     }
+    // Aliens (Hive Brood): the minion that died was Implanted (Hive Brute).
+    if (key === 'deadImplanted') {
+      if ((ev.dead?.implanted != null) !== want) return false;
+      continue;
+    }
     // Sand Sharks: the trap's owner has a Burrowed minion (Tremor Sense).
     if (key === 'hasBurrowed') {
       if (state.players[ctx.controller].board.some((m) => m.burrowed) !== want) return false;
@@ -248,6 +255,7 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.maxHealth != null && c.health > want.maxHealth) return false;
     if (want.prey && !c.prey) return false;
     if (want.burrowed != null && !!c.burrowed !== want.burrowed) return false;
+    if (want.implanted != null && (c.implanted != null) !== want.implanted) return false;
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;
     return true;
   }

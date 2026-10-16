@@ -12,7 +12,7 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf,
 } from './core.js';
-import { checkCondition, processBeyond, resolveEffect, surfaceMinion } from './effects.js';
+import { checkCondition, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -460,6 +460,8 @@ function huntDamage(state, a, d, dmg) {
     if (card.doubleVsPrey) dmg *= 2;
   }
   if (card.woundBonus && d.health < d.maxHealth) dmg += 1;
+  // Aliens (Hive Brood): extra Attack against an Implanted minion (Xeno Runner).
+  if (card.implantAttack && d.implanted != null) dmg += card.implantAttack;
   return dmg;
 }
 
@@ -709,7 +711,7 @@ const STEPS = {
       const event = {
         type: 'minionDied', source: m.uid, player: m.controller, cardId: m.cardId,
         killer: m.lastDamagedBy, killerPlayer: m.lastDamagedByController, killerMinion: killerMinion.get(m.uid), byBurn: !!m.diedToBurn,
-        dead: { kind: 'minion', controller: m.controller, prey: !!m.prey, tribes: [...m.tribes], cardId: m.cardId, storedCost: m.storedCost, upgrades: m.upgrades ?? 0, irradiated: radiationOf(m) > 0 },
+        dead: { kind: 'minion', controller: m.controller, prey: !!m.prey, tribes: [...m.tribes], cardId: m.cardId, storedCost: m.storedCost, upgrades: m.upgrades ?? 0, irradiated: radiationOf(m) > 0, implanted: m.implanted ?? null },
       };
       // Poisonous: the enemy minion that killed it dies too.
       const killer = findCharacter(state, m.lastDamagedBy);
@@ -913,6 +915,8 @@ const STEPS = {
     processBeyond(state, p);
     // Sand Sharks: Burrowed minions Surface.
     for (const m of [...pl.board]) if (m.burrowed) surfaceMinion(state, m);
+    // Aliens (Hive Brood): Chestbursters grow, and Evolve when they're ready.
+    tickChestbursters(state, p);
     // Acidic: Caustic Reservoir keeps eating at its minion each turn it survives.
     if (pl.reservoir != null) {
       const m = state.players[opponentOf(p)].board.find((x) => x.uid === pl.reservoir);

@@ -1454,6 +1454,11 @@ function accountHTML() {
         <button data-act="privateMatch">Play friend</button></div>
     </div>`;
   }
+  return acctFormHTML();
+}
+
+// The sign-in / create-account form (the Play Online screen and the first-launch screen).
+function acctFormHTML() {
   const down = acct.status === 'error' || acct.status === 'down';
   const busy = acct.status === 'connecting';
   const reg = acct.tab === 'register';
@@ -1464,9 +1469,41 @@ function accountHTML() {
       ${reg ? '<p class="sub">Names are 3-16 letters, numbers or _. Passwords need 8+ characters.</p>' : ''}
       ${acct.msg ? `<p class="lobby-error">${esc(acct.msg)}</p>` : ''}
       ${acct.slow && !acct.msg && acct.status !== 'error' ? '<p class="sub">Waking up the server. The first connection can take up to a minute.</p>' : ''}
-      ${down && !acct.msg && !acct.slow ? '<p class="lobby-error">Can\'t reach the game server right now. You can still play a friend with a room code below.</p>' : ''}
+      ${down && !acct.msg && !acct.slow ? `<p class="lobby-error">Can't reach the game server right now.${screen === 'online' ? ' You can still play a friend with a room code below.' : ''}</p>` : ''}
+      <label class="acct-remember"><input type="checkbox" id="acct-remember" ${srv.remembering() ? 'checked' : ''}> Remember me</label>
       <button data-act="${reg ? 'signUp' : 'signIn'}" ${busy ? 'disabled' : ''}>${busy ? 'Connecting…' : reg ? 'Create account' : 'Sign in'}</button>
     </div>`;
+}
+
+// ---- First launch: an account before anything else ----
+// When the game opens without a saved sign-in, players sign in or make an account first.
+// "Remember me" keeps them signed in next time. If the server can't be reached, they can play
+// offline for now and are asked again the next time they open the game.
+const OFFLINE_KEY = 'shattered-offline';
+const HAD_ACCOUNT_KEY = 'shattered-had-account';
+const needsSignIn = () => {
+  if (!BUILD.online || srv.hasSavedLogin()) return false;
+  try { return sessionStorage.getItem(OFFLINE_KEY) !== '1'; } catch { return true; }
+};
+
+function renderSignIn() {
+  showMenuBackdrop(true);
+  const offline = acct.slow || acct.status === 'error' || acct.status === 'down';
+  const reg = acct.tab === 'register';
+  app.innerHTML = `
+    <div class="menu tavern title-screen signin">
+      <header class="ts-title">
+        <div class="ts-runes"></div>
+        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
+        <p class="ts-tag">${reg ? 'Create your account to begin.' : 'Welcome back. Sign in to play.'}</p>
+      </header>
+      <section class="ts-panel signin-panel">
+        ${acctFormHTML()}
+        <p class="sub signin-why">Your account keeps your rank and lets you play online against anyone.</p>
+        ${offline ? '<button data-act="playOffline" class="ghost">Play offline for now</button>' : ''}
+      </section>
+    </div>`;
+  app.querySelector('#acct-pass')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitAccount(); });
 }
 
 function roomCodeHTML() {
@@ -1701,15 +1738,17 @@ function serverHandlers() {
       // Still connecting after a few seconds: the server is probably waking up.
       clearTimeout(acct.slowTimer);
       acct.slow = false;
-      if (st === 'connecting' || st === 'down') acct.slowTimer = setTimeout(() => { if (acct.status !== 'open') { acct.slow = true; if (screen === 'online') render(); } }, 4000);
+      if (st === 'connecting' || st === 'down') acct.slowTimer = setTimeout(() => { if (acct.status !== 'open') { acct.slow = true; if (onAcctScreen()) render(); } }, 4000);
       if (st === 'down' && screen === 'game' && game?.mode === 'online' && link === srv && !game.state.gameOver) flash('Connection lost. Reconnecting…');
       if (st === 'down' && lobby?.status === 'queued') lobby = { status: 'choose', msg: 'Lost the connection to the server.' };
-      if (screen === 'online') render();
+      if (onAcctScreen()) render();
     },
-    error: (msg) => { acct.status = 'error'; acct.msg = msg; if (screen === 'online') render(); },
+    error: (msg) => { acct.status = 'error'; acct.msg = msg; if (onAcctScreen()) render(); },
     data: onServerMessage,
   });
 }
+
+const onAcctScreen = () => screen === 'online' || screen === 'signin';
 
 function connectServer() {
   serverHandlers();
@@ -1722,6 +1761,7 @@ function submitAccount() {
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) { acct.msg = 'Names are 3-16 letters, numbers or _.'; return render(); }
   if (acct.tab === 'register' ? pass.length < 8 : !pass) { acct.msg = acct.tab === 'register' ? 'Passwords need at least 8 characters.' : 'Type your password.'; return render(); }
   acct.msg = null;
+  srv.setRemember(app.querySelector('#acct-remember')?.checked ?? true);
   connectServer();
   if (acct.tab === 'register') srv.register(name, pass); else srv.login(name, pass);
 }
@@ -1757,11 +1797,20 @@ function onServerMessage(msg) {
       return;
     case 'welcome': case 'me': case 'loggedOut':
       acct.msg = null;
-      if (screen === 'online') render();
+      if (msg.t === 'welcome') { try { localStorage.setItem(HAD_ACCOUNT_KEY, '1'); } catch { /* storage unavailable */ } }
+      if (msg.t === 'welcome' && screen === 'signin') {
+        // Signed in from the first-launch screen: on to the game (Play Online reconnects later).
+        srv.disconnect();
+        screen = 'menu';
+        render();
+        flash(`Welcome, ${msg.you?.name ?? 'traveller'}!`);
+        return;
+      }
+      if (onAcctScreen()) render();
       return;
     case 'authError':
       acct.msg = msg.msg;
-      if (screen === 'online') render();
+      if (onAcctScreen()) render();
       return;
     case 'replaced':
       flash(msg.msg);
@@ -2548,19 +2597,34 @@ function screenChange(from, to) {
   if (root && !root.classList.contains('arena')) fx.animate(root, frames, { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
 }
 
+// Text typed into a form survives a redraw of the same screen (say, when the server connects
+// while the player is typing their name).
+const KEPT_INPUTS = ['acct-name', 'acct-pass', 'friend-input', 'room-input', 'delete-pass'];
+function keepInputs() {
+  const focus = document.activeElement?.id;
+  const vals = KEPT_INPUTS.map((id) => [id, app.querySelector(`#${id}`)?.value]).filter(([, v]) => v);
+  return () => {
+    for (const [id, v] of vals) { const el = app.querySelector(`#${id}`); if (el && !el.value) el.value = v; }
+    if (focus && KEPT_INPUTS.includes(focus)) app.querySelector(`#${focus}`)?.focus();
+  };
+}
+
 function render() {
   // A new screen opens at its top (menus scroll inside #app).
   if (screen !== shownScreen) app.scrollTop = 0;
+  const restoreInputs = screen === shownScreen ? keepInputs() : null;
   document.body.classList.toggle('in-game', screen === 'game');
   if (screen !== 'game') hideBoard();
-  if (screen !== 'menu' && screen !== 'online' && screen !== 'howto') showMenuBackdrop(false);
+  if (screen !== 'menu' && screen !== 'online' && screen !== 'howto' && screen !== 'signin') showMenuBackdrop(false);
   if (screen !== 'game') clearTips();
   if (screen === 'menu') renderMenu();
   else if (screen === 'gallery') renderGallery();
   else if (screen === 'builder') renderBuilder();
   else if (screen === 'online') renderLobby();
+  else if (screen === 'signin') renderSignIn();
   else if (screen === 'howto') { app.innerHTML = howToPlayHTML(KEYWORD_TEXT); showMenuBackdrop(true); }
   else renderGame();
+  restoreInputs?.();
   music(screen === 'game' ? 'battle' : 'menu');
   fitAllText(app);
   syncReactionTimer();
@@ -3015,7 +3079,14 @@ function onButton(name) {
     case 'acctLogin': acct.tab = 'login'; acct.msg = null; return render();
     case 'acctRegister': acct.tab = 'register'; acct.msg = null; return render();
     case 'signIn': case 'signUp': return submitAccount();
-    case 'signOut': srv.logout(); lobby = { status: 'choose' }; return render();
+    case 'signOut':
+      srv.logout(); lobby = { status: 'choose' };
+      if (BUILD.online) { acct.tab = 'login'; acct.msg = null; screen = 'signin'; }
+      return render();
+    case 'playOffline':
+      try { sessionStorage.setItem(OFFLINE_KEY, '1'); } catch { /* storage unavailable */ }
+      srv.disconnect(); acct.msg = null; screen = 'menu';
+      return render();
     case 'quickMatch': return queueMatch('quick');
     case 'rankedMatch': return queueMatch('ranked');
     case 'privateMatch': return queueMatch('private');
@@ -3130,6 +3201,11 @@ fitMenus();
 window.addEventListener('resize', fitMenus);
 
 applySettings();
+if (needsSignIn()) {
+  screen = 'signin';
+  try { acct.tab = localStorage.getItem(HAD_ACCOUNT_KEY) ? 'login' : 'register'; } catch { acct.tab = 'register'; }
+  connectServer(); // wakes the server while the player types
+}
 render();
 boot();
 
@@ -3182,7 +3258,7 @@ function onBack() {
   if (zoomArt) return onButton('closeArt');
   if (zoomId) return onButton('closeZoom');
   if (screen === 'game') { if (!game?.state?.gameOver) return openSettings(); return onButton('menu'); }
-  if (screen !== 'menu') return onButton('menu');
+  if (screen !== 'menu' && screen !== 'signin') return onButton('menu');
   window.Capacitor?.Plugins?.App?.minimizeApp?.();
 }
 const nativeApp = window.Capacitor?.Plugins?.App;

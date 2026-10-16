@@ -74,6 +74,9 @@ export const KEYWORD_TEXT = {
   Devour: 'Whenever this destroys an enemy minion, it gains +1/+1.',
   Burrow: "Goes underground: it has Stealth until the start of your next turn, then it Surfaces. A minion with Burrow arrives Burrowed.",
   Surface: 'Happens when this comes back up from Burrow (at the start of your turn, or sooner if a card Surfaces it).',
+  Implant: 'Puts a parasite in an enemy minion. When that minion dies, a 1/1 Chestburster bursts out on your side.',
+  Chestburster: "A weak 1/1 newborn that remembers the minion it burst from. After 2 of your turns it Evolves into that realm's Xeno.",
+  Evolve: "A Chestburster turns into a stronger Xeno shaped by the realm of the minion it burst from (a Vampire's makes a Xeno Nosferatu, a Robot's a Xeno Mech...).",
   Infect: 'Mark an enemy minion as Infected. When an Infected minion dies, the player who Infected it summons a 2/1 Rage Runner with Rush.',
   Underground: "Bees (Hornet expansion): your Queen is hiding in your Hidden Nest. She can't be hurt there; when the Nest dies she comes back out with +2/+2.",
   'Hidden Nest': "A 0/5 Bee Hive with Stealth that can't attack. At the end of your turn it summons a 1/1 Hornet Drone with Rush. Exit: your Queen comes back out with +2/+2.",
@@ -124,6 +127,9 @@ export const BOARD_EVENTS = [
   'devoured',         // Plants: a minion with Devour destroyed an enemy minion: { source: the devourer, player }
   'minionBurrowed',   // Sand Sharks: a minion Burrowed ({ source, player })
   'minionSurfaced',   // Sand Sharks: a Burrowed minion Surfaced ({ source, player })
+  'implanted',        // Aliens (Hive Brood): an enemy minion was Implanted ({ target, player: its controller, by })
+  'chestburst',       // Aliens (Hive Brood): a Chestburster burst out ({ source, player })
+  'minionEvolved',    // Aliens (Hive Brood): a Chestburster Evolved ({ source, player })
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)
   'minionReborn',     // a minion came back through Reborn
   'minionHaunted',    // Ghosts: a minion was Haunted from a Graveyard

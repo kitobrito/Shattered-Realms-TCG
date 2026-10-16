@@ -3,6 +3,7 @@
 
 import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, mushroomsIn, radiationOf } from '../engine/core.js';
 import { actingPlayer } from '../engine/engine.js';
+import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
 import { BOARD_ART, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
@@ -22,10 +23,15 @@ export function keywordClasses(c) {
   return allKeywords(c).map((k) => `kw-${kwSlug(k)}`).join(' ');
 }
 
+// Aliens (Hive Brood): turns until a Chestburster Evolves.
+const evolveLeft = (m, s) => Math.max(1, evolveTurnsFor(s, m.controller) - (m.evolveProgress ?? 0));
+
 function cornerIcons(m, s) {
   return [
     m.prey ? '<i class="prey-mark" title="Marked Prey: Sharks hunt it through Stealth and Elusive">🩸</i>' : '',
     m.corrosion > 0 ? `<i class="corr-mark" title="Corrosion ${m.corrosion}: its Attack was lowered by ${m.corrosion} for as long as it stays in play">🧪${m.corrosion}</i>` : '',
+    m.implanted != null ? `<i class="implant-mark" title="Implanted: when it dies, a Chestburster bursts out on ${m.implanted === m.controller ? 'its own' : 'the other'} side">🥚</i>` : '',
+    m.cardId === 'chestburster' ? `<i class="evolve-mark" title="Chestburster: Evolves into a Xeno ${evolveLeft(m, s) <= 1 ? 'at the start of its next turn' : `in ${evolveLeft(m, s)} of its turns`}">⏳${evolveLeft(m, s)}</i>` : '',
     m.infected != null ? `<i class="infect-mark" title="Infected: when it dies, ${m.infected === s.players[m.controller]?.index ? 'its own side' : 'the other side'} summons a 2/1 Rage Runner">🦠</i>` : '',
     m.acidCoated ? '<i class="coat-mark" title="Acid-coated: its next Corrosion lowers its Attack by 1 more">💧</i>' : '',
     m.tempControl ? '<i title="Controlled temporarily">⛓</i>' : '',
@@ -37,7 +43,7 @@ function cornerIcons(m, s) {
 function badges(m) {
   if (hasKeyword(m, 'Silenced')) return '';
   // (An Infection's Rage Runner shows as the 🦠 mark, not as an Exit.)
-  const triggers = [...(getCard(m.cardId).triggers ?? []), ...(m.grantedTriggers ?? []).filter((t) => !t.infection)];
+  const triggers = [...(getCard(m.cardId).triggers ?? []), ...(m.grantedTriggers ?? []).filter((t) => !t.infection && !t.implant)];
   return [
     // Robots: installed Upgrades and the Weapon.
     m.upgrades ? `<i class="b-upgrade" title="${m.upgrades} Upgrade${m.upgrades === 1 ? '' : 's'} installed">⚙${m.upgrades}</i>` : '',
