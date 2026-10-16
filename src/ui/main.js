@@ -1422,7 +1422,8 @@ function accountHTML() {
       <input id="acct-pass" class="text-input" type="password" maxlength="128" placeholder="Password" autocomplete="${reg ? 'new-password' : 'current-password'}">
       ${reg ? '<p class="sub">Names are 3-16 letters, numbers or _. Passwords need 8+ characters.</p>' : ''}
       ${acct.msg ? `<p class="lobby-error">${esc(acct.msg)}</p>` : ''}
-      ${down && !acct.msg ? '<p class="lobby-error">Can\'t reach the game server right now. You can still play a friend with a room code below.</p>' : ''}
+      ${acct.slow && !acct.msg && acct.status !== 'error' ? '<p class="sub">Waking up the server. The first connection can take up to a minute.</p>' : ''}
+      ${down && !acct.msg && !acct.slow ? '<p class="lobby-error">Can\'t reach the game server right now. You can still play a friend with a room code below.</p>' : ''}
       <button data-act="${reg ? 'signUp' : 'signIn'}" ${busy ? 'disabled' : ''}>${busy ? 'Connecting…' : reg ? 'Create account' : 'Sign in'}</button>
     </div>`;
 }
@@ -1625,6 +1626,10 @@ function serverHandlers() {
     status: (st) => {
       acct.status = st;
       if (st === 'open') acct.msg = null;
+      // Still connecting after a few seconds: the server is probably waking up.
+      clearTimeout(acct.slowTimer);
+      acct.slow = false;
+      if (st === 'connecting' || st === 'down') acct.slowTimer = setTimeout(() => { if (acct.status !== 'open') { acct.slow = true; if (screen === 'online') render(); } }, 4000);
       if (st === 'down' && screen === 'game' && game?.mode === 'online' && link === srv && !game.state.gameOver) flash('Connection lost. Reconnecting…');
       if (st === 'down' && lobby?.status === 'queued') lobby = { status: 'choose', msg: 'Lost the connection to the server.' };
       if (screen === 'online') render();

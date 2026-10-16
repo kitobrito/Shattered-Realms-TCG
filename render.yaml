@@ -1,0 +1,17 @@
+# Render Blueprint for the Shattered Realms server (accounts, Quick Match, Ranked).
+# In Render: New + → Blueprint → pick this repository. See server/README.md.
+services:
+  - type: web
+    name: shattered-realms
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev --no-audit --no-fund
+    startCommand: node server/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Your Postgres connection string (e.g. from neon.com). Render asks for it when you create the Blueprint.
+      - key: DATABASE_URL
+        sync: false

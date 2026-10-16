@@ -1,0 +1,15 @@
+{
+  "name": "shattered-realms",
+  "private": true,
+  "type": "module",
+  "description": "Shattered Realms: the game (index.html, src, art) and its online server (server/).",
+  "scripts": {
+    "start": "node server/server.js",
+    "test:server": "node tools/test-server.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "pg": "^8.13.0",
+    "ws": "^8.18.0"
+  }
+}
