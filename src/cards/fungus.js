@@ -247,4 +247,90 @@ export const FUNGUS_CARDS = [
     trap: { on: 'mushroomTriggered', filter: { player: 'enemy' },
       effects: [{ op: 'damage', target: 'enemyHero', amount: 2 }] },
   },
+
+  // ---- Rot & Renewal expansion (unlockable) ----
+  // Corpses: a friendly Fungus minion that dies leaves a Corpse (as Zombies do; engine deaths
+  // step). These cards make more and spend them.
+  {
+    ...F, id: 'rotgrub_cap', name: 'Rotgrub Cap', art: '🍄', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Gain a Corpse.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'addCorpses', count: 1 }] }],
+  },
+  {
+    ...F, id: 'carrion_puffball', name: 'Carrion Puffball', art: '🍄', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Exit: Gain 2 Corpses.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'addCorpses', count: 2 }] }],
+  },
+  {
+    ...F, id: 'mulch_crawler', name: 'Mulch Crawler', art: '🪲', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Arrival: Spend a Corpse to gain +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', count: 1, effects: [{ op: 'buff', target: 'self', attack: 2, health: 2 }] }] }],
+  },
+  {
+    ...F, id: 'decay_tender', name: 'Decay Tender', art: '🌱', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Arrival: Spend 2 Corpses to restore 5 Health to your Hero.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', count: 2, effects: [{ op: 'heal', target: 'friendlyHero', amount: 5 }] }] }],
+  },
+  {
+    ...F, id: 'corpse_bloom', name: 'Corpse Bloom', art: '🌸', extra: true, cost: 3, attack: 3, health: 3,
+    text: 'Arrival: Spend 2 Corpses to add a random friendly minion that died this game to your hand.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', count: 2, effects: [{ op: 'addToHand', fromGraveyard: true }] }] }],
+  },
+  {
+    ...F, id: 'sludge_hulk', name: 'Sludge Hulk', art: '🟢', extra: true, cost: 4, attack: 3, health: 6, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: Spend up to 5 Corpses. Gain +1/+1 for each one.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', upTo: 5, each: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }] }],
+  },
+  {
+    ...F, id: 'grave_gardener', name: 'Grave Gardener', art: '⚰️', extra: true, cost: 4, attack: 4, health: 5,
+    text: 'Whenever another friendly minion dies, gain a Corpse.',
+    triggers: [{ on: 'minionDied', filter: { source: { side: 'friendly', notSelf: true } }, effects: [{ op: 'addCorpses', count: 1 }] }],
+  },
+  {
+    ...F, id: 'the_rot_king', name: 'The Rot King', art: '👑', extra: true, cost: 8, attack: 6, health: 6, costPerCorpse: 1,
+    text: 'Costs 1 less for each Corpse you have. Arrival: Spend all your Corpses (up to 10). Deal 1 damage to a random enemy for each one.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', upTo: 10,
+      each: [{ op: 'damage', target: { randomOf: { characters: { side: 'enemy' } }, aliveOnly: true }, amount: 1 }] }] }],
+  },
+  {
+    ...S, id: 'decompose', name: 'Decompose', art: '🍂', extra: true, cost: 1,
+    text: 'Destroy a friendly minion. Gain 3 Corpses and draw a card.',
+    target: { type: 'minion', side: 'friendly' },
+    effects: [{ op: 'destroy', target: 'chosen' }, { op: 'addCorpses', count: 3 }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, id: 'return_to_the_soil', name: 'Return to the Soil', art: '🌳', extra: true, cost: 3,
+    text: 'Deal 3 damage to an enemy minion. If you have 3 Corpses, spend them to destroy it instead.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'consumeCorpses', count: 3, effects: [{ op: 'destroy', target: 'chosen' }], otherwise: [{ op: 'damage', target: 'chosen', amount: 3 }] }],
+  },
+  {
+    ...S, id: 'feed_the_earth', name: 'Feed the Earth', art: '🌍', extra: true, cost: 1,
+    text: 'Quick Play: When a friendly minion dies, gain 3 Corpses.',
+    quickPlay: { windows: ['minionDied'], filter: { source: { side: 'friendly' } } },
+    effects: [{ op: 'addCorpses', count: 3 }],
+  },
+  {
+    ...S, id: 'rot_burst', name: 'Rot Burst', art: '💥', extra: true, cost: 1, requiresCorpses: 2,
+    text: 'Quick Play: When an enemy minion attacks, spend 2 Corpses to deal 4 damage to it.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
+    effects: [{ op: 'consumeCorpses', count: 2, effects: [{ op: 'damage', target: 'eventSource', amount: 4 }] }],
+  },
+  {
+    ...S, id: 'second_bloom', name: 'Second Bloom', art: '🌼', extra: true, cost: 2, requiresCorpses: 3,
+    text: 'Quick Play: When a friendly minion dies, spend 3 Corpses to summon it again with full Health.',
+    quickPlay: { windows: ['minionDied'], filter: { source: { side: 'friendly' } } },
+    effects: [{ op: 'consumeCorpses', count: 3, effects: [{ op: 'summon', eventCard: true }] }],
+  },
+  {
+    ...T, id: 'fester', name: 'Fester', art: '🦠', extra: true, cost: 1,
+    text: 'Trap: When an enemy minion destroys a friendly minion, deal damage to it equal to your Corpses (up to 5).',
+    trap: { on: 'minionDied', filter: { source: { side: 'friendly' }, killerPlayer: 'enemy', killerMinion: true },
+      effects: [{ op: 'damage', target: 'killer', amountFromCorpses: { max: 5 } }] },
+  },
+  {
+    ...T, id: 'mushroom_circle', name: 'Mushroom Circle', art: '⭕', extra: true, cost: 2,
+    text: 'Trap: When your Hero takes damage, gain 3 Corpses and summon two 1/2 Rotgrub Caps.',
+    trap: { on: 'damageDealt', filter: { target: 'friendlyHero' }, effects: [{ op: 'addCorpses', count: 3 }, { op: 'summon', cardId: 'rotgrub_cap', count: 2 }] },
+  },
 ];
