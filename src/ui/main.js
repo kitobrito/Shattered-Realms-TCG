@@ -1394,6 +1394,47 @@ function leaveOnline() {
 
 function stopQueueTicker() { clearInterval(queueTicker); queueTicker = null; }
 
+// ---- Play a bot while you wait (Quick Match / Ranked queue) ----
+// You stay in the queue while playing the AI. A banner keeps the search time; when a real
+// opponent is found, the bot game ends and you go straight into the match. The bot game's
+// "Main menu" goes back to the queue instead, and "Stop searching" leaves the queue but lets
+// you finish the bot game.
+let pendingStart = null;   // a match found mid-animation, started once the move has played out
+let waitBanner = null;
+const waitingInQueue = () => !!game?.waiting && lobby?.status === 'queued';
+
+function startBotWhileWaiting() {
+  if (lobby?.status !== 'queued' || lobby.mode === 'private') return;
+  startGame('ai', picked);
+  if (game?.mode === 'ai') game.waiting = { mode: lobby.mode };
+  render();
+}
+
+function stopSearching() {
+  srv.send({ t: 'cancel' });
+  lobby = { status: 'choose' };
+  if (game) game.waiting = null;
+  flash('Stopped searching. Finish your game against the bot.');
+  render();
+}
+
+function syncWaitBanner() {
+  if (!(screen === 'game' && waitingInQueue())) {
+    if (waitBanner) { clearInterval(waitBanner.timer); waitBanner.remove(); waitBanner = null; }
+    return;
+  }
+  if (waitBanner) return;
+  waitBanner = document.createElement('div');
+  waitBanner.className = 'wait-banner';
+  waitBanner.innerHTML = `<span class="wb-spin"></span><span>Searching for a real opponent · ${esc(MODE_NAMES[lobby.mode] ?? 'Match')} <b class="wb-time"></b></span>`
+    + '<button class="ghost" data-stop>Stop searching</button>';
+  waitBanner.querySelector('[data-stop]').addEventListener('click', stopSearching);
+  document.body.appendChild(waitBanner);
+  const tick = () => { const t = waitBanner?.querySelector('.wb-time'); if (t && lobby?.since) t.textContent = fmtWait(Date.now() - lobby.since); };
+  tick();
+  waitBanner.timer = setInterval(tick, 1000);
+}
+
 const MODE_NAMES = { quick: 'Quick match', ranked: 'Ranked match', private: 'Private match' };
 const fmtWait = (ms) => { const t = Math.floor(ms / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
 
@@ -1453,6 +1494,7 @@ function renderLobby() {
         <h3>${esc(MODE_NAMES[st.mode] ?? 'Match')}</h3>
         <p class="lobby-wait">${st.mode === 'private' ? `Waiting for <b>${esc(st.friend)}</b> to type your name (<b>${esc(srv.user?.name ?? '')}</b>)…` : 'Looking for an opponent…'}</p>
         <div class="queue-time">${fmtWait(Date.now() - st.since)}</div>
+        ${st.mode !== 'private' ? '<button data-act="botWhileWaiting">🤖 Play a bot while you wait</button>' : ''}
         <button data-act="cancelQueue" class="ghost">Cancel</button>
       </div>`
     : st.status === 'delete'
@@ -1714,6 +1756,13 @@ function onServerMessage(msg) {
       lobby = { status: 'leaderboard', rows: msg.rows };
       return render();
     case 'start': {
+      // A real opponent while you play a bot: finish the move on screen first, then switch.
+      if (game?.waiting && screen === 'game') {
+        if (animating) { pendingStart = msg; return; }
+        clearTimeout(aiTimer); drag.cancel(); hidePreview();
+        game.waiting = null;
+        flash(`Real opponent found: ${msg.opponent?.name ?? 'a player'}!`);
+      }
       const online = { server: true, mode: msg.mode, opponent: msg.opponent, you: msg.you };
       if (msg.resume && inServerGame) { game.online = online; applySync(msg.state); flash('Reconnected.'); return; }
       link = srv;
@@ -2370,7 +2419,7 @@ function renderGame() {
   }
   app.innerHTML = boardHTML({
     s, me: viewer, legal: legalForView(), mode: game.mode, handoff, isAI, history, logOpen, mullMarked, shattered: heroesShattered, rope: ropeState(),
-    endArmed: endArmed === s.turn, concedeAsk, stats: game.stats, online: game.online, result: game.result,
+    endArmed: endArmed === s.turn, concedeAsk, stats: game.stats, online: game.online, result: game.result, waiting: waitingInQueue(),
     unlocked: game.unlocked, fresh: s.gameOver && heroesShattered && !game.summaryShown,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
   });
@@ -2485,6 +2534,8 @@ function render() {
   fitAllText(app);
   syncReactionTimer();
   syncTurnTimer();
+  syncWaitBanner();
+  if (pendingStart && !animating) { const m = pendingStart; pendingStart = null; queueMicrotask(() => onServerMessage(m)); }
   if (screen !== shownScreen) { screenChange(shownScreen, screen); shownScreen = screen; }
   if (zoomAnim) { const a = zoomAnim; zoomAnim = null; if (zoomId) playZoomAnim(a); }
 }
@@ -2912,7 +2963,14 @@ function onButton(name) {
       if (next === zoomId) return;
       zoomId = next; zoomAnim = { dir: name === 'zoomNext' ? 1 : -1 }; return render();
     }
-    case 'menu': clearTimeout(aiTimer); drag.cancel(); hidePreview(); if (game?.mode === 'online' || screen === 'online') leaveOnline(); screen = 'menu'; return render();
+    case 'menu':
+      clearTimeout(aiTimer); drag.cancel(); hidePreview();
+      // From a bot game played while queued: back to the queue (still searching).
+      if (screen === 'game' && waitingInQueue()) { screen = 'online'; return render(); }
+      if (game?.mode === 'online' || screen === 'online') leaveOnline();
+      screen = 'menu';
+      return render();
+    case 'botWhileWaiting': return startBotWhileWaiting();
     case 'online':
       if (!BUILD.online) return;
       sound.play('click');
@@ -2946,6 +3004,7 @@ function onButton(name) {
       try { localStorage.setItem(LOG_KEY, logOpen ? '1' : '0'); } catch { /* storage unavailable */ }
       return render();
     case 'rematch':
+      if (waitingInQueue()) return startBotWhileWaiting();
       if (game.mode === 'online' && game.online?.server) { leaveOnline(); lobby = { status: 'choose' }; screen = 'online'; srv.send({ t: 'me' }); return render(); }
       if (game.mode === 'online') { flash('Host a new online game from the menu.'); leaveOnline(); screen = 'menu'; return render(); }
       return startGame(game.mode, game.factions, game.rivalFactions);

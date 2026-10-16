@@ -465,7 +465,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
       ${best}
       ${rewards}
       ${onlineResultHTML(ctx)}
-      <div class="go-actions" style="--i:${i + 3}"><button data-act="rematch">${ctx.online?.server ? 'Play again' : 'Rematch'}</button><button data-act="menu" class="ghost">Main menu</button></div>
+      <div class="go-actions" style="--i:${i + 3}"><button data-act="rematch">${ctx.waiting ? 'Another bot game' : ctx.online?.server ? 'Play again' : 'Rematch'}</button><button data-act="menu" class="ghost">${ctx.waiting ? 'Back to the queue' : 'Main menu'}</button></div>
     </div></div>`;
 }
 

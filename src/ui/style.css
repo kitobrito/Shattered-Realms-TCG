@@ -4148,3 +4148,13 @@ body.reduced-motion .living > *, body.reduced-motion .hero-portrait .portrait-gl
 @keyframes sand-drift { from { transform: translateY(0) scaleX(1); } to { transform: translateY(-3%) scaleX(1.03); } }
 .b-surface { filter: drop-shadow(0 0 3px #e2bd73); }
 body.reduced-motion .minion.burrowed .m-sand { animation: none; }
+
+/* ---- Playing a bot while queued: the search keeps going (main.js syncWaitBanner) ---- */
+.wait-banner { position: fixed; top: max(6px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 950;
+  display: flex; align-items: center; gap: 10px; padding: 5px 6px 5px 12px; border-radius: 999px;
+  background: #140c1ee6; border: 1px solid #e7b55288; box-shadow: 0 4px 14px #000b; color: #f1e3c0;
+  font-size: 13px; letter-spacing: 0.02em; white-space: nowrap; pointer-events: auto; }
+.wait-banner b { color: #ffd76a; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.wait-banner button { padding: 3px 10px; font-size: 12px; }
+.wait-banner .wb-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e7b55244; border-top-color: #ffd76a; animation: wb-spin 0.9s linear infinite; }
+@keyframes wb-spin { to { transform: rotate(360deg); } }
