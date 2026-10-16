@@ -9,6 +9,10 @@
 // preview, card lifted); a second tap plays it, and dragging plays it as usual.
 // Pressing and holding a hand card shows its big preview until you let go
 // (the release neither picks the card up nor plays it).
+//
+// While the last move is still animating you can already pick up and drag your
+// next card: dropping it holds the play, and it goes through (if it is still
+// legal) the moment the animation ends.
 
 import { ghost } from './fx.js';
 
@@ -21,6 +25,8 @@ let drag = null;    // a hand card is being dragged
 let aim = null;     // a targeting arrow is active
 let inspectedAt = 0;  // when the card was picked up (a fast second click is a double-click, not a play)
 let inspected = null; // touch: hand card uid shown in the preview, waiting for a second tap
+let queued = null;    // a card dropped during an animation, waiting to be played
+let pointerId = null; // the finger (or mouse) the current press/drag belongs to; other touches are ignored
 
 // ---- Arrow overlay --------------------------------------------------------------
 
@@ -159,6 +165,7 @@ export function putBack() {
 
 export function cancel() {
   endHold();
+  if (queued) { queued.ghost.remove(); queued = null; }
   if (aim) aimEndedAt = Date.now();
   clearInspect();
   if (drag?.ghost) drag.ghost.remove();
@@ -168,6 +175,7 @@ export function cancel() {
   drag = null;
   aim = null;
   press = null;
+  pointerId = null;
   hideArrow();
   if (api) paintTargets();
 }
@@ -206,6 +214,11 @@ const overBoard = (x, y) => {
   return r && y >= r.top - 40 && y <= r.bottom + 30 && x >= r.left - 40 && x <= r.right + 40;
 };
 
+// Where the card lands is judged where the card is (above the finger on touch).
+const cardY = (e) => (drag?.touch ? e.clientY - drag.offY / 2 : e.clientY);
+// A drop counts if the card is above the hand, or (touch) it was swiped up decisively.
+const droppedOnField = (e) => aboveHand(cardY(e)) || (drag?.touch && drag.startY - e.clientY > 70);
+
 const aboveHand = (y) => {
   const hand = api.root().querySelector('.my-hand');
   return y < hand.getBoundingClientRect().top + 30;
@@ -213,11 +226,37 @@ const aboveHand = (y) => {
 
 // ---- Pointer handlers ------------------------------------------------------------------
 
+// Touch: a press in the hand that lands in a gap between cards picks the nearest card.
+function handCardAt(e) {
+  const direct = e.target.closest('[data-hand]');
+  if (direct || e.pointerType !== 'touch') return direct;
+  const hand = e.target.closest('.my-hand');
+  if (!hand) return null;
+  let best = null, bestD = Infinity;
+  for (const el of hand.querySelectorAll('[data-hand]')) {
+    const r = el.getBoundingClientRect();
+    const d = Math.abs(e.clientX - (r.left + r.width / 2));
+    if (d < bestD) { best = el; bestD = d; }
+  }
+  return best;
+}
+
 function onDown(e) {
+  // A second finger (or a palm) while one is already pressing or dragging is ignored.
+  if ((press || drag) && pointerId != null && e.pointerId !== pointerId) return;
+  pointerId = e.pointerId;
   // Touching anything other than the inspected card puts it back.
   if (inspected != null && !e.target.closest(`[data-hand="${inspected}"]`)) clearInspect();
   // Hand cards can be tapped or clicked to read them even when you can't play (enemy turn).
-  const tapped = e.button === 0 ? e.target.closest('[data-hand]') : null;
+  const tapped = e.button === 0 ? handCardAt(e) : null;
+  // Your turn, but the last move is still animating: you may already pick up a card.
+  const planning = !api.canAct() && !!api.canPlan?.() && !queued;
+  if (tapped && planning) {
+    const uid = Number(tapped.dataset.hand);
+    press = { kind: 'hand', el: tapped, uid, options: null, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch' };
+    e.preventDefault();
+    return;
+  }
   if (tapped && !api.canAct()) {
     const uid = Number(tapped.dataset.hand);
     if (inspected === uid) { clearInspect(); return; }
@@ -235,7 +274,7 @@ function onDown(e) {
   if (e.button !== 0 || !api.canAct()) return;
   if (aim) return; // clicks during aiming are handled on pointerup
   const legal = api.legal();
-  const handEl = e.target.closest('[data-hand]');
+  const handEl = handCardAt(e);
   const hsEl = e.target.closest('[data-hs]');
   const charEl = e.target.closest('[data-char]');
   if (handEl) {
@@ -270,13 +309,16 @@ function onDown(e) {
 }
 
 function onMove(e) {
+  if (pointerId != null && e.pointerId !== pointerId) return;
   if (press && !drag && press.kind === 'hand' && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) endHold();
-  if (press && !drag && press.kind === 'hand' && press.options.length && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) {
+  if (press && !drag && press.kind === 'hand' && (press.options === null || press.options.length) && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) {
     clearInspect();
     // Start dragging a hand card.
     const rect = press.el.getBoundingClientRect();
+    // Touch: the card rides above your thumb so you can see it (and where it will land).
+    const lift = press.touch ? { offX: rect.width / 2, offY: rect.height + 14 } : { offX: press.x - rect.left, offY: press.y - rect.top };
     drag = { uid: press.uid, options: press.options, el: press.el, minion: press.el.classList.contains('t-minion'),
-      offX: press.x - rect.left, offY: press.y - rect.top, ghost: ghost(press.el, rect), rect };
+      ...lift, ghost: ghost(press.el, rect), rect, startY: press.y, touch: press.touch };
     drag.ghost.classList.add('dragging');
     press.el.classList.add('drag-src');
     api.onChange?.();
@@ -292,9 +334,9 @@ function onMove(e) {
     g.style.setProperty('--tilt', `${drag.tilt.toFixed(1)}deg`);
     clearTimeout(drag.settle);
     drag.settle = setTimeout(() => g.style.setProperty('--tilt', '0deg'), 90);
-    const lifted = aboveHand(e.clientY);
+    const lifted = aboveHand(cardY(e));
     g.classList.toggle('lifted', lifted);
-    if (drag.minion && overBoard(e.clientX, e.clientY)) showGap(slotIndex(e.clientX)); else removeGap();
+    if (drag.minion && overBoard(e.clientX, cardY(e))) showGap(slotIndex(e.clientX)); else removeGap();
   }
   if (aim) {
     const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-char]');
@@ -308,6 +350,7 @@ function onMove(e) {
 }
 
 function onUp(e) {
+  if (pointerId != null && e.pointerId !== pointerId && (press || drag)) return;
   if (e.button === 2) { cancel(); return; }
   // Releasing / clicking while aiming (attack drags, or click-to-target).
   if (aim && (!press || press.kind === 'attack')) {
@@ -332,11 +375,36 @@ function onUp(e) {
     return;
   }
 
+  if (kind === 'hand' && options === null) {
+    // Picked up during an animation.
+    if (drag && droppedOnField(e)) {
+      const position = drag.minion && overBoard(e.clientX, cardY(e)) ? slotIndex(e.clientX) : undefined;
+      const g = drag.ghost;
+      drag.ghost = null;
+      g.classList.add('aiming-card');
+      removeGap();
+      queued = { uid: press.uid, minion: drag.minion, position, ghost: g, at: Date.now() };
+      drag = null;
+      press = null;
+      waitForTurn();
+      return;
+    }
+    if (drag) { cancel(); return; }
+    // A tap: just read the card.
+    press = null;
+    clearInspect();
+    inspected = Number(el.dataset.hand);
+    inspectedAt = Date.now();
+    el.classList.add('inspect');
+    api.inspect?.(el);
+    return;
+  }
+
   if (kind === 'hand') {
     const needsTarget = options.some((a) => a.target != null);
     if (drag) {
-      const placeOnBoard = aboveHand(e.clientY);
-      const position = drag.minion && overBoard(e.clientX, e.clientY) ? slotIndex(e.clientX) : undefined;
+      const placeOnBoard = droppedOnField(e);
+      const position = drag.minion && overBoard(e.clientX, cardY(e)) ? slotIndex(e.clientX) : undefined;
       if (!placeOnBoard) {
         // Dropped back on the hand: cancel.
         cancel();
@@ -384,11 +452,43 @@ function onUp(e) {
   }
 }
 
+// A card dropped during an animation: play it as soon as you can act again.
+function waitForTurn() {
+  const q = queued;
+  if (!q) return;
+  if (api.canAct()) {
+    queued = null;
+    const options = api.legal().filter((a) => a.type === 'play' && a.card === q.uid);
+    const handEl = api.root().querySelector(`[data-hand="${q.uid}"]`);
+    if (!options.length) {
+      // No longer playable (not enough Mana, board full...): the card goes back.
+      q.ghost.remove();
+      if (handEl) api.deny?.(handEl, 'card', q.uid);
+      return;
+    }
+    if (options.some((a) => a.target != null)) {
+      startAim(q.ghost, options, { extra: q.minion ? { position: q.position } : {}, source: q.ghost });
+      aim.ghost = q.ghost;
+      handEl?.classList.add('drag-src');
+      return;
+    }
+    api.act({ ...options[0], ...(q.position != null ? { position: q.position } : {}) }, { from: q.ghost, dropped: true });
+    q.ghost.remove();
+    return;
+  }
+  // Still animating (and still your turn): keep waiting, but not forever.
+  if (!api.canPlan?.() || Date.now() - q.at > 8000) { queued = null; q.ghost.remove(); return; }
+  requestAnimationFrame(waitForTurn);
+}
+
 export function init(handlers) {
   api = handlers;
   document.addEventListener('pointerdown', onDown);
   document.addEventListener('pointermove', onMove);
   document.addEventListener('pointerup', onUp);
+  // The system took the touch away (an edge swipe, a notification...): drop the drag cleanly
+  // instead of leaving it stuck to the next touch.
+  document.addEventListener('pointercancel', () => { if (press || drag || aim) cancel(); });
   document.addEventListener('contextmenu', (e) => { if (aim || drag) { e.preventDefault(); cancel(); } });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && (aim || drag)) cancel(); });
 }
