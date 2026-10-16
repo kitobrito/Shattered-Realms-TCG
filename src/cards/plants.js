@@ -15,6 +15,9 @@ const ALL_FRIENDLY_PLANTS = { minions: { side: 'friendly', tribe: 'Plant' } };
 const MY_TURN_START = { on: 'startOfTurn', filter: { player: 'friendly' } };
 const MY_TURN_END = { on: 'endOfTurn', filter: { player: 'friendly' } };
 const IF_SEEDLING = { controls: { tribe: 'Seedling' } };
+// Carnivorous Garden expansion: Devour (see rules.js) and the Flytrap Sprout token.
+const ENEMY_MINION = { type: 'minion', side: 'enemy' };
+const sprout = { op: 'summon', cardId: 'flytrap_sprout' };
 
 export const PLANT_CARDS = [
   // ---- Hero Spell ----
@@ -263,7 +266,88 @@ export const PLANT_CARDS = [
       effects: [{ op: 'summon', cardId: 'treant' }] },
   },
 
+  // ---- Carnivorous Garden expansion (unlockable) ----
+  // Devour: whenever the minion destroys an enemy minion, it gains +1/+1.
+  {
+    ...P, id: 'snapjaw_sprout', name: 'Snapjaw Sprout', art: '🪴', extra: true, cost: 1, attack: 1, health: 2, keywords: ['Devour'],
+    text: 'Devour.',
+  },
+  {
+    ...S, id: 'sticky_sundew', name: 'Sticky Sundew', art: '💧', extra: true, cost: 1,
+    text: 'Freeze an enemy minion and deal 1 damage to it.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'buff', target: 'chosen', keywords: ['Frozen'] }, { op: 'damage', target: 'chosen', amount: 1 }],
+  },
+  {
+    ...P, id: 'bladderwort_snapper', name: 'Bladderwort Snapper', art: '🫧', extra: true, cost: 2, attack: 2, health: 1, keywords: ['Rush', 'Devour'],
+    text: 'Rush. Devour.',
+  },
+  {
+    ...P, id: 'sundew_lurer', name: 'Sundew Lurer', art: '🌿', extra: true, cost: 2, attack: 1, health: 3, keywords: ['Taunt'],
+    text: 'Taunt. Whenever an enemy minion attacks this, Freeze it.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [{ op: 'buff', target: 'eventSource', keywords: ['Frozen'] }] }],
+  },
+  {
+    ...S, id: 'hunger_of_the_garden', name: 'Hunger of the Garden', art: '🌱', extra: true, cost: 2,
+    text: 'Give a friendly Plant +1/+1 and Devour.',
+    target: FRIENDLY_PLANT,
+    effects: [{ op: 'buff', target: 'chosen', attack: 1, health: 1, keywords: ['Devour'] }],
+  },
+  {
+    ...T, id: 'pitfall_pitcher', name: 'Pitfall Pitcher', art: '🏺', extra: true, cost: 2,
+    text: 'When an enemy minion attacks: Destroy it if it has 3 or less Attack. Otherwise, deal 3 damage to it.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [
+      { op: 'destroy', target: 'eventSource', if: { subject: 'eventSource', attackAtMost: 3 }, else: [{ op: 'damage', target: 'eventSource', amount: 3 }] },
+    ] },
+  },
+  {
+    ...P, id: 'giant_flytrap', name: 'Giant Flytrap', art: '🪤', extra: true, cost: 3, attack: 2, health: 2, keywords: ['Devour'],
+    text: 'Devour. Arrival: Deal 2 damage to an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: 'chosen', amount: 2 }] }],
+  },
+  {
+    ...P, id: 'carrion_gardener', name: 'Carrion Gardener', art: '🧺', extra: true, cost: 3, attack: 2, health: 3,
+    text: 'Whenever another friendly Plant Devours, summon a 1/2 Flytrap Sprout with Devour.',
+    triggers: [{ on: 'devoured', filter: { source: { side: 'friendly', notSelf: true } }, effects: [sprout] }],
+  },
+  {
+    ...S, id: 'garden_frenzy', name: 'Garden Frenzy', art: '🦷', extra: true, cost: 4,
+    text: 'Give your Plants +1 Attack and Devour this turn.',
+    effects: [{ op: 'buff', target: ALL_FRIENDLY_PLANTS, attack: 1, temporary: true, temporaryKeywords: ['Devour'] }],
+  },
+  {
+    ...S, id: 'digestive_enzymes', name: 'Digestive Enzymes', art: '🧪', extra: true, cost: 3,
+    text: 'Destroy a damaged enemy minion. Restore 4 Health to your Hero.',
+    target: { type: 'minion', side: 'enemy', damaged: true },
+    effects: [{ op: 'destroy', target: 'chosen' }, { op: 'heal', target: 'friendlyHero', amount: 4 }],
+  },
+  {
+    ...P, id: 'pitcher_plant', name: 'Pitcher Plant', art: '🏺', extra: true, cost: 4, attack: 2, health: 5, keywords: ['Taunt', 'Devour'],
+    text: 'Taunt. Devour.',
+  },
+  {
+    ...P, id: 'cobra_lily', name: 'Cobra Lily', art: '🐍', extra: true, cost: 5, attack: 3, health: 3, keywords: ['Venomous', 'Devour'],
+    text: 'Venomous. Devour.',
+  },
+  {
+    ...P, id: 'flytrap_matriarch', name: 'Flytrap Matriarch', art: '🌺', extra: true, cost: 5, attack: 3, health: 5,
+    text: 'At the end of your turn, summon a 1/2 Flytrap Sprout with Devour.',
+    triggers: [{ ...MY_TURN_END, effects: [sprout] }],
+  },
+  {
+    ...P, id: 'monstrous_nepenthes', name: 'Monstrous Nepenthes', art: '🏺', extra: true, cost: 7, attack: 4, health: 7, keywords: ['Taunt', 'Devour'],
+    text: 'Taunt. Devour. Whenever this Devours, restore 2 Health to your Hero.',
+    triggers: [{ on: 'devoured', filter: { source: 'self' }, effects: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }],
+  },
+  {
+    ...P, id: 'titan_arum', name: 'Titan Arum, the Corpse Flower', art: '🌺', extra: true, cost: 10, attack: 6, health: 6,
+    text: 'Arrival: Destroy the enemy minion with the highest Attack and gain its Attack and Health.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'devourStrongest' }] }],
+  },
+
   // ---- Tokens ----
+  { ...P, id: 'flytrap_sprout', name: 'Flytrap Sprout', art: '🪴', token: true, cost: 1, attack: 1, health: 2, keywords: ['Devour'], text: 'Devour.' },
   { ...SEEDLING, id: 'seedling', name: 'Seedling', art: '🌱', token: true, cost: 0, attack: 0, health: 1, text: '' },
   {
     ...SEEDLING, id: 'seedling_of_growth', name: 'Seedling', art: '🌱', token: true, cost: 0, attack: 0, health: 1,
