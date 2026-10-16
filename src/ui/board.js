@@ -216,8 +216,8 @@ function beyondHTML(pl, s) {
 // Zombies: Corpses left behind (shown once a player has any, or plays Zombies).
 function corpseHTML(pl) {
   const n = pl.corpses ?? 0;
-  if (!n && !pl.factions.includes('Zombies')) return '';
-  return `<div class="corpse-badge ${n ? '' : 'empty'}" title="${n} Corpse${n === 1 ? '' : 's'}: left when a friendly Zombie dies; Zombie cards consume them"><span>🪦</span><b>${n}</b></div>`;
+  if (!n && !pl.factions.includes('Zombies') && !pl.factions.includes('Fungus')) return '';
+  return `<div class="corpse-badge ${n ? '' : 'empty'}" title="${n} Corpse${n === 1 ? '' : 's'}: left when a friendly Zombie or Fungus minion dies; some cards spend them"><span>🪦</span><b>${n}</b></div>`;
 }
 
 function extinctionHTML(pl, s) {

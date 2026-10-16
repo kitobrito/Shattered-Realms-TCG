@@ -127,7 +127,9 @@ export function resolveSelector(state, sel, ctx) {
   }
   if (sel.randomOf) {
     // count: up to N different picks (Tri-Maw Hydra).
-    const pool = resolveSelector(state, sel.randomOf, ctx);
+    let pool = resolveSelector(state, sel.randomOf, ctx);
+    // aliveOnly: skip minions already at 0 Health this step (The Rot King's split damage).
+    if (sel.aliveOnly) pool = pool.filter((id) => { const c = findCharacter(state, id); return c && c.health > 0 && !c.destroyed; });
     const out = [];
     for (let i = 0; i < (sel.count ?? 1) && pool.length; i++) {
       const pick = pickRandom(state, pool);

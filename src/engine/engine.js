@@ -732,6 +732,11 @@ const STEPS = {
         (zp.deadZombies ??= []).push(m.cardId);
         zp.zombieDeathsThisTurn = (zp.zombieDeathsThisTurn ?? 0) + 1;
         log(state, `🪦 ${nameOf(state, m)} leaves a Corpse.`);
+      } else if (m.tribes.includes('Fungus')) {
+        // Fungus (Rot & Renewal): a friendly Fungus minion that dies also leaves a Corpse.
+        const fp = state.players[m.controller];
+        fp.corpses = (fp.corpses ?? 0) + 1;
+        log(state, `🪦 ${nameOf(state, m)} leaves a Corpse.`);
       }
       // noExit: destroyed without its Exit (Emergency Hatching).
       if (!m.noExit) steps.push(...selfTriggerSteps(state, card, 'deathrattle', { self: m.uid, controller: m.controller, event }));

@@ -456,6 +456,9 @@ export const EFFECT_OPS = {
   // target, that damage pauses for their window and resolves afterwards.
   damage(state, e, ctx) {
     let base = e.amountIf && checkCondition(state, e.amountIf.if, ctx) ? e.amountIf.amount : e.amount;
+    // amountFromCorpses: { max } — as much damage as you have Corpses (Fester).
+    if (e.amountFromCorpses) base = Math.min(e.amountFromCorpses.max ?? 99, state.players[ctx.controller].corpses ?? 0);
+    if (e.amountFromCorpses && !base) return;
     // amountPerCount: { count: selector, each, max } — extra damage per matching character (Colossus Prime).
     if (e.amountPerCount) base += Math.min(e.amountPerCount.max ?? 99, resolveSelector(state, e.amountPerCount.count, ctx).length * (e.amountPerCount.each ?? 1));
     const deferred = [];
@@ -765,7 +768,15 @@ export const EFFECT_OPS = {
 
   // { cardId } — put a card into your hand.
   addToHand(state, e, ctx) {
-    addToHand(state, ctx.controller, e.cardId, { ...(e.costMod ? { costMod: e.costMod } : {}), ...(e.minCost != null ? { minCost: e.minCost } : {}) });
+    let cardId = e.cardId;
+    // fromGraveyard: a random friendly minion that died this game, not a token (Corpse Bloom).
+    if (e.fromGraveyard) {
+      const pool = [...new Set(state.players[ctx.controller].graveyard.filter((g) => g.died).map((g) => g.cardId)
+        .filter((id) => getCard(id)?.type === 'minion' && !getCard(id).token))];
+      if (!pool.length) { log(state, 'No friendly minion has died yet.'); return; }
+      cardId = pickRandom(state, pool);
+    }
+    addToHand(state, ctx.controller, cardId, { ...(e.costMod ? { costMod: e.costMod } : {}), ...(e.minCost != null ? { minCost: e.minCost } : {}) });
   },
 
   // { amount } — extra Mana this turn only (Mana Potion).
@@ -1367,10 +1378,24 @@ export const EFFECT_OPS = {
   },
 
   // ---- Zombies: Corpses ----
-  // { count, effects } — spend friendly Corpses; the effects happen only if you had enough.
+  // { count, effects, otherwise? } — spend friendly Corpses; the effects happen only if you had
+  // enough (otherwise the `otherwise` effects do: Return to the Soil).
+  // { upTo, each } — spend as many as you have, up to N, and repeat `each` once per Corpse
+  // spent (Sludge Hulk, The Rot King).
   consumeCorpses(state, e, ctx) {
     const pl = state.players[ctx.controller];
-    if ((pl.corpses ?? 0) < e.count) { log(state, `Not enough Corpses (${pl.corpses ?? 0}/${e.count}).`); return; }
+    if (e.upTo != null) {
+      const n = Math.min(e.upTo, pl.corpses ?? 0);
+      if (!n) { log(state, 'No Corpses to spend.'); return; }
+      pl.corpses -= n;
+      log(state, `🪦 ${pl.name} consumes ${n} Corpse${n === 1 ? '' : 's'}.`);
+      for (let i = 0; i < n; i++) for (const sub of e.each ?? []) resolveEffect(state, sub, ctx);
+      return;
+    }
+    if ((pl.corpses ?? 0) < e.count) {
+      if (e.otherwise) { for (const sub of e.otherwise) resolveEffect(state, sub, ctx); return; }
+      log(state, `Not enough Corpses (${pl.corpses ?? 0}/${e.count}).`); return;
+    }
     pl.corpses -= e.count;
     log(state, `🪦 ${pl.name} consumes ${e.count} Corpse${e.count === 1 ? '' : 's'}.`);
     for (const sub of e.effects ?? []) resolveEffect(state, sub, ctx);

@@ -134,6 +134,8 @@ export function costOf(state, inst) {
   }
   // Ghosts: Graveyard Colossus — 1 less for every 2 minions that died this game, to a minimum.
   if (card.costPerDeaths && state) aura -= Math.min(Math.floor((state.deathsThisGame ?? 0) / card.costPerDeaths.per), Math.max(0, card.cost - card.costPerDeaths.min));
+  // Fungus: The Rot King — 1 less for each Corpse you have.
+  if (card.costPerCorpse && state) aura -= Math.floor((state.players[inst.owner]?.corpses ?? 0) / card.costPerCorpse);
   // Robots: Chief Engineer — the next Upgrade you play costs less.
   if (card.upgrade && state) aura -= state.players[inst.owner]?.upgradeDiscount ?? 0;
   return Math.max(inst.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
