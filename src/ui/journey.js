@@ -68,6 +68,12 @@ export function availableFactions() {
   return PLAYABLE_FACTIONS.filter((f) => open.has(f));
 }
 
+// Start the new-player path again (to try it, or to show someone); decks and unlocked cards stay.
+export function restartJourney() {
+  state = { games: 0, done: false, seen: state.seen ?? [] };
+  save();
+}
+
 export function unlockEverything() {
   state.done = true;
   save();
