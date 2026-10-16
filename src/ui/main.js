@@ -1051,6 +1051,8 @@ const TIPS = [
   'Divine: healing a character at full Health raises its maximum Health (Overheal).',
   'Robots: Upgrades stack on one machine. Build one great Robot, or a swarm of Drones.',
   'Bees: protect the Hive. When it falls, the Queen emerges, and if she dies your Hero takes 10 damage.',
+  "Bees: you don't have to break the Hive to beat the Bees. Their Hero falls at 0 Health like anyone else's.",
+  'Bees: Burrow the Queen hides her in a Hidden Nest that can\'t be attacked. Damage that hits every minion is the usual way to dig her out.',
   'Acidic: Corrosion lowers Attack for good. A minion at 0 Attack can\'t attack until something raises it.',
   'Sharks: enemy minions at 3 Health or less become Marked Prey. Heal them above 3 to shake the hunters off.',
   'Ultraterrestrials: a Displaced minion is gone until the turn named, so it dodges attacks, spells and board wipes, and its abilities stop.',
