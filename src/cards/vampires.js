@@ -139,11 +139,13 @@ export const VAMPIRE_CARDS = [
   {
     ...S, id: 'vampirism', name: 'Vampirism', art: '🧛',
     cost: 3,
-    text: 'One non-Vampire minion becomes a Vampire and gains Lifesteal.',
-    target: { type: 'minion', side: 'any', notTribe: 'Vampire' },
+    text: 'Give a Vampire +2/+2. Or turn any other minion into a Vampire with Lifesteal.',
+    target: { type: 'minion', side: 'any' },
     effects: [
-      { op: 'addTribe', target: 'chosen', tribe: 'Vampire' },
-      { op: 'buff', target: 'chosen', keywords: ['Lifesteal'] },
+      { op: 'buff', target: 'chosen', attack: 2, health: 2, if: { subject: 'chosen', tribe: 'Vampire' }, else: [
+        { op: 'addTribe', target: 'chosen', tribe: 'Vampire' },
+        { op: 'buff', target: 'chosen', keywords: ['Lifesteal'] },
+      ] },
     ],
   },
   {
@@ -242,10 +244,10 @@ export const VAMPIRE_CARDS = [
   {
     ...T, id: 'crimson_feast', name: 'Crimson Feast', art: '🍖',
     cost: 2,
-    text: 'When an enemy minion damages your Hero, destroy that minion if it has 2 or less Health and restore 2 Health to your Hero.',
-    // Q: the heal happens even if the minion has more than 2 Health.
-    trap: { on: 'damageDealt', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [
-      { op: 'destroy', target: 'eventSource', if: { subject: 'eventSource', healthAtMost: 2 } },
+    text: 'When an enemy minion with 2 or less Health damages your Hero, destroy it and restore 2 Health to your Hero.',
+    // Only a minion it can destroy sets it off (a bigger attacker no longer wastes it).
+    trap: { on: 'damageDealt', filter: { source: { side: 'enemy', maxHealth: 2 }, target: 'friendlyHero' }, effects: [
+      { op: 'destroy', target: 'eventSource' },
       { op: 'heal', target: 'friendlyHero', amount: 2 },
     ] },
   },
