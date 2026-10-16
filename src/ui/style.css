@@ -4132,3 +4132,19 @@ body:not(.in-game) #app :is(.sub, .ts-soon, .deck-line, .fg-head span, .journey-
 .arena .hero-portrait .portrait-front.fused { animation: lv-figure 5.5s ease-in-out infinite; }
 body.reduced-motion .living > *, body.reduced-motion .hero-portrait .portrait-glint { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .living > *, .hero-portrait .portrait-glint { animation: none !important; } }
+
+/* ---- Sand Sharks: a Burrowed minion sinks into a sand mound (it has Stealth until it Surfaces) ---- */
+.minion.burrowed .m-art { filter: sepia(0.7) saturate(0.85) brightness(0.6) contrast(1.05); }
+.minion.burrowed .m-fx { overflow: visible; }
+.minion.burrowed .m-sand { display: block; z-index: 4; inset: auto -12% -8% -12%; height: 58%;
+  border-radius: 58% 42% 14% 14% / 78% 66% 14% 14%;
+  background:
+    radial-gradient(ellipse 34% 20% at 30% 26%, #fbe6b4cc, #0000 72%),
+    radial-gradient(ellipse 22% 14% at 74% 40%, #f6dca099, #0000 72%),
+    repeating-radial-gradient(ellipse 140% 90% at 40% 130%, #0000 0 9%, #7d55263d 10% 11.5%, #0000 12.5% 18%),
+    radial-gradient(ellipse 90% 110% at 45% 100%, #dcb36a, #c0904a 55%, #8d6330);
+  box-shadow: inset 0 3px 6px #fff4, inset 0 -8px 12px #0006, 0 -3px 8px #000a;
+  animation: sand-drift 3.2s ease-in-out infinite alternate; }
+@keyframes sand-drift { from { transform: translateY(0) scaleX(1); } to { transform: translateY(-3%) scaleX(1.03); } }
+.b-surface { filter: drop-shadow(0 0 3px #e2bd73); }
+body.reduced-motion .minion.burrowed .m-sand { animation: none; }

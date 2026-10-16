@@ -144,6 +144,11 @@ export function matchFilter(state, filter, ctx) {
       if (!!state.players[ctx.controller].queenUnderground !== want) return false;
       continue;
     }
+    // Sand Sharks: the trap's owner has a Burrowed minion (Tremor Sense).
+    if (key === 'hasBurrowed') {
+      if (state.players[ctx.controller].board.some((m) => m.burrowed) !== want) return false;
+      continue;
+    }
     if (key === 'cardType') {
       if (ev.cardType !== want) return false;
       continue;

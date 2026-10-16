@@ -245,7 +245,6 @@ test('No two cards in the game share an id (a later one would silently replace t
   for (const f of readdirSync(new URL('../src/cards/', import.meta.url))) {
     if (f.endsWith('.js')) ids.push(...[...readFileSync(new URL(`../src/cards/${f}`, import.meta.url), 'utf8').matchAll(/\bid: '([a-z0-9_]+)'/g)].map((m) => m[1]));
   }
-  // Known: the Sharks' and Zombies' Feeding Frenzy share an id (older; the Shark one is the one in the game).
   const dupes = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
   if (dupes.length) return `shared ids: ${dupes}`;
 });

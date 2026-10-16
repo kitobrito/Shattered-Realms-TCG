@@ -13,7 +13,7 @@ import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroAr
 
 // Keywords are drawn on the minion itself (shield, bubble, ice, ...) the way
 // Hearthstone does it; only things with no visual get a small icon.
-const ONE_TIME_TRIGGERS = new Set(['battlecry', 'summon', 'deathrattle']);
+const ONE_TIME_TRIGGERS = new Set(['battlecry', 'summon', 'deathrattle', 'surface']);
 
 // 'Twin Strike' -> 'twin-strike' (for CSS classes and data-kw).
 const kwSlug = (k) => k.toLowerCase().replace(/\s+/g, '-');
@@ -43,6 +43,7 @@ function badges(m) {
     m.upgrades ? `<i class="b-upgrade" title="${m.upgrades} Upgrade${m.upgrades === 1 ? '' : 's'} installed">⚙${m.upgrades}</i>` : '',
     m.weapon ? `<i class="b-weapon" title="Weapon: ${m.weapon.name}">🔫</i>` : '',
     triggers.some((t) => t.on === 'deathrattle') ? '<i class="b-deathrattle" title="Exit">💀</i>' : '',
+    triggers.some((t) => t.on === 'surface') ? '<i class="b-surface" title="Surface: happens when it comes up from Burrow">⏫</i>' : '',
     triggers.some((t) => !ONE_TIME_TRIGGERS.has(t.on)) ? '<i class="b-trigger" title="Triggers when something happens">⚡</i>' : '',
     hasKeyword(m, 'Lifesteal') ? '<i class="b-lifesteal" title="Lifesteal">🩸</i>' : '',
     hasKeyword(m, 'Poisonous') ? '<i class="b-poison" title="Poisonous">☠</i>' : '',
@@ -121,7 +122,7 @@ export function minionHTML(m, s, cls = '') {
   if (!taunt) wardSince.delete(m.uid);
   const faction = (card.faction ?? 'neutral').toLowerCase().replace(/\s+/g, '-');
   return `
-    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>
@@ -130,7 +131,7 @@ export function minionHTML(m, s, cls = '') {
       <div class="m-ring"></div>
       ${burnHTML(m)}
       ${radHTML(m)}
-      <div class="m-fx"><span class="m-ice"></span><span class="m-drip"></span><span class="m-embers"></span><span class="m-blind"></span><span class="m-silence"></span><span class="m-camo"></span><span class="m-smoke"></span><span class="m-ghost"></span><span class="m-ghost two"></span></div>
+      <div class="m-fx"><span class="m-ice"></span><span class="m-drip"></span><span class="m-embers"></span><span class="m-blind"></span><span class="m-silence"></span><span class="m-camo"></span><span class="m-smoke"></span><span class="m-ghost"></span><span class="m-ghost two"></span><span class="m-sand"></span></div>
       <div class="m-speed"></div><div class="m-sparkle"></div>
       <div class="m-zzz"><b>z</b><b>z</b><b>Z</b></div>
       <div class="icons">${cornerIcons(m, s)}</div>
