@@ -68,8 +68,9 @@ export function connect() {
     ws = null;
     handlers.status?.('down');
     if (!wanted) return;
-    // Never reached the server at all: give up after a few tries instead of retrying forever.
-    if (!opened && retry >= 3) {
+    // Never reached the server at all: give up after about a minute instead of retrying forever
+    // (a server on a free plan can take that long to wake up).
+    if (!opened && retry >= 6) {
       wanted = false;
       retry = 0;
       handlers.error?.("Can't reach the game server right now. Try again later.");
