@@ -22,6 +22,7 @@ const FRIENDLY_DEMON = { type: 'minion', side: 'friendly', tribe: 'Demon' };
 const FRIENDLY_DEMONS = { minions: { side: 'friendly', tribe: 'Demon' } };
 const ENEMY_MINIONS = { minions: { side: 'enemy' } };
 const PAID = { player: 'friendly', paid: true };
+const TITHE = (count) => ({ op: 'tithe', count });
 
 export const DEMON_CARDS = [
   // ---- Hero Spell ----
@@ -230,4 +231,93 @@ export const DEMON_CARDS = [
   // ---- Tokens ----
   { ...DM, id: 'imp', name: 'Imp', art: '😈', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...DM, id: 'lesser_demon', name: 'Lesser Demon', art: '👿', token: true, cost: 3, attack: 3, health: 3, keywords: ['Taunt'], text: 'Taunt.' },
+
+  // ---- Kings of Hell expansion (unlockable) ----
+  // Tithe N: both players draw N cards. Your Demons hand out cards, then punish your opponent for
+  // drawing and holding them (cardDrawn events; a card drawn into a full hand of 10 is burned).
+  {
+    ...DM, id: 'ledger_imp', name: 'Ledger Imp', art: '📒', extra: true, cost: 1, attack: 2, health: 2,
+    text: 'Arrival: Tithe 1.',
+    triggers: [{ on: 'battlecry', effects: [TITHE(1)] }],
+  },
+  {
+    ...DM, id: 'infernal_herald', name: 'Infernal Herald', art: '📯', extra: true, cost: 1, attack: 3, health: 2,
+    text: 'Whenever your opponent draws a card, gain +1 Attack this turn.',
+    triggers: [{ on: 'cardDrawn', filter: { player: 'enemy' }, effects: [{ op: 'buff', target: 'self', attack: 1, temporary: true }] }],
+  },
+  {
+    ...DM, id: 'hellbound_scribe', name: 'Hellbound Scribe', art: '✒️', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Whenever your opponent draws a card, deal 1 damage to the enemy Hero.',
+    triggers: [{ on: 'cardDrawn', filter: { player: 'enemy' }, effects: [{ op: 'damage', target: 'enemyHero', amount: 1 }] }],
+  },
+  {
+    ...DM, id: 'royal_debt_collector', name: 'Royal Debt Collector', art: '⛓️', extra: true, cost: 3, attack: 3, health: 4,
+    text: 'Arrival: Deal 1 damage to the enemy Hero for each card in their hand above 3.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: 'enemyHero', amountFromEnemyHand: { over: 3 } }] }],
+  },
+  {
+    ...DM, id: 'paimon_king_of_secrets', name: 'Paimon, King of Secrets', art: '🐪', extra: true, cost: 4, attack: 4, health: 6,
+    text: "At the start of each player's turn, they draw an extra card.",
+    triggers: [
+      { on: 'startOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'draw', count: 1 }] },
+      { on: 'startOfTurn', filter: { player: 'enemy' }, effects: [{ op: 'draw', count: 1, side: 'enemy' }] },
+    ],
+  },
+  {
+    ...DM, id: 'beleth_king_of_wrath', name: 'Beleth, King of Wrath', art: '🐎', extra: true, cost: 5, attack: 5, health: 5,
+    text: 'Whenever your opponent draws a card, deal 2 damage to a random enemy minion.',
+    triggers: [{ on: 'cardDrawn', filter: { player: 'enemy' }, effects: [{ op: 'damage', target: { randomOf: ENEMY_MINIONS, aliveOnly: true }, amount: 2 }] }],
+  },
+  {
+    ...DM, id: 'asmoday_king_of_greed', name: 'Asmoday, King of Greed', art: '💰', extra: true, cost: 6, attack: 5, health: 6,
+    text: 'Whenever your opponent draws a card, gain +1/+1. If their hand was full and it is burned, also deal 3 damage to their Hero.',
+    triggers: [
+      { on: 'cardDrawn', filter: { player: 'enemy' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] },
+      { on: 'cardDrawn', filter: { player: 'enemy', burned: true }, effects: [{ op: 'damage', target: 'enemyHero', amount: 3 }] },
+    ],
+  },
+  {
+    ...DM, id: 'bael_first_king_of_hell', name: 'Bael, First King of Hell', art: '👑', extra: true, cost: 8, attack: 7, health: 7,
+    text: 'Arrival: Both players draw until they have 10 cards. Deal 1 damage to the enemy Hero for each card your opponent drew.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'fillHands', max: 10, damagePerEnemyCard: 1 }] }],
+  },
+  {
+    ...S, id: 'infernal_contract', name: 'Infernal Contract', art: '📜', extra: true, cost: 1,
+    text: 'Tithe 2. Your next Demon this turn costs 2 less.',
+    effects: [TITHE(2), { op: 'demonDiscount', amount: 2 }],
+  },
+  {
+    ...S, id: 'hellfire_decree', name: 'Hellfire Decree', art: '🔥', extra: true, cost: 3,
+    text: 'Deal 2 damage to all enemy minions, plus 1 for each card your opponent drew this turn.',
+    effects: [{ op: 'damage', target: ENEMY_MINIONS, amountFromEnemyDraws: { plus: 2 } }],
+  },
+  {
+    ...S, id: 'cursed_gift', name: 'Cursed Gift', art: '🎁', extra: true, cost: 1,
+    text: 'Quick Play: When your opponent plays a card, they draw a card and take 4 damage.',
+    quickPlay: { windows: ['cardPlayed'], filter: { player: 'enemy' } },
+    effects: [{ op: 'draw', count: 1, side: 'enemy' }, { op: 'damage', target: 'enemyHero', amount: 4 }],
+  },
+  {
+    ...S, id: 'kingly_retribution', name: 'Kingly Retribution', art: '✋', extra: true, cost: 2,
+    text: 'Quick Play: When an enemy minion attacks, Tithe 1 and deal 4 damage to the attacker.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
+    effects: [TITHE(1), { op: 'damage', target: 'eventSource', amount: 4 }],
+  },
+  {
+    ...T, id: 'royal_tax', name: 'Royal Tax', art: '⚖️', extra: true, cost: 1,
+    text: 'Trap: When your opponent draws a card, it costs 3 more this turn.',
+    trap: { on: 'cardDrawn', filter: { player: 'enemy', burned: false }, effects: [{ op: 'taxDrawn', amount: 3 }] },
+  },
+  {
+    ...T, id: 'signed_in_blood', name: 'Signed in Blood', art: '🩸', extra: true, cost: 1,
+    text: 'Trap: When your opponent plays a spell, they draw a card and you draw 2. Deal 3 damage to their Hero.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'spell' }, effects: [
+      { op: 'draw', count: 1, side: 'enemy' }, { op: 'draw', count: 2 }, { op: 'damage', target: 'enemyHero', amount: 3 }] },
+  },
+  {
+    ...T, id: 'gilded_cage', name: 'Gilded Cage', art: '🪤', extra: true, cost: 2,
+    text: "Trap: At the start of your opponent's turn, if they have 6 or more cards in hand, they discard 2 random cards and take 5 damage.",
+    trap: { on: 'startOfTurn', filter: { player: 'enemy', playerHandAtLeast: 6 }, effects: [
+      { op: 'burnCards', from: 'hand', count: 2 }, { op: 'damage', target: 'enemyHero', amount: 5 }] },
+  },
 ];

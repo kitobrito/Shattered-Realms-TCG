@@ -456,6 +456,10 @@ export const EFFECT_OPS = {
   // target, that damage pauses for their window and resolves afterwards.
   damage(state, e, ctx) {
     let base = e.amountIf && checkCondition(state, e.amountIf.if, ctx) ? e.amountIf.amount : e.amount;
+    // Demons: one per enemy card above N (Royal Debt Collector); cards they drew this turn (Hellfire Decree).
+    if (e.amountFromEnemyHand) base = Math.max(0, state.players[opponentOf(ctx.controller)].hand.length - (e.amountFromEnemyHand.over ?? 0));
+    if (e.amountFromEnemyDraws) { const f = state.players[opponentOf(ctx.controller)]; base = (e.amountFromEnemyDraws.plus ?? 0) + (f.drawsTurn === state.turn ? f.drawsThisTurn : 0); }
+    if ((e.amountFromEnemyHand || e.amountFromEnemyDraws) && !base) return;
     // amountFromCorpses: { max } — as much damage as you have Corpses (Fester).
     if (e.amountFromCorpses) base = Math.min(e.amountFromCorpses.max ?? 99, state.players[ctx.controller].corpses ?? 0);
     if (e.amountFromCorpses && !base) return;
@@ -1211,8 +1215,39 @@ export const EFFECT_OPS = {
   },
 
   // { count?, filter?: { type?, tribe? } } — draws matching cards when filtered.
+  // { count, filter?, side?: 'enemy' } — side 'enemy': your opponent draws.
   draw(state, e, ctx) {
-    drawCards(state, ctx.controller, e.count ?? 1, e.filter ? (card) => cardMatches(card, e.filter) : null);
+    const p = e.side === 'enemy' ? opponentOf(ctx.controller) : ctx.controller;
+    drawCards(state, p, e.count ?? 1, e.filter ? (card) => cardMatches(card, e.filter) : null);
+  },
+
+  // ---- Demons: Kings of Hell ----
+  // Tithe N: both players draw N cards (you first).
+  tithe(state, e, ctx) {
+    log(state, `🪙 Tithe ${e.count}: both players draw.`);
+    drawCards(state, ctx.controller, e.count);
+    drawCards(state, opponentOf(ctx.controller), e.count);
+  },
+  // { max, damagePerEnemyCard } — both players draw until they hold `max` cards; then deal damage
+  // to the enemy Hero for each card the opponent drew (Bael).
+  fillHands(state, e, ctx) {
+    const me = state.players[ctx.controller], foe = state.players[opponentOf(ctx.controller)];
+    drawCards(state, ctx.controller, Math.max(0, Math.min(e.max, state.rules.maxHandSize) - me.hand.length));
+    const n = Math.max(0, Math.min(e.max, state.rules.maxHandSize) - foe.hand.length);
+    drawCards(state, opponentOf(ctx.controller), n);
+    if (n && e.damagePerEnemyCard) dealDamage(state, ctx.self, foe.hero.uid, n * e.damagePerEnemyCard, { sourceController: ctx.controller });
+  },
+  // { amount } — your next Demon this turn costs less (Infernal Contract).
+  demonDiscount(state, e, ctx) {
+    state.players[ctx.controller].demonDiscount = { turn: state.turn, amount: e.amount };
+  },
+  // { amount } — the card just drawn costs more this turn (Royal Tax).
+  taxDrawn(state, e, ctx) {
+    const pl = state.players[ctx.event?.player];
+    const inst = pl?.hand.find((h) => h.uid === ctx.event?.cardUid);
+    if (!inst) return;
+    inst.taxTurn = state.turn; inst.tax = (inst.tax ?? 0) + e.amount;
+    log(state, `🪙 ${getCard(inst.cardId).name} is taxed: +${e.amount} cost this turn.`);
   },
 
   // Discover: choose 1 of up to 3 different matching cards from your deck; it goes to your hand.

@@ -169,6 +169,20 @@ export function matchFilter(state, filter, ctx) {
       if (state.players[ctx.controller].board.some((m) => m.burrowed) !== want) return false;
       continue;
     }
+    // Demons (Kings of Hell): the drawn card was burned by a full hand (Asmoday); it is the
+    // trap/trigger owner's turn (Hellbound Scribe); the event's player holds N+ cards (Gilded Cage).
+    if (key === 'burned') {
+      if (!!ev.burned !== want) return false;
+      continue;
+    }
+    if (key === 'duringYourTurn') {
+      if ((state.activePlayer === ctx.controller) !== want) return false;
+      continue;
+    }
+    if (key === 'playerHandAtLeast') {
+      if ((state.players[ev.player]?.hand.length ?? 0) < want) return false;
+      continue;
+    }
     if (key === 'cardType') {
       if (ev.cardType !== want) return false;
       continue;

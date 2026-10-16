@@ -136,6 +136,10 @@ export function costOf(state, inst) {
   if (card.costPerDeaths && state) aura -= Math.min(Math.floor((state.deathsThisGame ?? 0) / card.costPerDeaths.per), Math.max(0, card.cost - card.costPerDeaths.min));
   // Fungus: The Rot King — 1 less for each Corpse you have.
   if (card.costPerCorpse && state) aura -= Math.floor((state.players[inst.owner]?.corpses ?? 0) / card.costPerCorpse);
+  // Demons (Kings of Hell): Infernal Contract's discount on your next Demon this turn; Royal Tax.
+  const dd = state?.players[inst.owner]?.demonDiscount;
+  if (dd && dd.turn === state.turn && (card.tribes ?? []).includes('Demon')) aura -= dd.amount;
+  if (inst.taxTurn != null && state && inst.taxTurn === state.turn) aura += inst.tax ?? 0;
   // Robots: Chief Engineer — the next Upgrade you play costs less.
   if (card.upgrade && state) aura -= state.players[inst.owner]?.upgradeDiscount ?? 0;
   return Math.max(inst.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
@@ -541,15 +545,19 @@ export function drawCards(state, p, count = 1, filter = null) {
       dealDamage(state, null, pl.hero.uid, pl.fatigue);
       continue;
     }
-    if (pl.hand.length >= state.rules.maxHandSize) {
+    const burned = pl.hand.length >= state.rules.maxHandSize;
+    if (burned) {
       pl.graveyard.push(card);
       log(state, `${pl.name}'s hand is full; ${getCard(card.cardId).name} is burned.`);
     } else {
       pl.hand.push(card);
     }
+    // Demons (Kings of Hell): cards drawn this turn (Hellfire Decree).
+    if (pl.drawsTurn !== state.turn) { pl.drawsTurn = state.turn; pl.drawsThisTurn = 0; }
+    pl.drawsThisTurn += 1;
     // A burned card still counts as drawn. The draw event comes first (Hidden
     // Spores can add Mushrooms to the card), then any Mushrooms on it burst.
-    emit(state, { type: 'cardDrawn', player: p, cardUid: card.uid, cardId: card.cardId });
+    emit(state, { type: 'cardDrawn', player: p, cardUid: card.uid, cardId: card.cardId, burned });
     state.buffer.push({ kind: 'mushrooms', player: p, cardUid: card.uid });
   }
 }
