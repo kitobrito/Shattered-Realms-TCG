@@ -2730,8 +2730,49 @@ window.addEventListener('resize', () => {
   fitAllText(app);
 });
 
+// Short, wide screens (a phone held sideways): scale the menus so each fits like a game screen.
+function fitMenus() {
+  const w = innerWidth, h = innerHeight;
+  const zoom = w > h && h < 640 ? Math.max(0.45, Math.min(1, h / 700)) : 1;
+  document.documentElement.style.setProperty('--ui-zoom', String(Math.round(zoom * 100) / 100));
+}
+fitMenus();
+window.addEventListener('resize', fitMenus);
+
 applySettings();
 render();
+boot();
+
+// The boot screen (in index.html) stays up while the fonts, menu art, hero portraits and card
+// backs load, with a progress bar, then fades into the menu. Never less than a moment, never stuck.
+async function boot() {
+  const el = document.getElementById('boot');
+  if (!el) return;
+  const bar = el.querySelector('.boot-bar i');
+  const status = el.querySelector('.boot-status');
+  const STEPS = ['Opening the realms…', 'Gathering the heroes…', 'Shuffling the decks…', 'Lighting the candles…'];
+  const img = (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
+  const jobs = [
+    document.fonts?.ready ?? Promise.resolve(),
+    ...['art/ui/logo.png', 'art/ui/menu-bg.jpg', 'art/ui/play-button.png', 'art/ui/divider.png',
+      'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-trap.png'].map(img),
+    ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${f.toLowerCase()}.jpg`)]),
+  ];
+  let done = 0;
+  const step = () => {
+    done++;
+    const k = done / jobs.length;
+    bar.style.width = `${Math.max(4, Math.round(k * 100))}%`;
+    status.textContent = STEPS[Math.min(STEPS.length - 1, Math.floor(k * STEPS.length))];
+  };
+  const all = Promise.all(jobs.map((j) => Promise.resolve(j).catch(() => {}).then(step)));
+  await Promise.all([Promise.race([all, fx.wait(10000)]), fx.wait(1100)]);
+  bar.style.width = '100%';
+  status.textContent = 'Ready';
+  await fx.wait(250);
+  el.classList.add('done');
+  setTimeout(() => el.remove(), 700);
+}
 document.addEventListener('cardstyle', () => { if (!animating) render(); });
 
 // iPhone: inside a match, a finger drag must never scroll or bounce the page

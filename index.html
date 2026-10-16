@@ -14,6 +14,12 @@
   <link rel="stylesheet" href="src/ui/style.css">
 </head>
 <body style="background:#0c0806">
+  <!-- Boot screen: shown the moment the app opens, removed by main.js once the game is ready. -->
+  <div id="boot" style="position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 42%,#2a1838 0%,#0c0806 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh">
+    <img class="boot-logo" src="art/ui/logo.png" alt="Shattered Realms" style="width:min(70vw,620px);max-height:34vh;object-fit:contain">
+    <div class="boot-bar" style="width:min(56vw,420px);height:10px;border-radius:6px;background:#1a1210;border:1px solid #6a4a22;overflow:hidden"><i style="display:block;height:100%;width:4%;background:linear-gradient(90deg,#8c5a1d,#e4b964)"></i></div>
+    <div class="boot-status" style="font:600 14px Georgia,serif;letter-spacing:.18em;text-transform:uppercase;color:#cdb68a">Opening the realms…</div>
+  </div>
   <div id="app"></div>
   <script type="module" src="src/ui/main.js"></script>
 </body>
