@@ -4,7 +4,7 @@ Run from the build folder after `npx cap init` (before `npx cap add android`) wi
 then after `npx cap add android` with `native`, and once with `splash` to draw the splash images.
 
   config  capacitor.config.json: dark background (no white flash on launch), App plugin.
-  native  MainActivity: full screen (status and navigation bars hidden, swipe to peek),
+  native  MainActivity: landscape only; full screen (status and navigation bars hidden, swipe to peek),
           screen stays on, text ignores the phone's font-size setting; VIBRATE permission.
   splash  assets/splash*.png for capacitor-assets: the logo on the game's dark background.
 """
@@ -66,6 +66,9 @@ def native():
     open(path, 'w').write(MAIN % {'pkg': PKG})
     man = 'android/app/src/main/AndroidManifest.xml'
     s = open(man).read()
+    # Landscape only (either way up), like Hearthstone.
+    if 'android:screenOrientation' not in s:
+        s = re.sub(r'(<activity\b)', r'\1\n            android:screenOrientation="sensorLandscape"', s, count=1)
     if 'android.permission.VIBRATE' not in s:
         s = s.replace('</manifest>', '    <uses-permission android:name="android.permission.VIBRATE" />\n</manifest>')
     open(man, 'w').write(s)
