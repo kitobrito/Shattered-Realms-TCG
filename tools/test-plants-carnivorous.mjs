@@ -83,6 +83,18 @@ test('Devour: killing an enemy minion gives +1/+1 (no heal)', () => {
   if (m.attack !== 4 || m.health !== 2 || m.maxHealth !== 3) return `snapjaw ${m.attack}/${m.health} (max ${m.maxHealth})`;
 });
 
+test('Venus Flytrap (the original Plant) has Devour and feeds Carrion Gardener', () => {
+  const g = put(0, 'carrion_gardener');
+  const m = put(0, 'venus_flytrap');
+  if (!hasKeyword(m, 'Devour')) return 'no Devour keyword';
+  const e = foe(1, 2);
+  attack(0, m.uid, e.uid);
+  if (pl(1).board.includes(e)) return 'enemy survived';
+  if (m.attack !== 3 || m.health !== 2 || m.maxHealth !== 3) return `flytrap ${m.attack}/${m.health} (max ${m.maxHealth})`;
+  if (sprouts() !== 1) return `Carrion Gardener made ${sprouts()} sprouts`;
+  if (!pl(0).board.includes(g)) return 'gardener missing';
+});
+
 test('Devour does nothing if the devourer dies in the same fight', () => {
   const m = put(0, 'snapjaw_sprout');
   const e = foe(5, 1);
