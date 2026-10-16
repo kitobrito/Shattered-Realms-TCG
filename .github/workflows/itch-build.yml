@@ -10,6 +10,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+# One run at a time: itch.io takes a new build only after the last one has processed.
+concurrency:
+  group: itch-push-html5
+  cancel-in-progress: false
 jobs:
   zip:
     runs-on: ubuntu-latest
@@ -61,7 +65,14 @@ jobs:
           {
             echo "target: $ITCH_GAME:html5"
             ./butler-bin/butler -V 2>&1 || true
-            rc=0; ./butler-bin/butler push itch-dir "$ITCH_GAME:html5" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}" 2>&1 || rc=$?
+            # itch.io refuses a new build while the previous one is still processing: wait and retry (up to ~25 min).
+            for try in $(seq 1 25); do
+              rc=0; out=$(./butler-bin/butler push itch-dir "$ITCH_GAME:html5" --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}" 2>&1) || rc=$?
+              echo "$out"
+              if [ "$rc" = 0 ] || ! grep -q "still processing" <<<"$out"; then break; fi
+              echo "itch.io is still processing the previous build; trying again in 60 s ($try/25)"
+              sleep 60
+            done
             echo "push exit code: $rc"
             ./butler-bin/butler status "$ITCH_GAME" 2>&1 || true
           } | tee butler-report.txt

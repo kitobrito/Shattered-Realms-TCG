@@ -3553,6 +3553,7 @@ body.reduced-motion .prey-stream i { animation: none; }
   mask: var(--foil-frame) 0 0 / 100% 100% no-repeat, linear-gradient(#000 0 0) 50% 50% / 86% 91% no-repeat; }
 .big-card.shard.t-minion .zoom-foil { --foil-frame: url('../../art/frames/painted-minion.png'); }
 .big-card.shard.t-spell .zoom-foil { --foil-frame: url('../../art/frames/painted-spell.png'); }
+.big-card.shard.t-spell.qp .zoom-foil { --foil-frame: url('../../art/frames/painted-quickplay.png'); }
 .big-card.shard.t-trap .zoom-foil { --foil-frame: url('../../art/frames/painted-trap.png'); }
 
 /* ==== Stats that react: the ring that flares behind a changed Attack / Health ==== */

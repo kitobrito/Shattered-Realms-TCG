@@ -174,14 +174,16 @@ function sigilHTML(card) {
 // Health in two crystal shards either side of the name plate; the type sits in a tab at the bottom.
 // Frames: art/frames/painted-<type>.png (painted; the openings are transparent) and
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
+// Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
+  const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
   return `
-    <div class="big-card shard t-${card.type} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
+    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
-      <img class="bc-frame" src="art/frames/painted-${type}.png" alt="" draggable="false">
+      <img class="bc-frame" src="art/frames/painted-${frame}.png" alt="" draggable="false">
       <i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>
       ${sigilHTML(card)}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
