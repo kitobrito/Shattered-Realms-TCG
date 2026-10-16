@@ -4,7 +4,7 @@
 import * as fx from './fx.js';
 import * as sound from './sound.js';
 import { setMusicVolume } from './music.js';
-import { journeyDone, unlockEverything } from './journey.js';
+import { journeyDone, restartJourney, unlockEverything } from './journey.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
@@ -92,7 +92,9 @@ export function openSettings() {
       ${sound.canVibrate() ? `<label class="set-row"><span>Vibration</span><input type="checkbox" data-set="vibration" ${st.vibration ? 'checked' : ''}><i>A light buzz when cards land and blows hit</i></label>` : ''}
       <label class="set-row"><span>Tips for new players</span><input type="checkbox" data-set="tips" ${st.tips ? 'checked' : ''}><i>Short hints the first time things happen</i></label>
       <div class="set-row"><span></span><button class="ghost tips-reset">Show all tips again</button></div>
-      ${journeyDone() ? '' : '<div class="set-row"><span>New-player path</span><button class="ghost journey-skip">Unlock everything</button><i>All realms, two-faction decks, traps and Quick Plays now</i></div>'}
+      ${journeyDone()
+    ? '<div class="set-row"><span>New-player path</span><button class="ghost journey-replay">Replay it</button><i>Start over as a new player: choose 3 starter realms, starter decks first. Your decks and unlocked cards stay.</i></div>'
+    : '<div class="set-row"><span>New-player path</span><button class="ghost journey-skip">Unlock everything</button><i>All realms, two-faction decks, traps and Quick Plays now</i></div>'}
       <button class="settings-close">Done</button>
     </div>`;
   document.body.appendChild(el);
@@ -125,6 +127,12 @@ export function openSettings() {
       const box = el.querySelector('[data-set="tips"]');
       if (box) box.checked = true;
       e.target.textContent = 'Tips will show again';
+    }
+    if (e.target.closest('.journey-replay')) {
+      restartJourney();
+      closeSettings();
+      document.dispatchEvent(new Event('journey'));
+      return;
     }
     if (e.target.closest('.journey-skip')) {
       unlockEverything();
