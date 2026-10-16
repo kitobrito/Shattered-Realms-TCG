@@ -35,14 +35,25 @@ jobs:
         working-directory: build
         run: |
           npm init -y >/dev/null
-          npm install --no-audit --no-fund @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0 @capacitor/assets@3.0.5
+          npm install --no-audit --no-fund @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0 @capacitor/assets@3.0.5 @capacitor/app@6.0.2
           npx cap init "Shattered Realms" com.kitobrito.shatteredrealms --web-dir www
+          # Feel like a game, not a web page: dark launch, full screen, Back button, haptics (tools/android/setup-native.py).
+          python3 ../tools/android/setup-native.py config
           npx cap add android
-          npx capacitor-assets generate --android --iconBackgroundColor '#0d0a1a' --iconBackgroundColorDark '#0d0a1a'
+          python3 ../tools/android/setup-native.py native
+          python3 ../tools/android/setup-native.py splash
+          npx capacitor-assets generate --android --iconBackgroundColor '#0d0a1a' --iconBackgroundColorDark '#0d0a1a' --splashBackgroundColor '#0c0806' --splashBackgroundColorDark '#0c0806'
           npx cap sync android
       - name: Build the APK
         working-directory: build/android
-        run: ./gradlew assembleDebug --no-daemon
+        # Keep the build log; if the build fails it is attached to the android-latest release.
+        run: ./gradlew assembleDebug --no-daemon 2>&1 | tee ../../android-build-log.txt; exit ${PIPESTATUS[0]}
+        shell: bash
+      - name: Attach the build log if the APK failed to build
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload android-latest android-build-log.txt --clobber || true
       - name: Sign with the project's fixed test key (so updates install over old builds)
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)

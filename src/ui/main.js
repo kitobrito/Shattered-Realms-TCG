@@ -8,7 +8,7 @@ import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../
 import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { artSrc, ensureArt } from './art-packs.js';
 import { boardArtFor } from '../cards/board-art.js';
-import { applySettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
+import { applySettings, closeSettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
@@ -1741,7 +1741,7 @@ function renderSwapBuilder() {
   const cards = galleryCards(f).filter((c) => FACTION_POOLS[f].includes(c.id));
   galleryOrder = cards.map((c) => c.id);
   const extras = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
-  const scrollY = window.scrollY;
+  const scrollY = app.scrollTop;
   const grid = (list) => `<div class="gallery-grid builder-grid">${list.map((c) => (isLocked(c.id)
     ? cardHTML(c, { cuttable: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
     : cardHTML(c, { cuttable: true, isCut: !draftLineup.includes(c.id), cutLabel: 'OUT' }))).join('')}</div>`;
@@ -1765,7 +1765,7 @@ function renderSwapBuilder() {
       ${grid(cards.filter((c) => !c.extra))}
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
-  window.scrollTo(0, scrollY);
+  app.scrollTop = scrollY;
 }
 
 function renderBuilder() {
@@ -1797,7 +1797,7 @@ function renderBuilder() {
     </aside>`;
   const section = (f) => `<h3>${crestHTML(f)} ${esc(f)} <span class="pick-count ${!single && inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${single ? `${inFaction(f)} in deck` : `${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}`}</span></h3>
       <div class="gallery-grid builder-grid">${pool(f).map(tile).join('')}</div>`;
-  const scrollY = window.scrollY;
+  const scrollY = app.scrollTop;
   app.innerHTML = `
     <div class="gallery builder">
       <div class="builder-bar">
@@ -1822,7 +1822,7 @@ function renderBuilder() {
       </div>
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
-  window.scrollTo(0, scrollY);
+  app.scrollTop = scrollY;
   // The deck list sticks just under the builder bar, whatever height the bar wraps to.
   const bar = app.querySelector('.builder-bar');
   if (bar) app.querySelector('.builder')?.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
@@ -1933,7 +1933,7 @@ function renderGallery() {
   galleryOrder = galleryCards(bookPage).map((c) => c.id);
   const f = bookPage;
   const art = heroArtOf(f);
-  const scrollY = window.scrollY;
+  const scrollY = app.scrollTop;
   app.innerHTML = `
     <div class="book">
       <div class="book-head"><h2>Card collection</h2><button data-act="menu" class="ghost">Back</button></div>
@@ -1953,7 +1953,7 @@ function renderGallery() {
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
   bookTurned = false;
-  window.scrollTo(0, scrollY);
+  app.scrollTop = scrollY;
 }
 
 // A faction's crest: the emblem from the middle of its card back (Fusion gets a split of colours).
@@ -2195,6 +2195,8 @@ function screenChange(from, to) {
 }
 
 function render() {
+  // A new screen opens at its top (menus scroll inside #app).
+  if (screen !== shownScreen) app.scrollTop = 0;
   document.body.classList.toggle('in-game', screen === 'game');
   if (screen !== 'game') hideBoard();
   if (screen !== 'menu' && screen !== 'online' && screen !== 'howto') showMenuBackdrop(false);
@@ -2509,7 +2511,7 @@ app.addEventListener('click', (e) => {
   const swapBtn = e.target.closest('[data-swap]');
   if (swapBtn && screen === 'menu') {
     builderMode = 'swap'; swapFaction = swapBtn.dataset.swap; draftLineup = [...lineupOf(swapFaction, savedLineups())];
-    zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
+    zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
   }
   const cutCard = e.target.closest('[data-cut]');
   if (cutCard && screen === 'builder' && builderMode === 'swap') {
@@ -2539,7 +2541,7 @@ app.addEventListener('click', (e) => {
   }
   const tab = e.target.closest('[data-book]');
   if (tab && screen === 'gallery') {
-    if (tab.dataset.book !== bookPage) { bookPage = tab.dataset.book; bookTurned = true; sound.play('draw'); window.scrollTo(0, 0); }
+    if (tab.dataset.book !== bookPage) { bookPage = tab.dataset.book; bookTurned = true; sound.play('draw'); app.scrollTop = 0; }
     return render();
   }
   const chip = e.target.closest('[data-faction]');
@@ -2578,13 +2580,13 @@ function onButton(name) {
     case 'ai': sound.play('click'); return startGame('ai');
     case 'hotseat': sound.play('click'); return startGame('hotseat');
     case 'continue': game = loadSaved(); return game ? enterGame() : render();
-    case 'gallery': screen = 'gallery'; zoomId = null; window.scrollTo(0, 0); return render();
-    case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; window.scrollTo(0, 0); return render();
+    case 'gallery': screen = 'gallery'; zoomId = null; app.scrollTop = 0; return render();
+    case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; app.scrollTop = 0; return render();
     case 'closeZoom': zoomId = null; zoomArt = false; return render();
     case 'zoomArt': zoomArt = true; return render();
     case 'closeArt': zoomArt = false; return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
-    case 'editCuts': builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; window.scrollTo(0, 0); return render();
+    case 'editCuts': builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
     case 'formatPair': setFormat('pair'); return render();
     case 'formatSingle': setFormat('single'); return render();
     case 'resetCuts': storeDeck(picked, null); storeCuts(picked, null); flash('Using the recommended deck.'); return render();
@@ -2620,7 +2622,7 @@ function onButton(name) {
       if (!BUILD.online) return;
       sound.play('click');
       if (picked.length !== pickNeeded()) return flash(`Pick ${pickNeeded()} factions.`);
-      lobby = { status: 'choose' }; screen = 'online'; window.scrollTo(0, 0);
+      lobby = { status: 'choose' }; screen = 'online'; app.scrollTop = 0;
       connectServer();
       return render();
     case 'acctLogin': acct.tab = 'login'; acct.msg = null; return render();
@@ -2737,6 +2739,25 @@ document.addEventListener('cardstyle', () => { if (!animating) render(); });
 // drag-an-image-out-of-the-app gesture. Outside a match, pages scroll normally.
 document.addEventListener('touchmove', (e) => { if (screen === 'game') e.preventDefault(); }, { passive: false });
 document.addEventListener('dragstart', (e) => e.preventDefault());
+// A game, not a web page: no long-press / right-click menus (except where you type).
+document.addEventListener('contextmenu', (e) => { if (!e.target.closest?.('input, textarea')) e.preventDefault(); });
+
+// Android app: the Back button steps back through the game (close what's open, then go to the
+// menu) instead of quitting; on the main menu it sends the app to the background.
+function onBack() {
+  if (drag.busy()) { drag.cancel(); return; }
+  if (document.getElementById('settings')) { closeSettings(); return; }
+  if (zoomArt) return onButton('closeArt');
+  if (zoomId) return onButton('closeZoom');
+  if (screen === 'game') { if (!game?.state?.gameOver) return openSettings(); return onButton('menu'); }
+  if (screen !== 'menu') return onButton('menu');
+  window.Capacitor?.Plugins?.App?.minimizeApp?.();
+}
+const nativeApp = window.Capacitor?.Plugins?.App;
+if (window.Capacitor?.isNativePlatform?.() && nativeApp?.addListener) {
+  document.body.classList.add('native-app');
+  nativeApp.addListener('backButton', onBack);
+}
 // Older browsers without overflow: clip: if anything scrolls the arena, put it straight back
 // (a scrolled arena lifts every piece off the painted board).
 document.addEventListener('scroll', (e) => {
