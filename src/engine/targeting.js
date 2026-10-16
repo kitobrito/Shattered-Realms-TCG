@@ -40,6 +40,7 @@ function minionPasses(m, f) {
   if (f.burrowed != null && !!m.burrowed !== f.burrowed) return false; // Sand Sharks
   if (f.implanted != null && (m.implanted != null) !== f.implanted) return false; // Aliens (Hive Brood)
   if (f.evolved && !getCard(m.cardId).evolvedXeno) return false;
+  if (f.frozen != null && hasKeyword(m, 'Frozen') !== f.frozen) return false; // Frost Dragons
   if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
   // Acidic: Attack at least N; buffed or holding a defensive keyword (Rust-Eater Brute); corroded.
   if (f.minAttack != null && effectiveAttack(m) < f.minAttack) return false;
@@ -113,6 +114,16 @@ export function resolveSelector(state, sel, ctx) {
   }
   if (sel.minions) {
     return minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.minions, ctx)).map((m) => m.uid);
+  }
+  // { adjacent: 'chosen' | 'eventSource' | 'self', includeSelf } — the minions next to that one on
+  // its side of the board, and optionally the minion itself (Frostbreath Drake, Ice Trap).
+  if (sel.adjacent) {
+    const [id] = resolveSelector(state, sel.adjacent, ctx);
+    const c = findCharacter(state, id);
+    if (c?.kind !== 'minion') return [];
+    const board = state.players[c.controller].board;
+    const i = board.findIndex((m) => m.uid === c.uid);
+    return [board[i - 1], sel.includeSelf ? c : null, board[i + 1]].filter(Boolean).map((m) => m.uid);
   }
   if (sel.randomOf) {
     // count: up to N different picks (Tri-Maw Hydra).
@@ -256,6 +267,7 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.prey && !c.prey) return false;
     if (want.burrowed != null && !!c.burrowed !== want.burrowed) return false;
     if (want.implanted != null && (c.implanted != null) !== want.implanted) return false;
+    if (want.frozen != null && hasKeyword(c, 'Frozen') !== want.frozen) return false;
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;
     return true;
   }

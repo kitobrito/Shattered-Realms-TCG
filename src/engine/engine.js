@@ -462,6 +462,8 @@ function huntDamage(state, a, d, dmg) {
   if (card.woundBonus && d.health < d.maxHealth) dmg += 1;
   // Aliens (Hive Brood): extra Attack against an Implanted minion (Xeno Runner).
   if (card.implantAttack && d.implanted != null) dmg += card.implantAttack;
+  // Frost Dragons: double damage against a Frozen minion (Rimescale Hatchling).
+  if (card.doubleVsFrozen && hasKeyword(d, 'Frozen')) dmg *= 2;
   return dmg;
 }
 
@@ -865,8 +867,10 @@ const STEPS = {
         m.tempHealth = 0;
       }
     }
-    // Frozen minions thaw once they've missed one of their controller's turns.
-    for (const m of state.players[p].board) {
+    // Frozen minions thaw once they've missed one of their controller's turns, but not while
+    // their opponent has a minion that keeps them frozen (Glacius, the Winter Queen).
+    const holdsFrost = state.players[opponentOf(p)].board.some((m) => getCard(m.cardId).holdsFrost && m.health > 0 && !m.destroyed);
+    for (const m of holdsFrost ? [] : state.players[p].board) {
       if (m.thawAfter == null || !hasKeyword(m, 'Frozen')) continue;
       m.thawAfter -= 1;
       if (m.thawAfter <= 0) { removeKeyword(m, 'Frozen'); m.thawAfter = null; log(state, `${nameOf(state, m)} thaws.`); }
