@@ -37,6 +37,7 @@ function minionPasses(m, f) {
   if (f.prey && !m.prey) return false;
   if (f.maxHealth != null && m.health > f.maxHealth) return false;
   if (f.stealthed && !hasKeyword(m, 'Stealth')) return false;
+  if (f.burrowed != null && !!m.burrowed !== f.burrowed) return false; // Sand Sharks
   if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
   // Acidic: Attack at least N; buffed or holding a defensive keyword (Rust-Eater Brute); corroded.
   if (f.minAttack != null && effectiveAttack(m) < f.minAttack) return false;
@@ -241,6 +242,7 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.minAttack != null && effectiveAttack(c) < want.minAttack) return false;
     if (want.maxHealth != null && c.health > want.maxHealth) return false;
     if (want.prey && !c.prey) return false;
+    if (want.burrowed != null && !!c.burrowed !== want.burrowed) return false;
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;
     return true;
   }

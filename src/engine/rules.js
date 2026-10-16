@@ -37,7 +37,7 @@ export const POSITIVE_KEYWORDS = [
 //   Burned    loses 1 Health at the end of its controller's turn
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
-export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', ...NEGATIVE_KEYWORDS];
+export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', ...NEGATIVE_KEYWORDS];
 
 // Player-facing rules text for keywords and card terms (collection glossary, tooltips).
 export const KEYWORD_TEXT = {
@@ -72,6 +72,8 @@ export const KEYWORD_TEXT = {
   Venomous: 'Kills any enemy minion it attacks.',
   Rage: 'Whenever this takes damage and survives, it gains +1 Attack.',
   Devour: 'Whenever this destroys an enemy minion, it gains +1/+1.',
+  Burrow: "Goes underground: it has Stealth until the start of your next turn, then it Surfaces. A minion with Burrow arrives Burrowed.",
+  Surface: 'Happens when this comes back up from Burrow (at the start of your turn, or sooner if a card Surfaces it).',
   Infect: 'Mark an enemy minion as Infected. When an Infected minion dies, the player who Infected it summons a 2/1 Rage Runner with Rush.',
   Underground: "Bees (Hornet expansion): your Queen is hiding in your Hidden Nest. She can't be hurt there; when the Nest dies she comes back out with +2/+2.",
   'Hidden Nest': "A 0/5 Bee Hive with Stealth that can't attack. At the end of your turn it summons a 1/1 Hornet Drone with Rush. Exit: your Queen comes back out with +2/+2.",
@@ -109,7 +111,7 @@ export const UNDEFINED_KEYWORDS = [];
 // Self triggers fire only for the card that owns them.
 // Internal ids. Players see 'Arrival' for 'battlecry' and 'Exit' for 'deathrattle'
 // (renamed from Hearthstone's terms).
-export const SELF_TRIGGERS = ['battlecry', 'summon', 'deathrattle'];
+export const SELF_TRIGGERS = ['battlecry', 'summon', 'deathrattle', 'surface'];
 
 // Board events any minion/trap can listen to.
 export const BOARD_EVENTS = [
@@ -120,6 +122,8 @@ export const BOARD_EVENTS = [
   'cardDrawn',        // a card was drawn (before any Mushrooms on it burst)
   'mushroomTriggered', // Mushrooms on a drawn card burst: { player: drawer, amount }
   'devoured',         // Plants: a minion with Devour destroyed an enemy minion: { source: the devourer, player }
+  'minionBurrowed',   // Sand Sharks: a minion Burrowed ({ source, player })
+  'minionSurfaced',   // Sand Sharks: a Burrowed minion Surfaced ({ source, player })
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)
   'minionReborn',     // a minion came back through Reborn
   'minionHaunted',    // Ghosts: a minion was Haunted from a Graveyard
