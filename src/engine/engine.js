@@ -12,7 +12,7 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf,
 } from './core.js';
-import { checkCondition, processBeyond, resolveEffect } from './effects.js';
+import { checkCondition, processBeyond, resolveEffect, surfaceMinion } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -203,7 +203,10 @@ function playOptions(state, p, card, id, type) {
   const out = [];
   for (const t of first) {
     if (!card.target2) { out.push({ ...base, target: t }); continue; }
-    for (const t2 of targetCandidates(state, card.target2, p, t, bySpell)) out.push({ ...base, target: t, target2: t2 });
+    const second = targetCandidates(state, card.target2, p, t, bySpell);
+    // target2Optional: still playable with no second target (Sinkhole with no friendly minion).
+    if (!second.length && card.target2Optional) out.push({ ...base, target: t });
+    for (const t2 of second) out.push({ ...base, target: t, target2: t2 });
   }
   return out;
 }
@@ -908,6 +911,8 @@ const STEPS = {
     for (const x of state.players) x.zombieDeathsThisTurn = 0;
     // Ultraterrestrials: Displaced minions due back now return.
     processBeyond(state, p);
+    // Sand Sharks: Burrowed minions Surface.
+    for (const m of [...pl.board]) if (m.burrowed) surfaceMinion(state, m);
     // Acidic: Caustic Reservoir keeps eating at its minion each turn it survives.
     if (pl.reservoir != null) {
       const m = state.players[opponentOf(p)].board.find((x) => x.uid === pl.reservoir);

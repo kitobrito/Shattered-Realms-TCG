@@ -80,6 +80,8 @@ export function reduceHealthStat(state, c, amount) {
 // Keywords come from three lists: permanent, "this turn", and "until a
 // player's next turn" ({ k, until }).
 export function hasKeyword(c, k) {
+  // Sand Sharks: a Burrowed minion has Stealth until it Surfaces.
+  if (k === 'Stealth' && c.burrowed) return true;
   return c.keywords.includes(k) || (c.tempKeywords ?? []).includes(k) || (c.lingerKeywords ?? []).some((x) => x.k === k)
     || (c.auraKeywords ?? []).includes(k);
 }
@@ -579,5 +581,7 @@ export function summonMinion(state, p, cardId, opts = {}) {
   const pos = opts.position ?? pl.board.length;
   pl.board.splice(Math.min(pos, pl.board.length), 0, m);
   if (!opts.silent) log(state, `${pl.name} summons ${getCard(cardId).name}.`);
+  // Sand Sharks: a minion with Burrow arrives Burrowed (Stealth until it Surfaces).
+  if (m.keywords.includes('Burrow')) m.burrowed = true;
   return m;
 }

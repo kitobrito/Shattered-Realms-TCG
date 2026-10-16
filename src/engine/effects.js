@@ -28,7 +28,7 @@ import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
 import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL } from './rules.js';
 import { resolveSelector, targetCandidates } from './targeting.js';
-import { enterBattlefield } from './triggers.js';
+import { enterBattlefield, selfTriggerSteps } from './triggers.js';
 
 const each = (state, sel, ctx, fn) => {
   for (const id of resolveSelector(state, sel, ctx)) {
@@ -124,6 +124,32 @@ export function displaceMinion(state, m, opts) {
   });
   log(state, `🌀 ${nameOf(state, m)} is Displaced Beyond Reality.`);
   emit(state, { type: 'minionDisplaced', source: m.uid, player: m.controller, by: opts.by });
+  return true;
+}
+
+// ---- Sand Sharks: Burrow and Surface ---------------------------------------------
+// A Burrowed minion stays on the board but has Stealth until the start of its controller's next
+// turn, when it Surfaces: the Stealth ends and its Surface effects happen (twice while its
+// controller has a Dune Matriarch).
+export function burrowMinion(state, m) {
+  if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed || m.burrowed) return false;
+  m.burrowed = true;
+  log(state, `🏜 ${nameOf(state, m)} Burrows.`);
+  emit(state, { type: 'minionBurrowed', source: m.uid, player: m.controller });
+  return true;
+}
+
+export function surfaceMinion(state, m, opts = {}) {
+  if (!m?.burrowed) return false;
+  m.burrowed = false;
+  if (opts.attack) m.attack += opts.attack;
+  log(state, `🏜 ${nameOf(state, m)} Surfaces${opts.attack ? ` (+${opts.attack} Attack)` : ''}!`);
+  const card = getCard(m.cardId);
+  const twice = state.players[m.controller].board.some((x) => getCard(x.cardId).doubleSurface && x.health > 0 && !x.destroyed);
+  const steps = [];
+  for (let i = 0; i < (twice ? 2 : 1); i++) steps.push(...selfTriggerSteps(state, card, 'surface', { self: m.uid, controller: m.controller }));
+  if (steps.length) pushFront(state, steps);
+  emit(state, { type: 'minionSurfaced', source: m.uid, player: m.controller });
   return true;
 }
 
@@ -1416,10 +1442,30 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (c) => markPrey(state, c, !!e.force));
   },
 
-  // { target } — reveal: the targets lose Stealth.
+  // Sand Sharks. { target } — Burrow the targets (Dig In, Duck Under, Sandstorm Stalker).
+  burrow(state, e, ctx) {
+    each(state, e.target, ctx, (c) => burrowMinion(state, c));
+  },
+  // { target, attack? } — Surface Burrowed targets now (Erupt, Tremor Sense: +attack).
+  surface(state, e, ctx) {
+    each(state, e.target, ctx, (c) => surfaceMinion(state, c, { attack: e.attack ?? 0 }));
+  },
+  // { target, now? } — the targets can't attack during their controller's next turn
+  // (now: nor again this turn).
+  exhaust(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion') return;
+      c.exhausted = true;
+      if (e.now) c.cantAttackThisTurn = true;
+      log(state, `${nameOf(state, c)} can't attack next turn.`);
+    });
+  },
+
+  // { target } — reveal: the targets lose Stealth (a Burrowed minion is dug out; it doesn't Surface).
   revealStealth(state, e, ctx) {
     each(state, e.target, ctx, (c) => {
       if (!hasKeyword(c, 'Stealth')) return;
+      if (c.burrowed) c.burrowed = false;
       loseKeyword(state, c, 'Stealth');
       log(state, `👁 ${nameOf(state, c)} is revealed.`);
     });

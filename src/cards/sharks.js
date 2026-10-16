@@ -206,6 +206,97 @@ export const SHARK_CARDS = [
     effects: [dmg('chosen', 3, { if: { subject: 'chosen', prey: true }, else: [mark('chosen', true)] })],
   },
 
+  // ---- Sand Shark expansion: The Dunes (unlockable) ----
+  // Burrow: a Burrowed minion has Stealth until the start of your next turn, then it Surfaces
+  // and its Surface effects happen (effects.js burrowMinion / surfaceMinion). A minion with the
+  // Burrow keyword arrives Burrowed.
+  {
+    ...K, id: 'sand_pup', name: 'Sand Pup', art: '🦈', extra: true, cost: 1, attack: 1, health: 2, keywords: ['Burrow'],
+    text: 'Burrow. Surface: Gain +1 Attack.',
+    triggers: [{ on: 'surface', effects: [{ op: 'buff', target: 'self', attack: 1 }] }],
+  },
+  {
+    ...K, id: 'dune_fin', name: 'Dune Fin', art: '🦈', extra: true, cost: 1, attack: 2, health: 1,
+    text: 'Whenever a friendly minion Surfaces, gain +1 Attack this turn.',
+    triggers: [{ on: 'minionSurfaced', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'self', attack: 1, temporary: true }] }],
+  },
+  {
+    ...K, id: 'gravel_grinder', name: 'Gravel Grinder', art: '🪨', extra: true, cost: 2, attack: 2, health: 3, keywords: ['Burrow'],
+    text: 'Burrow. Surface: Deal 1 damage to all enemy minions.',
+    triggers: [{ on: 'surface', effects: [dmg(ENEMY_MINIONS, 1)] }],
+  },
+  {
+    ...K, id: 'quicksand_lurker', name: 'Quicksand Lurker', art: '🏜️', extra: true, cost: 2, attack: 1, health: 4, keywords: ['Taunt'],
+    text: "Taunt. Arrival: An enemy minion can't attack next turn.",
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'exhaust', target: 'chosen' }] }],
+  },
+  {
+    ...K, id: 'tunnel_shark', name: 'Tunnel Shark', art: '🦈', extra: true, cost: 3, attack: 3, health: 3, keywords: ['Burrow'],
+    text: 'Burrow. Surface: Deal 3 damage to a random enemy minion.',
+    // Ruling: Surfacing happens at the start of your turn, with no moment to choose, so it's random.
+    triggers: [{ on: 'surface', effects: [dmg({ randomOf: { minions: { side: 'enemy' } } }, 3)] }],
+  },
+  {
+    ...K, id: 'sandstorm_stalker', name: 'Sandstorm Stalker', art: '🌪️', extra: true, cost: 3, attack: 3, health: 2, keywords: ['Stealth'],
+    text: 'Stealth. After this attacks, Burrow it.',
+    triggers: [{ on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'burrow', target: 'self' }] }],
+  },
+  {
+    ...K, id: 'dune_matriarch', name: 'Dune Matriarch', art: '🦈', extra: true, cost: 5, attack: 4, health: 5, doubleSurface: true,
+    text: 'Your Surface effects happen twice.',
+  },
+  {
+    ...K, id: 'great_white_of_the_dunes', name: 'Great White of the Dunes', art: '🦈', extra: true, cost: 7, attack: 6, health: 7, keywords: ['Burrow'],
+    text: 'Burrow. Surface: Destroy all enemy minions with 3 or less Health.',
+    triggers: [{ on: 'surface', effects: [{ op: 'destroy', target: { minions: { side: 'enemy', maxHealth: 3 } } }] }],
+  },
+  {
+    ...S, id: 'dig_in', name: 'Dig In', art: '⏬', extra: true, cost: 1,
+    text: 'Burrow a friendly minion. Draw a card.',
+    target: { type: 'minion', side: 'friendly' },
+    effects: [{ op: 'burrow', target: 'chosen' }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, id: 'sinkhole', name: 'Sinkhole', art: '🕳️', extra: true, cost: 4,
+    text: 'Deal 4 damage to an enemy minion. If it dies, Burrow a friendly minion.',
+    target: ENEMY_MINION, target2: { type: 'minion', side: 'friendly' }, target2Optional: true,
+    effects: [dmg('chosen', 4), { op: 'burrow', target: 'chosen2', if: DEAD }],
+  },
+  {
+    ...S, id: 'duck_under', name: 'Duck Under', art: '🦈', extra: true, cost: 1,
+    text: 'Quick Play: When a friendly minion is attacked, Burrow it. The attack is cancelled.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion', target: 'friendlyMinion' } },
+    effects: [{ op: 'burrow', target: 'eventTarget' }, { op: 'stopAttack' }],
+  },
+  {
+    ...S, id: 'erupt', name: 'Erupt', art: '🌋', extra: true, cost: 2, quickPlay: {},
+    text: 'Quick Play: Surface a friendly Burrowed minion right now.',
+    target: { type: 'minion', side: 'friendly', burrowed: true },
+    effects: [{ op: 'surface', target: 'chosen' }],
+  },
+  {
+    ...S, id: 'sand_undertow', name: 'Sand Undertow', art: '🌊', extra: true, cost: 3,
+    text: "Quick Play: When an enemy minion attacks, cancel the attack. It can't attack until the end of its owner's next turn.",
+    // Ruling: Burrowing an enemy would hide and protect it, so the sand drags it down instead.
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
+    effects: [{ op: 'stopAttack' }, { op: 'exhaust', target: 'eventSource', now: true }],
+  },
+  {
+    ...T, id: 'tremor_sense', name: 'Tremor Sense', art: '👣', extra: true, cost: 1,
+    text: 'Trap: When your opponent plays a minion while you have a Burrowed minion, your Burrowed minions Surface and gain +1 Attack.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion', hasBurrowed: true }, effects: [
+      { op: 'surface', target: { minions: { side: 'friendly', burrowed: true } }, attack: 1 },
+    ] },
+  },
+  {
+    ...T, id: 'sand_trap', name: 'Sand Trap', art: '🪤', extra: true, cost: 2,
+    text: "Trap: When an enemy minion attacks your Hero, deal 3 damage to it. It can't attack next turn.",
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [
+      dmg('eventSource', 3), { op: 'exhaust', target: 'eventSource' },
+    ] },
+  },
+
   // ---- Tokens ----
   { ...K, id: 'shark_pup', name: 'Shark Pup', art: '🦈', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...K, id: 'sand_lurker', name: 'Sand Lurker', art: '🏖️', token: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'], text: 'Rush.' },
