@@ -4,10 +4,11 @@
 import * as fx from './fx.js';
 import * as sound from './sound.js';
 import { setMusicVolume } from './music.js';
+import { journeyDone, unlockEverything } from './journey.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false };
 
 // AI difficulty, easiest first (keys match DIFFICULTIES in ai/smart.js).
 export const DIFFICULTY_LEVELS = [
@@ -84,12 +85,14 @@ export function openSettings() {
       <div class="set-row set-difficulty">${difficultySliderHTML(st.difficulty)}</div>
       <div class="set-row"><span>Game speed</span>
         <div class="seg">${Object.keys(SPEEDS).map((k) => `<button data-speed="${k}" class="${st.speed === k ? 'on' : ''}">${k === 'turbo' ? 'Very fast' : k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
+      <label class="set-row"><span>Turn timer vs AI</span><input type="checkbox" data-set="turnTimerVsAI" ${st.turnTimerVsAI ? 'checked' : ''}><i>Off: take as long as you like against the computer (online and hot-seat games are always timed)</i></label>
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>
       <label class="set-row"><span>Colour-blind mode</span><input type="checkbox" data-set="colorBlind" ${st.colorBlind ? 'checked' : ''}><i>Blue / orange instead of green / red</i></label>
       <label class="set-row"><span>Classic card frames</span><input type="checkbox" data-set="classicCards" ${st.classicCards ? 'checked' : ''}><i>The older painted frames instead of the Shard frames</i></label>
       ${sound.canVibrate() ? `<label class="set-row"><span>Vibration</span><input type="checkbox" data-set="vibration" ${st.vibration ? 'checked' : ''}><i>A light buzz when cards land and blows hit</i></label>` : ''}
       <label class="set-row"><span>Tips for new players</span><input type="checkbox" data-set="tips" ${st.tips ? 'checked' : ''}><i>Short hints the first time things happen</i></label>
       <div class="set-row"><span></span><button class="ghost tips-reset">Show all tips again</button></div>
+      ${journeyDone() ? '' : '<div class="set-row"><span>New-player path</span><button class="ghost journey-skip">Unlock everything</button><i>All realms, two-faction decks, traps and Quick Plays now</i></div>'}
       <button class="settings-close">Done</button>
     </div>`;
   document.body.appendChild(el);
@@ -122,6 +125,12 @@ export function openSettings() {
       const box = el.querySelector('[data-set="tips"]');
       if (box) box.checked = true;
       e.target.textContent = 'Tips will show again';
+    }
+    if (e.target.closest('.journey-skip')) {
+      unlockEverything();
+      e.target.textContent = 'Everything unlocked';
+      e.target.disabled = true;
+      document.dispatchEvent(new Event('journey'));
     }
     if (e.target.closest('.settings-close') || e.target === el) closeSettings();
   });

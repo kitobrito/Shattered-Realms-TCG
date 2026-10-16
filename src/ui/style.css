@@ -3944,3 +3944,82 @@ body:not(.in-game) #app > * { zoom: var(--ui-zoom, 1); }
   .arena:not(.portrait) .corner-buttons { display: grid; grid-template-columns: repeat(2, 30px); gap: 4px; }
   .arena:not(.portrait) .corner-buttons button { width: 30px; height: 30px; font-size: 14px; border-radius: 8px; }
 }
+
+/* ---- New-player path (journey.js): progress line, sealed realms, milestone pop-ups ---- */
+.journey-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 4px 0 14px;
+  padding: 10px 14px; border-radius: 10px; background: #2a1a3a99; border: 1px solid #8f7bd855; color: #e6dcff; font-size: 15px; }
+.journey-line button { font-size: 13px; padding: 6px 12px; }
+.medallion.sealed { cursor: default; filter: grayscale(1) brightness(0.45); opacity: 0.7; }
+.medallion.sealed .medal-face { position: relative; }
+.medallion.sealed .medal-lock { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; font-style: normal; filter: grayscale(0) brightness(2); }
+.milestone-overlay { z-index: 80; }
+.milestone-panel { position: relative; width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box;
+  padding: 26px 28px 22px; text-align: center; border-radius: 18px; color: #f3e6c8;
+  background: radial-gradient(ellipse at 50% 0%, #3a2450, #140c18 70%); border: 2px solid #c9a35a; box-shadow: 0 0 0 4px #0008, 0 20px 60px #000c, 0 0 40px #9a5cff44; }
+.milestone-panel h2 { font-family: var(--font-title); font-size: 30px; margin: 4px 0 2px; color: #ffe7a8; text-shadow: 0 2px 6px #000; }
+.milestone-panel .ui-divider { width: 70%; margin: 4px auto 10px; display: block; }
+.milestone-panel p { margin: 8px 0; line-height: 1.45; }
+.milestone-panel .ms-points { text-align: left; margin: 6px auto 8px; max-width: 480px; line-height: 1.5; }
+.milestone-panel button { margin-top: 12px; }
+.ms-fusion-title { background: linear-gradient(90deg, #ff6ad5, #ffd36a, #6ae4ff); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.ms-fusion-burst { position: absolute; inset: -20% -20% auto; height: 70%; background: radial-gradient(circle, #ffd36a55, transparent 60%); pointer-events: none; animation: ms-pulse 2.4s ease-in-out infinite; }
+@keyframes ms-pulse { 0%, 100% { opacity: .5; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.1); } }
+.ms-fusion-demo, .ms-realms { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.ms-realm { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 110px; }
+.ms-realm img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid #c9a35a; box-shadow: 0 0 16px #000a; }
+.ms-realm b { font-family: var(--font-title); font-size: 15px; }
+.ms-realm small { font-size: 11px; color: #c9b896; }
+.ms-plus { font-family: var(--font-title); font-size: 30px; color: #ffd36a; }
+.ms-card { width: 140px; font-size: 7px; }
+
+/* ---- The Fusion cinematic ---- */
+.fx-fusion { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.fx-fusion .ff-veil { position: absolute; inset: 0; background: radial-gradient(ellipse at center, #2a1040cc, #050208ee 70%); }
+.fx-fusion .ff-crest { position: absolute; top: 50%; width: min(26vh, 200px); aspect-ratio: 0.72; border-radius: 14px; background: #241430 center / cover;
+  box-shadow: 0 0 0 3px #c9a35a, 0 0 40px #ffd36a88; display: flex; align-items: flex-end; justify-content: center; }
+.fx-fusion .ff-crest.left { left: 38%; } .fx-fusion .ff-crest.right { left: 62%; }
+.fx-fusion .ff-crest b { font-family: var(--font-title); font-size: 14px; color: #fff3d0; text-shadow: 0 2px 4px #000; margin-bottom: 8px; }
+.fx-fusion .ff-burst { position: absolute; left: 50%; top: 50%; width: 60vh; height: 60vh; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, #fff 0%, #ffd36a 25%, #ff6ad5 45%, transparent 70%); }
+.fx-fusion .ff-card { position: absolute; left: 50%; top: 50%; width: min(34vh, 260px); transform: translate(-50%, -50%); opacity: 0;
+  filter: drop-shadow(0 0 24px #ffd36aaa); }
+.fx-fusion .ff-title { position: absolute; left: 50%; top: 5vh; transform: translateX(-50%); text-align: center; opacity: 0; white-space: nowrap;
+  font-family: var(--font-title); font-weight: 900; font-size: min(5.5vh, 44px); color: #ffe7a8; text-shadow: 0 0 18px #ff6ad5, 0 3px 6px #000; }
+.fx-fusion .ff-title small { display: block; font-size: 0.42em; letter-spacing: 0.3em; text-transform: uppercase; color: #e6dcff; }
+.fx-fusion .ff-title em { display: block; font-style: normal; font-weight: 600; font-size: 0.45em; letter-spacing: 0.12em; color: #ffd36a; margin-top: 2px; }
+.fx-fusion.first .ff-card { width: min(40vh, 300px); }
+.fx-fusion .ff-title { top: max(2vh, 8px); }
+.fx-fusion .ff-card .big-card { --h: min(52vh, 420px); }
+.fx-fusion.first .ff-card .big-card { --h: min(58vh, 460px); }
+.ms-card .big-card { --h: 196px; }
+
+/* ---- First launch: choose your first three realms ---- */
+.first-pick-overlay { z-index: 85; background: radial-gradient(ellipse at 50% 30%, #2a1838ee, #070406f6 75%); }
+.first-pick { width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; box-sizing: border-box; padding: 18px 18px 16px; text-align: center; color: #f3e6c8; }
+.first-pick h2 { font-family: var(--font-title); font-size: 34px; margin: 0; color: #ffe7a8; text-shadow: 0 0 18px #9a5cff88, 0 3px 6px #000; }
+.first-pick > .sub { margin: 6px 0 14px; font-size: 16px; }
+.fp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.first-pick .fp-realm { box-sizing: border-box; cursor: pointer; user-select: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 12px 10px 14px; border-radius: 14px; background: linear-gradient(#2a1c2ecc, #160d18e6); border: 2px solid #6a4a2a; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.first-pick .fp-realm:hover { transform: translateY(-3px); border-color: #c9a35a; }
+.first-pick .fp-realm.on { border-color: #ffd36a; box-shadow: 0 0 0 2px #ffd36a55, 0 0 26px #ffd36a66; background: linear-gradient(#3a2a1ecc, #1e140ce6); }
+.fp-art { position: relative; width: 96px; height: 96px; }
+.fp-art img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #c9a35a; box-shadow: 0 0 14px #000a; }
+.fp-check { position: absolute; right: -4px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 900;
+  background: #ffd36a; color: #2a1408; box-shadow: 0 2px 6px #000a; }
+.fp-realm b { font-family: var(--font-title); font-size: 19px; color: #fff0c8; }
+.fp-realm small { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c9b896; }
+.fp-sum { font-size: 14px; line-height: 1.35; color: #e8dcc4; }
+.fp-foot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 16px; }
+@media (max-width: 640px) { .fp-grid { grid-template-columns: repeat(2, 1fr); } .first-pick h2 { font-size: 26px; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .first-pick { zoom: 0.62; max-height: none; }
+}
+
+/* Small grey notes and descriptions on the menus: bigger, and boosted further on phones held
+   sideways where the menus are scaled down (--note-boost from main.js). */
+body:not(.in-game) #app :is(.sub, .ts-soon, .deck-line, .fg-head span, .journey-line span, .fp-sum, .zoom-sub, .book-head .sub, .ts-tag) {
+  font-size: calc(1.08em * var(--note-boost, 1)); line-height: 1.4;
+}
+.milestone-panel > p, .milestone-panel > .sub { display: block; width: 100%; }
+.ms-realms { width: 100%; }

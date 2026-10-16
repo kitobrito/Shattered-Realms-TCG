@@ -27,6 +27,7 @@ import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
 import { awardUnlocks, isLocked, lockedCount, unlockPopupHTML } from './unlocks.js';
+import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
 const SAVE_VERSION = 2;
@@ -158,18 +159,31 @@ function setFormat(next) {
   picked = otherPick[format] ?? picked.slice(0, pickNeeded());
   try { localStorage.setItem(FORMAT_KEY, format); } catch { /* storage unavailable */ }
 }
-const deckFor = (factions, mine) => (mine ? pairDeckFor(factions)
-  : format === 'single' ? buildSingleDeck(factions[0]) : buildDeck(factions));
+const deckFor = (factions, mine) => (starterMode() && factions.length === 1 ? starterDeck(factions[0])
+  : mine ? pairDeckFor(factions) : format === 'single' ? buildSingleDeck(factions[0]) : buildDeck(factions));
+
+// New players (journey.js): one faction and only the realms opened so far.
+function applyJourney() {
+  if (!pairUnlocked() && format !== 'single') { otherPick[format] = picked; format = 'single'; picked = picked.slice(0, 1); }
+  const open = availableFactions();
+  picked = picked.filter((f) => open.includes(f));
+  if (!picked.length) picked = open.slice(0, pickNeeded());
+}
+let milestone = null; // what the last match opened up, shown on the menu
+let firstPicks = [];   // a brand-new player's choice of first realms (before they're saved)
 
 // The opponent gets a random pair of playable factions.
 function randomPick() {
-  const pool = [...PLAYABLE_FACTIONS];
+  const pool = [...availableFactions()];
   const out = [];
   while (out.length < pickNeeded()) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   return out;
 }
 
 function startGame(mode, factions = picked, rivalFactions = randomPick()) {
+  if (needsFirstPick()) return render(); // choose your first realms first
+  applyJourney();
+  if (factions !== picked && factions.some((f) => !availableFactions().includes(f))) factions = picked;
   if (factions.length !== pickNeeded()) return flash(`Pick ${pickNeeded()} factions.`);
   // The coin flip: the human takes seat 0 (goes first) or seat 1 (goes second, gets the Mana Potion).
   const human = Math.random() < 0.5 ? 0 : 1;
@@ -389,6 +403,41 @@ const nameOfChar = (s, c) => (c.kind === 'hero' ? s.players[c.owner].name : getC
 
 // A card the AI plays (or a Trap that goes off) is shown full size so you can read it.
 // The opponent's cards are shown long enough to read (2.6 s at normal speed).
+// The Fusion cinematic: both realms' crests fly in from the sides, collide in a burst, and the
+// Fusion card rises from the light under its name. The first one you ever cast lingers.
+async function fusionCinematic(card, player) {
+  const first = player === viewer && firstTime('fusion-cast');
+  const [a, b] = card.fusion;
+  const who = player === viewer && game.mode !== 'hotseat' ? 'Your' : `${esc(game.state.players[player].name)}'s`;
+  const el = document.createElement('div');
+  el.className = `fx-fusion ${first ? 'first' : ''}`;
+  const crest = (f, side) => `<i class="ff-crest ${side}" style="${backArtOf(f) ? `background-image:url('${backArtOf(f)}')` : ''}"><b>${esc(f)}</b></i>`;
+  el.innerHTML = `<div class="ff-veil"></div>${crest(a, 'left')}${crest(b, 'right')}<div class="ff-burst"></div>
+    <div class="ff-title"><small>${who} Fusion</small>${esc(card.name)}${first ? '<em>Two realms. One power.</em>' : ''}</div>
+    <div class="ff-card">${bigCardHTML(card)}</div>`;
+  fx.layer().appendChild(el);
+  fitAllText(el);
+  sound.play('versus');
+  const L = el.querySelector('.ff-crest.left'), R = el.querySelector('.ff-crest.right');
+  const rush = { duration: first ? 900 : 600, easing: 'cubic-bezier(.5,0,.8,.6)' };
+  await Promise.all([
+    fx.animate(el.querySelector('.ff-veil'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }),
+    fx.animate(L, [{ transform: 'translate(-60vw, -50%) rotate(-30deg)', opacity: 0 }, { transform: 'translate(-50%, -50%) rotate(0)', opacity: 1 }], rush),
+    fx.animate(R, [{ transform: 'translate(60vw, -50%) rotate(30deg)', opacity: 0 }, { transform: 'translate(-50%, -50%) rotate(0)', opacity: 1 }], rush),
+  ]);
+  sound.play('bigHit');
+  L.style.opacity = R.style.opacity = '0';
+  fx.animate(el.querySelector('.ff-burst'), [{ opacity: 1, transform: 'translate(-50%, -50%) scale(0.2)' }, { opacity: 0, transform: 'translate(-50%, -50%) scale(3.2)' }], { duration: 700, easing: 'ease-out' });
+  await Promise.all([
+    fx.animate(el.querySelector('.ff-card'), [{ opacity: 0, transform: 'translate(-50%, -40%) scale(0.4) rotateY(90deg)' }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotateY(0)' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.3,1.2)' }),
+    fx.animate(el.querySelector('.ff-title'), [{ opacity: 0, transform: 'translate(-50%, 20px)' }, { opacity: 1, transform: 'translate(-50%, 0)' }], { duration: 500, easing: 'ease-out' }),
+  ]);
+  sound.play('spell');
+  await fx.wait(first ? 2600 : 1200);
+  await fx.animate(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
+  el.remove();
+}
+
 async function revealPlayed(cardId, { label = '', duration = 2600, cls = 'fx-reveal' } = {}) {
   const holder = document.createElement('div');
   holder.className = cls;
@@ -527,6 +576,9 @@ async function act(action, meta = {}) {
           flash.remove();
         }
       }
+    } else if (playedCard?.fusion) {
+      // A Fusion: the two realms' crests rush together and the Fusion is born (longer the first time).
+      await fusionCinematic(playedCard, action.player);
     } else if (playedCard) {
       sound.play(playedCard.type === 'minion' ? 'cardPlay' : playedCard.type === 'trap' ? 'trapSet' : 'spell');
       const hidden = playedCard.type === 'trap' && action.player !== viewer;
@@ -1662,10 +1714,13 @@ function deckGroups(playable) {
 }
 
 function renderMenu() {
+  applyJourney();
   const saved = loadSaved();
   showMenuBackdrop(true);
   const roster = [...FACTIONS].sort((a, b) => PLAYABLE_FACTIONS.includes(b) - PLAYABLE_FACTIONS.includes(a));
   const playable = roster.filter((f) => PLAYABLE_FACTIONS.includes(f));
+  const open = availableFactions();
+  const progress = progressLine();
   const soon = roster.filter((f) => !PLAYABLE_FACTIONS.includes(f));
   const ready = picked.length === pickNeeded();
   const fusion = format !== 'single' && ready ? fusionFor(picked) : null;
@@ -1701,17 +1756,23 @@ function renderMenu() {
       <section class="ts-panel">
         <div class="ts-panel-head">
           <h3>Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'} <span class="pick-count">${picked.length}/${pickNeeded()}</span></h3>
-          <div class="format-toggle">
+          ${pairUnlocked() ? `<div class="format-toggle">
             <button data-act="formatPair" class="${format === 'pair' ? 'on' : 'ghost'}">Two factions</button>
             <button data-act="formatSingle" class="${format === 'single' ? 'on' : 'ghost'}">One faction</button>
-          </div>
+          </div>` : ''}
         </div>
+        ${progress ? `<div class="journey-line"><span>${esc(progress)}</span><button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>` : ''}
         <div class="faction-groups">
           ${deckGroups(playable).map((g) => `<div class="fg">
             <div class="fg-head"><b>${esc(g.name)}</b><span>${esc(g.blurb)}</span></div>
             <div class="factions">${g.factions.map((f) => {
             const art = heroArtOf(f);
             const on = picked.includes(f);
+            if (!open.includes(f)) {
+              return `<span class="faction medallion sealed f-${f.toLowerCase()}" data-sealed="${esc(f)}" title="${esc(f)} · opens as you play">
+              <span class="medal-ring"></span><span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : ''}<i class="medal-lock">🔒</i></span>
+              <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span></span>`;
+            }
             return `<span class="faction medallion f-${f.toLowerCase()} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}">
               <span class="medal-ring"></span>
               <span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
@@ -1725,12 +1786,59 @@ function renderMenu() {
         </div>` : ''}
         ${ready && format !== 'single' ? synergyHTML(picked) : ''}
         ${ready ? factionGuideHTML(picked) : ''}
-        ${deckLineHTML()}
-        <p class="sub">${format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p>
+        ${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}
+        <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p>
         ${soon.length ? `<p class="ts-soon">Coming soon: ${soon.map(esc).join(' · ')}</p>` : ''}
       </section>
     </div>
-    ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}`;
+    ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
+    ${milestone ? milestoneHTML(milestone) : ''}
+    ${needsFirstPick() ? firstPickHTML() : ''}`;
+}
+
+// A brand-new player's first screen: choose three of the six easiest realms to start with.
+function firstPickHTML() {
+  const card = (f) => {
+    const art = heroArtOf(f);
+    const on = firstPicks.includes(f);
+    const info = FACTION_INFO[f] ?? {};
+    return `<div class="fp-realm f-${f.toLowerCase()} ${on ? 'on' : ''}" data-first="${esc(f)}" role="button" tabindex="0" aria-pressed="${on}">
+      <span class="fp-art">${art ? `<img src="${art}" alt="" draggable="false">` : ''}${on ? '<i class="fp-check">✓</i>' : ''}</span>
+      <b>${esc(f)}</b><small>${esc(info.style ?? '')}</small><span class="fp-sum">${esc(info.summary ?? '')}</span></div>`;
+  };
+  const n = firstPicks.length;
+  return `<div class="overlay first-pick-overlay"><div class="first-pick">
+    <h2>Choose your first realms</h2>
+    <p class="sub">Pick <b>${FIRST_PICKS}</b> to start with. These are the easiest to learn; the other realms open as you play.</p>
+    <div class="fp-grid">${STARTERS.map(card).join('')}</div>
+    <div class="fp-foot"><button data-act="firstBegin" ${n === FIRST_PICKS ? '' : 'disabled'}>${n === FIRST_PICKS ? 'Begin my journey' : `Choose ${FIRST_PICKS - n} more`}</button>
+      <button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>
+  </div></div>`;
+}
+
+// What the last match opened up on the new-player path (journey.js).
+function milestoneHTML(m) {
+  const realm = (f) => { const art = heroArtOf(f); return `<div class="ms-realm f-${f.toLowerCase()}">${art ? `<img src="${art}" alt="">` : ''}<b>${esc(f)}</b><small>${esc(FACTION_INFO[f]?.style ?? '')}</small></div>`; };
+  let body = '';
+  if (m.kind === 'reactive') {
+    body = `<h2>Traps &amp; Quick Plays</h2><img class="ui-divider" src="art/ui/divider.png" alt="">
+      <p>Your decks now hold two kinds of surprise:</p>
+      <ul class="ms-points"><li><b>Traps</b> are set face-down and spring by themselves when the enemy does something.</li>
+      <li><b>Quick Plays ⚡</b> can be played on your opponent's turn. When one fits, a <b>Quick Play?</b> prompt appears.</li></ul>
+      <p class="sub">No rush: against the AI there's no timer.</p>`;
+  } else if (m.kind === 'fusion') {
+    const ex = fusionFor(['Vampires', 'Aliens']);
+    body = `<div class="ms-fusion-burst"></div><h2 class="ms-fusion-title">Fusion unlocked</h2><img class="ui-divider" src="art/ui/divider.png" alt="">
+      <p>Now you can join <b>two realms</b> in one deck. Every pair of realms has its own <b>Fusion</b>: a unique Hero Spell that only that pair can cast.</p>
+      <div class="ms-fusion-demo">${realm('Vampires')}<span class="ms-plus">+</span>${realm('Aliens')}<span class="ms-plus">=</span>${ex ? `<div class="ms-card">${cardHTML(ex)}</div>` : ''}</div>
+      <p class="sub">It charges as you use your Hero Spells. Fire it to turn the battle. Find the pair whose Fusion you love.</p>`;
+  } else {
+    body = `<h2>New realms open</h2><img class="ui-divider" src="art/ui/divider.png" alt="">
+      <div class="ms-realms">${m.realms.map(realm).join('')}</div>
+      <p class="sub">${m.all ? 'Every realm is open. The Shattered Realms are yours.' : 'Two more open after every match.'}</p>`;
+  }
+  return `<div class="overlay milestone-overlay"><div class="milestone-panel ms-${m.kind}">${body}
+    <button data-act="milestoneOk">${m.kind === 'fusion' ? 'Choose two realms' : 'Continue'}</button></div></div>`;
 }
 
 // Choose which 30 of a faction's cards you bring (expansion factions).
@@ -2094,6 +2202,7 @@ function renderGame() {
   // A win (vs the AI or online) unlocks expansion cards, once per match.
   if (s.gameOver && heroesShattered && !game.unlockChecked) {
     game.unlockChecked = true;
+    if (game.mode !== 'online') milestone = recordMatch() ?? milestone;
     if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks();
   }
   app.innerHTML = boardHTML({
@@ -2132,6 +2241,8 @@ function timedTurn() {
   const s = game?.state;
   if (screen !== 'game' || !s || s.gameOver || handoff || s.pending?.type === 'mulligan') return null;
   if (isAI(s.activePlayer)) return null;
+  // Against the AI the turn is untimed unless you turn the timer on in Settings.
+  if (game.mode === 'ai' && !getSettings().turnTimerVsAI) return null;
   return `${s.turn}`;
 }
 
@@ -2216,12 +2327,20 @@ function render() {
 }
 
 // A human Quick Play window auto-passes after quickPlaySeconds.
+let reactionPrompted = null;
 function syncReactionTimer() {
   const s = game?.state;
   const open = screen === 'game' && s?.pending?.type === 'reaction' && !isAI(s.pending.player) && !handoff;
   const key = open ? `${s.turn}|${s.log.length}|${s.pending.window}|${s.pending.player}` : null;
   if (reactionTimer && reactionTimer.key !== key) { clearInterval(reactionTimer.interval); reactionTimer = null; }
   if (!open || reactionTimer) { paintCountdown(); return; }
+  // Untimed vs the AI (Settings → Turn timer vs AI): no countdown, no auto-pass.
+  if (game.mode === 'ai' && !getSettings().turnTimerVsAI) {
+    if (reactionPrompted !== key) { reactionPrompted = key; sound.play('quickPlay'); }
+    const cd = app.querySelector('.countdown');
+    if (cd) cd.style.display = 'none';
+    return;
+  }
   sound.play('quickPlay');
   const deadline = Date.now() + s.rules.quickPlaySeconds * 1000;
   reactionTimer = {
@@ -2544,6 +2663,14 @@ app.addEventListener('click', (e) => {
     if (tab.dataset.book !== bookPage) { bookPage = tab.dataset.book; bookTurned = true; sound.play('draw'); app.scrollTop = 0; }
     return render();
   }
+  const first = e.target.closest('[data-first]');
+  if (first && screen === 'menu') {
+    const f = first.dataset.first;
+    firstPicks = firstPicks.includes(f) ? firstPicks.filter((x) => x !== f) : firstPicks.length < FIRST_PICKS ? [...firstPicks, f] : firstPicks;
+    sound.play('click');
+    return render();
+  }
+  if (e.target.closest('[data-sealed]') && screen === 'menu') return flash('This realm opens as you play: two more after every match.');
   const chip = e.target.closest('[data-faction]');
   if (chip && screen === 'menu') {
     const f = chip.dataset.faction;
@@ -2585,6 +2712,11 @@ function onButton(name) {
     case 'closeZoom': zoomId = null; zoomArt = false; return render();
     case 'zoomArt': zoomArt = true; return render();
     case 'closeArt': zoomArt = false; return render();
+    case 'firstBegin':
+      if (firstPicks.length !== FIRST_PICKS) return;
+      chooseFirstRealms(firstPicks); picked = [firstPicks[0]]; firstPicks = []; sound.play('versus'); return render();
+    case 'milestoneOk': { const m = milestone; milestone = null; sound.play('click'); if (m?.kind === 'fusion') setFormat('pair'); return render(); }
+    case 'journeySkip': unlockEverything(); sound.play('click'); flash('Everything is unlocked: all realms, two-faction decks, traps and Quick Plays.'); return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
     case 'editCuts': builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
     case 'formatPair': setFormat('pair'); return render();
@@ -2735,6 +2867,8 @@ function fitMenus() {
   const w = innerWidth, h = innerHeight;
   const zoom = w > h && h < 640 ? Math.max(0.45, Math.min(1, h / 700)) : 1;
   document.documentElement.style.setProperty('--ui-zoom', String(Math.round(zoom * 100) / 100));
+  // Small notes shrink with the menus; scale them back up so they stay readable.
+  document.documentElement.style.setProperty('--note-boost', String(Math.round(Math.min(1.7, Math.max(1, 0.85 / zoom)) * 100) / 100));
 }
 fitMenus();
 window.addEventListener('resize', fitMenus);
@@ -2774,6 +2908,7 @@ async function boot() {
   setTimeout(() => el.remove(), 700);
 }
 document.addEventListener('cardstyle', () => { if (!animating) render(); });
+document.addEventListener('journey', () => { if (screen === 'menu') render(); });
 
 // iPhone: inside a match, a finger drag must never scroll or bounce the page
 // (or the itch.io page around it), and must never start the system's
