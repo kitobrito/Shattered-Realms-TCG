@@ -613,9 +613,11 @@ const STEPS = {
     if (event.type === 'attackGained' && event.player === state.activePlayer) {
       steps.push({ kind: 'window', name: 'enemyBuffed', priority: opponentOf(event.player), ctx: { event } });
     }
-    // Damage and Burn damage open a Quick Play window for the waiting player (Dragons).
+    // Damage opens a Quick Play window for the waiting player; Burn damage, for the player whose
+    // fire it is (the burning character's opponent: Feed the Flames).
     if (event.type === 'damageDealt' || event.type === 'burnDamage') {
-      steps.push({ kind: 'window', name: event.type, priority: opponentOf(state.activePlayer), ctx: { event } });
+      const priority = event.type === 'burnDamage' ? opponentOf(event.player) : opponentOf(state.activePlayer);
+      steps.push({ kind: 'window', name: event.type, priority, ctx: { event } });
     }
     // Demons: Quick Plays for your own attacks and for your own Hero losing Health (on either turn).
     if (event.type === 'attackDeclared') {
@@ -810,17 +812,18 @@ const STEPS = {
   },
 
   // Burned: each Burned minion loses 1 Health at the end of its controller's turn.
-  // Burn (Dragons): each Burning character of that player takes its Burn value
-  // as damage, then the value rises by 1.
+  // Burn (Dragons): at the end of YOUR turn, each Burning enemy character takes its Burn value as
+  // damage, then the value rises by 1. So Burn you apply hits as soon as you end your turn.
   burn(state, { player: p }) {
     const pl = state.players[p];
     for (const m of pl.board) if (hasKeyword(m, 'Burned')) loseHealth(state, m.uid, 1);
-    for (const c of [pl.hero, ...pl.board]) {
+    const foe = opponentOf(p);
+    for (const c of [state.players[foe].hero, ...state.players[foe].board]) {
       if (!isBurning(c) || c.health <= 0 || c.destroyed) continue;
       const n = c.burn;
-      const dealt = dealDamage(state, null, c.uid, n, { sourceController: opponentOf(p), burn: true });
+      const dealt = dealDamage(state, null, c.uid, n, { sourceController: p, burn: true });
       if (c.kind === 'minion') c.diedToBurn = c.health <= 0;
-      if (dealt > 0) emit(state, { type: 'burnDamage', target: c.uid, player: p, amount: dealt });
+      if (dealt > 0) emit(state, { type: 'burnDamage', target: c.uid, player: foe, amount: dealt });
       // After its last tick the fire goes out (Burn lasts at most burnTurns turns).
       c.burnLeft = (c.burnLeft ?? 2) - 1;
       if (c.burnLeft <= 0) { c.burn = 0; log(state, `${nameOf(state, c)} stops Burning.`); } else c.burn = n + 1;
