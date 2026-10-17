@@ -1491,6 +1491,7 @@ function renderSignIn() {
   const offline = acct.slow || acct.status === 'error' || acct.status === 'down';
   const reg = acct.tab === 'register';
   app.innerHTML = `
+    <button class="ghost signin-mute" data-act="mute" aria-label="${sound.isMuted() ? 'Unmute' : 'Mute'}" title="${sound.isMuted() ? 'Sound off: tap to unmute' : 'Sound on: tap to mute'}">${sound.isMuted() ? '🔇' : '🔊'}</button>
     <div class="menu tavern title-screen signin">
       <header class="ts-title">
         <div class="ts-runes"></div>

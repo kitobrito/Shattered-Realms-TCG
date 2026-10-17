@@ -4217,3 +4217,5 @@ body:not(.in-game) #app .signin .acct-form .sub, body:not(.in-game) #app .signin
   box-shadow: 0 0 10px #7dff4acc, 0 2px 4px #000a; }
 .hero-portrait .rad-hit-badge { bottom: 30%; right: -8%; font-size: calc(var(--hero, 100px) * 0.15); }
 body.reduced-motion .rad-haze { animation: none; opacity: 0.85; }
+
+.signin-mute { position: fixed; top: 12px; right: 12px; z-index: 50; font-size: 22px !important; padding: 6px 12px !important; line-height: 1; }
