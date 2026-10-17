@@ -52,7 +52,7 @@ export const KEYWORD_TEXT = {
   Dark: 'A tag on Vampires, Demons and other creatures of darkness. Divine cards punish it.',
   Undead: 'A tag on Zombies, Vampires and other undead. Divine cards punish it.',
   'Primal Mana': 'Gold Mana Crystals from Extinction Cycle. They can only pay for Dinosaur cards.',
-  Burn: "At the end of its controller's turn, takes damage equal to its Burn value, then the value rises by 1. Lasts 2 turns. Applying Burn X sets the value to X, or adds X if it is already X or more (adding doesn't extend the 2 turns).",
+  Burn: "At the end of its enemy's turn (the player who set it on fire), takes damage equal to its Burn value, then the value rises by 1. Lasts 2 turns. Applying Burn X sets the value to X, or adds X if it is already X or more (adding doesn't extend the 2 turns).",
   Burning: 'Has a Burn value (see Burn).',
   Cleanse: 'Removes Burn, Radiation and harmful effects (Frozen, Burned, Blind) from a character.',
   Stealth: "Can't be attacked or targeted by enemies. Only removed by a card that says so.",
@@ -141,7 +141,7 @@ export const BOARD_EVENTS = [
   'dissolved',        // Acidic: a minion was Dissolved ({ target, player, by, result })
   'corrosiveSpell',   // Acidic: a spell that applies Corrosion was played ({ player, cardId })
   'burnApplied',      // a character's Burn value was set or raised
-  'burnDamage',       // a character took Burn damage (end of its controller's turn)
+  'burnDamage',       // a character took Burn damage (end of its enemy's turn)
   'cardBurned',       // a card was burned from a hand or deck
   'overhealed',       // healing at full Health raised maximum Health (Divine)
   'bonusHealth',      // a character's maximum Health rose permanently (Divine)

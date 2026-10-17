@@ -2,7 +2,7 @@
 // Text is the designer's wording ("Battlecry" shown as Arrival). Interpretation
 // choices are marked "Ruling:" and listed in docs/OPEN_QUESTIONS.md (Q14).
 //
-// Burn (Dragon rule): a character's Burn value. At the end of its controller's
+// Burn (Dragon rule): a character's Burn value. At the end of its enemy's
 // turn it takes that much damage, then the value rises by 1 (engine burn step).
 // Applying Burn X sets the value to X if it was lower, otherwise adds X.
 // Burning a card destroys it from the opponent's hand (random) or the top of

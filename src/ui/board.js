@@ -59,6 +59,9 @@ function badges(m) {
 }
 
 // Radiation: a ☢ badge with the Radiation value (and turns left if it's temporary).
+// A character weakened by an enemy's Radiation: a green haze plus a "-N" tag by its Health.
+const radHitHTML = (c) => (c.radReduction > 0
+  ? `<span class="rad-hit-badge" title="Irradiated: ${c.radReduction} less Health from enemy Radiation">☢−${c.radReduction}</span><i class="rad-haze"></i>` : '');
 const radHTML = (c) => {
   const r = radiationOf(c);
   if (!r) return '';
@@ -70,7 +73,7 @@ const radHTML = (c) => {
 const burnHTML = (c) => (c.burn > 0
   ? `<div class="m-flames" style="--heat:${Math.min(1, 0.45 + c.burn * 0.12).toFixed(2)}"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
      <div class="m-flames front"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-     <span class="burn-badge" title="Burn ${c.burn}: takes ${c.burn} damage at the end of its controller's turn, then Burn rises by 1 (${c.burnLeft ?? 2} turn${(c.burnLeft ?? 2) === 1 ? '' : 's'} left)">🔥${c.burn}</span>`
+     <span class="burn-badge" title="Burn ${c.burn}: takes ${c.burn} damage at the end of its enemy's turn, then Burn rises by 1 (${c.burnLeft ?? 2} turn${(c.burnLeft ?? 2) === 1 ? '' : 's'} left)">🔥${c.burn}</span>`
   : '');
 
 const asleep = (m, s) => m.sick && !hasKeyword(m, 'Charge') && !hasKeyword(m, 'Rush') && m.controller === s.activePlayer;
@@ -136,7 +139,7 @@ export function minionHTML(m, s, cls = '') {
       <i class="sm-shine"></i>
       <div class="m-ring"></div>
       ${burnHTML(m)}
-      ${radHTML(m)}
+      ${radHTML(m)}${radHitHTML(m)}
       <div class="m-fx"><span class="m-ice"></span><span class="m-drip"></span><span class="m-embers"></span><span class="m-blind"></span><span class="m-silence"></span><span class="m-camo"></span><span class="m-smoke"></span><span class="m-ghost"></span><span class="m-ghost two"></span><span class="m-sand"></span></div>
       <div class="m-speed"></div><div class="m-sparkle"></div>
       <div class="m-zzz"><b>z</b><b>z</b><b>Z</b></div>
@@ -273,7 +276,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
       <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
-        ${radHTML(h)}
+        ${radHTML(h)}${radHitHTML(h)}
         ${cracksSVG(crackStage(h))}
         <span class="m-ice"></span>
         <div class="hero-name">${esc(pl.name)}</div>

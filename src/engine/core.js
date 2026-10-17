@@ -207,8 +207,8 @@ export function payMana(pl, card, cost) {
 }
 
 // ---- Burn (Dragons) -----------------------------------------------------
-// A character's Burn value (c.burn). At the end of its controller's turn it
-// takes that much damage, then the value rises by 1 (engine burn step).
+// A character's Burn value (c.burn). At the end of its enemy's turn it takes that
+// much damage, then the value rises by 1 (engine burn step).
 
 export const isBurning = (c) => (c?.burn ?? 0) > 0;
 
