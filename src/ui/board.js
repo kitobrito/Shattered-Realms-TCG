@@ -28,11 +28,7 @@ const evolveLeft = (m, s) => Math.max(1, evolveTurnsFor(s, m.controller) - (m.ev
 
 function cornerIcons(m, s) {
   return [
-    m.prey ? '<i class="prey-mark" title="Marked Prey: Sharks hunt it through Stealth and Elusive">🩸</i>' : '',
-    m.corrosion > 0 ? `<i class="corr-mark" title="Corrosion ${m.corrosion}: its Attack was lowered by ${m.corrosion} for as long as it stays in play">🧪${m.corrosion}</i>` : '',
-    m.implanted != null ? `<i class="implant-mark" title="Implanted: when it dies, a Chestburster bursts out on ${m.implanted === m.controller ? 'its own' : 'the other'} side">🥚</i>` : '',
     m.cardId === 'chestburster' ? `<i class="evolve-mark" title="Chestburster: Evolves into a Xeno ${evolveLeft(m, s) <= 1 ? 'at the start of its next turn' : `in ${evolveLeft(m, s)} of its turns`}">⏳${evolveLeft(m, s)}</i>` : '',
-    m.infected != null ? `<i class="infect-mark" title="Infected: when it dies, ${m.infected === s.players[m.controller]?.index ? 'its own side' : 'the other side'} summons a 2/1 Rage Runner">🦠</i>` : '',
     m.acidCoated ? '<i class="coat-mark" title="Acid-coated: its next Corrosion lowers its Attack by 1 more">💧</i>' : '',
     m.tempControl ? '<i title="Controlled temporarily">⛓</i>' : '',
     m.returnAtEndOfTurn ? '<i title="Returns to hand at end of turn">↩</i>' : '',
@@ -77,6 +73,47 @@ const burnHTML = (c) => (c.burn > 0
   : '');
 
 const asleep = (m, s) => m.sick && !hasKeyword(m, 'Charge') && !hasKeyword(m, 'Rush') && m.controller === s.activePlayer;
+
+// ---- Status strip --------------------------------------------------------------
+// Every status a minion is under gets one colour-coded chip, in a fixed order, in a strip above
+// it: the same place, colour and icon every time, so states can't be mixed up at a glance.
+// At most 3 show; the rest fold into "+N" (hover/tap the minion to read them all). A chip that
+// is new since the last redraw pops in, so you see the moment a status lands.
+// STATUS_ICONS: painted icon art (art/icons/<slug>.png) once it exists; emoji until then.
+export const STATUS_ICONS = {};
+const STATUS_DEFS = [
+  { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
+  { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },
+  { k: 'infected', label: 'Infected', ico: '🦠', test: (m) => m.infected != null, tip: 'Infected: when it dies, a 2/1 Rage Runner is summoned for the Infecting side' },
+  { k: 'implanted', label: 'Implant', ico: '🥚', test: (m) => m.implanted != null, tip: 'Implanted: when it dies, a Chestburster bursts out for the other side' },
+  { k: 'irradiated', label: 'Rad', ico: '☢', test: (m) => radiationOf(m) > 0, n: (m) => radiationOf(m), tip: (m) => `Radiation ${radiationOf(m)}: other characters without Radiation have ${radiationOf(m)} less Health` },
+  { k: 'radhit', label: 'Irradiated', ico: '☢', test: (m) => m.radReduction > 0, n: (m) => `−${m.radReduction}`, tip: (m) => `Irradiated: ${m.radReduction} less Health from enemy Radiation, and can't be healed` },
+  { k: 'corroded', label: 'Corroded', ico: '🧪', test: (m) => m.corrosion > 0, n: (m) => `−${m.corrosion}`, tip: (m) => `Corrosion: Attack lowered by ${m.corrosion}` },
+  { k: 'prey', label: 'Prey', ico: '🎯', test: (m) => !!m.prey, tip: 'Marked Prey: Sharks hunt it, even through Stealth and Elusive' },
+  { k: 'silenced', label: 'Silenced', ico: '🔇', test: (m) => hasKeyword(m, 'Silenced'), tip: 'Silenced: its card text and keywords are gone' },
+  { k: 'blind', label: 'Blind', ico: '🙈', test: (m) => hasKeyword(m, 'Blind'), tip: 'Blind: its attacks hit a random character' },
+  { k: 'burned', label: 'Scorched', ico: '♨', test: (m) => hasKeyword(m, 'Burned'), tip: 'Burned: loses 1 Health at the end of its turn' },
+  { k: 'rage', label: 'Rage', ico: '💢', test: (m) => hasKeyword(m, 'Rage'), tip: 'Rage: gains +1 Attack whenever it takes damage and survives' },
+  { k: 'stealth', label: 'Stealth', ico: '👁', test: (m) => hasKeyword(m, 'Stealth'), tip: "Stealth: can't be attacked or targeted until it attacks" },
+  { k: 'burrowed', label: 'Burrowed', ico: '⛰', test: (m) => !!m.burrowed, tip: 'Burrowed: underground until its next turn, then it Surfaces' },
+];
+const seenStatus = new Map(); // uid -> Set of status keys shown last time
+let statusGame = null;
+function statusStripHTML(m, s) {
+  if (statusGame !== s) { statusGame = s; seenStatus.clear(); }
+  const on = STATUS_DEFS.filter((d) => d.test(m));
+  const before = seenStatus.get(m.uid) ?? new Set();
+  seenStatus.set(m.uid, new Set(on.map((d) => d.k)));
+  if (!on.length) return '';
+  const shown = on.slice(0, 3), more = on.slice(3);
+  const chip = (d) => {
+    const tip = typeof d.tip === 'function' ? d.tip(m) : d.tip;
+    const ico = STATUS_ICONS[d.k] ? `<img src="${STATUS_ICONS[d.k]}" alt="">` : `<span class="st-emo">${d.ico}</span>`;
+    const n = d.n ? `<b>${d.n(m)}</b>` : '';
+    return `<i class="st st-${d.k}${before.has(d.k) ? '' : ' new'}" title="${esc(tip)}">${ico}${n}<em>${d.label}</em></i>`;
+  };
+  return `<div class="status-strip">${shown.map(chip).join('')}${more.length ? `<i class="st st-more" title="${esc(more.map((d) => (typeof d.tip === 'function' ? d.tip(m) : d.tip)).join('\n'))}">+${more.length}</i>` : ''}</div>`;
+}
 
 // ---- Shard minions -------------------------------------------------------------
 // Board minions are six-sided crystal shards in a bronze rim, edged in their faction's
@@ -131,7 +168,7 @@ export function minionHTML(m, s, cls = '') {
   if (!taunt) wardSince.delete(m.uid);
   const faction = (card.faction ?? 'neutral').toLowerCase().replace(/\s+/g, '-');
   return `
-    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>
@@ -140,6 +177,10 @@ export function minionHTML(m, s, cls = '') {
       <div class="m-ring"></div>
       ${burnHTML(m)}
       ${radHTML(m)}${radHitHTML(m)}
+      ${m.infected != null ? '<i class="ov-infect"><b></b><b></b><b></b><b></b></i>' : ''}
+      ${m.implanted != null ? '<i class="ov-implant"><b></b></i>' : ''}
+      ${hasKeyword(m, 'Rage') && !hasKeyword(m, 'Silenced') ? '<i class="ov-rage"></i>' : ''}
+      ${statusStripHTML(m, s)}
       <div class="m-fx"><span class="m-ice"></span><span class="m-drip"></span><span class="m-embers"></span><span class="m-blind"></span><span class="m-silence"></span><span class="m-camo"></span><span class="m-smoke"></span><span class="m-ghost"></span><span class="m-ghost two"></span><span class="m-sand"></span></div>
       <div class="m-speed"></div><div class="m-sparkle"></div>
       <div class="m-zzz"><b>z</b><b>z</b><b>Z</b></div>
