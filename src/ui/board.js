@@ -47,9 +47,9 @@ function badges(m) {
     triggers.some((t) => t.on === 'deathrattle') ? '<i class="b-deathrattle" title="Exit">💀</i>' : '',
     triggers.some((t) => t.on === 'surface') ? '<i class="b-surface" title="Surface: happens when it comes up from Burrow">⏫</i>' : '',
     triggers.some((t) => !ONE_TIME_TRIGGERS.has(t.on)) ? '<i class="b-trigger" title="Triggers when something happens">⚡</i>' : '',
-    hasKeyword(m, 'Lifesteal') ? '<i class="b-lifesteal" title="Lifesteal">🩸</i>' : '',
-    hasKeyword(m, 'Poisonous') ? '<i class="b-poison" title="Poisonous">☠</i>' : '',
-    hasKeyword(m, 'Venomous') ? '<i class="b-venom" title="Venomous">🐍</i>' : '',
+    hasKeyword(m, 'Lifesteal') ? `<i class="b-lifesteal">${kwIcon('lifesteal', 'Lifesteal')}</i>` : '',
+    hasKeyword(m, 'Poisonous') ? `<i class="b-poison">${kwIcon('poisonous', 'Poisonous')}</i>` : '',
+    hasKeyword(m, 'Venomous') ? `<i class="b-venom">${kwIcon('venomous', 'Venomous')}</i>` : '',
     hasKeyword(m, 'Recoil') ? '<i class="b-recoil" title="Recoil">↯</i>' : '',
   ].join('');
 }
@@ -80,7 +80,8 @@ const asleep = (m, s) => m.sick && !hasKeyword(m, 'Charge') && !hasKeyword(m, 'R
 // At most 3 show; the rest fold into "+N" (hover/tap the minion to read them all). A chip that
 // is new since the last redraw pops in, so you see the moment a status lands.
 // STATUS_ICONS: painted icon art (art/icons/<slug>.png) once it exists; emoji until then.
-export const STATUS_ICONS = {};
+export const STATUS_ICONS = Object.fromEntries(['frozen', 'burning', 'infected', 'implanted', 'irradiated', 'radhit', 'corroded', 'prey', 'silenced', 'blind', 'burned', 'rage', 'stealth', 'burrowed'].map((k) => [k, `art/icons/${k}.png`]));
+const kwIcon = (k, title) => `<img class="kw-ico" src="art/icons/${k}.png" alt="" title="${title}">`;
 const STATUS_DEFS = [
   { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
   { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },

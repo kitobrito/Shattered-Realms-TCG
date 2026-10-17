@@ -4298,3 +4298,14 @@ body.reduced-motion .ov-infect, body.reduced-motion .ov-implant b, body.reduced-
 .minion.burrowed .m-sand { opacity: 0.55; }
 .minion.burrowed .m-smoke { opacity: 1; z-index: 5; }
 .status-strip { flex-wrap: nowrap !important; max-width: none; gap: 1px; font-size: calc(var(--minion-w, 70px) * 0.13); }
+
+/* Painted status icons: let the icon art read, with a thin coloured ring for the status colour. */
+.status-strip .st img { width: 1.55em; height: 1.55em; margin: -0.2em -0.05em; filter: drop-shadow(0 1px 1px #000c); }
+.status-strip .st { padding: 0.05em 0.15em; }
+.badges .kw-ico { width: 1.4em; height: 1.4em; vertical-align: middle; filter: drop-shadow(0 1px 2px #000); }
+.status-strip { gap: 3px !important; }
+.status-strip .st { position: relative; margin: 0 !important; padding: 0.05em 0.25em 0.05em 0.08em; }
+.status-strip .st img { margin: -0.15em 0 !important; }
+.status-strip .st b { margin-left: 0.05em; }
+.status-strip .st { flex-shrink: 0 !important; }
+.status-strip { font-size: calc(var(--minion-w, 70px) * 0.17) !important; }
