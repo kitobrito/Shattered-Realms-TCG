@@ -4325,14 +4325,14 @@ body.reduced-motion .ov-infect, body.reduced-motion .ov-implant b, body.reduced-
    the window; card grids turn pages (pager.js) and the deck list squeezes to fit. ---- */
 #app.fit-screen { overflow: hidden; }
 #app.fit-screen > .book, #app.fit-screen > .builder { height: calc(100dvh / var(--ui-zoom, 1)); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
-.pager { flex: 1; min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto; align-items: center; gap: 0 6px; }
-.pager-grid.gallery-grid { display: grid; flex-wrap: nowrap; height: 100%; min-height: 0; margin: 0; justify-content: center; align-content: center; overflow: visible; }
-.pager-grid.gallery-grid .card { margin: 0; }
-.pager-grid.gallery-grid .card:hover { transform: translateY(-4px); }
-.pg-arrow { width: clamp(34px, 4vw, 58px); height: clamp(60px, 14vh, 120px); padding: 0 !important; font-size: clamp(30px, 5vh, 54px) !important; line-height: 1; border-radius: 14px !important; }
-.pg-arrow:disabled { visibility: hidden; }
-.pg-count { grid-column: 1 / -1; text-align: center; font-family: var(--font-title); font-size: 13px; color: #8a6a3a; min-height: 16px; letter-spacing: 0.04em; }
-.pager.pg-single .pg-arrow { visibility: hidden; }
+#app.fit-screen .pager { flex: 1; min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto; align-items: center; gap: 0 6px; }
+#app.fit-screen .pager-grid.gallery-grid { display: grid; flex-wrap: nowrap; height: 100%; min-height: 0; margin: 0; justify-content: center; align-content: center; overflow: visible; }
+#app.fit-screen .pager-grid.gallery-grid .card { margin: 0; }
+@media (hover: none) { #app.fit-screen .pager-grid.gallery-grid .card:hover { transform: none; } }
+#app.fit-screen .pg-arrow { width: clamp(34px, 4vw, 58px); height: clamp(60px, 14vh, 120px); padding: 0 !important; font-size: clamp(30px, 5vh, 54px) !important; line-height: 1; border-radius: 14px !important; }
+#app.fit-screen .pg-arrow:disabled { visibility: hidden; }
+#app.fit-screen .pg-count { grid-column: 1 / -1; text-align: center; font-family: var(--font-title); font-size: 13px; color: #8a6a3a; min-height: 16px; letter-spacing: 0.04em; }
+#app.fit-screen .pager.pg-single .pg-arrow { visibility: hidden; }
 
 /* The collection book. */
 .fit-screen .book { max-width: none; width: 100%; margin: 0; padding: 10px 14px 12px; }
@@ -4541,3 +4541,11 @@ body:not(.in-game) #app.fit-screen > .lobby-fit { zoom: 1; }
 .ts-fit .journey-line span { min-width: 0; text-align: left; }
 .ts-fit .journey-line button { flex: none; padding: clamp(2px, 0.5vh, 6px) 10px; font-size: clamp(9px, 1.5vh, 13px); white-space: nowrap; }
 .ts-fit p.deck-line { display: block; margin: 0; font-size: clamp(10px, 1.8vh, 15px); }
+/* Portrait (phones held upright): the scrolling layouts, every card shown, no page arrows. */
+#app:not(.fit-screen) .pg-arrow, #app:not(.fit-screen) .pg-count { display: none; }
+#app:not(.fit-screen) .pager-grid { display: flex; flex-wrap: wrap; justify-content: center; }
+/* Collection: the hovered card lifts and grows so its text is easy to read. */
+@media (hover: hover) {
+  #app.fit-screen .pager-grid .card { transition: transform 0.15s, filter 0.15s; }
+  #app.fit-screen .pager-grid.gallery-grid .card:hover { transform: scale(1.35); z-index: 20; position: relative; filter: drop-shadow(0 14px 24px #000c); }
+}

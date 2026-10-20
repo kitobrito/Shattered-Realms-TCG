@@ -33,11 +33,13 @@ export function layoutPager(pg) {
   if (!cards.length || !W || !H) { pg.classList.add('pg-single'); return; }
   const base = natural(cards[0]);
   const gap = Math.max(6, Math.min(18, H * 0.025));
-  // Two rows of cards (three on tall screens), as big as fit; enough columns to fill the width.
-  const rows = H >= 940 ? 3 : 2;
-  // At least four cards across where there's room (the cards shrink a little rather than leave a bare page).
-  const minCols = W > 700 ? 4 : 3;
-  let k = Math.min((H - gap * (rows - 1)) / rows / base.h, (W - gap * (minCols - 1)) / minCols / base.w, 1.7);
+  // Cards big enough to read: one row on short screens (phones held sideways), two on most
+  // screens, three only on very tall ones; then as many across as fit.
+  const rows = H < 480 ? 1 : H >= 1250 ? 3 : 2;
+  let k = Math.min((H - gap * (rows - 1)) / rows / base.h * 0.96, 1.7);
+  // Four across where they stay readable (not much under three-quarters size).
+  const k4 = (W - gap * 3) / 4 / base.w;
+  if (k4 < k && k4 >= 0.75) k = k4;
   const cols = Math.max(1, Math.floor((W + gap) / (base.w * k + gap)));
   // Never wider than the space.
   if (cols === 1 && base.w * k > W) k = W / base.w;
