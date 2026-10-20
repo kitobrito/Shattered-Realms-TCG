@@ -100,6 +100,7 @@ export const KEYWORD_TEXT = {
   Trap: 'Set face-down beside your Hero (a purple ? token). Your opponent can\'t see which Trap it is. It goes off automatically when its condition happens.',
   'Hero Spell': 'Always available outside your deck. Once per turn.',
   Extinction: 'Every 7 turns: destroy all your Mana Crystals and friendly minions.',
+  Breakthrough: 'Happens when this minion comes back from being Displaced.',
   Tithe: 'Both players draw that many cards.',
   Corpse: 'Left behind when a friendly Zombie or Fungus minion dies. Corpses stay until a card consumes them. A Corpse is not a minion.',
   Mushroom: 'Attached to a card in the enemy deck. When that card is drawn, the enemy Hero takes 1 damage for each Mushroom on it, then they are removed.',

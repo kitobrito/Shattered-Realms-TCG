@@ -213,6 +213,10 @@ export function returnFromBeyond(state, entry) {
   log(state, `🌀 ${nameOf(state, m)} returns from Beyond Reality${bonus ? ` (${bonus})` : ''}.`);
   if (entry.onReturn) pushFront(state, [...entry.onReturn.effects.map((effect) => ({ kind: 'effect', effect, ctx: { ...entry.onReturn.ctx, returned: m.uid } })), { kind: 'deaths' }]);
   emit(state, { type: 'minionReturned', source: m.uid, player: m.controller });
+  // Machine Elf Choir: Breakthrough effects happen twice (an echo only Breakthrough triggers listen to).
+  if (state.players[m.controller].board.some((x) => getCard(x.cardId).doubleBreakthrough && x.health > 0 && !x.destroyed)) {
+    emit(state, { type: 'minionReturned', source: m.uid, player: m.controller, echo: true });
+  }
   return true;
 }
 
@@ -800,6 +804,17 @@ export const EFFECT_OPS = {
   // { target, amount, forSummon? } — Health loss that is not damage (a cost paid with Health).
   loseHealth(state, e, ctx) {
     each(state, e.target, ctx, (c) => loseHealth(state, c.uid, e.amount, { forSummon: e.forSummon }));
+  },
+
+  // { target } — swap a minion's Attack and Health (Kaleidoscope Jester).
+  swapStats(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion') return;
+      const a = effectiveAttack(m), h = m.health;
+      m.attack = h - (effectiveAttack(m) - m.attack); m.health = a; m.maxHealth = Math.max(a, 1);
+      if (m.health <= 0) m.destroyed = true;
+      log(state, `🃏 ${nameOf(state, m)}'s Attack and Health swap (${h}/${a}).`);
+    });
   },
 
   // ---- Radioactive ----
