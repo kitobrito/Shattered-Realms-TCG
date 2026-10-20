@@ -252,3 +252,11 @@ export const DECK_TYPES = [
   { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts'] },
   { name: 'Attrition', blurb: 'Protect, outlast and wear them down.', factions: ['Divine', 'Fungus', 'Acidic'] },
 ];
+
+// The name of each faction's expansion (its `extra: true` cards), for the collection's set filter.
+export const EXPANSION_NAMES = {
+  Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
+  Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
+  Robots: 'Arsenal Protocol', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
+  Sharks: 'Sand Sharks',
+};

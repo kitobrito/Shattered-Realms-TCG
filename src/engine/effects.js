@@ -245,6 +245,11 @@ export function checkCondition(state, cond, ctx) {
   if (!cond) return true;
   // { all: [conditions] } — every one must hold.
   if (cond.all) return cond.all.every((c) => checkCondition(state, c, ctx));
+  // Robots (Arsenal): { armorAtLeast: N } — your Hero has N+ Armor; { heroHasWeapon } — your Hero holds a Weapon.
+  if (cond.armorAtLeast != null) return (heroOf(state, ctx.controller).armor ?? 0) >= cond.armorAtLeast;
+  // { eventTargetGone } — the attacked character is dead or already off the board (Power Fist).
+  if (cond.eventTargetGone != null) { const t = findCharacter(state, ctx.event?.target); return (!t || t.health <= 0 || !!t.destroyed) === cond.eventTargetGone; }
+  if (cond.heroHasWeapon != null) return !!heroOf(state, ctx.controller).weapon === cond.heroHasWeapon;
   // { eventDeadFaction } — the minion that just died was from this faction (Graceful Return).
   if (cond.eventDeadFaction) return !!ctx.event?.dead?.cardId && getCard(ctx.event.dead.cardId).faction === cond.eventDeadFaction;
   // { enemyHandEmpty: true } — Ashen Curse.
@@ -467,6 +472,11 @@ export const EFFECT_OPS = {
     // amountFromCorpses: { max } — as much damage as you have Corpses (Fester).
     if (e.amountFromCorpses) base = Math.min(e.amountFromCorpses.max ?? 99, state.players[ctx.controller].corpses ?? 0);
     if (e.amountFromCorpses && !base) return;
+    // amountFromArmor: { max } — as much damage as your Hero has Armor (Bulwark Sentinel).
+    if (e.amountFromArmor) base = Math.min(e.amountFromArmor.max ?? 99, heroOf(state, ctx.controller).armor ?? 0);
+    // amountFromSelfAttack — as much damage as this minion's Attack (Arsenal Overseer).
+    if (e.amountFromSelfAttack) { const me = findCharacter(state, ctx.self); base = me ? effectiveAttack(me) : 0; }
+    if ((e.amountFromArmor || e.amountFromSelfAttack) && !base) return;
     // amountPerCount: { count: selector, each, max } — extra damage per matching character (Colossus Prime).
     if (e.amountPerCount) base += Math.min(e.amountPerCount.max ?? 99, resolveSelector(state, e.amountPerCount.count, ctx).length * (e.amountPerCount.each ?? 1));
     const deferred = [];
@@ -1882,6 +1892,41 @@ export const EFFECT_OPS = {
     heroOf(state, ctx.controller).armor += e.amount;
   },
 
+  // ---- Robots (Arsenal Protocol): Hero Weapons ----
+  // { cardId, name, attack, durability, triggers?, ifNoWeapon? } — your Hero equips a Weapon: it gains
+  // the Weapon's Attack and can attack (once a turn). Each attack uses 1 Durability; at 0 it breaks.
+  // One Weapon at a time: a new one replaces the old. triggers act as the Hero ({ source: 'self' } = the Hero).
+  equipHeroWeapon(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    if (e.ifNoWeapon && hero.weapon) return;
+    if (hero.weapon) dropHeroWeapon(state, hero, 'drops');
+    hero.weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability };
+    hero.attack = (hero.attack ?? 0) + e.attack;
+    for (const t of e.triggers ?? []) (hero.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, weapon: true });
+    log(state, `${nameOf(state, hero)} equips ${e.name} (${e.attack}/${e.durability}).`);
+    emit(state, { type: 'weaponEquipped', source: hero.uid, player: ctx.controller });
+  },
+
+  // { attack?, durability? } — your Hero's Weapon gets more Attack / Durability (no Weapon: nothing).
+  buffHeroWeapon(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    const w = hero.weapon;
+    if (!w) return;
+    w.attack += e.attack ?? 0;
+    hero.attack += e.attack ?? 0;
+    w.durability += e.durability ?? 0;
+    w.maxDurability = Math.max(w.maxDurability, w.durability);
+    log(state, `${nameOf(state, hero)}'s ${w.name} becomes ${w.attack}/${w.durability}.`);
+  },
+
+  // After your Hero attacks with a Weapon: it loses 1 Durability (engine declareAttack).
+  wearHeroWeapon(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    if (!hero.weapon) return;
+    hero.weapon.durability -= 1;
+    if (hero.weapon.durability <= 0) dropHeroWeapon(state, hero, 'breaks');
+  },
+
   // Dinosaur Extinction Cycle modifiers for the caster's next Extinction.
   // { mode: 'bothBoards' | 'meteorShower' }
   setExtinctionMode(state, e, ctx) {
@@ -1916,4 +1961,14 @@ export function resolveEffect(state, effect, ctx) {
   const op = EFFECT_OPS[effect.op];
   if (!op) throw new Error(`Unknown effect op: ${effect.op}`);
   op(state, effect, ctx);
+}
+
+// The Hero loses its Weapon (it broke or was replaced): its Attack and its effects go.
+export function dropHeroWeapon(state, hero, how = 'breaks') {
+  const w = hero.weapon;
+  if (!w) return;
+  hero.attack = Math.max(0, (hero.attack ?? 0) - w.attack);
+  hero.grantedTriggers = (hero.grantedTriggers ?? []).filter((t) => !t.weapon);
+  hero.weapon = null;
+  log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : `${nameOf(state, hero)} drops the ${w.name}.`);
 }

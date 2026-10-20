@@ -265,6 +265,16 @@ function corpseHTML(pl) {
   return `<div class="corpse-badge ${n ? '' : 'empty'}" title="${n} Corpse${n === 1 ? '' : 's'}: left when a friendly Zombie or Fungus minion dies; some cards spend them"><span>🪦</span><b>${n}</b></div>`;
 }
 
+// Robots (Arsenal Protocol): the Hero's Weapon, with its Attack and Durability left. Tap to see the card.
+// It sits in the slot left of the portrait; the Fusion sits with the Hero Spells.
+function weaponHTML(pl) {
+  const w = pl.hero.weapon;
+  if (!w) return '';
+  const art = artOf(getCard(w.cardId));
+  return `<div class="weapon-badge" data-preview="${w.cardId}" title="${esc(w.name)}: ${w.attack} Attack, ${w.durability} Durability left (each attack uses 1)">
+    ${art ? `<i style="background-image:url('${art}')"></i>` : '<span>⚔️</span>'}<b class="w-atk">${w.attack}</b><b class="w-dur">${w.durability}</b></div>`;
+}
+
 function extinctionHTML(pl, s) {
   const ext = pl.extinction;
   if (!ext) return '';
@@ -314,7 +324,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
   return `
     <div class="hero-zone ${mine ? 'me' : 'opp'}">
       <div class="traps">${traps}</div>
-      ${pl.fusion ? `<div class="hero-fusion">${fusionHTML(pl, legal, mine)}</div>` : ''}
+      ${pl.hero.weapon ? `<div class="hero-fusion">${weaponHTML(pl)}</div>` : ''}
       <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
@@ -326,7 +336,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${beyondHTML(pl, s)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
     </div>`;
 }
 

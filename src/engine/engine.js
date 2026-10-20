@@ -488,6 +488,8 @@ function declareAttack(state, { player: p, attacker, defender }) {
     { kind: 'deaths' },
     { kind: 'event', event: { type: 'afterAttack', source: attacker, target: defender, player: p } },
   );
+  // Robots (Arsenal Protocol): a Hero attacking with a Weapon wears it down by 1 Durability.
+  if (a.kind === 'hero' && a.weapon) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon' }, ctx: { self: a.uid, controller: p } });
 }
 
 // ---- Auras ---------------------------------------------------------------
@@ -532,6 +534,11 @@ function applyAuras(state) {
   }
   // Attack auras (Graveyard Overseer) are recomputed outright each step.
   for (const m of minionsInOrder(state)) m.auraAttack = bonusAtk.get(m.uid) ?? 0;
+  // Weaponsmith Unit: your Hero's Weapon has +1 Attack per such minion (only while it holds one).
+  for (const pl of state.players) {
+    const smiths = pl.board.filter((m) => getCard(m.cardId).heroWeaponAura && m.health > 0 && !m.destroyed).length;
+    pl.hero.auraAttack = pl.hero.weapon ? smiths : 0;
+  }
   for (const m of minionsInOrder(state)) {
     const d = (bonus.get(m.uid) ?? 0) - m.auraHealth;
     if (!d) continue;
