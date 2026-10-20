@@ -1846,8 +1846,128 @@ export function themedDeath(clone, rect, faction) {
     }
     return done(Promise.all(jobs));
   }
+  // The rest go out in one sweep of their own: [keyframes, ms, easing, transform-origin, extra burst].
+  const sweep = DEATH_SWEEPS[faction];
+  if (sweep) {
+    const g = one();
+    g.style.transformOrigin = sweep.origin ?? '50% 50%';
+    sweep.extra?.(rect);
+    return done(animate(g, sweep.frames, { duration: sweep.ms, easing: sweep.ease ?? 'cubic-bezier(.4,0,.6,1)' }));
+  }
   host.remove();
   return null;
+}
+
+const DEATH_SWEEPS = {
+  // Dissolves into a red mist.
+  Vampires: { ms: 1000, frames: [
+    { transform: 'scale(1)', filter: 'none', opacity: 1 },
+    { transform: 'scale(1.05)', filter: 'brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)', opacity: 0.9, offset: 0.3 },
+    { transform: 'scale(1.25) translateY(-20%)', filter: 'sepia(1) saturate(8) hue-rotate(-40deg) blur(10px)', opacity: 0 }] },
+  // Topples over and turns to fossil.
+  Dinosaurs: { ms: 1100, origin: '80% 100%', ease: 'cubic-bezier(.5,0,.9,.5)', frames: [
+    { transform: 'rotate(0)', filter: 'none', opacity: 1 },
+    { transform: 'rotate(-6deg)', filter: 'sepia(0.5)', opacity: 1, offset: 0.3 },
+    { transform: 'rotate(80deg) translateY(10%)', filter: 'sepia(1) grayscale(0.6) brightness(0.6)', opacity: 0 }] },
+  // Glows, then melts into the floor.
+  Radioactive: { ms: 1100, origin: '50% 100%', frames: [
+    { transform: 'scale(1, 1)', filter: 'none', opacity: 1 },
+    { transform: 'scale(1.04, 1.04)', filter: 'brightness(2.2) sepia(1) saturate(6) hue-rotate(40deg)', opacity: 1, offset: 0.3 },
+    { transform: 'scale(1.3, 0.1)', filter: 'brightness(1.5) sepia(1) saturate(6) hue-rotate(40deg) blur(3px)', opacity: 0 }] },
+  // Wilts with a buzz and drifts down.
+  Bees: { ms: 900, frames: [
+    { transform: 'translate(0, 0) rotate(0)', opacity: 1 },
+    { transform: 'translate(-4px, -6px) rotate(-8deg)', opacity: 1, offset: 0.15 },
+    { transform: 'translate(4px, -2px) rotate(8deg)', opacity: 1, offset: 0.3 },
+    { transform: 'translate(0, 60%) rotate(30deg) scale(0.6)', filter: 'sepia(0.8) brightness(0.6)', opacity: 0 }] },
+  // Folds into a spinning kaleidoscope point.
+  Ultraterrestrials: { ms: 1100, ease: 'cubic-bezier(.6,0,.4,1)', frames: [
+    { transform: 'rotate(0) scale(1)', filter: 'none', opacity: 1 },
+    { transform: 'rotate(90deg) scale(0.9)', filter: 'hue-rotate(120deg) brightness(1.6)', opacity: 1, offset: 0.4 },
+    { transform: 'rotate(540deg) scale(0)', filter: 'hue-rotate(360deg) brightness(3)', opacity: 0 }] },
+  // Sinks under the sand.
+  Sharks: { ms: 1000, ease: 'cubic-bezier(.6,-0.3,.8,.6)', frames: [
+    { transform: 'translateY(0)', clipPath: 'inset(0 0 0 0)', opacity: 1 },
+    { transform: 'translateY(-5%)', clipPath: 'inset(0 0 0 0)', opacity: 1, offset: 0.2 },
+    { transform: 'translateY(90%)', clipPath: 'inset(0 0 100% 0)', filter: 'brightness(0.5)', opacity: 0.6 }],
+    extra: (r) => particles({ left: r.left, top: r.top + r.height * 0.6, width: r.width, height: r.height * 0.4 }, 'Dinosaurs', 8) },
+  // Dragged down into hellfire.
+  Demons: { ms: 1100, origin: '50% 100%', ease: 'cubic-bezier(.6,0,.9,.5)', frames: [
+    { transform: 'translateY(0) scale(1)', filter: 'none', opacity: 1 },
+    { transform: 'translateY(-4%) scale(1.03)', filter: 'brightness(1.5) sepia(1) saturate(5) hue-rotate(-30deg)', opacity: 1, offset: 0.25 },
+    { transform: 'translateY(60%) scale(0.8, 0.4)', filter: 'brightness(0.4) sepia(1) saturate(8) hue-rotate(-30deg)', opacity: 0 }] },
+  // Ascends in golden light.
+  Divine: { ms: 1300, ease: 'cubic-bezier(.4,0,.3,1)', frames: [
+    { transform: 'translateY(0) scale(1)', filter: 'none', opacity: 1 },
+    { transform: 'translateY(-5%) scale(1.03)', filter: 'brightness(2) sepia(0.6) saturate(2)', opacity: 1, offset: 0.35 },
+    { transform: 'translateY(-90%) scale(0.85)', filter: 'brightness(4) sepia(0.6) blur(4px)', opacity: 0 }] },
+  // Beamed up: squeezed thin and pulled skyward.
+  Aliens: { ms: 1000, origin: '50% 0%', ease: 'cubic-bezier(.7,0,.3,1)', frames: [
+    { transform: 'scale(1, 1)', filter: 'none', opacity: 1 },
+    { transform: 'scale(0.9, 1.05)', filter: 'brightness(1.8) sepia(1) saturate(4) hue-rotate(110deg)', opacity: 1, offset: 0.35 },
+    { transform: 'translateY(-120%) scale(0.05, 1.6)', filter: 'brightness(3) sepia(1) saturate(4) hue-rotate(110deg)', opacity: 0 }] },
+};
+
+// Ultraterrestrials: a minion slips through a swirling portal Beyond Reality, and later steps back out.
+function portalRing(rect, faction, { out = true } = {}) {
+  const color = FACTION_COLOR[faction] ?? FACTION_COLOR.Ultraterrestrials;
+  const c = center(rect);
+  const size = Math.max(rect.width, rect.height) * 1.1;
+  const el = document.createElement('div');
+  el.className = 'fx-portal';
+  el.style.setProperty('--c', color);
+  Object.assign(el.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${size}px`, height: `${size}px` });
+  layer().appendChild(el);
+  return animate(el, [
+    { transform: 'translate(-50%, -50%) scale(0.1) rotate(0deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(200deg)', opacity: 1, offset: 0.35 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(420deg)', opacity: 1, offset: 0.7 },
+    { transform: 'translate(-50%, -50%) scale(0) rotate(720deg)', opacity: 0 },
+  ], { duration: out ? 1100 : 1000, easing: 'ease-in-out' }).then(() => el.remove());
+}
+
+export function portalOut(clone, rect, faction) {
+  const host = ghostHost(rect);
+  const g = clone.cloneNode(true);
+  g.classList.add('fx-ghost');
+  Object.assign(g.style, { position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: '0', zIndex: '901', pointerEvents: 'none', animation: 'none' });
+  host.appendChild(g);
+  const ring = portalRing(rect, faction);
+  const pull = animate(g, [
+    { transform: 'rotate(0) scale(1)', filter: 'none', opacity: 1 },
+    { transform: 'rotate(0) scale(1)', filter: 'brightness(1.6) hue-rotate(60deg)', opacity: 1, offset: 0.3 },
+    { transform: 'rotate(360deg) scale(0)', filter: 'brightness(3) hue-rotate(240deg)', opacity: 0 },
+  ], { duration: 1000, easing: 'cubic-bezier(.6,0,.6,1)' });
+  return Promise.all([ring, pull]).then(() => host.remove(), () => host.remove());
+}
+
+export function portalIn(el, faction) {
+  if (!el) return Promise.resolve();
+  const ring = portalRing(el.getBoundingClientRect(), faction, { out: false });
+  particles(el.getBoundingClientRect(), 'Ultraterrestrials', 10);
+  const step = animate(el, [
+    { transform: 'rotate(-360deg) scale(0)', filter: 'brightness(3) hue-rotate(240deg)', opacity: 0 },
+    { transform: 'rotate(-360deg) scale(0)', filter: 'brightness(3) hue-rotate(240deg)', opacity: 0, offset: 0.3 },
+    { transform: 'rotate(0) scale(1.08)', filter: 'brightness(1.6) hue-rotate(60deg)', opacity: 1, offset: 0.8 },
+    { transform: 'rotate(0) scale(1)', filter: 'none', opacity: 1 },
+  ], { duration: 1000, easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'none' });
+  return Promise.all([ring, step]);
+}
+
+// End-of-turn Burn scorching a character: flames lick up and embers fly.
+export function burnTick(rect, dmg = 1) {
+  const el = document.createElement('div');
+  el.className = 'fx-burntick';
+  Object.assign(el.style, { left: `${rect.left - rect.width * 0.15}px`, top: `${rect.top + rect.height * 0.1}px`, width: `${rect.width * 1.3}px`, height: `${rect.height}px` });
+  layer().appendChild(el);
+  animate(el, [
+    { transform: 'scaleY(0.2)', opacity: 0 },
+    { transform: 'scaleY(1.1)', opacity: 1, offset: 0.3 },
+    { transform: 'scaleY(0.9) translateY(-8%)', opacity: 0.9, offset: 0.6 },
+    { transform: 'scaleY(1.2) translateY(-20%)', opacity: 0 },
+  ], { duration: 900, easing: 'ease-out' }).then(() => el.remove());
+  fling(rect, '🔥', Math.min(5, 1 + dmg), { rise: 0.8, spread: 0.7, size: 22, duration: 900 });
+  return particles(rect, 'Dragons', 4 + dmg * 2);
 }
 
 export function heroHit(el) {
