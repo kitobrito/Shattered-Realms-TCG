@@ -19,6 +19,7 @@ import { canPokeBoard, hideBoard, pokeBoard, showBoard } from './board-layer.js'
 import * as drag from './drag.js';
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
+import * as mfx from './menu-fx.js';
 import { artOf, backArtOf, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
@@ -27,7 +28,7 @@ import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
-import { awardUnlocks, isLocked, lockedCount, unlockPopupHTML } from './unlocks.js';
+import { awardUnlocks, isLocked, lockedCount, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
@@ -2017,6 +2018,7 @@ function deckGroups(playable) {
   return groups;
 }
 
+let playLaunching = false; // the Play button's burst is playing
 let howtoPage = 0; // the How to Play chapter that's open
 let guideOpen = false; // the main menu's realm guide (what the picked factions do)
 function renderMenu() {
@@ -2211,7 +2213,7 @@ function renderBuilder() {
     if (isLocked(c.id)) return cardHTML(c, { cuttable: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ');
     const k = draftDeck[c.id] ?? 0;
     // In the deck: a ×1 / ×2 badge; both copies in: dimmed (like Hearthstone).
-    return cardHTML(c, { cuttable: true }).replace('class="card ', `class="card draggable ${k >= DEFAULT_RULES.maxCopies ? 'maxed' : ''} `)
+    return cardHTML(c, { cuttable: true }).replace('class="card ', `class="card draggable ${c.extra ? 'expansion ' : ''}${k >= DEFAULT_RULES.maxCopies ? 'maxed' : ''} `)
       .replace(/<\/div>\s*$/, `${k ? `<span class="in-deck">×${k}</span>` : ''}</div>`);
   };
   // The deck list (right side; a tray along the bottom on phones): one row per card, by cost.
@@ -2219,6 +2221,7 @@ function renderBuilder() {
     .sort((a, b) => a.c.cost - b.c.cost || a.c.name.localeCompare(b.c.name));
   const deckPanel = `<aside class="deck-panel" data-deckdrop>
       <header><b>Your deck</b><span class="${!problem ? 'done' : ''}">${n} / ${need}</span></header>
+      ${manaCurveHTML(deck)}
       <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${c.faction.toLowerCase()}" data-deckrow="${c.id}" title="Drag out or click to remove one">
         <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${artOf(c) ? `<i class="dr-art" style="background-image:url('${artOf(c)}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
@@ -2261,21 +2264,33 @@ function renderBuilder() {
   if (builderFlash) {
     const row = app.querySelector(`[data-deckrow="${builderFlash}"]`);
     row?.classList.add('just-added'); row?.scrollIntoView({ block: 'nearest' });
+    if (deckFly?.id === builderFlash) mfx.flyToDeck(deckFly.rect, row, artOf(getCard(deckFly.id)));
+    deckFly = null;
     builderFlash = null;
   }
+}
+
+// The deck's mana curve: how many cards at each cost (7+ together), as small bars.
+function manaCurveHTML(deck) {
+  const counts = Array(8).fill(0);
+  for (const id of deck) counts[Math.min(7, getCard(id).cost)] += 1;
+  const top = Math.max(1, ...counts);
+  return `<div class="mana-curve" title="Mana curve: cards at each cost">${counts.map((k, i) => `<span class="mc-bar"><i style="height:${Math.round((k / top) * 100)}%"></i><b>${k || ''}</b><small>${i === 7 ? '7+' : i}</small></span>`).join('')}</div>`;
 }
 
 // ---- Deck builder: drag cards into the deck (Hearthstone style) ----------------------
 let builderTab = null; // the faction whose cards the builder shows
 let builderFlash = null; // the deck row to flash after the next render
 function deckTotal() { return Object.values(draftDeck).reduce((t, x) => t + x, 0); }
-function addToDraft(id) {
+let deckFly = null; // { id, rect }: a card just dropped into the deck flies into its row
+function addToDraft(id, fromRect = null) {
   if (isLocked(id)) return flash('Locked. Win matches to unlock new cards (2 per win).');
   const k = draftDeck[id] ?? 0;
   if (k >= DEFAULT_RULES.maxCopies) return flash(`Up to ${DEFAULT_RULES.maxCopies} copies of a card.`);
   if (deckTotal() >= deckSizeFor(picked)) return flash(`Your deck has ${deckSizeFor(picked)} cards. Take one out first.`);
   draftDeck = { ...draftDeck, [id]: k + 1 };
   builderFlash = id;
+  deckFly = fromRect ? { id, rect: fromRect } : null;
   sound.play('cardPlay');
   render();
 }
@@ -2331,12 +2346,13 @@ function endDrag(e, cancelled = false) {
   d.src.classList.remove('lift');
   document.body.classList.remove('builder-dragging');
   app.querySelector('.deck-panel')?.classList.remove('drop-in', 'drop-out');
+  d.ghostRect = d.ghost?.getBoundingClientRect();
   d.ghost?.remove();
   if (cancelled) return;
   if (d.ghost) {
     builderSuppressClick = true; // the drag isn't also a click (a click, if any, follows straight away)
     setTimeout(() => { builderSuppressClick = false; }, 0);
-    if (d.from === 'collection' && overDeck(e)) addToDraft(d.id);
+    if (d.from === 'collection' && overDeck(e)) addToDraft(d.id, d.ghostRect);
     else if (d.from === 'deck' && !overDeck(e)) removeFromDraft(d.id);
   }
 }
@@ -2389,7 +2405,7 @@ function renderGallery() {
             `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${k === 'exp' ? '✦ ' : ''}${esc(label)}</button>`).join('')}</nav>` : ''}
           ${pagerHTML(`gal:${f}:${bookSet}`, setCards(f).map((c) => (isLocked(c.id)
             ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
-            : cardHTML(c, { zoom: true }))).join(''), { chain: true })}
+            : cardHTML(c, { zoom: true }).replace('class="card ', `class="card ${c.extra ? 'expansion ' : ''}`))).join(''), { chain: true })}
         </section>
       </div>
     </div>
@@ -2658,9 +2674,12 @@ function keepInputs() {
   };
 }
 
+// One-off animations to play right after the next render (menu-fx.js).
+const afterRender = [];
 function render() {
   // A new screen opens at its top (menus scroll inside #app).
   if (screen !== shownScreen) app.scrollTop = 0;
+  const tabsBefore = screen === shownScreen ? mfx.tabRects(app) : null;
   const restoreInputs = screen === shownScreen ? keepInputs() : null;
   document.body.classList.toggle('in-game', screen === 'game');
   if (screen !== 'game') hideBoard();
@@ -2688,6 +2707,9 @@ function render() {
   if (pendingStart && !animating) { const m = pendingStart; pendingStart = null; queueMicrotask(() => onServerMessage(m)); }
   if (screen !== shownScreen) { screenChange(shownScreen, screen); shownScreen = screen; }
   if (zoomAnim) { const a = zoomAnim; zoomAnim = null; if (zoomId) playZoomAnim(a); }
+  mfx.slideTabs(app, tabsBefore);
+  if (screen === 'builder') mfx.animateCurve(app);
+  for (const f of afterRender.splice(0)) f();
 }
 
 // A human Quick Play window auto-passes after quickPlaySeconds.
@@ -2992,6 +3014,13 @@ app.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-act]');
   if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   const zoom = e.target.closest('[data-zoom]');
+  const lockedCard = (screen === 'gallery' || screen === 'builder') && e.target.closest('.card.locked');
+  if (lockedCard) {
+    mfx.rattle(lockedCard);
+    const f = getCard(lockedCard.dataset.zoom ?? lockedCard.dataset.cut ?? lockedCard.querySelector('[data-zoom]')?.dataset.zoom)?.faction;
+    const left = lockedCount(f);
+    return flash(`Locked. Every win unlocks 2 new cards${left ? ` · ${left} ${esc(f ?? '')} card${left === 1 ? '' : 's'} still locked (about ${Math.ceil(left / UNLOCKS_PER_WIN)} win${Math.ceil(left / UNLOCKS_PER_WIN) === 1 ? '' : 's'})` : ''}.`);
+  }
   if (zoom && (screen === 'gallery' || screen === 'builder' || screen === 'menu')) { zoomId = zoom.dataset.zoom; zoomAnim = zoomFrom(zoom); return render(); }
   const swapBtn = e.target.closest('[data-swap]');
   if (swapBtn && screen === 'menu') {
@@ -3027,16 +3056,17 @@ app.addEventListener('click', (e) => {
   const ch = e.target.closest('[data-howto]');
   if (ch && screen === 'howto') { howtoPage = Number(ch.dataset.howto); sound.play('draw'); return render(); }
   const setBtn = e.target.closest('[data-bookset]');
-  if (setBtn && screen === 'gallery') { bookSet = setBtn.dataset.bookset; sound.play('draw'); return render(); }
+  if (setBtn && screen === 'gallery') { bookSet = setBtn.dataset.bookset; sound.play('draw'); afterRender.push(() => mfx.dealIn(app.querySelector('.pager'))); return render(); }
   const btab = e.target.closest('[data-btab]');
   if (btab && screen === 'builder') {
     if (builderMode === 'swap') swapTab = btab.dataset.btab; else builderTab = btab.dataset.btab;
     sound.play('draw');
+    afterRender.push(() => mfx.dealIn(app.querySelector('.pager')));
     return render();
   }
   const tab = e.target.closest('[data-book]');
   if (tab && screen === 'gallery') {
-    if (tab.dataset.book !== bookPage) { bookPage = tab.dataset.book; bookTurned = true; sound.play('draw'); app.scrollTop = 0; }
+    if (tab.dataset.book !== bookPage) { bookPage = tab.dataset.book; bookTurned = true; sound.play('draw'); app.scrollTop = 0; afterRender.push(() => mfx.dealIn(app.querySelector('.pager'))); }
     return render();
   }
   const first = e.target.closest('[data-first]');
@@ -3050,7 +3080,9 @@ app.addEventListener('click', (e) => {
   const chip = e.target.closest('[data-faction]');
   if (chip && (screen === 'menu' || (screen === 'online' && lobbyEditable()))) {
     const f = chip.dataset.faction;
-    picked = picked.includes(f) ? picked.filter((x) => x !== f) : [...picked, f].slice(-pickNeeded());
+    const adding = !picked.includes(f);
+    picked = adding ? [...picked, f].slice(-pickNeeded()) : picked.filter((x) => x !== f);
+    if (adding) afterRender.push(() => mfx.realmPicked(app, f));
     return render();
   }
   // Tapping a corner prop on the board: it hops, flashes and makes its sound.
@@ -3080,7 +3112,15 @@ app.addEventListener('click', (e) => {
 function onButton(name) {
   const s = game?.state;
   switch (name) {
-    case 'ai': sound.play('click'); return startGame('ai');
+    case 'ai': {
+      sound.play('click');
+      if (screen !== 'menu' || needsFirstPick() || picked.length !== pickNeeded()) return startGame('ai');
+      if (playLaunching) return;
+      playLaunching = true;
+      const wait = mfx.playBurst(app.querySelector('.ts-play'));
+      setTimeout(() => { playLaunching = false; if (screen === 'menu') startGame('ai'); }, wait);
+      return;
+    }
     case 'hotseat': sound.play('click'); return startGame('hotseat');
     case 'continue': game = loadSaved(); return game ? enterGame() : render();
     case 'guide': guideOpen = true; return render();
@@ -3295,7 +3335,7 @@ window.addEventListener('resize', () => {
 // Turning pages: the arrows, the arrow keys and swiping across the cards.
 function pageTurn(pg, dir) {
   const off = turnPage(pg, dir);
-  if (!off) { sound.play('draw'); return; }
+  if (!off) { sound.play('draw'); mfx.dealIn(pg, dir); return; }
   // The collection runs on into the previous / next faction.
   if (screen === 'gallery') {
     const factions = [...Object.keys(FACTION_LISTS), 'Fusion'];
@@ -3303,7 +3343,9 @@ function pageTurn(pg, dir) {
     if (i < 0 || i >= factions.length) return;
     bookPage = factions[i];
     setPage(`gal:${bookPage}:${bookSet}`, off === 'next' ? 0 : 999);
-    bookTurned = true; sound.play('draw'); render();
+    bookTurned = true; sound.play('draw');
+    afterRender.push(() => mfx.dealIn(app.querySelector('.pager'), off === 'next' ? 1 : -1));
+    render();
   }
 }
 document.addEventListener('keydown', (e) => {
