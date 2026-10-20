@@ -75,8 +75,6 @@ export function turnPage(pg, dir) {
   if (next < 0 || next >= total) return pg.dataset.chain === '1' ? (dir < 0 ? 'prev' : 'next') : null;
   setPage(key, next);
   layoutPager(pg);
-  const grid = pg.querySelector('.pager-grid');
-  grid?.animate?.([{ transform: `translateX(${dir * 40}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
   return null;
 }
 

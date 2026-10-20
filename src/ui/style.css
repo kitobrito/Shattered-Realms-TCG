@@ -4571,3 +4571,50 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 .set-filter { flex: none; display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 0; }
 .set-filter button { padding: 4px 12px !important; font-size: clamp(11px, 1.7vh, 14px) !important; }
 .set-filter button.on { background: linear-gradient(180deg, #fbe7ae, #e4b964 38%, #b9822f 72%, #8c5a1d) !important; color: #2a1a0a !important; text-shadow: none !important; }
+
+/* ---- Menu & collection animations (menu-fx.js) ---- */
+/* Medallions: on hover, motes of the faction's colour drift up around the face. */
+.title-screen .faction.medallion:not(.sealed) .medal-face { position: relative; }
+.title-screen .faction.medallion:not(.sealed)::before { content: ''; position: absolute; left: 50%; top: 0; width: 130%; aspect-ratio: 1; transform: translateX(-50%);
+  pointer-events: none; opacity: 0; transition: opacity 0.25s; z-index: 2; border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--fc, #ffd25a) 0 2px, transparent 3px) 15% 80% / 100% 100% no-repeat,
+    radial-gradient(circle, var(--fc, #ffd25a) 0 1.5px, transparent 2.5px) 80% 70% / 100% 100% no-repeat,
+    radial-gradient(circle, #fff 0 1.5px, transparent 2.5px) 60% 90% / 100% 100% no-repeat,
+    radial-gradient(circle, var(--fc, #ffd25a) 0 2px, transparent 3px) 30% 95% / 100% 100% no-repeat,
+    radial-gradient(circle, #fff 0 1px, transparent 2px) 88% 92% / 100% 100% no-repeat;
+  filter: drop-shadow(0 0 4px var(--fc, #ffd25a)); }
+.title-screen .faction.medallion:not(.sealed):hover::before { opacity: 1; animation: medal-motes 1.6s linear infinite; }
+@keyframes medal-motes { from { background-position: 15% 80%, 80% 70%, 60% 90%, 30% 95%, 88% 92%; } to { background-position: 18% 10%, 76% 0%, 64% 20%, 26% 25%, 84% 15%; } }
+
+/* The mystery Fusion hero: faint cracks of light that flare when the pair completes. */
+.vs-hero.mystery .vs-mystery { position: relative; overflow: hidden; }
+.vs-hero.mystery .vs-mystery::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+  background: linear-gradient(115deg, transparent 46%, #ffd25a 48%, transparent 50%), linear-gradient(40deg, transparent 58%, #ffd25a 59.5%, transparent 61%),
+    linear-gradient(160deg, transparent 30%, #ffb040 31%, transparent 32.5%); animation: crack-glow 3s ease-in-out infinite; }
+@keyframes crack-glow { 50% { opacity: 0.7; filter: drop-shadow(0 0 6px #ffb040); } }
+.vs-hero.mystery.cracking .vs-mystery { animation: crack-shake 0.5s ease-in-out 2; }
+.vs-hero.mystery.cracking .vs-mystery::after { opacity: 1; filter: drop-shadow(0 0 10px #ffd25a) brightness(1.5); animation: none; }
+@keyframes crack-shake { 25% { transform: rotate(-3deg) scale(1.05); } 75% { transform: rotate(3deg) scale(1.05); } }
+
+/* Expansion cards: a slow shine sweeps across them now and then. */
+.card.expansion:not(.locked)::after { content: ''; position: absolute; inset: 0; z-index: 7; pointer-events: none; border-radius: 6%;
+  background: linear-gradient(110deg, transparent 35%, #ffffff55 48%, #ffe6a055 52%, transparent 65%) -150% 0 / 250% 100% no-repeat;
+  mix-blend-mode: screen; animation: exp-shine 5.5s ease-in-out infinite; }
+.card.expansion:nth-child(3n+1)::after { animation-delay: -1.8s; } .card.expansion:nth-child(3n+2)::after { animation-delay: -3.6s; }
+@keyframes exp-shine { 0%, 70% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+.card.expansion { position: relative; }
+
+/* Tab rows: the gold highlight slides between tabs. */
+.tab-pill { position: fixed; z-index: 30; pointer-events: none; border-radius: 10px; mix-blend-mode: normal;
+  background: linear-gradient(180deg, #fbe7ae, #e4b964 38%, #b9822f 72%, #8c5a1d); box-shadow: 0 0 14px #ffd25a88; opacity: 0.85; }
+.pill-wait { visibility: hidden; }
+
+/* Deck builder: a card dropped into the deck flies into its row; the mana curve under the header. */
+.deck-fly { position: fixed; z-index: 3000; pointer-events: none; background: #c9a35a center / cover; box-shadow: 0 0 18px #ffd25a, 0 6px 16px #000c; }
+.mana-curve { flex: none; display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; height: clamp(34px, 7vh, 60px); padding: 4px 10px 2px; border-bottom: 1px solid #8a6a3a44; }
+.mc-bar { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-height: 0; }
+.mc-bar i { display: block; width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, #7fb2ff, #2f6fe0); box-shadow: 0 0 6px #4a8aff66; }
+.mc-bar b { position: absolute; top: -2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; font-family: var(--font-title); }
+.mc-bar small { font-size: 9px; color: #b89a6a; line-height: 1; margin-top: 1px; }
+@media (max-height: 520px) { .mana-curve { height: 26px; padding: 2px 6px 1px; } .mc-bar b { display: none; } }
