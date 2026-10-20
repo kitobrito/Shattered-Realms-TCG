@@ -4556,3 +4556,18 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
   .zoom-overlay .big-card { --h: 94vh; }
   .zoom-side { max-height: 94vh; width: 260px; font-size: 13px; }
 }
+
+/* Robots (Arsenal Protocol): the Hero's Weapon beside the portrait — Attack (gold) and Durability (grey). */
+.weapon-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; cursor: help;
+  border: 3px solid #c9a35a; background: #1a1612; box-shadow: 0 0 0 2px #000, 0 0 14px #ffb84a66; display: grid; place-items: center; }
+.weapon-badge i { position: absolute; inset: 0; border-radius: 50%; background-size: cover; background-position: center; }
+.weapon-badge span { font-size: calc(var(--hero) * 0.24); }
+.weapon-badge b { position: absolute; bottom: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px;
+  font-family: var(--font-title); font-weight: 900; color: #fff; border: 2px solid #000; text-shadow: 0 1px 2px #000; }
+.weapon-badge .w-atk { left: -6px; background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a22a 55%, #8a5a10); }
+.weapon-badge .w-dur { right: -6px; background: radial-gradient(circle at 35% 30%, #e8eef6, #8a93a3 55%, #3a404a); }
+
+/* Collection: filter a faction's page by set (all / original / its expansion). */
+.set-filter { flex: none; display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 0; }
+.set-filter button { padding: 4px 12px !important; font-size: clamp(11px, 1.7vh, 14px) !important; }
+.set-filter button.on { background: linear-gradient(180deg, #fbe7ae, #e4b964 38%, #b9822f 72%, #8c5a1d) !important; color: #2a1a0a !important; text-shadow: none !important; }

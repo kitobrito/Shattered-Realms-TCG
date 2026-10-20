@@ -18,6 +18,8 @@ const FRIENDLY_ROBOT = { type: 'minion', side: 'friendly', tribe: 'Robot' };
 const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const ENEMY_MINIONS = { minions: { side: 'enemy' } };
 const upgraded = { op: 'markUpgrade', target: 'chosen' };
+// A Hero Weapon (Arsenal Protocol): equips your Hero (effects.js equipHeroWeapon).
+const weapon = (cardId, name, attack, durability, triggers) => ({ op: 'equipHeroWeapon', cardId, name, attack, durability, ...(triggers ? { triggers } : {}) });
 const drones = (count, extra = {}) => ({ op: 'summon', cardId: 'drone', count, ...extra });
 
 export const ROBOT_CARDS = [
@@ -246,7 +248,95 @@ export const ROBOT_CARDS = [
     ] },
   },
 
+  // ---- Arsenal Protocol expansion (unlockable): Hero Weapons and Armor ----
+  // A Hero Weapon gives your Hero its Attack; your Hero can attack once a turn, and each attack
+  // uses 1 Durability (at 0 it breaks). A new Weapon replaces the old one (effects.js equipHeroWeapon).
+  {
+    ...R, id: 'forge_drone', name: 'Forge Drone', art: '🔥', extra: true, tribes: ['Robot', 'Drone'], cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Gain 2 Armor.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'gainArmor', amount: 2 }] }],
+  },
+  {
+    ...S, id: 'rivet_blade', name: 'Rivet Blade', art: '🗡️', extra: true, cost: 1, heroWeapon: { attack: 1, durability: 3 },
+    text: 'Equip a 1/3 Hero Weapon: "After your Hero attacks, gain 1 Armor."',
+    effects: [weapon('rivet_blade', 'Rivet Blade', 1, 3, [{ on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'gainArmor', amount: 1 }] }])],
+  },
+  {
+    ...S, id: 'plating_press', name: 'Plating Press', art: '🛡️', extra: true, cost: 2,
+    text: 'Gain 4 Armor. If your Hero has a Weapon, give it +1 Durability.',
+    effects: [{ op: 'gainArmor', amount: 4 }, { op: 'buffHeroWeapon', durability: 1 }],
+  },
+  {
+    ...R, id: 'armory_bot', name: 'Armory Bot', art: '🔧', extra: true, cost: 2, attack: 2, health: 2,
+    text: 'Arrival: If your Hero has no Weapon, equip a 2/2 Scrap Cleaver.',
+    triggers: [{ on: 'battlecry', effects: [{ ...weapon('scrap_cleaver', 'Scrap Cleaver', 2, 2), ifNoWeapon: true }] }],
+  },
+  {
+    ...S, id: 'ion_gauntlets', name: 'Ion Gauntlets', art: '🥊', extra: true, cost: 3, heroWeapon: { attack: 2, durability: 2 },
+    text: 'Equip a 2/2 Hero Weapon: "Whenever your Hero attacks, give a random friendly Robot +1/+1."',
+    effects: [weapon('ion_gauntlets', 'Ion Gauntlets', 2, 2, [{ on: 'attackDeclared', filter: { source: 'self' },
+      effects: [{ op: 'buff', target: { randomOf: { minions: { side: 'friendly', tribe: 'Robot' } } }, attack: 1, health: 1 }] }])],
+  },
+  {
+    ...R, id: 'weaponsmith_unit', name: 'Weaponsmith Unit', art: '⚒️', extra: true, cost: 3, attack: 2, health: 2, heroWeaponAura: true,
+    text: "Your Hero's Weapon has +1 Attack.",
+  },
+  {
+    ...T, id: 'reactive_plating', name: 'Reactive Plating', art: '🧱', extra: true, cost: 3,
+    text: 'When your Hero is attacked: Gain 6 Armor.',
+    trap: { on: 'attackDeclared', filter: { target: 'friendlyHero' }, effects: [{ op: 'gainArmor', amount: 6 }] },
+  },
+  {
+    ...S, id: 'repulsor_shield', name: 'Repulsor Shield', art: '🔰', extra: true, cost: 3,
+    text: 'Quick Play: When an enemy attacks your Hero. Gain 4 Armor. If you have 10 or more Armor, draw a card.',
+    quickPlay: { windows: ['attackDeclared'], filter: { target: 'friendlyHero' } },
+    effects: [{ op: 'gainArmor', amount: 4 }, { op: 'draw', count: 1, if: { armorAtLeast: 10 } }],
+  },
+  {
+    ...S, id: 'power_fist', name: 'Power Fist', art: '👊', extra: true, cost: 4, heroWeapon: { attack: 3, durability: 2 },
+    text: 'Equip a 3/2 Hero Weapon: "After your Hero attacks and kills a minion, draw a card."',
+    effects: [weapon('power_fist', 'Power Fist', 3, 2, [{ on: 'afterAttack', filter: { source: 'self' },
+      effects: [{ op: 'draw', count: 1, if: { eventTargetGone: true } }] }])],
+  },
+  {
+    ...R, id: 'shield_generator', name: 'Shield Generator', art: '🔋', extra: true, cost: 5, attack: 2, health: 5, keywords: ['Taunt'],
+    text: 'Taunt. At the end of your turn, gain 2 Armor.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'gainArmor', amount: 2 }] }],
+  },
+  {
+    ...S, id: 'exo_frame_overdrive', name: 'Exo-Frame Overdrive', art: '🦾', extra: true, cost: 4,
+    text: 'Gain 3 Armor. Your Hero gets +2 Attack and Twin Strike this turn.',
+    effects: [{ op: 'gainArmor', amount: 3 }, { op: 'buff', target: 'friendlyHero', attack: 2, temporary: true, temporaryKeywords: ['Twin Strike'] }],
+  },
+  {
+    ...MECH, id: 'bulwark_sentinel', name: 'Bulwark Sentinel', art: '🛡️', extra: true, cost: 5, attack: 4, health: 6, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: Deal damage equal to your Armor (up to 6) to an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: 'chosen', amountFromArmor: { max: 6 } }] }],
+  },
+  {
+    ...S, id: 'plasma_lance', name: 'Plasma Lance', art: '🔱', extra: true, cost: 5, heroWeapon: { attack: 3, durability: 3 },
+    text: 'Equip a 3/3 Hero Weapon: "Whenever your Hero attacks a minion, deal 2 damage to the minions next to it."',
+    effects: [weapon('plasma_lance', 'Plasma Lance', 3, 3, [{ on: 'attackDeclared', filter: { source: 'self' },
+      effects: [{ op: 'damage', target: { adjacent: 'eventTarget' }, amount: 2 }] }])],
+  },
+  {
+    ...R, id: 'arsenal_overseer', name: 'Arsenal Overseer', art: '🎖️', extra: true, cost: 6, attack: 4, health: 4,
+    text: "Arrival: Give your Hero's Weapon +1/+1. Whenever your Hero attacks, this deals damage equal to its Attack to the same target.",
+    triggers: [
+      { on: 'battlecry', effects: [{ op: 'buffHeroWeapon', attack: 1, durability: 1 }] },
+      { on: 'attackDeclared', filter: { source: 'friendlyHero' }, effects: [{ op: 'damage', target: 'eventTarget', amountFromSelfAttack: true }] },
+    ],
+  },
+  {
+    ...S, id: 'titan_mech_suit', name: 'Titan Mech Suit', art: '🤖', extra: true, cost: 9,
+    text: 'Equip a 5/3 Titan Cannon and gain 6 Armor. Your Hero is Immune this turn.',
+    effects: [weapon('titan_cannon', 'Titan Cannon', 5, 3), { op: 'gainArmor', amount: 6 }, { op: 'buff', target: 'friendlyHero', temporaryKeywords: ['Immune'] }],
+  },
+
   // ---- Tokens ----
+  { ...S, id: 'scrap_cleaver', name: 'Scrap Cleaver', art: '🔪', token: true, cost: 2, heroWeapon: { attack: 2, durability: 2 }, text: 'A 2/2 Hero Weapon made by Armory Bot.', effects: [weapon('scrap_cleaver', 'Scrap Cleaver', 2, 2)] },
+  { ...S, id: 'titan_cannon', name: 'Titan Cannon', art: '💥', token: true, cost: 5, heroWeapon: { attack: 5, durability: 3 }, text: 'A 5/3 Hero Weapon from Titan Mech Suit.', effects: [weapon('titan_cannon', 'Titan Cannon', 5, 3)] },
   { ...R, id: 'drone', name: 'Drone', art: '🛸', token: true, tribes: ['Robot', 'Drone'], cost: 1, attack: 1, health: 1, text: '' },
   { ...MECH, id: 'combat_mech', name: 'Combat Mech', art: '🤖', token: true, cost: 4, attack: 4, health: 4, keywords: ['Taunt'], text: 'Taunt.' },
 ];

@@ -21,7 +21,7 @@ import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import { artOf, backArtOf, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
-import { DECK_TYPES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
+import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
 import * as sound from './sound.js';
 import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
@@ -2360,10 +2360,17 @@ function galleryCards(f) {
 let bookPage = null;
 let bookTurned = false; // play the page-turn only when the page changes
 
+// The collection's set filter: every card, the original set, or the faction's expansion.
+let bookSet = 'all';
+const setCards = (f) => {
+  const cards = galleryCards(f);
+  if (!EXPANSION_NAMES[f] || bookSet === 'all') return cards;
+  return cards.filter((c) => !c.token && !c.heroSpell && (bookSet === 'exp') === !!c.extra);
+};
 function renderGallery() {
   const factions = [...Object.keys(FACTION_LISTS), 'Fusion'];
   bookPage = factions.includes(bookPage) ? bookPage : factions[0];
-  galleryOrder = galleryCards(bookPage).map((c) => c.id);
+  galleryOrder = setCards(bookPage).map((c) => c.id);
   const f = bookPage;
   const art = heroArtOf(f);
   const scrollY = app.scrollTop;
@@ -2378,7 +2385,9 @@ function renderGallery() {
             <span class="sub">${f === 'Fusion'
     ? `${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells · one per faction pair · charges as you use your Hero Spells (3 uses) · click a card to see it full size`
     : `${hasExtras(f) ? `${FACTION_POOLS[f].length} cards (${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new) · a deck uses ${FACTION_DECKS[f].length}` : `${FACTION_DECKS[f].length}/${FACTION_LISTS[f].length} cards`} · Hero Spell first, tokens last · click a card to see it full size`}</span></div></header>
-          ${pagerHTML(`gal:${f}`, galleryCards(f).map((c) => (isLocked(c.id)
+          ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All cards'], ['core', 'Original set'], ['exp', EXPANSION_NAMES[f]]].map(([k, label]) =>
+            `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${k === 'exp' ? '✦ ' : ''}${esc(label)}</button>`).join('')}</nav>` : ''}
+          ${pagerHTML(`gal:${f}:${bookSet}`, setCards(f).map((c) => (isLocked(c.id)
             ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
             : cardHTML(c, { zoom: true }))).join(''), { chain: true })}
         </section>
@@ -3017,6 +3026,8 @@ app.addEventListener('click', (e) => {
   }
   const ch = e.target.closest('[data-howto]');
   if (ch && screen === 'howto') { howtoPage = Number(ch.dataset.howto); sound.play('draw'); return render(); }
+  const setBtn = e.target.closest('[data-bookset]');
+  if (setBtn && screen === 'gallery') { bookSet = setBtn.dataset.bookset; sound.play('draw'); return render(); }
   const btab = e.target.closest('[data-btab]');
   if (btab && screen === 'builder') {
     if (builderMode === 'swap') swapTab = btab.dataset.btab; else builderTab = btab.dataset.btab;
@@ -3291,7 +3302,7 @@ function pageTurn(pg, dir) {
     const i = factions.indexOf(bookPage) + (off === 'next' ? 1 : -1);
     if (i < 0 || i >= factions.length) return;
     bookPage = factions[i];
-    setPage(`gal:${bookPage}`, off === 'next' ? 0 : 999);
+    setPage(`gal:${bookPage}:${bookSet}`, off === 'next' ? 0 : 999);
     bookTurned = true; sound.play('draw'); render();
   }
 }
