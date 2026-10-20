@@ -2666,7 +2666,11 @@ function render() {
   else renderGame();
   restoreInputs?.();
   music(screen === 'game' ? 'battle' : 'menu');
-  app.classList.toggle('fit-screen', FIT_SCREENS.has(screen));
+  const fitting = FIT_SCREENS.has(screen) && landscape();
+  app.classList.toggle('fit-screen', fitting);
+  // Upright phones keep the scrolling layouts.
+  if (!fitting) app.firstElementChild?.classList.remove('ts-fit', 'howto-book', 'lobby-fit');
+  fitLandscape = landscape();
   layoutFit();
   fitAllText(app);
   syncReactionTimer();
@@ -3237,8 +3241,14 @@ let suppressZoomClick = false;
 // Menus, collection and deck builder fit the window with no scrolling (like Hearthstone):
 // card grids turn pages and the deck list squeezes its rows to fit.
 const FIT_SCREENS = new Set(['gallery', 'builder', 'menu', 'howto', 'online']);
+const landscape = () => innerWidth > innerHeight;
+let fitLandscape = null;
 function layoutFit() {
-  if (!FIT_SCREENS.has(screen)) return;
+  if (!FIT_SCREENS.has(screen) || !landscape()) {
+    for (const c of app.querySelectorAll('.pager-grid > *')) { c.style.display = ''; c.style.zoom = ''; }
+    for (const g of app.querySelectorAll('.pager-grid')) g.removeAttribute('style');
+    return;
+  }
   layoutPagers(app);
   // After paging through the zoomed cards, the page shows the card you stopped on.
   if (zoomId) {
@@ -3266,7 +3276,11 @@ function fitDeckRows() {
   }
   box.style.setProperty('--row-h', `${Math.max(10, Math.min(34, Math.floor(h)))}px`);
 }
-window.addEventListener('resize', () => { if (FIT_SCREENS.has(screen)) layoutFit(); });
+window.addEventListener('resize', () => {
+  if (!FIT_SCREENS.has(screen)) return;
+  if (landscape() !== fitLandscape) return render(); // turned the phone: switch layouts
+  layoutFit();
+});
 // Turning pages: the arrows, the arrow keys and swiping across the cards.
 function pageTurn(pg, dir) {
   const off = turnPage(pg, dir);
@@ -3282,13 +3296,13 @@ function pageTurn(pg, dir) {
   }
 }
 document.addEventListener('keydown', (e) => {
-  if (!FIT_SCREENS.has(screen) || zoomId || e.target.closest?.('input, textarea')) return;
+  if (!app.classList.contains('fit-screen') || zoomId || e.target.closest?.('input, textarea')) return;
   const pg = app.querySelector('.pager');
   if (pg && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) pageTurn(pg, e.key === 'ArrowLeft' ? -1 : 1);
 });
 let pageSwipe = null;
 document.addEventListener('touchstart', (e) => {
-  const pg = !zoomId && FIT_SCREENS.has(screen) && e.touches.length === 1 ? e.target.closest('.pager') : null;
+  const pg = !zoomId && app.classList.contains('fit-screen') && e.touches.length === 1 ? e.target.closest('.pager') : null;
   pageSwipe = pg ? { pg, x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
 }, { passive: true });
 document.addEventListener('touchend', (e) => {
