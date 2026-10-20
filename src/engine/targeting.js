@@ -171,6 +171,11 @@ export function matchFilter(state, filter, ctx) {
     }
     // Demons (Kings of Hell): the drawn card was burned by a full hand (Asmoday); it is the
     // trap/trigger owner's turn (Hellbound Scribe); the event's player holds N+ cards (Gilded Cage).
+    // Ultraterrestrials (Hyperspace): the Machine Elf Choir's repeat of a return (only Breakthrough hears it).
+    if (key === 'echo') {
+      if (!!ev.echo !== want) return false;
+      continue;
+    }
     if (key === 'burned') {
       if (!!ev.burned !== want) return false;
       continue;

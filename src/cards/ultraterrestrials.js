@@ -18,6 +18,7 @@ const ANY_MINION = { type: 'minion', side: 'any' };
 // Displace until the start of your next turn (the default), with extra options.
 const displace = (target, extra = {}) => ({ op: 'displace', target, ...extra });
 const once = (key, effects) => ({ op: 'oncePerTurn', key, effects });
+const BREAK = (effects) => ({ on: 'minionReturned', filter: { source: 'self' }, effects });
 
 export const ULTRATERRESTRIAL_CARDS = [
   // ---- Hero Spell ----
@@ -206,5 +207,88 @@ export const ULTRATERRESTRIAL_CARDS = [
   {
     ...U, id: 'echo_copy', name: 'Echo Copy', art: '🪞', token: true, cost: 1, attack: 1, health: 1,
     text: 'A 1/1 echo of Parallel Self. It has no effects.',
+  },
+
+  // ---- Hyperspace expansion (unlockable) ----
+  // Breakthrough: happens when the minion comes back from Displacement (a minionReturned trigger on
+  // itself). Machine Elf Choir repeats every return once more as an `echo` only Breakthrough hears.
+  {
+    ...U, id: 'waiting_room_usher', name: 'Waiting Room Usher', art: '🚪', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Displace another friendly minion until your next turn. It comes back with +1/+1.',
+    target: FRIENDLY_MINION,
+    triggers: [{ on: 'battlecry', effects: [displace('chosen', { attack: 1, health: 1 })] }],
+  },
+  {
+    ...U, id: 'self_dribbling_jewel', name: 'Self-Dribbling Jewel', art: '💎', extra: true, cost: 2, attack: 2, health: 2,
+    text: 'Breakthrough: Summon a copy of this.',
+    triggers: [BREAK([{ op: 'summon', copyOf: 'self' }])],
+  },
+  {
+    ...U, id: 'fractal_elf', name: 'Fractal Elf', art: '🧝', extra: true, cost: 2, attack: 2, health: 3,
+    text: 'Breakthrough: Gain +2/+2.',
+    triggers: [BREAK([{ op: 'buff', target: 'self', attack: 2, health: 2 }])],
+  },
+  {
+    ...U, id: 'kaleidoscope_jester', name: 'Kaleidoscope Jester', art: '🃏', extra: true, cost: 3, attack: 3, health: 3,
+    text: "Arrival: Swap an enemy minion's Attack and Health.",
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'swapStats', target: 'chosen' }] }],
+  },
+  {
+    ...U, id: 'mantis_surgeon', name: 'Mantis Surgeon', art: '🦗', extra: true, cost: 3, attack: 3, health: 5,
+    text: 'Breakthrough: Fully heal your other minions and cleanse them.',
+    triggers: [BREAK([{ op: 'heal', target: { minions: { side: 'friendly', excludeSelf: true } }, amount: 99 }, { op: 'cleanse', target: { minions: { side: 'friendly', excludeSelf: true } } }])],
+  },
+  {
+    ...U, id: 'tessellated_guardian', name: 'Tessellated Guardian', art: '🧱', extra: true, cost: 4, attack: 3, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Whenever a friendly minion comes back from Displacement, gain +1/+1.',
+    triggers: [{ on: 'minionReturned', filter: { source: { side: 'friendly' }, echo: false }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...U, id: 'chrysanthemum_gate', name: 'Chrysanthemum Gate', art: '🌼', extra: true, cost: 4, attack: 0, health: 6,
+    text: 'At the end of your turn, Displace another random friendly minion until your next turn. It comes back with +1/+1.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [displace({ randomOf: { minions: { side: 'friendly', excludeSelf: true } } }, { attack: 1, health: 1 })] }],
+  },
+  {
+    ...U, id: 'hyperdimensional_architect', name: 'Hyperdimensional Architect', art: '📐', extra: true, cost: 5, attack: 5, health: 5,
+    text: 'Breakthrough: Draw 2 cards.',
+    triggers: [BREAK([{ op: 'draw', count: 2 }])],
+  },
+  {
+    ...U, id: 'machine_elf_choir', name: 'Machine Elf Choir', art: '🎶', extra: true, cost: 4, attack: 4, health: 5, doubleBreakthrough: true,
+    text: 'Your Breakthrough effects happen twice.',
+  },
+  {
+    ...U, id: 'the_teacher_beyond', name: 'The Teacher Beyond', art: '👁️', extra: true, cost: 9, attack: 7, health: 7,
+    text: 'Arrival: Displace all other minions until your next turn. Yours come back with +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [displace({ minions: { side: 'any', excludeSelf: true } }, { ifFriendly: { attack: 2, health: 2 } })] }],
+  },
+  {
+    ...S, id: 'geometry_lesson', name: 'Geometry Lesson', art: '🔷', extra: true, cost: 1,
+    text: 'Displace a friendly minion until your next turn. It comes back with +1/+1. Draw a card.',
+    target: FRIENDLY_MINION,
+    effects: [displace('chosen', { attack: 1, health: 1 }), { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, id: 'fold_space', name: 'Fold Space', art: '🗺️', extra: true, cost: 3,
+    text: 'Displace an enemy minion until your next turn. Deal 2 damage to all other enemy minions.',
+    target: ENEMY_MINION,
+    effects: [displace('chosen'), { op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }],
+  },
+  {
+    ...S, id: 'the_breakthrough', name: 'The Breakthrough', art: '💥', extra: true, cost: 3,
+    text: 'Quick Play: When a friendly minion would take lethal damage, prevent it and Displace that minion until your next turn.',
+    quickPlay: { windows: ['wouldTakeDamage'], filter: { target: { side: 'friendly' }, lethal: true } },
+    effects: [{ op: 'preventDamage', target: 'eventTarget', amount: 'all' }, displace('eventTarget')],
+  },
+  {
+    ...T, id: 'mirror_hall', name: 'Mirror Hall', art: '🪞', extra: true, cost: 1,
+    text: 'Trap: When your opponent plays a minion, Displace it until their next turn.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [displace('eventSource', { until: 'theirNextTurn' })] },
+  },
+  {
+    ...T, id: 'welcome_back', name: 'Welcome Back', art: '🌟', extra: true, cost: 2,
+    text: 'Trap: When a friendly minion comes back from Displacement, give it +2/+2 and Taunt.',
+    trap: { on: 'minionReturned', filter: { source: { side: 'friendly' }, echo: false }, effects: [{ op: 'buff', target: 'eventSource', attack: 2, health: 2, keywords: ['Taunt'] }] },
   },
 ];
