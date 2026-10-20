@@ -44,20 +44,29 @@ const SECTIONS = [
 
 const KEY_WORDS = ['Taunt', 'Charge', 'Rush', 'Lifesteal', 'Evade', 'Stealth', 'Poisonous', 'Reborn', 'Arrival', 'Exit', 'Discover', 'Frozen', 'Elusive', 'Twin Strike'];
 
-export function howToPlayHTML(keywordText) {
-  return `
-    <div class="menu tavern howto">
-      <div class="tavern-sign"><h1>How to Play</h1></div>
-      <img class="ui-divider" src="art/ui/divider.png" alt="">
-      <p class="sub howto-lead">New to card games? Everything you need for your first match, in a few minutes.</p>
-      <div class="howto-grid">
-        ${SECTIONS.map(([icon, title, body]) => `<section class="howto-card"><h3><span>${icon}</span> ${title}</h3><div>${body}</div></section>`).join('')}
-      </div>
-      <section class="howto-card howto-keywords"><h3><span>📜</span> Common keywords</h3>
+// A small book: chapters down the side, one chapter open at a time (fits the screen, no scrolling).
+export const HOWTO_PAGES = SECTIONS.length + 1;
+export function howToPlayHTML(keywordText, page = 0) {
+  const chapters = [...SECTIONS.map(([icon, title]) => [icon, title]), ['📜', 'Common keywords']];
+  const p = Math.max(0, Math.min(chapters.length - 1, page));
+  const body = p < SECTIONS.length
+    ? `<h3><span>${SECTIONS[p][0]}</span> ${SECTIONS[p][1]}</h3><div class="howto-text">${SECTIONS[p][2]}</div>`
+    : `<h3><span>📜</span> Common keywords</h3>
         <dl>${KEY_WORDS.filter((k) => keywordText[k]).map((k) => `<dt>${esc(k)}</dt><dd>${esc(keywordText[k])}</dd>`).join('')}</dl>
-        <p class="sub">Any card's keywords are explained when you tap or hover over it.</p>
-      </section>
-      <div class="menu-buttons"><button data-act="ai">Play a match vs AI</button> <button data-act="menu" class="ghost">Back</button></div>
+        <p class="sub">Any card's keywords are explained when you tap or hover over it.</p>`;
+  return `
+    <div class="menu tavern howto howto-book">
+      <div class="howto-top"><h1>How to Play</h1><p class="sub howto-lead">Everything you need for your first match, in a few minutes.</p></div>
+      <div class="howto-body">
+        <nav class="howto-chapters" style="--n:${chapters.length}">${chapters.map(([ic, t], i) => `<button class="howto-ch ${i === p ? 'on' : ''}" data-howto="${i}"><span>${ic}</span>${t}</button>`).join('')}</nav>
+        <section class="howto-card howto-page ${p === SECTIONS.length ? 'howto-keywords' : ''}">${body}</section>
+      </div>
+      <div class="menu-buttons howto-foot">
+        <button data-act="howtoPrev" class="ghost" ${p === 0 ? 'disabled' : ''}>‹ Back</button>
+        <span class="sub">${p + 1} / ${chapters.length}</span>
+        ${p < chapters.length - 1 ? '<button data-act="howtoNext">Next ›</button>' : '<button data-act="ai">Play a match vs AI</button>'}
+        <button data-act="menu" class="ghost">Main menu</button>
+      </div>
     </div>`;
 }
 

@@ -9,7 +9,7 @@ import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { artSrc, ensureArt } from './art-packs.js';
 import { boardArtFor } from '../cards/board-art.js';
 import { applySettings, closeSettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
-import { clearTips, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
+import { clearTips, HOWTO_PAGES, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
@@ -18,6 +18,7 @@ import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLay
 import { canPokeBoard, hideBoard, pokeBoard, showBoard } from './board-layer.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
+import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import { artOf, backArtOf, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
@@ -1597,16 +1598,20 @@ function renderLobby() {
     return `<span class="lobby-hero f-${f.toLowerCase()}" title="${esc(f)}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>`;
   }).join('');
   app.innerHTML = `
-    <div class="menu tavern title-screen lobby">
-      <header class="ts-title">
-        <div class="ts-runes"></div>
-        <div class="tavern-sign"><h1>Play Online</h1></div>
-        <p class="ts-tag">Test your realms against the world.</p>
-      </header>
-      ${lobbySetupHTML(heroes, lobbyEditable())}
-      ${st.msg ? `<p class="lobby-error">${esc(st.msg)}</p>` : ''}
-      <section class="ts-panel lobby-panel">${body}</section>
-      <nav class="ts-actions"><div class="ts-row small"><button data-act="menu" class="ghost">← Main menu</button></div></nav>
+    <div class="menu tavern title-screen lobby lobby-fit">
+      <div class="lobby-left">
+        <header class="ts-title">
+          <div class="ts-runes"></div>
+          <div class="tavern-sign"><h1>Play Online</h1></div>
+          <p class="ts-tag">Test your realms against the world.</p>
+        </header>
+        ${lobbySetupHTML(heroes, lobbyEditable())}
+        <nav class="ts-actions"><div class="ts-row small"><button data-act="menu" class="ghost">← Main menu</button></div></nav>
+      </div>
+      <div class="lobby-right">
+        ${st.msg ? `<p class="lobby-error">${esc(st.msg)}</p>` : ''}
+        <section class="ts-panel lobby-panel">${body}</section>
+      </div>
     </div>`;
   app.querySelector('#room-input')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinOnline(); });
   app.querySelector('#friend-input')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') queueMatch('private'); });
@@ -2012,6 +2017,8 @@ function deckGroups(playable) {
   return groups;
 }
 
+let howtoPage = 0; // the How to Play chapter that's open
+let guideOpen = false; // the main menu's realm guide (what the picked factions do)
 function renderMenu() {
   applyJourney();
   const saved = loadSaved();
@@ -2020,7 +2027,6 @@ function renderMenu() {
   const playable = roster.filter((f) => PLAYABLE_FACTIONS.includes(f));
   const open = availableFactions();
   const progress = progressLine();
-  const soon = roster.filter((f) => !PLAYABLE_FACTIONS.includes(f));
   const ready = picked.length === pickNeeded();
   const fusion = format !== 'single' && ready ? fusionFor(picked) : null;
   galleryOrder = fusion ? [fusion.id] : []; // the full-size view holds just this card
@@ -2037,28 +2043,29 @@ function renderMenu() {
     return `<div class="vs-hero f-${f.toLowerCase()}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}<span>${esc(f)}</span></div>`;
   };
   app.innerHTML = `
-    <div class="menu tavern title-screen">
-      <header class="ts-title">
-        <div class="ts-runes"></div>
-        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-        <p class="ts-tag">Sixteen realms broke apart. Two of them are yours.</p>
-        <img class="ui-divider" src="art/ui/divider.png" alt="" draggable="false">
-      </header>
+    <div class="menu tavern title-screen ts-fit">
+      <div class="ts-left">
+        <header class="ts-title">
+          <div class="ts-runes"></div>
+          <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
+          <p class="ts-tag">Sixteen realms broke apart. Two of them are yours.</p>
+        </header>
 
-      <nav class="ts-actions">
-        <button data-act="ai" class="ts-play play-art" aria-label="Play vs AI"><img class="pa-img" src="art/ui/play-button.png" alt="" draggable="false"><i class="pa-glow"></i><i class="pa-shine"></i><span class="pa-sparks">${'<b></b>'.repeat(8)}</span><small>vs AI</small></button>
-        ${difficultySliderHTML()}
-        <div class="ts-row">
-          ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
-          <button data-act="hotseat">${icon('players')} Hot-seat</button>
-          ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
-        </div>
-        <div class="ts-row small">
-          <button data-act="howto" class="ghost ${howToOpened() ? '' : 'new-player'}">${icon('book')} How to play${howToOpened() ? '' : ' <small>New? Start here</small>'}</button>
-          <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Card collection</button>
-          <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
-        </div>
-      </nav>
+        <nav class="ts-actions">
+          <button data-act="ai" class="ts-play play-art" aria-label="Play vs AI"><img class="pa-img" src="art/ui/play-button.png" alt="" draggable="false"><i class="pa-glow"></i><i class="pa-shine"></i><span class="pa-sparks">${'<b></b>'.repeat(8)}</span><small>vs AI</small></button>
+          ${difficultySliderHTML()}
+          <div class="ts-row">
+            ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
+            <button data-act="hotseat">${icon('players')} Hot-seat</button>
+            ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
+          </div>
+          <div class="ts-row small">
+            <button data-act="howto" class="ghost ${howToOpened() ? '' : 'new-player'}">${icon('book')} How to play${howToOpened() ? '' : ' <small>New? Start here</small>'}</button>
+            <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Collection</button>
+            <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
+          </div>
+        </nav>
+      </div>
 
       <section class="ts-panel">
         <div class="ts-panel-head">
@@ -2086,18 +2093,22 @@ function renderMenu() {
               <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span>${on ? '<span class="medal-check">✓</span>' : ''}</span>`;
           }).join('')}</div></div>`).join('')}
         </div>
-        ${ready ? `<div class="ts-matchup">
-          ${picked.map(heroCard).join('<span class="vs-plus">+</span>')}${fusedHeroHTML(picked)}
-          ${fusion ? `<div class="vs-fusion">🌀 Fusion: <b>${esc(fusion.name)}</b></div>
-          <div class="vs-fusion-card" title="Click to see it full size">${cardHTML(fusion, { zoom: true })}</div>` : ''}
-        </div>` : ''}
-        ${ready && format !== 'single' ? synergyHTML(picked) : ''}
-        ${ready ? factionGuideHTML(picked) : ''}
-        ${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}
-        <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p>
-        ${soon.length ? `<p class="ts-soon">Coming soon: ${soon.map(esc).join(' · ')}</p>` : ''}
+        <div class="ts-bottom">
+          ${ready ? `<div class="ts-matchup">
+            ${picked.map(heroCard).join('<span class="vs-plus">+</span>')}${fusedHeroHTML(picked)}
+          </div>` : ''}
+          <div class="ts-bottom-info">
+            ${fusion ? `<button class="ghost ts-fusion-btn" data-zoom="${fusion.id}" title="See the Fusion card">🌀 Fusion: <b>${esc(fusion.name)}</b></button>` : ''}
+            ${ready && format !== 'single' ? synergyHTML(picked) : ''}
+            ${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}
+            ${ready ? `<button data-act="guide" class="ghost ts-guide-btn">${icon('book')} Realm guide</button>` : ''}
+          </div>
+        </div>
       </section>
     </div>
+    ${guideOpen && ready ? `<div class="overlay guide-overlay"><div class="guide-backdrop" data-act="closeGuide"></div><div class="guide-panel">
+      <button class="ghost guide-close" data-act="closeGuide">✕</button>${factionGuideHTML(picked)}
+      <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p></div></div>` : ''}
     ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
     ${needsFirstPick() ? firstPickHTML() : ''}`;
@@ -2149,6 +2160,7 @@ function milestoneHTML(m) {
 }
 
 // Choose which 30 of a faction's cards you bring (expansion factions).
+let swapTab = 'new'; // the swap builder shows its new cards or its original ones
 function renderSwapBuilder() {
   const f = swapFaction;
   const need = FACTION_DECKS[f].length;
@@ -2157,15 +2169,15 @@ function renderSwapBuilder() {
   galleryOrder = cards.map((c) => c.id);
   const extras = FACTION_POOLS[f].length - FACTION_LISTS[f].length;
   const scrollY = app.scrollTop;
-  const grid = (list) => `<div class="gallery-grid builder-grid">${list.map((c) => (isLocked(c.id)
+  const grid = (list) => list.map((c) => (isLocked(c.id)
     ? cardHTML(c, { cuttable: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
-    : cardHTML(c, { cuttable: true, isCut: !draftLineup.includes(c.id), cutLabel: 'OUT' }))).join('')}</div>`;
+    : cardHTML(c, { cuttable: true, isCut: !draftLineup.includes(c.id), cutLabel: 'OUT' }))).join('');
   app.innerHTML = `
     <div class="gallery builder swap-builder">
       <div class="builder-bar">
         <div>
           <h2>Choose your ${esc(f)} cards</h2>
-          <div class="sub">${esc(f)} has ${FACTION_POOLS[f].length} cards (${extras} new, ${extras - lockedCount(f)} unlocked). Your deck uses ${need}: tap a card to take it out or put it in. Win matches vs the AI to unlock more (${'2'} per win).</div>
+          <div class="sub builder-help">${esc(f)} has ${FACTION_POOLS[f].length} cards (${extras} new, ${extras - lockedCount(f)} unlocked). Your deck uses ${need}: tap a card to take it out or put it in. Win matches vs the AI to unlock more (${'2'} per win).</div>
         </div>
         <div class="builder-count ${n === need ? 'done' : ''}">In <b>${n}</b> / ${need}<span class="sub">${n > need ? `take out ${n - need}` : n < need ? `add ${need - n}` : 'ready'}</span></div>
         <div class="builder-buttons">
@@ -2174,10 +2186,11 @@ function renderSwapBuilder() {
           <button data-act="swapSave" ${n === need ? '' : 'disabled'}>Save cards</button>
         </div>
       </div>
-      <h3><img class="h-icon" src="art/ui/icon-dino-egg.png" alt=""> New cards <span class="pick-count">${cards.filter((c) => c.extra && draftLineup.includes(c.id)).length} of ${extras} in</span></h3>
-      ${grid(cards.filter((c) => c.extra))}
-      <h3>${crestHTML(f)} Original cards <span class="pick-count">${cards.filter((c) => !c.extra && draftLineup.includes(c.id)).length} of ${FACTION_LISTS[f].length} in</span></h3>
-      ${grid(cards.filter((c) => !c.extra))}
+      <nav class="builder-tabs">
+        <button class="builder-tab ghost ${swapTab === 'new' ? 'on' : ''}" data-btab="new"><img class="h-icon" src="art/ui/icon-dino-egg.png" alt=""> New cards <span class="pick-count">${cards.filter((c) => c.extra && draftLineup.includes(c.id)).length} of ${extras} in</span></button>
+        <button class="builder-tab ghost ${swapTab === 'old' ? 'on' : ''}" data-btab="old">${crestHTML(f)} Original cards <span class="pick-count">${cards.filter((c) => !c.extra && draftLineup.includes(c.id)).length} of ${FACTION_LISTS[f].length} in</span></button>
+      </nav>
+      ${pagerHTML(`swap:${f}:${swapTab}`, grid(cards.filter((c) => (swapTab === 'new') === !!c.extra)), { cls: 'builder-grid' })}
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
   app.scrollTop = scrollY;
@@ -2210,15 +2223,19 @@ function renderBuilder() {
         <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${artOf(c) ? `<i class="dr-art" style="background-image:url('${artOf(c)}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
     </aside>`;
-  const section = (f) => `<h3>${crestHTML(f)} ${esc(f)} <span class="pick-count ${!single && inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${single ? `${inFaction(f)} in deck` : `${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}`}</span></h3>
-      <div class="gallery-grid builder-grid">${pool(f).map(tile).join('')}</div>`;
+  // One faction's cards at a time (tabs), a page at a time.
+  if (!picked.includes(builderTab)) builderTab = picked[0];
+  const tabBtn = (f) => `<button class="builder-tab ghost ${f === builderTab ? 'on' : ''}" data-btab="${esc(f)}">${crestHTML(f)} ${esc(f)}
+      <span class="pick-count ${!single && inFaction(f) < DEFAULT_RULES.minPerFaction ? 'short' : ''}">${single ? `${inFaction(f)} in deck` : `${inFaction(f)} in deck · at least ${DEFAULT_RULES.minPerFaction}`}</span></button>`;
+  const section = () => `<nav class="builder-tabs">${picked.map(tabBtn).join('')}</nav>
+      ${pagerHTML(`bld:${builderTab}`, pool(builderTab).map(tile).join(''), { cls: 'builder-grid' })}`;
   const scrollY = app.scrollTop;
   app.innerHTML = `
     <div class="gallery builder">
       <div class="builder-bar">
         <div>
           <h2>Build your deck</h2>
-          <div class="sub">${esc(picked.join(' + '))} · drag cards into your deck (hold, then drag on a phone) · drag one out or click it in the list to remove it · click a card to see it full size ·
+          <div class="sub builder-help">${esc(picked.join(' + '))} · drag cards into your deck (hold, then drag on a phone) · drag one out or click it in the list to remove it · click a card to see it full size ·
             ${need} cards${single ? '' : `, at least ${DEFAULT_RULES.minPerFaction} from each faction`}, up to ${DEFAULT_RULES.maxCopies} of a card · Hero Spell${heroSpells.length === 1 ? '' : 's'} always included:
             ${heroSpells.map((c) => esc(c.name)).join(', ')}</div>
         </div>
@@ -2232,7 +2249,7 @@ function renderBuilder() {
       </div>
       ${problem && n ? `<p class="builder-hint">${esc(problem)}</p>` : ''}
       <div class="builder-layout">
-        <div class="builder-cards">${picked.map(section).join('')}</div>
+        <div class="builder-cards">${section()}</div>
         ${deckPanel}
       </div>
     </div>
@@ -2249,6 +2266,7 @@ function renderBuilder() {
 }
 
 // ---- Deck builder: drag cards into the deck (Hearthstone style) ----------------------
+let builderTab = null; // the faction whose cards the builder shows
 let builderFlash = null; // the deck row to flash after the next render
 function deckTotal() { return Object.values(draftDeck).reduce((t, x) => t + x, 0); }
 function addToDraft(id) {
@@ -2360,9 +2378,9 @@ function renderGallery() {
             <span class="sub">${f === 'Fusion'
     ? `${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells · one per faction pair · charges as you use your Hero Spells (3 uses) · click a card to see it full size`
     : `${hasExtras(f) ? `${FACTION_POOLS[f].length} cards (${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new) · a deck uses ${FACTION_DECKS[f].length}` : `${FACTION_DECKS[f].length}/${FACTION_LISTS[f].length} cards`} · Hero Spell first, tokens last · click a card to see it full size`}</span></div></header>
-          <div class="gallery-grid">${galleryCards(f).map((c) => (isLocked(c.id)
+          ${pagerHTML(`gal:${f}`, galleryCards(f).map((c) => (isLocked(c.id)
             ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
-            : cardHTML(c, { zoom: true }))).join('')}</div>
+            : cardHTML(c, { zoom: true }))).join(''), { chain: true })}
         </section>
       </div>
     </div>
@@ -2370,6 +2388,13 @@ function renderGallery() {
   bookTurned = false;
   app.scrollTop = scrollY;
 }
+
+// One screenful of cards with page arrows (pager.js lays it out after render).
+const pagerHTML = (key, cards, { chain = false, cls = '' } = {}) => `<div class="pager ${cls}" data-pager="${esc(key)}"${chain ? ' data-chain="1"' : ''}>
+  <button class="pg-arrow prev" data-page="-1" aria-label="Previous page">‹</button>
+  <div class="pager-grid gallery-grid ${cls}">${cards}</div>
+  <button class="pg-arrow next" data-page="1" aria-label="Next page">›</button>
+  <span class="pg-count"></span></div>`;
 
 // A faction's crest: the emblem from the middle of its card back (Fusion gets a split of colours).
 const crestHTML = (f) => (backArtOf(f) ? `<i class="crest" style="background-image:url('${backArtOf(f)}')"></i>` : '<i class="crest crest-fusion"></i>');
@@ -2637,10 +2662,12 @@ function render() {
   else if (screen === 'builder') renderBuilder();
   else if (screen === 'online') renderLobby();
   else if (screen === 'signin') renderSignIn();
-  else if (screen === 'howto') { app.innerHTML = howToPlayHTML(KEYWORD_TEXT); showMenuBackdrop(true); }
+  else if (screen === 'howto') { app.innerHTML = howToPlayHTML(KEYWORD_TEXT, howtoPage); showMenuBackdrop(true); }
   else renderGame();
   restoreInputs?.();
   music(screen === 'game' ? 'battle' : 'menu');
+  app.classList.toggle('fit-screen', FIT_SCREENS.has(screen));
+  layoutFit();
   fitAllText(app);
   syncReactionTimer();
   syncTurnTimer();
@@ -2947,6 +2974,8 @@ document.addEventListener('click', (e) => {
 app.addEventListener('click', (e) => {
   // Clicks inside the zoomed card panel don't close it (only its own buttons act).
   if (suppressZoomClick && e.target.closest('.zoom-overlay')) return; // the tap that ended a swipe
+  const pgBtn = e.target.closest('[data-page]');
+  if (pgBtn) return pageTurn(pgBtn.closest('.pager'), Number(pgBtn.dataset.page));
   const btn = e.target.closest('[data-act]');
   if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   const zoom = e.target.closest('[data-zoom]');
@@ -2980,6 +3009,14 @@ app.addEventListener('click', (e) => {
     }
     draftDeck = { ...draftDeck, [id]: k + 1 };
     if (draftDeck[id] > DEFAULT_RULES.maxCopies) delete draftDeck[id];
+    return render();
+  }
+  const ch = e.target.closest('[data-howto]');
+  if (ch && screen === 'howto') { howtoPage = Number(ch.dataset.howto); sound.play('draw'); return render(); }
+  const btab = e.target.closest('[data-btab]');
+  if (btab && screen === 'builder') {
+    if (builderMode === 'swap') swapTab = btab.dataset.btab; else builderTab = btab.dataset.btab;
+    sound.play('draw');
     return render();
   }
   const tab = e.target.closest('[data-book]');
@@ -3031,8 +3068,12 @@ function onButton(name) {
     case 'ai': sound.play('click'); return startGame('ai');
     case 'hotseat': sound.play('click'); return startGame('hotseat');
     case 'continue': game = loadSaved(); return game ? enterGame() : render();
+    case 'guide': guideOpen = true; return render();
+    case 'closeGuide': guideOpen = false; return render();
     case 'gallery': screen = 'gallery'; zoomId = null; app.scrollTop = 0; return render();
-    case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; app.scrollTop = 0; return render();
+    case 'howtoPrev': howtoPage = Math.max(0, howtoPage - 1); sound.play('draw'); return render();
+    case 'howtoNext': howtoPage = Math.min(HOWTO_PAGES - 1, howtoPage + 1); sound.play('draw'); return render();
+    case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; howtoPage = 0; app.scrollTop = 0; return render();
     case 'closeZoom': zoomId = null; zoomArt = false; return render();
     case 'zoomArt': zoomArt = true; return render();
     case 'closeArt': zoomArt = false; return render();
@@ -3192,6 +3233,71 @@ document.addEventListener('touchend', (e) => {
   onButton(dx < 0 ? 'zoomNext' : 'zoomPrev');
 }, { passive: true });
 let suppressZoomClick = false;
+
+// Menus, collection and deck builder fit the window with no scrolling (like Hearthstone):
+// card grids turn pages and the deck list squeezes its rows to fit.
+const FIT_SCREENS = new Set(['gallery', 'builder', 'menu', 'howto', 'online']);
+function layoutFit() {
+  if (!FIT_SCREENS.has(screen)) return;
+  layoutPagers(app);
+  // After paging through the zoomed cards, the page shows the card you stopped on.
+  if (zoomId) {
+    for (const pg of app.querySelectorAll('.pager')) {
+      const i = [...pg.querySelector('.pager-grid').children].findIndex((c) => c.matches(`[data-zoom="${zoomId}"], [data-cut="${zoomId}"]`) || c.querySelector(`[data-zoom="${zoomId}"], [data-cut="${zoomId}"]`));
+      if (i >= 0 && pg.querySelector('.pager-grid').children[i].style.display === 'none') showCard(pg, i);
+    }
+  }
+  fitDeckRows();
+}
+function fitDeckRows() {
+  const box = app.querySelector('.deck-rows');
+  if (!box) return;
+  const rows = box.querySelectorAll('.deck-row');
+  box.classList.remove('two-col');
+  box.style.removeProperty('--row-h');
+  if (!rows.length) return;
+  const avail = box.clientHeight - 8;
+  const gap = 3;
+  let h = (avail - gap * (rows.length - 1)) / rows.length;
+  if (h < 13) {
+    const half = Math.ceil(rows.length / 2);
+    box.classList.add('two-col'); box.style.setProperty('--rows', String(half));
+    h = (avail - gap * (half - 1)) / half;
+  }
+  box.style.setProperty('--row-h', `${Math.max(10, Math.min(34, Math.floor(h)))}px`);
+}
+window.addEventListener('resize', () => { if (FIT_SCREENS.has(screen)) layoutFit(); });
+// Turning pages: the arrows, the arrow keys and swiping across the cards.
+function pageTurn(pg, dir) {
+  const off = turnPage(pg, dir);
+  if (!off) { sound.play('draw'); return; }
+  // The collection runs on into the previous / next faction.
+  if (screen === 'gallery') {
+    const factions = [...Object.keys(FACTION_LISTS), 'Fusion'];
+    const i = factions.indexOf(bookPage) + (off === 'next' ? 1 : -1);
+    if (i < 0 || i >= factions.length) return;
+    bookPage = factions[i];
+    setPage(`gal:${bookPage}`, off === 'next' ? 0 : 999);
+    bookTurned = true; sound.play('draw'); render();
+  }
+}
+document.addEventListener('keydown', (e) => {
+  if (!FIT_SCREENS.has(screen) || zoomId || e.target.closest?.('input, textarea')) return;
+  const pg = app.querySelector('.pager');
+  if (pg && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) pageTurn(pg, e.key === 'ArrowLeft' ? -1 : 1);
+});
+let pageSwipe = null;
+document.addEventListener('touchstart', (e) => {
+  const pg = !zoomId && FIT_SCREENS.has(screen) && e.touches.length === 1 ? e.target.closest('.pager') : null;
+  pageSwipe = pg ? { pg, x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+}, { passive: true });
+document.addEventListener('touchend', (e) => {
+  if (!pageSwipe || bDrag?.ghost) { pageSwipe = null; return; }
+  const t = e.changedTouches[0];
+  const dx = t.clientX - pageSwipe.x, dy = t.clientY - pageSwipe.y;
+  const { pg } = pageSwipe; pageSwipe = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) pageTurn(pg, dx < 0 ? 1 : -1);
+}, { passive: true });
 
 const layoutKey = () => `${paintedBoards()}|${portraitLayout()}`;
 let wideBoard = layoutKey();
