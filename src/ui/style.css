@@ -4549,3 +4549,10 @@ body:not(.in-game) #app.fit-screen > .lobby-fit { zoom: 1; }
   #app.fit-screen .pager-grid .card { transition: transform 0.15s, filter 0.15s; }
   #app.fit-screen .pager-grid.gallery-grid .card:hover { transform: scale(1.35); z-index: 20; position: relative; filter: drop-shadow(0 14px 24px #000c); }
 }
+/* The full-size card view is never shrunk with the menus (on a phone held sideways it filled only half the height). */
+body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
+@media (max-height: 560px) and (orientation: landscape) {
+  .zoom-overlay { padding: 1.5vh 12px; }
+  .zoom-overlay .big-card { --h: 94vh; }
+  .zoom-side { max-height: 94vh; width: 260px; font-size: 13px; }
+}
