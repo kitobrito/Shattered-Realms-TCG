@@ -1454,6 +1454,10 @@ function accountHTML() {
         <button data-act="privateMatch">Play friend</button></div>
     </div>`;
   }
+  // A remembered sign-in is being restored: say so instead of flashing the sign-in form.
+  if (srv.hasSavedLogin() && acct.status !== 'error' && !acct.msg) {
+    return `<div class="acct-form"><p class="lobby-wait">Signing you in${srv.savedName() ? ` as <b>${esc(srv.savedName())}</b>` : ''}…</p></div>`;
+  }
   return acctFormHTML();
 }
 
@@ -1464,14 +1468,16 @@ function acctFormHTML() {
   const reg = acct.tab === 'register';
   return `<div class="acct-form">
       <div class="acct-tabs"><button data-act="acctLogin" class="${reg ? 'ghost' : 'on'}">Sign in</button><button data-act="acctRegister" class="${reg ? 'on' : 'ghost'}">Create account</button></div>
-      <input id="acct-name" class="text-input" maxlength="16" placeholder="Name" autocomplete="username" spellcheck="false" autocapitalize="off">
-      <input id="acct-pass" class="text-input" type="password" maxlength="128" placeholder="Password" autocomplete="${reg ? 'new-password' : 'current-password'}">
+      <form id="acct-form-el" style="display:contents">
+      <input id="acct-name" name="username" class="text-input" maxlength="16" placeholder="Name" autocomplete="username" spellcheck="false" autocapitalize="off" value="${esc(srv.savedName() ?? '')}">
+      <input id="acct-pass" name="password" class="text-input" type="password" maxlength="128" placeholder="Password" autocomplete="${reg ? 'new-password' : 'current-password'}">
       ${reg ? '<p class="sub">Names are 3-16 letters, numbers or _. Passwords need 8+ characters.</p>' : ''}
       ${acct.msg ? `<p class="lobby-error">${esc(acct.msg)}</p>` : ''}
       ${acct.slow && !acct.msg && acct.status !== 'error' ? '<p class="sub">Waking up the server. The first connection can take up to a minute.</p>' : ''}
       ${down && !acct.msg && !acct.slow ? `<p class="lobby-error">Can't reach the game server right now.${screen === 'online' ? ' You can still play a friend with a room code below.' : ''}</p>` : ''}
       <label class="acct-remember"><input type="checkbox" id="acct-remember" ${srv.remembering() ? 'checked' : ''}> Remember me</label>
-      <button data-act="${reg ? 'signUp' : 'signIn'}" ${busy ? 'disabled' : ''}>${busy ? 'Connecting…' : reg ? 'Create account' : 'Sign in'}</button>
+      <button type="submit" data-act="${reg ? 'signUp' : 'signIn'}" ${busy ? 'disabled' : ''}>${busy ? 'Connecting…' : reg ? 'Create account' : 'Sign in'}</button>
+      </form>
     </div>`;
 }
 
@@ -3024,7 +3030,7 @@ function onButton(name) {
     case 'closeArt': zoomArt = false; return render();
     case 'firstBegin':
       if (firstPicks.length !== FIRST_PICKS) return;
-      chooseFirstRealms(firstPicks); picked = [firstPicks[0]]; firstPicks = []; sound.play('versus'); return render();
+      chooseFirstRealms(firstPicks); picked = [firstPicks[0]]; firstPicks = []; sound.play('versus'); return startGame('ai');
     case 'milestoneOk': { const m = milestone; milestone = null; sound.play('click'); if (m?.kind === 'fusion') setFormat('pair'); return render(); }
     case 'journeySkip': unlockEverything(); sound.play('click'); flash('Everything is unlocked: all realms, two-faction decks, traps and Quick Plays.'); return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
@@ -3279,3 +3285,6 @@ document.addEventListener('scroll', (e) => {
 
 // Debugging aid (browser console): the live game and UI flags.
 window.__shattered = () => ({ game, animating, remoteQueue, viewer, screen, act, chooseAction, actingPlayer, render, hash: net.stateHash });
+
+// The sign-in form is a real <form> so browsers offer to save the password; it never navigates.
+document.addEventListener('submit', (e) => { if (e.target?.id === 'acct-form-el') e.preventDefault(); }, true);

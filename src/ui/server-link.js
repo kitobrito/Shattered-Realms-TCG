@@ -30,6 +30,8 @@ export let user = null;  // the signed-in account: { name, rating, tier, wins, l
 // "Remember me": the sign-in token is kept in localStorage (it survives closing the game). Without
 // it, the token lives in sessionStorage and is gone when the tab or app is closed.
 const REMEMBER_KEY = 'shattered-remember';
+const NAME_KEY = 'shattered-last-name';
+export const savedName = () => { try { return localStorage.getItem(NAME_KEY) || null; } catch { return null; } };
 const store = (kind) => { try { return kind === 'local' ? localStorage : sessionStorage; } catch { return null; } };
 export const remembering = () => { try { return localStorage.getItem(REMEMBER_KEY) !== '0'; } catch { return true; } };
 export function setRemember(on) {
@@ -72,7 +74,7 @@ export function connect() {
   sock.onmessage = (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
-    if (msg.t === 'welcome') { setToken(msg.token); user = msg.you; }
+    if (msg.t === 'welcome') { setToken(msg.token); user = msg.you; try { localStorage.setItem(NAME_KEY, msg.you?.name ?? ''); } catch { /* storage unavailable */ } }
     if (msg.t === 'authError' && msg.expired) setToken(null);
     if (msg.t === 'loggedOut' || msg.t === 'replaced' || msg.t === 'accountDeleted') { user = null; if (msg.t !== 'replaced') setToken(null); }
     if (msg.t === 'replaced') wanted = false;
