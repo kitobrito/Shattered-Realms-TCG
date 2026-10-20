@@ -1,0 +1,87 @@
+// Card pages (collection, deck builder): instead of one long scrolling grid, a .pager shows
+// exactly one screenful of cards, sized to fit the space it has, with arrows to turn the page
+// (like Hearthstone's collection book).
+//
+// Markup: <div class="pager" data-pager="key"><button class="pg-arrow" data-page="-1">‹</button>
+//           <div class="pager-grid">cards…</div><button class="pg-arrow" data-page="1">›</button>
+//           <span class="pg-count"></span></div>
+// The page each key is on is remembered, so re-rendering keeps your place.
+
+const pages = new Map();
+export const pageOf = (key) => pages.get(key) ?? 0;
+export const setPage = (key, n) => pages.set(key, n);
+
+// The card's own size at zoom 1, measured once per kind of grid.
+function natural(card) {
+  const z = card.style.zoom;
+  card.style.zoom = '1';
+  const r = { w: card.offsetWidth, h: card.offsetHeight };
+  card.style.zoom = z;
+  return r;
+}
+
+export function layoutPagers(root) {
+  for (const pg of root.querySelectorAll('.pager')) layoutPager(pg);
+}
+
+export function layoutPager(pg) {
+  const grid = pg.querySelector('.pager-grid');
+  if (!grid) return;
+  const cards = [...grid.children];
+  for (const c of cards) c.style.display = '';
+  const W = grid.clientWidth, H = grid.clientHeight;
+  if (!cards.length || !W || !H) { pg.classList.add('pg-single'); return; }
+  const base = natural(cards[0]);
+  const gap = Math.max(6, Math.min(18, H * 0.025));
+  // Two rows of cards (three on tall screens), as big as fit; enough columns to fill the width.
+  const rows = H >= 940 ? 3 : 2;
+  // At least four cards across where there's room (the cards shrink a little rather than leave a bare page).
+  const minCols = W > 700 ? 4 : 3;
+  let k = Math.min((H - gap * (rows - 1)) / rows / base.h, (W - gap * (minCols - 1)) / minCols / base.w, 1.7);
+  const cols = Math.max(1, Math.floor((W + gap) / (base.w * k + gap)));
+  // Never wider than the space.
+  if (cols === 1 && base.w * k > W) k = W / base.w;
+  const per = rows * cols;
+  const total = Math.max(1, Math.ceil(cards.length / per));
+  const key = pg.dataset.pager;
+  const page = Math.min(Math.max(0, pageOf(key)), total - 1);
+  setPage(key, page);
+  cards.forEach((c, i) => {
+    c.style.zoom = String(Math.round(k * 1000) / 1000);
+    c.style.display = i >= page * per && i < (page + 1) * per ? '' : 'none';
+  });
+  grid.style.gap = `${gap}px`;
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${Math.floor(base.w * k)}px)`;
+  grid.style.gridAutoRows = `${Math.floor(base.h * k)}px`;
+  pg.dataset.total = String(total);
+  pg.classList.toggle('pg-single', total === 1);
+  const count = pg.querySelector('.pg-count');
+  if (count) count.textContent = total > 1 ? `Page ${page + 1} / ${total}` : '';
+  const chain = pg.dataset.chain === '1';
+  for (const a of pg.querySelectorAll('[data-page]')) {
+    const d = Number(a.dataset.page);
+    a.disabled = !chain && (d < 0 ? page === 0 : page >= total - 1);
+  }
+}
+
+// Turn a page. Returns 'prev' / 'next' when the pager is chained and runs off its end
+// (the collection then opens the previous / next faction), else null.
+export function turnPage(pg, dir) {
+  const key = pg.dataset.pager;
+  const total = Number(pg.dataset.total ?? 1);
+  const next = pageOf(key) + dir;
+  if (next < 0 || next >= total) return pg.dataset.chain === '1' ? (dir < 0 ? 'prev' : 'next') : null;
+  setPage(key, next);
+  layoutPager(pg);
+  const grid = pg.querySelector('.pager-grid');
+  grid?.animate?.([{ transform: `translateX(${dir * 40}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  return null;
+}
+
+// The page holding a given card (so a card you just zoomed through stays in view).
+export function showCard(pg, index) {
+  const grid = pg.querySelector('.pager-grid');
+  const visible = [...grid.children].filter((c) => c.style.display !== 'none').length || 1;
+  setPage(pg.dataset.pager, Math.floor(index / visible));
+  layoutPager(pg);
+}
