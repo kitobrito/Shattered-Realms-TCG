@@ -512,6 +512,7 @@ function snapshot(s) {
     active: s.activePlayer,
     turn: s.turn,
     logLen: s.log.length,
+    beyond: new Set((s.beyond ?? []).map((e) => e.minion.uid)),
   };
 }
 
@@ -922,7 +923,10 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     if (uid === action.attacker) return action.defender;
     return null;
   };
+  const nowBeyond = new Set((s.beyond ?? []).map((e) => e.minion.uid));
   for (const [uid, old] of oldMinions) {
+    // Displaced: it slips through a portal Beyond Reality rather than dying.
+    if (!charEl(uid) && nowBeyond.has(uid)) { jobs.push(fx.portalOut(old.clone, old.rect, before.factionOf.get(uid))); sound.play('spell'); continue; }
     if (charEl(uid) || !before.factionOf.has(uid)) {
       if (!charEl(uid)) { died = true; jobs.push(fx.deathGhost(old.clone, old.rect)); }
       continue;
@@ -957,6 +961,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       summoned = true;
       const m = findCharacter(s, Number(el.dataset.char));
       const card = m && getCard(m.cardId);
+      if (before.beyond.has(m?.uid)) { jobs.push(fx.portalIn(el, card?.faction)); continue; }
       if (card && card.cost >= 7) { bigEntrance = true; jobs.push(fx.entrance(el, esc(card.name), card.faction)); }
       else jobs.push(fx.arrival(el, card?.faction, app.querySelector('.arena')));
     }
@@ -967,6 +972,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   jobs.push(fx.flip(app, rects, moving));
 
   // Damage and healing numbers.
+  const burnHits = new Set(newLog.map((l) => /^🔥 Burn deals \d+ to (.+)\.$/.exec(l)?.[1]).filter(Boolean));
   let hurt = false;
   let healed = false;
   let biggest = 0;
@@ -980,6 +986,8 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       if (!delta || !el) continue;
       const r = el.getBoundingClientRect();
       fx.floater(r, delta > 0 ? `+${delta}` : `${delta}`, delta > 0 ? 'heal' : 'damage');
+      // End-of-turn Burn: the flames flare up on whatever they scorch.
+      if (delta < 0 && burnHits.has(c.kind === 'hero' ? pl.name : getCard(c.cardId).name)) jobs.push(fx.burnTick(r, -delta));
       if (delta < 0) {
         // Bigger hits shake harder and throw more debris.
         hurt = true;
