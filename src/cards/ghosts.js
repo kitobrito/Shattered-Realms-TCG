@@ -19,6 +19,14 @@ const FRIENDLY_MINION = { type: 'minion', side: 'friendly' };
 const FRIENDLY_GHOST = { type: 'minion', side: 'friendly', tribe: 'Ghost' };
 const OTHER_GHOSTS = { minions: { side: 'friendly', tribe: 'Ghost', excludeSelf: true } };
 
+// ---- The Cursed Armory: Relics (equip to your Hero or a friendly Ghost) ----
+const RELIC_TARGET = { type: 'character', side: 'friendly', heroOrTribe: 'Ghost' };
+const relic = (r) => ({ target: RELIC_TARGET, relic: r, effects: [{ op: 'equipRelic', target: 'chosen' }, { op: 'countRelic' }] });
+const LANTERN = { on: 'endOfTurn', filter: { player: 'friendly' }, effects: [haunt({ maxCost: 1 })] };
+const CHAINS = { on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [{ op: 'buff', target: 'eventTarget', keywords: ['Frozen'] }] };
+const SCYTHE = { on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'hauntDead', eventTargetDead: true, if: { eventTargetGone: true } }] };
+const SOULFORGE = { on: 'attackDeclared', filter: { source: 'self' }, effects: [haunt({ from: 'friendly', maxCost: 3 })] };
+
 export const GHOST_CARDS = [
   // ---- Hero Spell ----
   {
@@ -221,5 +229,103 @@ export const GHOST_CARDS = [
   {
     faction: 'Ghosts', type: 'minion', tribes: ['Ghost', 'Insect'], id: 'spectral_insect', name: 'Spectral Insect', art: '🪲', token: true,
     cost: 1, attack: 1, health: 1, text: '',
+  },
+  // ---- The Cursed Armory expansion (unlockable): Relics ----
+  // A Relic is a haunted item equipped to your Hero (as a Hero Weapon: Attack, and Durability used
+  // up by attacks) or to a friendly Ghost (its stats, keywords and effects; it doesn't wear out).
+  // When a Ghost holding a Relic dies, the Relic lingers: it drifts to your Hero if the Hero is
+  // unarmed (effects.js equipRelic; engine deaths).
+  {
+    ...G, id: 'grave_squire', name: 'Grave Squire', art: '🛡️', extra: true, cost: 1, attack: 1, health: 1,
+    text: 'Arrival: Give a random Relic you hold +1 Attack.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buffRelics', pick: 'random', attack: 1 }] }],
+  },
+  {
+    ...S, ...relic({ attack: 1, durability: 2,
+      hero: { triggers: [{ on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'buff', target: { randomOf: { minions: { side: 'friendly', tribe: 'Ghost' } } }, attack: 1 }] }] },
+      ghost: { attack: 1, keywords: ['Evade'] } }),
+    id: 'rusted_spectral_dagger', name: 'Rusted Spectral Dagger', art: '🗡️', extra: true, cost: 2,
+    text: 'Relic. Hero: a 1/2 Weapon; after your Hero attacks, give a random friendly Ghost +1 Attack. Ghost: +1 Attack and Evade.',
+  },
+  {
+    ...S, ...relic({ attack: 0, durability: 3,
+      hero: { triggers: [LANTERN] },
+      ghost: { health: 2, triggers: [LANTERN] } }),
+    id: 'lantern_of_lost_souls', name: 'Lantern of Lost Souls', art: '🏮', extra: true, cost: 3,
+    text: 'Relic. Hero or Ghost: at the end of your turn, Haunt a minion that costs 1. Ghost also gets +0/+2.',
+  },
+  {
+    ...G, id: 'poltergeist_porter', name: 'Poltergeist Porter', art: '👻', extra: true, cost: 2, attack: 2, health: 1,
+    text: "Arrival: Move your Hero's Relic to this minion.",
+    triggers: [{ on: 'battlecry', effects: [{ op: 'moveHeroRelic', target: 'self' }] }],
+  },
+  {
+    ...S, ...relic({ attack: 2, durability: 2,
+      hero: { triggers: [CHAINS] },
+      ghost: { attack: 2, triggers: [CHAINS] } }),
+    id: 'wailing_chains', name: 'Wailing Chains', art: '⛓️', extra: true, cost: 3,
+    text: 'Relic. Hero: a 2/2 Weapon. Ghost: +2 Attack. Whenever it attacks an enemy minion, Freeze that minion.',
+  },
+  {
+    ...G, id: 'haunted_armor', name: 'Haunted Armor', art: '🪖', extra: true, cost: 3, attack: 2, health: 4, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: If your Hero holds a Weapon, gain +1/+1.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: 'self', attack: 1, health: 1, if: { heroHasWeapon: true } }] }],
+  },
+  {
+    ...T, id: 'cursed_heirloom', name: 'Cursed Heirloom', art: '📿', extra: true, cost: 2,
+    text: 'Trap: When a friendly Ghost dies, Haunt it.',
+    trap: { on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Ghost' } }, effects: [{ op: 'hauntDead', eventDead: true }] },
+  },
+  {
+    ...G, id: 'phantom_blacksmith', name: 'Phantom Blacksmith', art: '⚒️', extra: true, cost: 3, attack: 2, health: 3,
+    text: 'Arrival: Every Relic you hold gets +1 Attack, and +1 Health on a Ghost or +1 Durability on your Hero.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buffRelics', attack: 1, health: 1, durability: 1 }] }],
+  },
+  {
+    ...S, ...relic({ attack: 3, durability: 2,
+      hero: { triggers: [SCYTHE] },
+      ghost: { attack: 3, triggers: [SCYTHE] } }),
+    id: 'reapers_scythe', name: "Reaper's Scythe", art: '⚰️', extra: true, cost: 5,
+    text: 'Relic. Hero: a 3/2 Weapon. Ghost: +3 Attack. After it attacks and kills a minion, Haunt that minion.',
+  },
+  {
+    ...S, id: 'spirit_bond', name: 'Spirit Bond', art: '🔗', extra: true, cost: 3,
+    text: 'Quick Play: When a friendly minion holding a Relic would take lethal damage, prevent it and give it Evade.',
+    quickPlay: { windows: ['wouldTakeDamage'], filter: { target: { side: 'friendly', hasRelic: true }, lethal: true } },
+    effects: [{ op: 'preventDamage', target: 'eventTarget', amount: 'all' }, { op: 'buff', target: 'eventTarget', keywords: ['Evade'] }],
+  },
+  {
+    ...S, ...relic({ attack: 0, durability: 4,
+      hero: { onEquip: [{ op: 'gainArmor', amount: 4 }], triggers: [{ on: 'attackDeclared', filter: { target: 'self' }, effects: [{ op: 'gainArmor', amount: 2 }] }] },
+      ghost: { health: 4, keywords: ['Taunt'] } }),
+    id: 'possessed_shield', name: 'Possessed Shield', art: '🛡️', extra: true, cost: 5,
+    text: 'Relic. Hero: gain 4 Armor, and 2 Armor whenever your Hero is attacked. Ghost: +0/+4 and Taunt.',
+  },
+  {
+    ...G, id: 'banshee_blade_bearer', name: 'Banshee Blade-Bearer', art: '🗡️', extra: true, cost: 5, attack: 4, health: 4, keywords: ['Elusive'],
+    text: 'Elusive. Arrival: Take up a Phantom Blade (+2 Attack).',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'equipRelic', target: 'self', cardId: 'phantom_blade' }] }],
+  },
+  {
+    ...S, id: 'requiem_of_arms', name: 'Requiem of Arms', art: '🎻', extra: true, cost: 5,
+    text: "Give every friendly minion holding a Relic +1/+1. Your Hero's Weapon gets +2 Durability.",
+    effects: [{ op: 'buff', target: { minions: { side: 'friendly', hasRelic: true } }, attack: 1, health: 1 }, { op: 'buffHeroWeapon', durability: 2 }],
+  },
+  {
+    ...G, id: 'the_hollow_knight', name: 'The Hollow Knight', art: '🦴', extra: true, cost: 8, attack: 4, health: 6, keywords: ['Taunt'],
+    text: "Taunt. Arrival: Move your Hero's Relic to this. Gain +1/+1 for each Relic you've played this game (up to 3).",
+    triggers: [{ on: 'battlecry', effects: [{ op: 'moveHeroRelic', target: 'self' }, { op: 'buff', target: 'self', perRelicsPlayed: { max: 3 } }] }],
+  },
+  {
+    ...S, ...relic({ attack: 4, durability: 3,
+      hero: { triggers: [SOULFORGE], onBreak: [{ op: 'haunt', from: 'friendly', count: 2 }] },
+      ghost: { attack: 4, triggers: [SOULFORGE] } }),
+    id: 'soulforge_relic', name: 'Soulforge Relic', art: '⚔️', extra: true, cost: 8,
+    text: 'Relic. Hero: a 4/3 Weapon. Ghost: +4 Attack. Whenever it attacks, Haunt a friendly minion that died and costs 3 or less. When it breaks on your Hero, Haunt 2.',
+  },
+  {
+    ...S, ...relic({ attack: 2, durability: 2, ghost: { attack: 2 } }),
+    id: 'phantom_blade', name: 'Phantom Blade', art: '🗡️', token: true, cost: 2,
+    text: 'Relic. Hero: a 2/2 Weapon. Ghost: +2 Attack. (Taken up by Banshee Blade-Bearer.)',
   },
 ];

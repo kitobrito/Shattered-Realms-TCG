@@ -26,6 +26,8 @@ function minionPasses(m, f) {
   if (f.hasUpgrade && !(m.upgrades > 0)) return false;   // Robots
   if (f.minUpgrades != null && (m.upgrades ?? 0) < f.minUpgrades) return false;
   if (f.hasWeapon && !m.weapon) return false;
+  if (f.hasRelic != null && !!m.relic !== f.hasRelic) return false; // Ghosts (Cursed Armory)
+  if (f.heroOrTribe && !m.tribes.includes(f.heroOrTribe)) return false; // a Hero (always allowed) or a minion of this tribe
   if (f.faction && getCard(m.cardId).faction !== f.faction) return false;
   if (f.irradiated != null && (radiationOf(m) > 0) !== f.irradiated) return false;
   if (f.damaged && !(m.health < m.maxHealth)) return false; // took damage and hasn't fully healed

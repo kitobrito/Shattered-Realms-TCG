@@ -446,6 +446,12 @@ export const EFFECT_OPS = {
     }
     // attackPerEventAmount: +N Attack per unit of the event's amount (Fungal Colossus, per Mushroom).
     if (e.attackPerEventAmount) resolved = { ...resolved, attack: e.attackPerEventAmount * (ctx.event?.amount ?? 0) };
+    // perRelicsPlayed: { max } — +1/+1 per Relic you've played this game (The Hollow Knight).
+    if (e.perRelicsPlayed) {
+      const n = Math.min(e.perRelicsPlayed.max ?? 99, state.players[ctx.controller].relicsPlayed ?? 0);
+      if (!n) return;
+      resolved = { ...resolved, attack: n, health: n };
+    }
     // perFriendlyDeaths: { max } — +1/+1 per friendly minion that died this game (Gravebloom).
     if (e.perFriendlyDeaths) {
       const n = Math.min(e.perFriendlyDeaths.max ?? 99, state.players[ctx.controller].minionDeaths ?? 0);
@@ -1756,7 +1762,7 @@ export const EFFECT_OPS = {
 
   // Haunt the minion that just died (from the event) or a marked one. { eventDead?, uid?, ...STAT_MODS }
   hauntDead(state, e, ctx) {
-    const uid = e.uid ?? (e.eventDead ? ctx.event?.source : null);
+    const uid = e.uid ?? (e.eventDead ? ctx.event?.source : e.eventTargetDead ? ctx.event?.target : null);
     const entry = state.players.flatMap((pl) => pl.graveyard).find((g) => g.uid === uid && g.died);
     if (!entry) return;
     hauntEntry(state, entry, ctx, modsOf(e));
@@ -1919,6 +1925,62 @@ export const EFFECT_OPS = {
     log(state, `${nameOf(state, hero)}'s ${w.name} becomes ${w.attack}/${w.durability}.`);
   },
 
+  // ---- Ghosts (The Cursed Armory): Relics ----
+  // A Relic card (card.relic: { attack, durability, hero: { triggers, onEquip, onBreak }, ghost: { attack, health, keywords, triggers } })
+  // is equipped to your Hero (as a Hero Weapon) or to a friendly Ghost (stats, keywords and effects; it doesn't wear out).
+  // { target | toHero, cardId?, durability?, lingering? } — lingering: a Ghost holding it died; it drifts to your Hero if the Hero is unarmed.
+  equipRelic(state, e, ctx) {
+    const card = getCard(e.cardId ?? ctx.cardId);
+    const r = card.relic;
+    const ids = e.toHero ? [heroOf(state, ctx.controller).uid] : resolveSelector(state, e.target, ctx);
+    for (const id of ids) {
+      const c = findCharacter(state, id);
+      if (!c) continue;
+      if (c.kind === 'hero') {
+        if (e.lingering && c.weapon) { log(state, `${card.name} fades away.`); continue; }
+        EFFECT_OPS.equipHeroWeapon(state, { cardId: card.id, name: card.name, attack: r.attack, durability: e.durability ?? r.durability, triggers: r.hero?.triggers }, ctx);
+        if (e.lingering) log(state, `👻 ${card.name} lingers and drifts to ${nameOf(state, c)}.`);
+        for (const x of r.hero?.onEquip ?? []) resolveEffect(state, x, ctx);
+      } else {
+        if (c.relic) dropMinionRelic(state, c);
+        const g = r.ghost ?? {};
+        c.relic = { cardId: card.id, name: card.name, attack: g.attack ?? 0, health: g.health ?? 0, keywords: [...(g.keywords ?? [])], durability: r.durability };
+        c.attack += c.relic.attack;
+        if (c.relic.health) { c.maxHealth += c.relic.health; c.health += c.relic.health; }
+        for (const k of c.relic.keywords) addKeyword(c, k, false, state);
+        for (const t of g.triggers ?? []) (c.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, relic: true });
+        log(state, `${nameOf(state, c)} takes up ${card.name}.`);
+      }
+    }
+  },
+
+  // { attack?, health?, durability?, pick: 'all' | 'random' } — Relics you hold: on your Hero, +Attack / +Durability;
+  // on a Ghost, +Attack / +Health (Grave Squire, Phantom Blacksmith, Requiem of Arms).
+  buffRelics(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    const holders = [...(hero.weapon && getCard(hero.weapon.cardId)?.relic ? [hero] : []), ...state.players[ctx.controller].board.filter((m) => m.relic)];
+    const chosen = e.pick === 'random' ? [pickRandom(state, holders)].filter(Boolean) : holders;
+    for (const c of chosen) {
+      if (c.kind === 'hero') EFFECT_OPS.buffHeroWeapon(state, { attack: e.attack ?? 0, durability: e.durability ?? 0 }, ctx);
+      else applyBuff(state, c, { attack: e.attack ?? 0, health: e.health ?? 0 });
+    }
+  },
+
+  // A Relic card was played (The Hollow Knight counts them).
+  countRelic(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    pl.relicsPlayed = (pl.relicsPlayed ?? 0) + 1;
+  },
+
+  // { target } — your Hero's Relic moves to the target Ghost (Poltergeist Porter, The Hollow Knight).
+  moveHeroRelic(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    const w = hero.weapon;
+    if (!w || !getCard(w.cardId)?.relic) return;
+    dropHeroWeapon(state, hero, 'moves');
+    EFFECT_OPS.equipRelic(state, { target: e.target, cardId: w.cardId }, ctx);
+  },
+
   // After your Hero attacks with a Weapon: it loses 1 Durability (engine declareAttack).
   wearHeroWeapon(state, e, ctx) {
     const hero = heroOf(state, ctx.controller);
@@ -1970,5 +2032,19 @@ export function dropHeroWeapon(state, hero, how = 'breaks') {
   hero.attack = Math.max(0, (hero.attack ?? 0) - w.attack);
   hero.grantedTriggers = (hero.grantedTriggers ?? []).filter((t) => !t.weapon);
   hero.weapon = null;
+  if (how === 'moves') return;
   log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : `${nameOf(state, hero)} drops the ${w.name}.`);
+  // A Relic's last gasp when it breaks (Soulforge Relic).
+  if (how === 'breaks') for (const x of getCard(w.cardId)?.relic?.hero?.onBreak ?? []) resolveEffect(state, x, { self: hero.uid, controller: hero.controller });
+}
+
+// A Ghost lets go of its Relic (it took up another): the Relic's stats, keywords and effects go.
+export function dropMinionRelic(state, m) {
+  const r = m.relic;
+  if (!r) return;
+  m.attack = Math.max(0, m.attack - r.attack);
+  if (r.health) { m.maxHealth -= r.health; m.health = Math.min(m.health, m.maxHealth); }
+  for (const k of r.keywords) removeKeyword(m, k);
+  m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.relic);
+  m.relic = null;
 }
