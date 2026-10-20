@@ -735,6 +735,8 @@ const STEPS = {
       if (killer?.kind === 'minion' && killer.controller !== m.controller && hasKeyword(killer, 'Devour') && killer.health > 0 && !killer.destroyed) {
         steps.push({ kind: 'effect', effect: { op: 'devour' }, ctx: { self: killer.uid, controller: killer.controller, event } });
       }
+      // Ghosts (Cursed Armory): a Relic outlives its Ghost and drifts to its Hero (if the Hero is unarmed).
+      if (m.relic) steps.push({ kind: 'effect', effect: { op: 'equipRelic', toHero: true, cardId: m.relic.cardId, lingering: true }, ctx: { controller: m.controller } });
       // Zombies: a friendly Zombie that dies leaves a Corpse.
       if (m.tribes.includes('Zombie')) {
         const zp = state.players[m.controller];

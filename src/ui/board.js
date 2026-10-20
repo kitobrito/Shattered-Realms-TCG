@@ -44,6 +44,7 @@ function badges(m) {
     // Robots: installed Upgrades and the Weapon.
     m.upgrades ? `<i class="b-upgrade" title="${m.upgrades} Upgrade${m.upgrades === 1 ? '' : 's'} installed">⚙${m.upgrades}</i>` : '',
     m.weapon ? `<i class="b-weapon" title="Weapon: ${m.weapon.name}">🔫</i>` : '',
+    m.relic ? `<i class="b-weapon b-relic" title="Relic: ${m.relic.name}">🗡️</i>` : '',
     triggers.some((t) => t.on === 'deathrattle') ? '<i class="b-deathrattle" title="Exit">💀</i>' : '',
     triggers.some((t) => t.on === 'surface') ? '<i class="b-surface" title="Surface: happens when it comes up from Burrow">⏫</i>' : '',
     triggers.some((t) => !ONE_TIME_TRIGGERS.has(t.on)) ? '<i class="b-trigger" title="Triggers when something happens">⚡</i>' : '',

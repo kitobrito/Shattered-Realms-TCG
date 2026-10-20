@@ -100,6 +100,7 @@ export const KEYWORD_TEXT = {
   Trap: 'Set face-down beside your Hero (a purple ? token). Your opponent can\'t see which Trap it is. It goes off automatically when its condition happens.',
   'Hero Spell': 'Always available outside your deck. Once per turn.',
   'Hero Weapon': 'Your Hero equips it and gains its Attack, so your Hero can attack once a turn. Each attack uses 1 Durability; at 0 the Weapon breaks. A new Weapon replaces the old one.',
+  Relic: 'A haunted item. Equip it to your Hero (it works as a Hero Weapon) or to a friendly Ghost (it gives its stats and effect and never wears out). When a Ghost holding it dies, it drifts to your Hero if your Hero has no Weapon.',
   Armor: 'Soaks up damage to your Hero before Health is lost. It stays until used up.',
   Extinction: 'Every 7 turns: destroy all your Mana Crystals and friendly minions.',
   Breakthrough: 'Happens when this minion comes back from being Displaced.',
