@@ -64,7 +64,7 @@ export const KEYWORD_TEXT = {
   Graveyard: 'Where minions go when they die. Minions that were Obliterated never get there.',
   Prey: "Marked Prey: an enemy minion at 3 Health or less, marked by a Shark player (Blood in the Water) or a card. Sharks can reach it through Stealth and Elusive and hit it harder. The mark lasts until it leaves play or is healed above 3 Health.",
   Corrosion: "Corrosion X: permanently lower a minion's Attack by X (never its Health). At 0 Attack it can't attack until its Attack rises again. It lasts while the minion stays in play; a minion that leaves and comes back is fresh.",
-  Dissolve: 'Destroy a minion. You get an Essence spell holding one random piece of it: its original Attack, its original Health, or its keywords. Cast the Essence to give that to one of your minions for good.',
+  Dissolve: 'Destroy a minion. You get a 1-Mana Essence spell holding one random piece of it: its original Attack, its original Health, or its keywords. Cast the Essence to give that to one of your minions for good.',
   'Acid-coated': "The next Corrosion on this minion lowers its Attack by 1 more, then the coating is gone.",
   Caustic: 'An ability that triggers when Corrosion hits an enemy minion.',
   Displace: "Send a minion Beyond Reality for a while. It can't attack, be attacked or be targeted, doesn't take a board space, and its abilities stop until it returns (at the start of the turn named; it waits if its side's board is full).",
