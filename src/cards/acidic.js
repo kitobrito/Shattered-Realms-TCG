@@ -288,8 +288,8 @@ export const ACIDIC_CARDS = [
     ] }],
   },
   {
-    ...K, id: 'stomach_wall_colossus', name: 'Stomach-Wall Colossus', art: '🗿', extra: true, cost: 7, attack: 3, health: 8, keywords: ['Taunt', 'Acid Hide'], regenerate: 2,
-    text: 'Taunt. Acid Hide. Regenerate 2.',
+    ...K, id: 'stomach_wall_colossus', name: 'Stomach-Wall Colossus', art: '🗿', extra: true, cost: 7, attack: 3, health: 8, keywords: ['Taunt', 'Acid Hide'], regenerate: 1,
+    text: 'Taunt. Acid Hide. Regenerate 1.',
   },
   {
     ...K, id: 'the_undigested_king', name: 'The Undigested King', art: '👑', extra: true, cost: 9, attack: 5, health: 5, keywords: ['Acid Hide'], regenerate: 2,
