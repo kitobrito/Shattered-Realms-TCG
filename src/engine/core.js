@@ -322,8 +322,8 @@ export function corrode(state, m, amount, by = null) {
   return lost;
 }
 
-// Meltdown (Acidic): a minion at 0 Attack carrying 5 or more Corrosion is Dissolved.
-export const MELTDOWN_CORROSION = 5;
+// Meltdown (Acidic): a minion at 0 Attack carrying 6 or more Corrosion is Dissolved.
+export const MELTDOWN_CORROSION = 6;
 function meltdown(state, m, by) {
   if (effectiveAttack(m) > 0 || (m.corrosion ?? 0) < MELTDOWN_CORROSION) return;
   log(state, `🧪 Meltdown: ${nameOf(state, m)} has corroded away completely.`);
@@ -385,7 +385,7 @@ export function removeTempBuffs(state, m) {
 
 // Dissolving a minion distills it into a spell in the dissolver's hand that gives one
 // of their own minions one random piece of it for good: its printed Attack, its printed
-// Health, or its keywords. It costs 1.
+// Health, or its keywords. It costs 2.
 function distill(state, by, taken) {
   if (by == null || (!taken.attack && !taken.health && !taken.keywords.length)) return;
   const parts = [
@@ -394,7 +394,7 @@ function distill(state, by, taken) {
   ].filter(Boolean);
   const card = {
     id: `essence_${state.nextUid++}`, custom: true, token: true, faction: 'Acidic', type: 'spell',
-    name: `Essence of ${taken.name}`, art: '🧪', artFrom: taken.cardId, cost: 1,
+    name: `Essence of ${taken.name}`, art: '🧪', artFrom: taken.cardId, cost: 2,
     text: `Give a friendly minion ${parts.join(' and ')}.`,
     target: { type: 'minion', side: 'friendly' },
     effects: [{ op: 'buff', target: 'chosen',

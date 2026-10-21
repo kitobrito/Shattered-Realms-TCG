@@ -192,21 +192,21 @@ test('No Meltdown above 0 Attack: a 1-Attack minion just drops to 0', () => {
   if (effectiveAttack(m) !== 0 || !hasKeyword(m, 'Taunt')) return `${effectiveAttack(m)} ${m.keywords}`;
 });
 
-test('Meltdown: below 5 Corrosion a 0-Attack minion keeps its keywords', () => {
+test('Meltdown: below 6 Corrosion a 0-Attack minion keeps its keywords', () => {
   const m = blank(1, 0, 9); m.keywords = ['Taunt']; m.corrosion = 1;
   play(0, give(0, 'dissolve_arms'));
   if (!hasKeyword(m, 'Taunt') || !pl(1).board.includes(m)) return 'changed';
 });
 
-test('Meltdown: at 0 Attack with 5 Corrosion it is Dissolved, and you get its Essence', () => {
-  const m = blank(1, 0, 9); m.keywords = ['Taunt']; m.corrosion = 4;
+test('Meltdown: at 0 Attack with 6 Corrosion it is Dissolved, and you get its Essence', () => {
+  const m = blank(1, 0, 9); m.keywords = ['Taunt']; m.corrosion = 5;
   play(0, give(0, 'dissolve_arms'));
   if (pl(1).board.includes(m)) return 'survived';
   if (!pl(0).hand.some((h) => getCard(h.cardId).name.startsWith('Essence of'))) return 'no essence';
 });
 
-test('Meltdown: corroding down to 0 Attack with 5 total Corrosion Dissolves it', () => {
-  const m = blank(1, 1, 9); m.corrosion = 4;
+test('Meltdown: corroding down to 0 Attack with 6 total Corrosion Dissolves it', () => {
+  const m = blank(1, 1, 9); m.corrosion = 5;
   play(0, give(0, 'dissolve_arms'));
   if (pl(1).board.includes(m)) return 'survived';
 });
