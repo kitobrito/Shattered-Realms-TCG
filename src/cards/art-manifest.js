@@ -1012,6 +1012,7 @@ export const ART = {
   spectral_wolf: 'art/fusion/spirit_pack.jpg',
   duskwing_werebat: 'art/lycanthropes/duskwing_werebat.jpg',
   duskwing_werebat_beast: 'art/lycanthropes/duskwing_werebat_beast.jpg',
+  king_meg_the_apex_predator: 'art/sharks/king_meg_the_apex_predator.jpg',
   sobek_terror_of_the_museum: 'art/dinosaurs/sobek_terror_of_the_museum.jpg',
   sobeks_fossil: 'art/dinosaurs/sobeks_fossil.jpg',
 };

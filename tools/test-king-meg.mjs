@@ -5,6 +5,8 @@ import { buildDeck } from '../src/cards/index.js';
 import { effectiveAttack, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame } from '../src/engine/engine.js';
 import { getCard } from '../src/engine/registry.js';
+import { ART } from '../src/cards/art-manifest.js';
+import { existsSync } from 'node:fs';
 
 let s, failures = 0, passed = 0;
 function fresh() {
@@ -21,6 +23,7 @@ function test(name, fn) { fresh(); try { const r = fn(); if (r) { failures++; co
 
 test('King Meg exists, is a legendary 10-Mana 8/10 Rush Shark', () => {
   const c = getCard('king_meg_the_apex_predator');
+  if (!ART[c.id] || !existsSync(ART[c.id])) return 'no art';
   if (!c.legendary || c.cost !== 10 || c.attack !== 8 || c.health !== 10 || !c.keywords.includes('Rush')) return JSON.stringify(c);
 });
 test('Attacking Marked Prey swallows it whole: destroyed, its stats gained for good, no damage taken', () => {
