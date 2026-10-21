@@ -4678,6 +4678,7 @@ body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shiftin
 .big-card.shard.legend.t-minion .zoom-foil { --foil-frame: url('../../art/frames/legendary-minion.png'); }
 .big-card.shard.legend.t-spell .zoom-foil { --foil-frame: url('../../art/frames/legendary-spell.png'); }
 .big-card.shard.legend.t-trap .zoom-foil { --foil-frame: url('../../art/frames/legendary-trap.png'); }
+.big-card.shard.legend[style*='--foil-frame'] .zoom-foil { --foil-frame: inherit; }
 
 /* ---- Lycanthropes in the collection: the Beast Form card peeks out behind the Humanoid Form ---- */
 .card:has(> .beast-behind) { isolation: isolate; }
