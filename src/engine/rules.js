@@ -37,7 +37,7 @@ export const POSITIVE_KEYWORDS = [
 //   Burned    loses 1 Health at the end of its controller's turn
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
-export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', ...NEGATIVE_KEYWORDS];
+export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', 'Acid Hide', ...NEGATIVE_KEYWORDS];
 
 // Player-facing rules text for keywords and card terms (collection glossary, tooltips).
 export const KEYWORD_TEXT = {
@@ -100,6 +100,9 @@ export const KEYWORD_TEXT = {
   Trap: 'Set face-down beside your Hero (a purple ? token). Your opponent can\'t see which Trap it is. It goes off automatically when its condition happens.',
   'Hero Spell': 'Always available outside your deck. Once per turn.',
   'Hero Weapon': 'Your Hero equips it and gains its Attack, so your Hero can attack once a turn. Each attack uses 1 Durability; at 0 the Weapon breaks. A new Weapon replaces the old one.',
+  'Acid Hide': 'Whatever touches it melts. A minion that attacks it, or that it attacks, is Corroded by 1. A Hero that does loses its Weapon (or 2 Armor if it has no Weapon).',
+  Meltdown: 'Corrosion on a minion that is already at 0 Attack eats something else instead: first its Weapon or Relic, then a keyword, then its card text. With nothing left, it takes damage equal to all its Corrosion.',
+  Regenerate: 'At the start of your turn, this minion restores that much Health.',
   'Holy Flame': 'Holy fire. At the end of your turn each enemy with Holy Flame takes that much damage (double to Dark and Undead minions), then it burns down by 1. It can\'t be healed while it burns.',
   'Reduced to Ash': 'A minion that dies while it has Holy Flame is removed completely: it doesn\'t go to the Graveyard, its Exit doesn\'t happen and it can\'t be Reborn or Haunted.',
   Relic: 'A haunted item. Equip it to your Hero (it works as a Hero Weapon) or to a friendly Ghost (it gives its stats and effect and never wears out). When a Ghost holding it dies, it drifts to your Hero if your Hero has no Weapon.',
@@ -141,6 +144,8 @@ export const BOARD_EVENTS = [
   'minionReborn',     // a minion came back through Reborn
   'minionHaunted',    // Ghosts: a minion was Haunted from a Graveyard
   'minionAshed',      // Divine (Holy Pyre): a minion dying in Holy Flame was Reduced to Ash ({ source, player: its controller })
+  'weaponEquipped',   // Robots / Ghosts: a Hero equipped a Weapon or Relic ({ source: the Hero, player })
+  'regenerated',      // Acidic (Half-Digested): a minion Regenerated ({ source, player })
   'holyFlameApplied', // Divine (Holy Pyre): a character was set alight with Holy Flame
   'minionDisplaced',  // Ultraterrestrials: a minion went Beyond Reality ({ source, player, by })
   'minionReturned',   // Ultraterrestrials: a Displaced minion came back

@@ -42,7 +42,9 @@ export function effectiveAttack(c) {
   const linger = (c.lingerAttack ?? []).reduce((s, x) => s + x.amount, 0);
   // Wasteland Ghoul: extra Attack while it has Radiation.
   const rad = c.kind === 'minion' && radiationOf(c) > 0 ? (getCard(c.cardId).attackWhileIrradiated ?? 0) : 0;
-  return Math.max(0, c.attack + c.tempAttack + linger + (c.auraAttack ?? 0) + rad);
+  // The Chewed One: extra Attack while damaged.
+  const hurt = c.kind === 'minion' && c.health < c.maxHealth ? (getCard(c.cardId).attackWhileDamaged ?? 0) : 0;
+  return Math.max(0, c.attack + c.tempAttack + linger + (c.auraAttack ?? 0) + rad + hurt);
 }
 
 // ---- Radiation (Radioactive) -------------------------------------------------
@@ -299,6 +301,12 @@ export function checkPrey(state, m, healed = false) {
 export function corrode(state, m, amount, by = null) {
   if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed || amount <= 0) return 0;
   if (m.acidCoated) { amount += 1; m.acidCoated = false; }
+  // Meltdown: Corrosion on a minion already at 0 Attack eats something else instead.
+  if (effectiveAttack(m) <= 0) {
+    m.corrosion = (m.corrosion ?? 0) + amount;
+    meltdown(state, m, by);
+    return 0;
+  }
   const before = effectiveAttack(m);
   let left = amount;
   const fromBase = Math.min(left, m.attack);
@@ -310,6 +318,46 @@ export function corrode(state, m, amount, by = null) {
   log(state, `🧪 ${nameOf(state, m)} corrodes (Corrosion ${amount}): ${before} → ${after} Attack.`);
   emit(state, { type: 'corrosionApplied', target: m.uid, player: m.controller, by, amount, lost, zeroed: before > 0 && after === 0 });
   return lost;
+}
+
+// Meltdown (Acidic): Corrosion on a minion already at 0 Attack eats, instead, in order: its Weapon or Relic,
+// then one of its own keywords (good ones first), then its card text; with nothing left to lose,
+// it takes damage equal to all the Corrosion on it.
+function meltdown(state, m, by) {
+  const name = nameOf(state, m);
+  if (m.relic || m.weapon) {
+    const what = (m.relic ?? m.weapon).name;
+    if (m.relic) dropMinionRelic(state, m);
+    else { m.attack = Math.max(0, m.attack - (m.weapon.attack ?? 0)); m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.weapon); m.weapon = null; }
+    log(state, `🧪 Meltdown: ${name}'s ${what} melts away.`);
+  } else {
+    const own = [...m.keywords, ...(m.tempKeywords ?? []), ...(m.lingerKeywords ?? []).map((x) => x.k)].filter((k) => !NEGATIVE.includes(k));
+    if (own.length) {
+      const k = own[0];
+      removeKeyword(m, k);
+      log(state, `🧪 Meltdown: ${name} loses ${k}.`);
+      emit(state, { type: 'keywordLost', target: m.uid, player: m.controller, keyword: k });
+    } else if (!m.textLost && (getCard(m.cardId).triggers?.length || getCard(m.cardId).aura)) {
+      m.textLost = true;
+      log(state, `🧪 Meltdown: ${name}'s card text melts away.`);
+    } else {
+      log(state, `🧪 Meltdown: ${name} is eaten away (${m.corrosion} damage).`);
+      dealDamage(state, null, m.uid, m.corrosion, { sourceController: by });
+    }
+  }
+  emit(state, { type: 'meltdown', target: m.uid, player: m.controller, by });
+}
+const NEGATIVE = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
+
+// A Ghost lets go of its Relic (it took up another): the Relic's stats, keywords and effects go.
+export function dropMinionRelic(state, m) {
+  const r = m.relic;
+  if (!r) return;
+  m.attack = Math.max(0, m.attack - r.attack);
+  if (r.health) { m.maxHealth -= r.health; m.health = Math.min(m.health, m.maxHealth); }
+  for (const k of r.keywords) removeKeyword(m, k);
+  m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.relic);
+  m.relic = null;
 }
 
 export function acidCoat(state, m) {

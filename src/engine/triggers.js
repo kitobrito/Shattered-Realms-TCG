@@ -26,6 +26,7 @@ export function selfTriggerSteps(state, card, on, ctx) {
 }
 
 export function queueSelfTrigger(state, minion, on, extra = {}) {
+  if (minion.textLost) return; // Meltdown ate its card text
   const card = getCard(minion.cardId);
   state.buffer.push(...selfTriggerSteps(state, card, on, { self: minion.uid, controller: minion.controller, ...extra }));
 }
@@ -54,7 +55,7 @@ export function dispatchEvent(state, event) {
       const card = getCard(m.cardId);
       // Granted triggers (Fungal Infection) act for the player who granted them.
       const all = [
-        ...(card.triggers ?? []).map((t) => ({ t, controller: m.controller })),
+        ...(m.textLost ? [] : card.triggers ?? []).map((t) => ({ t, controller: m.controller })),
         ...(m.grantedTriggers ?? []).map((t) => ({ t, controller: t.controller })),
       ];
       for (const { t, controller } of all) {

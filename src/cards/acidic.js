@@ -220,4 +220,86 @@ export const ACIDIC_CARDS = [
     text: 'Whenever this attacks a minion, apply Corrosion 1 to it first.',
     triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [corrode('eventTarget', 1)] }],
   },
+  // ---- The Half-Digested expansion (unlockable): Acid Hide and Regenerate ----
+  // Creatures that broke out of a giant acid stomach. Acid Hide: whatever touches it in a fight
+  // melts (a minion is Corroded by 1; a Hero loses its Weapon, or 2 Armor). Regenerate X: heals X
+  // at the start of your turn (engine acidHideTouch / startTurn).
+  {
+    ...K, id: 'bile_slick_crawler', name: 'Bile-Slick Crawler', art: '🐛', extra: true, cost: 1, attack: 1, health: 2, keywords: ['Acid Hide'],
+    text: 'Acid Hide.',
+  },
+  {
+    ...S, id: 'regurgitate', name: 'Regurgitate', art: '🤮', extra: true, cost: 1,
+    text: 'Return a friendly minion to your hand. It costs 2 less.',
+    target: { type: 'minion', side: 'friendly' },
+    effects: [{ op: 'returnToHand', target: 'chosen', costChange: -2 }],
+  },
+  {
+    ...K, id: 'half_melted_hound', name: 'Half-Melted Hound', art: '🐕', extra: true, cost: 2, attack: 2, health: 2, keywords: ['Acid Hide'], regenerate: 1,
+    text: 'Acid Hide. Regenerate 1.',
+  },
+  {
+    ...S, id: 'stomach_lining_plate', name: 'Stomach Lining Plate', art: '🛡️', extra: true, cost: 2,
+    text: 'Give a friendly minion +0/+3 and Acid Hide.',
+    target: { type: 'minion', side: 'friendly' },
+    effects: [{ op: 'buff', target: 'chosen', health: 3, keywords: ['Acid Hide'] }],
+  },
+  {
+    ...K, id: 'sloughing_brute', name: 'Sloughing Brute', art: '🧟', extra: true, cost: 3, attack: 2, health: 5, keywords: ['Taunt', 'Acid Hide'],
+    text: 'Taunt. Acid Hide.',
+  },
+  {
+    ...S, id: 'dissolve_arms', name: 'Dissolve Arms', art: '🫠', extra: true, cost: 2, corrodes: true,
+    text: "Destroy the enemy Hero's Weapon. Corrode all enemy minions by 1.",
+    effects: [{ op: 'destroyHeroWeapon', side: 'enemy' }, corrode(ENEMY_MINIONS, 1)],
+  },
+  {
+    ...S, id: 'gastric_burst', name: 'Gastric Burst', art: '💥', extra: true, cost: 3, corrodes: true,
+    text: 'Quick Play: When a friendly Acid Hide minion is attacked, deal 3 damage to the attacker and Corrode it by 2.',
+    quickPlay: { windows: ['attackDeclared'], filter: { target: { side: 'friendly', keyword: 'Acid Hide' } } },
+    effects: [{ op: 'damage', target: 'eventSource', amount: 3 }, corrode('eventSource', 2)],
+  },
+  {
+    ...K, id: 'weeping_escapee', name: 'Weeping Escapee', art: '😭', extra: true, cost: 3, attack: 3, health: 3, regenerate: 2,
+    text: 'Regenerate 2. Whenever this Regenerates, Corrode a random enemy minion by 1.',
+    triggers: [{ on: 'regenerated', filter: { source: 'self' }, effects: [corrode({ randomOf: ENEMY_MINIONS }, 1)] }],
+  },
+  {
+    ...T, id: 'peptic_snare', name: 'Peptic Snare', art: '🕸️', extra: true, cost: 2,
+    text: 'Trap: When the enemy Hero equips a Weapon, destroy it and the enemy Hero loses 2 Armor.',
+    trap: { on: 'weaponEquipped', filter: { player: 'enemy' }, effects: [{ op: 'destroyHeroWeapon', side: 'enemy' }, { op: 'loseArmor', side: 'enemy', amount: 2 }] },
+  },
+  {
+    ...K, id: 'the_chewed_one', name: 'The Chewed One', art: '👹', extra: true, cost: 4, attack: 3, health: 5, keywords: ['Acid Hide'], regenerate: 2, attackWhileDamaged: 2,
+    text: 'Acid Hide. Regenerate 2. Has +2 Attack while damaged.',
+  },
+  {
+    ...S, id: 'melting_embrace', name: 'Melting Embrace', art: '🫂', extra: true, cost: 4, corrodes: true,
+    text: 'Dissolve an enemy minion, then Corrode it by 3.',
+    target: ENEMY_MINION,
+    effects: [dissolve('chosen'), corrode('chosen', 3)],
+  },
+  {
+    ...K, id: 'gut_burst_horror', name: 'Gut-Burst Horror', art: '😱', extra: true, cost: 5, attack: 5, health: 4,
+    text: 'Arrival: Deal 2 damage to all other minions. Restore 2 Health to your Acid Hide minions.',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'damage', target: { minions: { side: 'any', excludeSelf: true } }, amount: 2 },
+      { op: 'heal', target: { minions: { side: 'friendly', keyword: 'Acid Hide' } }, amount: 2 },
+    ] }],
+  },
+  {
+    ...K, id: 'stomach_wall_colossus', name: 'Stomach-Wall Colossus', art: '🗿', extra: true, cost: 6, attack: 3, health: 8, keywords: ['Taunt', 'Acid Hide'], regenerate: 2,
+    text: 'Taunt. Acid Hide. Regenerate 2.',
+  },
+  {
+    ...K, id: 'the_undigested_king', name: 'The Undigested King', art: '👑', extra: true, cost: 8, attack: 6, health: 6, keywords: ['Acid Hide'], regenerate: 2,
+    text: 'Acid Hide. Regenerate 2. Arrival: Destroy all enemy Weapons and Relics, and remove the enemy Hero\'s Armor. Gain +1/+1 for each Weapon or Relic destroyed.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'meltEnemyArsenal' }] }],
+  },
+  {
+    ...S, id: 'return_to_the_stomach', name: 'Return to the Stomach', art: '🌀', extra: true, cost: 8,
+    text: 'Destroy an enemy minion; it is removed from the game. Summon a 3/3 copy of it with Acid Hide and Regenerate 1.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'summon', copyOf: 'chosen', attack: 3, health: 3, keywords: ['Acid Hide'], regen: 1 }, { op: 'destroy', target: 'chosen', obliterate: true }],
+  },
 ];
