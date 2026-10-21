@@ -177,15 +177,20 @@ function sigilHTML(card) {
 // Frames: art/frames/painted-<type>.png (painted; the openings are transparent) and
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
+const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes',
+  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Zombies']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
   // Legendary cards (7+ Mana) wear their own gold frame (art/frames/legendary-<type>.png).
   const legend = !!card.legendary;
-  const frameSrc = legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
+  // Each faction's legendary minions have their own painted frame (Dragons and fusions use the gold one).
+  const own = legend && type === 'minion' && !card.fusion && LEGEND_FRAMES.has(card.faction);
+  const frameSrc = own ? `art/frames/legendary-minion-${card.faction.toLowerCase()}.webp`
+    : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
-    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}">
+    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       <img class="bc-frame" src="${frameSrc}" alt="" draggable="false">
