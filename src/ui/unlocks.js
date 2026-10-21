@@ -1,5 +1,5 @@
 // Expansion cards (`extra: true`) start locked. Each match the player wins
-// (vs the AI or online) unlocks two at random; a pop-up shows them.
+// (vs the AI or online) unlocks two at random, legendaries last; a pop-up shows them.
 // Saved in this browser (localStorage).
 
 import { allCards, getCard } from '../engine/registry.js';
@@ -19,9 +19,15 @@ export const lockedCount = (faction) => extras().filter((c) => (!faction || c.fa
 // Unlock up to n random locked cards; returns their ids.
 export function awardUnlocks(n = UNLOCKS_PER_WIN) {
   const have = saved();
-  const pool = extras().filter((c) => !have.has(c.id)).map((c) => c.id);
+  const left = extras().filter((c) => !have.has(c.id));
+  // Legendaries come last: they join the draw only once every other card is unlocked.
+  const pool = left.filter((c) => !c.legendary).map((c) => c.id);
+  const legends = left.filter((c) => c.legendary).map((c) => c.id);
   const won = [];
-  while (won.length < n && pool.length) won.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  while (won.length < n && (pool.length || legends.length)) {
+    const from = pool.length ? pool : legends;
+    won.push(from.splice(Math.floor(Math.random() * from.length), 1)[0]);
+  }
   for (const id of won) have.add(id);
   try { localStorage.setItem(KEY, JSON.stringify([...have])); } catch { /* storage unavailable */ }
   return won;
