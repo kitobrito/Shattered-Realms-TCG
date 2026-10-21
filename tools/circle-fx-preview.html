@@ -1,0 +1,22 @@
+<!doctype html>
+<!-- Dev preview of a living Circle of Hell board: tools/circle-fx-preview.html?n=1&o=land -->
+<html><head><meta charset="utf-8"><base href="../"><title>Circle FX preview</title>
+<style>
+  html, body { margin: 0; background: #000; }
+  #stage { position: relative; }
+  #stage img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .circle-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+</style></head>
+<body><div id="stage"><img id="art" alt=""></div>
+<script type="module">
+  const q = new URLSearchParams(location.search);
+  const n = q.get('n') ?? '1', o = q.get('o') ?? 'land';
+  const w = Number(q.get('w') ?? (o === 'land' ? 1024 : 459));
+  const [IW, IH] = o === 'land' ? [1024, 572] : [459, 1024];
+  const stage = document.getElementById('stage');
+  stage.style.width = `${w}px`; stage.style.height = `${Math.round(w * IH / IW)}px`;
+  document.getElementById('art').src = `art/${o === 'land' ? 'boards-v2' : 'boards-portrait'}/circle${n}.jpg`;
+  const { startCircleFx } = await import("./src/ui/circle-fx.js");
+  window.fx = await startCircleFx(stage, n, o);
+  window.ready = true;
+</script></body></html>

@@ -68,6 +68,9 @@ export const LEGENDARY = new Set([
   'sobeks_fossil',
   'king_meg_the_apex_predator',
   'tremor_the_dunes_quake',
+  'baphomet_king_of_the_sabbath',
+  'lilith_queen_of_the_night',
+  'satan_lord_of_the_pit',
   'elder_of_the_first_moon',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;

@@ -11,6 +11,7 @@ import {
   hasKeyword, hooks, log, loseHealth, minionsInOrder, nameOf, opponentOf, pushFront, removeKeyword,
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
+  addDescent, descentDepth, heroSpellCost, initDescent, maxHand,
 } from './core.js';
 import { canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
@@ -86,6 +87,8 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
       if (hive) hive.sick = false;
     }
   });
+  // Demons: the Descent through the Circles of Hell starts at the surface.
+  initDescent(state);
   drawCards(state, 0, state.rules.startingHandFirst);
   drawCards(state, 1, state.rules.startingHandSecond);
   if (state.rules.openingHandHelp) [0, 1].forEach((p) => ensureEarlyPlay(state, p));
@@ -266,7 +269,7 @@ export function getLegalActions(state) {
   }
   for (const hs of pl.heroSpells) {
     const card = getCard(hs.cardId);
-    if (hs.uses < state.rules.heroSpellUsesPerTurn && !(hs.cooldown > 0) && card.cost <= manaFor(pl, card) && hasRoom(state, p, card)) {
+    if (hs.uses < state.rules.heroSpellUsesPerTurn && !(hs.cooldown > 0) && heroSpellCost(state, card) <= manaFor(pl, card) && hasRoom(state, p, card)) {
       actions.push(...playOptions(state, p, card, hs.cardId, 'heroSpell'));
     }
   }
@@ -394,6 +397,8 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
     steps.push({ kind: 'event', event: { type: 'minionSummoned', source: m.uid, player: p } }, { kind: 'deaths' });
     state.queue.push(...steps);
   } else if (card.type === 'spell') {
+    // The Fourth Circle (Greed): casting a spell costs 1 Health (not a paid cost: it doesn't drive the Descent).
+    if (descentDepth(state) === 4) { log(state, '💰 Greed takes its due.'); loseHealth(state, pl.hero.uid, 1, { paid: false }); }
     const event = { type: 'cardPlayed', source: inst.uid, player: p, cardId: card.id, cardType: 'spell', target: chosen };
     state.queue.push(...spellSteps(card, { self: inst.uid, controller: p, chosen, chosen2, cardId: card.id }, event, p));
     pl.graveyard.push(inst);
@@ -414,7 +419,7 @@ function castHeroSpell(state, { player: p, card: cardId, target, target2 }) {
     if (card.cooldown) hs.cooldown = card.cooldown; // Controlled Irradiation: usable again after N turns
     if (pl.fusion) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + 1);
   }
-  payMana(pl, card, card.cost);
+  payMana(pl, card, heroSpellCost(state, card));
   log(state, `${pl.name} casts Hero Spell ${card.name}.`);
   const self = state.nextUid++;
   const event = { type: 'cardPlayed', source: self, player: p, cardId, cardType: 'spell', heroSpell: true, target: target ?? null };
@@ -452,7 +457,7 @@ function resolveChoice(state, { player: p, index }) {
     if (i >= 0) {
       const [inst] = pl.deck.splice(i, 1);
       if (choice.costMod) inst.costMod = (inst.costMod ?? 0) + choice.costMod; // Fusions: "it costs (N) less"
-      if (pl.hand.length < state.rules.maxHandSize) pl.hand.push(inst);
+      if (pl.hand.length < maxHand(state)) pl.hand.push(inst);
       else pl.graveyard.push(inst);
       log(state, `${pl.name} Discovers ${getCard(inst.cardId).name}.`);
     }
@@ -544,6 +549,8 @@ function applyAuras(state) {
       for (const id of resolveSelector(state, aura.target, ctx)) {
         if (aura.health) bonus.set(id, (bonus.get(id) ?? 0) + aura.health);
         if (aura.attack) bonusAtk.set(id, (bonusAtk.get(id) ?? 0) + aura.attack);
+        // attackPerDepth: +N Attack for each circle the battle has sunk (Baphomet).
+        if (aura.attackPerDepth) bonusAtk.set(id, (bonusAtk.get(id) ?? 0) + aura.attackPerDepth * descentDepth(state));
         if (aura.keywords) bonusKw.set(id, [...(bonusKw.get(id) ?? []), ...aura.keywords]);
       }
     }
@@ -569,7 +576,9 @@ function applyAuras(state) {
     c.health -= d;
   }
   // Attack auras (Graveyard Overseer) are recomputed outright each step.
-  for (const m of minionsInOrder(state)) m.auraAttack = bonusAtk.get(m.uid) ?? 0;
+  // The Fifth Circle (Wrath): every minion has +1 Attack.
+  const wrath = descentDepth(state) === 5 ? 1 : 0;
+  for (const m of minionsInOrder(state)) m.auraAttack = (bonusAtk.get(m.uid) ?? 0) + wrath;
   // Weaponsmith Unit: your Hero's Weapon has +1 Attack per such minion (only while it holds one).
   for (const pl of state.players) {
     const smiths = pl.board.filter((m) => getCard(m.cardId).heroWeaponAura && m.health > 0 && !m.destroyed).length;
@@ -765,6 +774,7 @@ const STEPS = {
       // Ghosts: deaths counted this turn / this game, and per player (friendly minions that died).
       state.deathsThisTurn = (state.deathsThisTurn ?? 0) + 1;
       state.deathsThisGame = (state.deathsThisGame ?? 0) + 1;
+      addDescent(state, 1); // every death drags the battle deeper (when a Demon player is here)
       state.players[m.controller].minionDeaths = (state.players[m.controller].minionDeaths ?? 0) + 1;
       const card = getCard(m.cardId);
       const event = {
@@ -865,6 +875,7 @@ const STEPS = {
       { kind: 'window', name: 'endOfTurn', priority: opponentOf(p), ctx: { event } },
       { kind: 'burn', player: p },
       { kind: 'extinction', player: p },
+      { kind: 'circleEnd', player: p },
       { kind: 'deaths' },
       { kind: 'cleanup', player: p },
       { kind: 'startTurn', player: opponentOf(p) },
@@ -874,6 +885,15 @@ const STEPS = {
   // Burned: each Burned minion loses 1 Health at the end of its controller's turn.
   // Burn (Dragons): at the end of YOUR turn, each Burning enemy character takes its Burn value as
   // damage, then the value rises by 1. So Burn you apply hits as soon as you end your turn.
+  // The Sixth Circle (Heresy): at the end of each turn, 1 damage to all minions.
+  circleEnd(state) {
+    if (descentDepth(state) !== 6) return;
+    const all = minionsInOrder(state).filter((m) => m.health > 0 && !m.destroyed);
+    if (!all.length) return;
+    log(state, '🔥 The tombs of Heresy burn: 1 damage to all minions.');
+    for (const m of all) dealDamage(state, null, m.uid, 1);
+  },
+
   burn(state, { player: p }) {
     const pl = state.players[p];
     for (const m of pl.board) if (hasKeyword(m, 'Burned')) loseHealth(state, m.uid, 1);
@@ -1041,7 +1061,8 @@ const STEPS = {
       if (m.exhausted) { m.cantAttackThisTurn = true; m.exhausted = false; }
     }
     log(state, `— Turn ${state.turn}: ${pl.name} (${pl.mana.current} Mana) —`);
-    drawCards(state, p, 1);
+    // The Third Circle (Gluttony): an extra card at the start of the turn.
+    drawCards(state, p, descentDepth(state) === 3 ? 2 : 1);
     emit(state, { type: 'startOfTurn', player: p });
     pushFront(state, [{ kind: 'deaths' }]);
   },

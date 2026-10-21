@@ -65,7 +65,7 @@ export function validateCard(card) {
     if (!TRIGGER_EVENTS.includes(t.on)) errors.push(`trigger ${i}: unknown event "${t.on}"`);
     checkEffects(card, t.effects, `trigger ${i} (${t.on})`, errors);
   }
-  for (const a of [].concat(card.aura ?? [])) if (!(a.target && (a.health || a.attack || a.keywords?.length))) errors.push('aura needs a target and health, attack or keywords');
+  for (const a of [].concat(card.aura ?? [])) if (!(a.target && (a.health || a.attack || a.attackPerDepth || a.keywords?.length))) errors.push('aura needs a target and health, attack (or attackPerDepth) or keywords');
   if (card.type === 'spell' && !card.passive) checkEffects(card, card.effects, 'spell', errors);
   if (card.type === 'trap') {
     if (!card.trap || !BOARD_EVENTS.includes(card.trap.on)) errors.push('trap needs trap.on with a board event');

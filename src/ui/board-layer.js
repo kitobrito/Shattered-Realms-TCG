@@ -7,8 +7,10 @@
 //                         > img.board-still   (always; shown until the video plays)
 //                         > video.board-video (when BOARD_VIDEO has one for the faction)
 
-import { BOARD_ANIM, BOARD_ART, BOARD_VIDEO, boardArtFor } from '../cards/board-art.js';
+import { BOARD_ANIM, BOARD_ART, BOARD_VIDEO, boardArtFor, CIRCLE_BOARDS } from '../cards/board-art.js';
 import { startBoardAnim } from './board-anim.js';
+import { startCircleFx } from './circle-fx.js';
+import { playDescent } from './descent-fx.js';
 
 let layer = null;
 let current = null; // faction shown now
@@ -34,8 +36,44 @@ function videoAllowed() {
   return true;
 }
 
-export function showBoard(faction) {
+// Demons' Descent: the current circle (0 = the surface, the faction's own board).
+let circleShown = 0;
+let circleFx = null;
+let circleWant = 0;
+function startCircle(n) {
+  circleFx?.stop();
+  circleFx = null;
+  if (!n || !videoAllowed()) return;
+  circleWant = n;
+  startCircleFx(layer.querySelector('.board-stage'), n, 'land').then((ctl) => {
+    if (circleWant !== n || circleShown !== n) { ctl?.stop(); return; }
+    circleFx = ctl;
+  }).catch(() => {});
+}
+// The board for this faction, or (depth > 0) the circle of Hell the battle has sunk to.
+// A change of circle plays the Descent: the old board sinks away, the new one rises.
+export function showBoard(faction, depth = 0) {
   if (!layer) build();
+  if (depth > 0 || circleShown > 0) {
+    layer.classList.add('show');
+    if (depth === circleShown && (depth > 0 || current === faction)) { anim?.resume(); circleFx?.resume(); return; }
+    const from = circleShown;
+    circleShown = depth;
+    const img = layer.querySelector('.board-still');
+    const src = depth > 0 ? CIRCLE_BOARDS.land[depth].src : boardArtFor(faction);
+    const swap = () => {
+      layer.querySelector('video')?.remove();
+      anim?.stop(); anim = null;
+      layer.querySelector('canvas.board-anim')?.remove();
+      img.setAttribute('src', src);
+      layer.querySelector('.board-backdrop').style.backgroundImage = `url('${src}')`;
+      current = depth > 0 ? `circle${depth}` : faction;
+      startCircle(depth);
+    };
+    if (depth > from && videoAllowed()) playDescent(layer.querySelector('.board-stage'), depth, swap);
+    else swap();
+    return;
+  }
   layer.classList.add('show');
   const still = boardArtFor(faction);
   const img = layer.querySelector('.board-still');
@@ -80,6 +118,12 @@ export function hideBoard() {
   layer.classList.remove('show');
   layer.querySelector('video')?.pause();
   anim?.pause();
+  circleFx?.pause();
+}
+
+// Leaving a match: the next one starts back at the surface.
+export function resetDescentBoard() {
+  circleFx?.stop(); circleFx = null; circleShown = 0; circleWant = 0; current = null;
 }
 
 // Resume after a hidden period (e.g. coming back from the menu).
@@ -96,10 +140,12 @@ function boardPoint(clientX, clientY) {
   return x >= 0 && y >= 0 && x <= 1 && y <= 1 ? [x, y] : null;
 }
 export function pokeBoard(clientX, clientY) {
-  const p = anim && boardPoint(clientX, clientY);
-  return p ? anim.poke(...p) : false;
+  const live = circleFx ?? anim;
+  const p = live && boardPoint(clientX, clientY);
+  return p ? live.poke(...p) : false;
 }
 export function canPokeBoard(clientX, clientY) {
-  const p = anim && boardPoint(clientX, clientY);
-  return p ? anim.canPoke(...p) : false;
+  const live = circleFx ?? anim;
+  const p = live && boardPoint(clientX, clientY);
+  return p ? live.canPoke(...p) : false;
 }
