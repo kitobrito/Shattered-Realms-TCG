@@ -304,6 +304,12 @@ export const SHARK_CARDS = [
     triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: { prey: true } }, effects: [{ op: 'swallow', target: 'eventTarget' }] }],
   },
 
+  {
+    ...K, id: 'tremor_the_dunes_quake', name: 'Tremor, the Dunes Quake', art: '🌋', extra: true, cost: 8, attack: 6, health: 8, keywords: ['Burrow'],
+    text: 'Burrow. Surface: Deal 2 damage to all enemy minions. Repeat once for each other friendly minion that Surfaced this turn.',
+    triggers: [{ on: 'surface', effects: [{ op: 'aftershocks', effects: [dmg(ENEMY_MINIONS, 2)] }] }],
+  },
+
   // ---- Tokens ----
   { ...K, id: 'shark_pup', name: 'Shark Pup', art: '🦈', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...K, id: 'sand_lurker', name: 'Sand Lurker', art: '🏖️', token: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'], text: 'Rush.' },
