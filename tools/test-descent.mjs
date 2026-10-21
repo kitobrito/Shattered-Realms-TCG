@@ -1,7 +1,8 @@
 // Rules tests for the Descent (Demons, Circles of Hell) and its legendaries.
 //   node tools/test-descent.mjs
 
-import { buildDeck } from '../src/cards/index.js';
+import { buildDeck, FACTION_POOLS } from '../src/cards/index.js';
+import { isComplete } from '../src/cards/validate.js';
 import { addDescent, addToHand, costOf, effectiveAttack, loseHealth, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame, getLegalActions } from '../src/engine/engine.js';
 import { getCard } from '../src/engine/registry.js';
@@ -103,6 +104,12 @@ test('The new legendaries exist, are legendary and have art', () => {
     const c = getCard(id);
     if (!ART[id] || !existsSync(ART[id])) return `${id} no art`;
     if (id !== 'lilim' && !c.legendary) return `${id} not legendary`;
+  }
+});
+test('The new legendaries pass the card checker and are in the Demons pool', () => {
+  for (const id of ['baphomet_king_of_the_sabbath', 'lilith_queen_of_the_night', 'satan_lord_of_the_pit']) {
+    if (!isComplete(getCard(id))) return `${id} incomplete`;
+    if (!FACTION_POOLS.Demons.includes(id)) return `${id} not in the pool`;
   }
 });
 test('Baphomet: Arrival sinks one circle; your other minions get +1 Attack per circle', () => {
