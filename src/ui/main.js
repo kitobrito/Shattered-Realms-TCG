@@ -2511,7 +2511,9 @@ const zoomFrom = (el) => { const r = (el.closest('.card') ?? el).getBoundingClie
 function zoomHTML(base) {
   const i = galleryOrder.indexOf(base.id);
   // Lycanthropes: the arrow flips between the Humanoid and Beast Form cards.
-  const twin = base.beastForm ? getCard(base.beastForm) : null;
+  // (Sobek: the same arrow shows the Fossil it is Reborn as.)
+  const twin = base.beastForm || base.rebornAs ? getCard(base.beastForm ?? base.rebornAs) : null;
+  const twinName = base.rebornAs ? (zoomBeast ? 'Sobek' : 'Fossil') : zoomBeast ? 'Humanoid Form' : 'Beast Form';
   const card = twin && zoomBeast ? twin : base;
   const first = i <= 0, last = i >= galleryOrder.length - 1;
   const art = artOf(card);
@@ -2525,7 +2527,7 @@ function zoomHTML(base) {
           <button class="ghost" data-act="closeZoom" title="Close">✕</button>
         </div>
         <button class="zoom-arrow" data-act="zoomPrev" ${first ? 'disabled' : ''} title="Previous (←)">‹</button>
-        ${bigCardHTML(card).replace(/<\/div>\s*$/, `<i class="zoom-foil"></i>${twin ? `<button class="zoom-flip-arrow" data-act="zoomFlip" title="Show the ${zoomBeast ? 'Humanoid' : 'Beast'} Form">⟲</button>` : ''}</div>`)}
+        ${bigCardHTML(card).replace(/<\/div>\s*$/, `<i class="zoom-foil"></i>${twin ? `<button class="zoom-flip-arrow" data-act="zoomFlip" title="Show ${twinName}">⟲</button>` : ''}</div>`)}
         <aside class="zoom-side">
           <header class="zoom-head">
             <span class="zoom-faction">${crestHTML(card.faction)}<span>${esc(card.faction)}</span></span>
@@ -2533,7 +2535,7 @@ function zoomHTML(base) {
             <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
           </header>
           <div class="zoom-kind">${card.form === 'beast' ? `Beast Form · ${card.cost}-Mana Minion` : esc(kindOf(card))}</div>
-          ${twin ? `<button class="zoom-flip ghost" data-act="zoomFlip">⟲ Show ${zoomBeast ? 'Humanoid' : 'Beast'} Form</button>` : ''}
+          ${twin ? `<button class="zoom-flip ghost" data-act="zoomFlip">⟲ Show ${twinName}</button>` : ''}
           ${isLocked(card.id) ? '<div class="zoom-locked">🔒 Locked · every win unlocks 2 new cards</div>' : ''}
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
           ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}
