@@ -8,16 +8,16 @@
 // "Whenever this transforms" sits on the form it turns INTO, so it happens on arrival in that form.
 // Rulings made while building are marked "Ruling:".
 
-const K = { faction: 'Lycanthropes', type: 'minion', tribes: ['Lycanthrope'] };
+const K = { faction: 'Lycanthropes', type: 'minion', tribes: ['Lycan'] };
 const S = { faction: 'Lycanthropes', type: 'spell' };
 const T = { faction: 'Lycanthropes', type: 'trap' };
 
-const LYC = { type: 'minion', side: 'friendly', tribe: 'Lycanthrope' };
+const LYC = { type: 'minion', side: 'friendly', tribe: 'Lycan' };
 const LYC_HUMAN = { ...LYC, form: 'human' };
 const LYC_BEAST = { ...LYC, form: 'beast' };
-const FRIENDLY_LYCS = { minions: { side: 'friendly', tribe: 'Lycanthrope' } };
-const OTHER_LYCS = { minions: { side: 'friendly', tribe: 'Lycanthrope', excludeSelf: true } };
-const FRIENDLY_BEASTS = { minions: { side: 'friendly', tribe: 'Lycanthrope', form: 'beast' } };
+const FRIENDLY_LYCS = { minions: { side: 'friendly', tribe: 'Lycan' } };
+const OTHER_LYCS = { minions: { side: 'friendly', tribe: 'Lycan', excludeSelf: true } };
+const FRIENDLY_BEASTS = { minions: { side: 'friendly', tribe: 'Lycan', form: 'beast' } };
 const OTHER_FRIENDLY = { randomOf: { minions: { side: 'friendly', excludeSelf: true } } };
 const OTHER_MINIONS = { minions: { side: 'friendly', excludeSelf: true } };
 const RANDOM_ENEMY = { randomOf: { minions: { side: 'enemy' } } };
@@ -30,8 +30,8 @@ const once = (key, effects) => ({ op: 'oncePerTurn', key, effects });
 // "Whenever this transforms" (into the form that carries it).
 const onShift = (effects) => ({ on: 'minionTransformed', filter: { source: 'self' }, effects });
 // "Whenever another friendly Lycanthrope transforms".
-const onOtherShift = (effects) => ({ on: 'minionTransformed', filter: { source: { side: 'friendly', tribe: 'Lycanthrope', notSelf: true } }, effects });
-const onAnyShift = (effects) => ({ on: 'minionTransformed', filter: { source: { side: 'friendly', tribe: 'Lycanthrope' } }, effects });
+const onOtherShift = (effects) => ({ on: 'minionTransformed', filter: { source: { side: 'friendly', tribe: 'Lycan', notSelf: true } }, effects });
+const onAnyShift = (effects) => ({ on: 'minionTransformed', filter: { source: { side: 'friendly', tribe: 'Lycan' } }, effects });
 const arrival = (effects) => ({ on: 'battlecry', effects });
 
 // One Lycanthrope = its Humanoid card + a hidden Beast twin. The Humanoid card's text also
@@ -202,7 +202,7 @@ export const LYCANTHROPE_CARDS = [
     // Ruling: "if the new form has more Health, prevent 2 damage" became a flat 2-damage shield.
     ...T, id: 'false_calm', name: 'False Calm', art: '🍃', cost: 1,
     text: 'When an enemy spell targets a friendly Lycanthrope: transform it and prevent the next 2 damage to it.',
-    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'spell', target: { side: 'friendly', tribe: 'Lycanthrope' } }, effects: [
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'spell', target: { side: 'friendly', tribe: 'Lycan' } }, effects: [
       shift('eventTarget'), { op: 'preventDamage', target: 'eventTarget', amount: 2 },
     ] },
   },
@@ -210,7 +210,7 @@ export const LYCANTHROPE_CARDS = [
     ...T, id: 'instinctive_defense', name: 'Instinctive Defense', art: '🛡️', cost: 2,
     text: 'When an enemy minion attacks your Hero: transform a random friendly Humanoid Lycanthrope into Beast Form. It gains Taunt until your next turn.',
     trap: { on: 'attackDeclared', filter: { player: 'enemy', target: 'friendlyHero' }, effects: [
-      shift({ randomOf: { minions: { side: 'friendly', tribe: 'Lycanthrope', form: 'human' } } }, { to: 'beast', then: [untilNext('chosen', 'Taunt')] }),
+      shift({ randomOf: { minions: { side: 'friendly', tribe: 'Lycan', form: 'human' } } }, { to: 'beast', then: [untilNext('chosen', 'Taunt')] }),
     ] },
   },
   {
@@ -223,7 +223,7 @@ export const LYCANTHROPE_CARDS = [
   {
     ...S, id: 'reflexive_shift', name: 'Reflexive Shift', art: '💥', cost: 1,
     text: 'Quick Play: when a friendly Lycanthrope takes damage, transform it and give it +1 Health.',
-    quickPlay: { windows: ['damageDealt'], filter: { target: { side: 'friendly', tribe: 'Lycanthrope', alive: true } } },
+    quickPlay: { windows: ['damageDealt'], filter: { target: { side: 'friendly', tribe: 'Lycan', alive: true } } },
     effects: [shift('eventTarget'), buff('eventTarget', 0, 1)],
   },
   {
@@ -236,7 +236,7 @@ export const LYCANTHROPE_CARDS = [
     // Ruling: "would be destroyed" uses the would-take-damage window for damage that would kill it.
     ...S, id: 'back_to_reason', name: 'Back to Reason', art: '🕊️', cost: 2,
     text: 'Quick Play: when a friendly Beast Form would take lethal damage, prevent it and transform it into Humanoid Form.',
-    quickPlay: { windows: ['wouldTakeDamage'], filter: { target: { side: 'friendly', tribe: 'Lycanthrope', form: 'beast' }, lethal: true } },
+    quickPlay: { windows: ['wouldTakeDamage'], filter: { target: { side: 'friendly', tribe: 'Lycan', form: 'beast' }, lethal: true } },
     effects: [{ op: 'preventDamage', target: 'eventTarget', amount: 'all' }, shift('eventTarget', { to: 'human' })],
   },
 
