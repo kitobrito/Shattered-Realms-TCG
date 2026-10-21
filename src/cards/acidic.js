@@ -22,12 +22,10 @@ const once = (key, effects) => ({ op: 'oncePerTurn', key, effects });
 export const ACIDIC_CARDS = [
   // ---- Hero Spell ----
   {
-    ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 3, corrodes: true,
-    text: 'Apply Corrosion 1 to an enemy minion. At the start of each of your turns, if it survived, apply Corrosion 1 to it again.',
-    // Ruling: one Reservoir target at a time; using it on a new minion moves the drip there.
-    // Balance: the designer's first hit was Corrosion 2; 1 brought Acidic from 76% to ~50%.
+    ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 2, corrodes: true,
+    text: 'Apply Corrosion 2 to an enemy minion.',
     target: ENEMY_MINION,
-    effects: [corrode('chosen', 1), { op: 'setReservoir', target: 'chosen' }],
+    effects: [corrode('chosen', 2)],
   },
 
   // ---- Minions (16) ----

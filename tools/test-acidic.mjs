@@ -107,22 +107,12 @@ test('Corrosion works on Radioactive minions (their passive only stops buffs)', 
 }, 'Vampires', ['Radioactive', 'Robots']);
 
 // ---- Caustic Reservoir --------------------------------------------------------------------
-test('Caustic Reservoir: Corrosion 1, then 1 more at the start of each of your turns', () => {
+test('Caustic Reservoir: Corrosion 2 right away, nothing later', () => {
   const e = foe(6, 9);
   heroSpell(0, 'caustic_reservoir', e.uid);
-  if (atkOf(e) !== 5) return `after cast ${atkOf(e)}`;
+  if (atkOf(e) !== 4) return `after cast ${atkOf(e)}`;
   endTurn(); endTurn();
   if (atkOf(e) !== 4) return `after a round ${atkOf(e)}`;
-  endTurn(); endTurn();
-  if (atkOf(e) !== 3) return `after two rounds ${atkOf(e)}`;
-});
-test('Caustic Reservoir moves to the new target when used again', () => {
-  const a = foe(6, 9); const b = foe(6, 9);
-  heroSpell(0, 'caustic_reservoir', a.uid);
-  endTurn(); endTurn();
-  heroSpell(0, 'caustic_reservoir', b.uid);
-  endTurn(); endTurn();
-  if (atkOf(a) !== 4 || atkOf(b) !== 4) return `a ${atkOf(a)} b ${atkOf(b)}`;
 });
 
 // ---- Minions ------------------------------------------------------------------------------
