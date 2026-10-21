@@ -25,8 +25,32 @@ export const CLASSIC_DECK_NAMES = {
 const cost = (id) => getCard(id).cost;
 export const expansionCards = (f) => (FACTION_POOLS[f] ?? []).filter((id) => !(FACTION_LISTS[f] ?? []).includes(id));
 
+// Hand-tuned Expansion decks (from sims vs every Classic deck): standard cards swapped out
+// (`out`) for others (`in`), one for one, to land near a 50% win rate.
+export const EXPANSION_TUNING = {
+  // 70% untuned: its cheapest standard cards made it too fast. Slower, swingier picks in.
+  Demons: { out: ['pit_lord', 'infernal_ravager', 'blood_pact', 'unholy_empowerment', 'abyssal_brute'],
+    in: ['soul_collector', 'dread_summoner', 'doom_herald', 'soul_snare', 'blood_price'] },
+  Dragons: { out: ['dragons_breath', 'magma_behemoth', 'furnace_dragon', 'ashen_tyrant'],
+    in: ['cinder_drake', 'charcoal_drake', 'ashen_curse', 'firebreak'] },
+  Ultraterrestrials: { out: ['phase_skitter', 'scale_paradox', 'observer_outside_time', 'phase_jelly', 'rift_hunter'],
+    in: ['riftling', 'temporal_reversal', 'paradox_mine', 'spatial_redirection', 'borrowed_seconds'] },
+  // 34% untuned: its weakest standard cards out, its best big minions back in.
+  Aliens: { out: ['abduction_ray', 'experimental_containment', 'probe_drone', 'ufo_interception', 'alien_tripwire'],
+    in: ['overmind_xalat', 'subjugator_drone', 'mind_control_beam', 'gene_thief_operative', 'qu_bio_engineer'] },
+};
+
 // A faction's 30 different cards built around its expansion.
 export function expansionLineup(f) {
+  const t = EXPANSION_TUNING[f];
+  const auto = autoExpansionLineup(f);
+  if (!t) return auto;
+  const out = new Set(t.out.filter((id) => auto.includes(id)));
+  const add = t.in.filter((id) => !auto.includes(id) && FACTION_DECKS[f].includes(id)).slice(0, out.size);
+  return add.length === out.size ? [...auto.filter((id) => !out.has(id)), ...add] : auto;
+}
+
+function autoExpansionLineup(f) {
   const size = FACTION_DECKS[f].length;
   const extras = expansionCards(f);
   const cut = new Set(STANDARD_CUTS[f] ?? []);
