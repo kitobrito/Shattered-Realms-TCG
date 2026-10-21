@@ -69,4 +69,14 @@ function swapPlaceholders(root = document) {
 }
 
 // The menus show hero portraits and card backs straight away, so fetch those packs early.
-if (PACKS && typeof document !== 'undefined') for (const name of PACKS.eager ?? []) loadPack(name);
+if (PACKS && typeof document !== 'undefined') {
+  for (const name of PACKS.eager ?? []) loadPack(name);
+  // Then, quietly and one at a time, fetch every other pack so art is ready before it's needed.
+  const rest = Object.keys(PACKS.packs);
+  const next = () => {
+    const name = rest.find((n) => !loading.has(n));
+    if (!name) return;
+    loadPack(name).finally(() => (window.requestIdleCallback ?? setTimeout)(next, { timeout: 2000 }));
+  };
+  setTimeout(next, 3000);
+}
