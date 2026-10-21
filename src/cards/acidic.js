@@ -221,7 +221,7 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [corrode('eventTarget', 1)] }],
   },
   // ---- The Half-Digested expansion (unlockable): Acid Hide and Regenerate ----
-  // Creatures that broke out of a giant acid stomach. Acid Hide: whatever touches it in a fight
+  // Creatures that broke out of a giant acid stomach. Acid Hide: whatever attacks it
   // melts (a minion is Corroded by 1; a Hero loses its Weapon, or 2 Armor). Regenerate X: heals X
   // at the start of your turn (engine acidHideTouch / startTurn).
   {
@@ -230,9 +230,9 @@ export const ACIDIC_CARDS = [
   },
   {
     ...S, id: 'regurgitate', name: 'Regurgitate', art: '🤮', extra: true, cost: 1,
-    text: 'Return a friendly minion to your hand. It costs 2 less.',
+    text: 'Return a friendly minion to your hand. It costs 1 less.',
     target: { type: 'minion', side: 'friendly' },
-    effects: [{ op: 'returnToHand', target: 'chosen', costChange: -2 }],
+    effects: [{ op: 'returnToHand', target: 'chosen', costChange: -1 }],
   },
   {
     ...K, id: 'half_melted_hound', name: 'Half-Melted Hound', art: '🐕', extra: true, cost: 2, attack: 2, health: 2, keywords: ['Acid Hide'], regenerate: 1,
@@ -240,9 +240,9 @@ export const ACIDIC_CARDS = [
   },
   {
     ...S, id: 'stomach_lining_plate', name: 'Stomach Lining Plate', art: '🛡️', extra: true, cost: 2,
-    text: 'Give a friendly minion +0/+3 and Acid Hide.',
+    text: 'Give a friendly minion +0/+2 and Acid Hide.',
     target: { type: 'minion', side: 'friendly' },
-    effects: [{ op: 'buff', target: 'chosen', health: 3, keywords: ['Acid Hide'] }],
+    effects: [{ op: 'buff', target: 'chosen', health: 2, keywords: ['Acid Hide'] }],
   },
   {
     ...K, id: 'sloughing_brute', name: 'Sloughing Brute', art: '🧟', extra: true, cost: 3, attack: 2, health: 5, keywords: ['Taunt', 'Acid Hide'],
@@ -280,7 +280,7 @@ export const ACIDIC_CARDS = [
     effects: [dissolve('chosen'), corrode('chosen', 3)],
   },
   {
-    ...K, id: 'gut_burst_horror', name: 'Gut-Burst Horror', art: '😱', extra: true, cost: 5, attack: 5, health: 4,
+    ...K, id: 'gut_burst_horror', name: 'Gut-Burst Horror', art: '😱', extra: true, cost: 5, attack: 4, health: 4,
     text: 'Arrival: Deal 2 damage to all other minions. Restore 2 Health to your Acid Hide minions.',
     triggers: [{ on: 'battlecry', effects: [
       { op: 'damage', target: { minions: { side: 'any', excludeSelf: true } }, amount: 2 },
@@ -288,18 +288,18 @@ export const ACIDIC_CARDS = [
     ] }],
   },
   {
-    ...K, id: 'stomach_wall_colossus', name: 'Stomach-Wall Colossus', art: '🗿', extra: true, cost: 6, attack: 3, health: 8, keywords: ['Taunt', 'Acid Hide'], regenerate: 2,
+    ...K, id: 'stomach_wall_colossus', name: 'Stomach-Wall Colossus', art: '🗿', extra: true, cost: 7, attack: 3, health: 8, keywords: ['Taunt', 'Acid Hide'], regenerate: 2,
     text: 'Taunt. Acid Hide. Regenerate 2.',
   },
   {
-    ...K, id: 'the_undigested_king', name: 'The Undigested King', art: '👑', extra: true, cost: 8, attack: 6, health: 6, keywords: ['Acid Hide'], regenerate: 2,
+    ...K, id: 'the_undigested_king', name: 'The Undigested King', art: '👑', extra: true, cost: 9, attack: 6, health: 6, keywords: ['Acid Hide'], regenerate: 2,
     text: 'Acid Hide. Regenerate 2. Arrival: Destroy all enemy Weapons and Relics, and remove the enemy Hero\'s Armor. Gain +1/+1 for each Weapon or Relic destroyed.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'meltEnemyArsenal' }] }],
   },
   {
     ...S, id: 'return_to_the_stomach', name: 'Return to the Stomach', art: '🌀', extra: true, cost: 8,
-    text: 'Destroy an enemy minion; it is removed from the game. Summon a 3/3 copy of it with Acid Hide and Regenerate 1.',
+    text: 'Destroy an enemy minion; it is removed from the game. Summon a 2/2 copy of it with Acid Hide and Regenerate 1.',
     target: ENEMY_MINION,
-    effects: [{ op: 'summon', copyOf: 'chosen', attack: 3, health: 3, keywords: ['Acid Hide'], regen: 1 }, { op: 'destroy', target: 'chosen', obliterate: true }],
+    effects: [{ op: 'summon', copyOf: 'chosen', attack: 2, health: 2, keywords: ['Acid Hide'], regen: 1 }, { op: 'destroy', target: 'chosen', obliterate: true }],
   },
 ];

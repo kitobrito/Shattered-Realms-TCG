@@ -100,7 +100,7 @@ export const KEYWORD_TEXT = {
   Trap: 'Set face-down beside your Hero (a purple ? token). Your opponent can\'t see which Trap it is. It goes off automatically when its condition happens.',
   'Hero Spell': 'Always available outside your deck. Once per turn.',
   'Hero Weapon': 'Your Hero equips it and gains its Attack, so your Hero can attack once a turn. Each attack uses 1 Durability; at 0 the Weapon breaks. A new Weapon replaces the old one.',
-  'Acid Hide': 'Whatever touches it melts. A minion that attacks it, or that it attacks, is Corroded by 1. A Hero that does loses its Weapon (or 2 Armor if it has no Weapon).',
+  'Acid Hide': 'Whatever attacks it melts. A minion that attacks it is Corroded by 1. A Hero that attacks it loses its Weapon (or 2 Armor if it has no Weapon).',
   Meltdown: 'Corrosion on a minion that is already at 0 Attack eats something else instead: first its Weapon or Relic, then a keyword, then its card text. With nothing left, it takes damage equal to all its Corrosion.',
   Regenerate: 'At the start of your turn, this minion restores that much Health.',
   'Holy Flame': 'Holy fire. At the end of your turn each enemy with Holy Flame takes that much damage (double to Dark and Undead minions), then it burns down by 1. It can\'t be healed while it burns.',

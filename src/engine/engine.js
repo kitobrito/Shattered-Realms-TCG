@@ -691,9 +691,8 @@ const STEPS = {
     const wasPrey = d.kind === 'minion' && d.prey;
     const dealt = dealDamage(state, a.uid, d.uid, huntDmg);
     dealDamage(state, d.uid, a.uid, dDmg);
-    // Acidic (Half-Digested): Acid Hide melts whatever touches it, attacker or defender.
+    // Acidic (Half-Digested): Acid Hide melts whatever attacks it.
     acidHideTouch(state, d, a);
-    acidHideTouch(state, a, d);
     // Scarred Leviathan: damage to Marked Prey heals your Hero by as much.
     if (wasPrey && dealt > 0 && a.kind === 'minion' && getCard(a.cardId).leechPrey) heal(state, heroOf(state, a.controller).uid, dealt, { source: a.uid });
     // Great White: killing Marked Prey lets it attack again this turn (once).

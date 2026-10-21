@@ -78,11 +78,11 @@ test('Acid Hide: a minion that attacks it is Corroded by 1', () => {
   if (effectiveAttack(m) !== 2 || m.corrosion !== 1) return `${effectiveAttack(m)} ${m.corrosion}`;
 });
 
-test('Acid Hide: a minion it attacks is Corroded by 1', () => {
+test('Acid Hide does nothing when its minion is the attacker', () => {
   const c = put(0, 'sloughing_brute');
   const m = blank(1, 3, 9);
   attack(0, c.uid, m.uid);
-  if (effectiveAttack(m) !== 2) return `${effectiveAttack(m)}`;
+  if (effectiveAttack(m) !== 3) return `${effectiveAttack(m)}`;
 });
 
 test('Acid Hide melts an attacking Hero\'s Weapon (or eats 2 Armor)', () => {
@@ -104,17 +104,17 @@ test('Regenerate heals at the start of your turn (not past full)', () => {
   if (h.health !== 2) return 'overhealed';
 });
 
-test('Regurgitate returns a friendly minion; it costs 2 less', () => {
+test('Regurgitate returns a friendly minion; it costs 1 less', () => {
   const m = put(0, 'the_chewed_one');
   play(0, give(0, 'regurgitate'), m.uid);
   const inst = pl(0).hand.find((c) => c.cardId === 'the_chewed_one');
-  if (!inst || inst.costMod !== -2) return `${inst?.costMod}`;
+  if (!inst || inst.costMod !== -1) return `${inst?.costMod}`;
 });
 
-test('Stomach Lining Plate: +0/+3 and Acid Hide', () => {
+test('Stomach Lining Plate: +0/+2 and Acid Hide', () => {
   const m = blank(0, 1, 2);
   play(0, give(0, 'stomach_lining_plate'), m.uid);
-  if (m.health !== 5 || !hasKeyword(m, 'Acid Hide')) return 'no';
+  if (m.health !== 4 || !hasKeyword(m, 'Acid Hide')) return 'no';
 });
 
 test("Dissolve Arms: destroys the enemy Hero's Weapon, Corrodes enemy minions", () => {
@@ -176,13 +176,13 @@ test('The Undigested King melts the enemy Weapon, Relics and Armor and grows', (
   if (effectiveAttack(k) !== 8 || k.health !== 8) return `${effectiveAttack(k)}/${k.health}`;
 });
 
-test('Return to the Stomach: removes the enemy (no Graveyard) and gives you a 3/3 Acid Hide copy', () => {
+test('Return to the Stomach: removes the enemy (no Graveyard) and gives you a 2/2 Acid Hide copy', () => {
   const m = blank(1, 6, 6);
   const gy = pl(1).graveyard.length;
   play(0, give(0, 'return_to_the_stomach'), m.uid);
   const copy = find(0, 'forge_drone');
   if (pl(1).board.includes(m) || pl(1).graveyard.length !== gy) return 'not removed';
-  if (!copy || effectiveAttack(copy) !== 3 || copy.health !== 3 || !hasKeyword(copy, 'Acid Hide') || copy.regen !== 1) return 'bad copy';
+  if (!copy || effectiveAttack(copy) !== 2 || copy.health !== 2 || !hasKeyword(copy, 'Acid Hide') || copy.regen !== 1) return 'bad copy';
 });
 
 test('No Meltdown above 0 Attack: a 1-Attack minion just drops to 0', () => {
