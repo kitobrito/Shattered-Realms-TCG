@@ -243,17 +243,17 @@ export const LYCANTHROPE_CARDS = [
   // ---- Wild Pack expansion (16) ----
   ...lycan(
     { id: 'hollowmoor_weredeer', name: 'Hollowmoor Weredeer', art: '🦌', extra: true, cost: 3, attack: 2, health: 3, text: '' },
-    { attack: 4, health: 3, keywords: ['Stealth'], text: 'Stealth. Whenever this transforms, give a random enemy minion -2 Attack this turn.',
+    { attack: 3, health: 3, keywords: ['Stealth'], text: 'Stealth. Whenever this transforms, give a random enemy minion -2 Attack this turn.',
       triggers: [onShift([tempAtk(RANDOM_ENEMY, -2)])] },
   ),
   ...lycan(
     { id: 'burrowgrit_werebadger', name: 'Burrowgrit Werebadger', art: '🦡', extra: true, cost: 2, attack: 2, health: 2, text: '' },
-    { attack: 3, health: 3, keywords: ['Rage'], text: 'Rage.' },
+    { attack: 3, health: 2, keywords: ['Rage'], text: 'Rage.' },
   ),
   ...lycan(
     { id: 'ridgeback_weregrizzly', name: 'Ridgeback Weregrizzly', art: '🐻', extra: true, cost: 5, attack: 4, health: 5, text: '' },
-    { attack: 6, health: 6, keywords: ['Taunt'], text: 'Taunt. Whenever this transforms, gain 3 Armor.',
-      triggers: [onShift([{ op: 'gainArmor', amount: 3 }])] },
+    { attack: 5, health: 6, keywords: ['Taunt'], text: 'Taunt. Whenever this transforms, gain 2 Armor.',
+      triggers: [onShift([{ op: 'gainArmor', amount: 2 }])] },
   ),
   ...lycan(
     { id: 'frostfang_werepolar_bear', name: 'Frostfang Werepolar Bear', art: '🐻‍❄️', extra: true, cost: 6, attack: 4, health: 6, text: '' },
@@ -262,12 +262,12 @@ export const LYCANTHROPE_CARDS = [
   ),
   ...lycan(
     { id: 'chainbreaker_werepitbull', name: 'Chainbreaker Werepitbull', art: '🐕', extra: true, cost: 3, attack: 3, health: 2, text: '' },
-    { attack: 4, health: 3, keywords: ['Rush'], text: 'Rush. After this attacks and survives, gain +1 Attack.',
+    { attack: 3, health: 3, keywords: ['Rush'], text: 'Rush. After this attacks and survives, gain +1 Attack.',
       triggers: [{ on: 'afterAttack', filter: { source: 'self', selfAlive: true }, effects: [buff('self', 1, 0)] }] },
   ),
   ...lycan(
-    { id: 'gatehound_weremastiff', name: 'Gatehound Weremastiff', art: '🐶', extra: true, cost: 4, attack: 2, health: 6, keywords: ['Taunt'], text: 'Taunt.' },
-    { attack: 4, health: 7, keywords: ['Taunt'], text: 'Taunt. Whenever this transforms, give adjacent minions +2 Health.',
+    { id: 'gatehound_weremastiff', name: 'Gatehound Weremastiff', art: '🐶', extra: true, cost: 4, attack: 2, health: 5, keywords: ['Taunt'], text: 'Taunt.' },
+    { attack: 4, health: 6, keywords: ['Taunt'], text: 'Taunt. Whenever this transforms, give adjacent minions +2 Health.',
       triggers: [onShift([buff({ adjacent: 'self' }, 0, 2)])] },
   ),
   ...lycan(
@@ -281,10 +281,10 @@ export const LYCANTHROPE_CARDS = [
   ),
   ...lycan(
     { id: 'carrion_werevulture', name: 'Carrion Werevulture', art: '🦅', extra: true, cost: 4, attack: 3, health: 3,
-      text: 'Whenever another minion dies, gain +1/+1.',
+      text: 'Whenever another minion dies, gain +1 Attack.',
+      triggers: [{ on: 'minionDied', effects: [buff('self', 1, 0)] }] },
+    { attack: 4, health: 4, text: 'Whenever another minion dies, gain +1/+1.',
       triggers: [{ on: 'minionDied', effects: [buff('self', 1, 1)] }] },
-    { attack: 4, health: 4, text: 'Whenever another minion dies, gain +2/+1.',
-      triggers: [{ on: 'minionDied', effects: [buff('self', 2, 1)] }] },
   ),
   ...lycan(
     { id: 'sandcoil_wererattlesnake', name: 'Sandcoil Wererattlesnake', art: '🐍', extra: true, cost: 3, attack: 2, health: 3, text: '' },
@@ -293,21 +293,21 @@ export const LYCANTHROPE_CARDS = [
   ),
   ...lycan(
     { id: 'skyreach_weregiraffe', name: 'Skyreach Weregiraffe', art: '🦒', extra: true, cost: 4, attack: 2, health: 5, text: '' },
-    { attack: 4, health: 5, text: 'Whenever this transforms, deal 2 damage to a random enemy minion.',
+    { attack: 3, health: 5, text: 'Whenever this transforms, deal 2 damage to a random enemy minion.',
       triggers: [onShift([{ op: 'damage', target: RANDOM_ENEMY, amount: 2 }])] },
   ),
   {
     ...S, id: 'antler_totem', name: 'Antler Totem', art: '🦌', extra: true, cost: 2,
-    text: 'Give a friendly Lycanthrope +2/+2. If it is in Beast Form, it also gains Taunt.', target: LYC,
-    effects: [buff('chosen', 2, 2), { op: 'ifTarget', target: 'chosen', filter: { form: 'beast' }, effects: [buff('chosen', 0, 0, { keywords: ['Taunt'] })] }],
+    text: 'Give a friendly Lycanthrope +1/+2. If it is in Beast Form, it also gains Taunt.', target: LYC,
+    effects: [buff('chosen', 1, 2), { op: 'ifTarget', target: 'chosen', filter: { form: 'beast' }, effects: [buff('chosen', 0, 0, { keywords: ['Taunt'] })] }],
   },
   {
-    ...S, id: 'blood_scent', name: 'Blood Scent', art: '🩸', extra: true, cost: 1,
+    ...S, id: 'blood_scent', name: 'Blood Scent', art: '🩸', extra: true, cost: 2,
     text: 'Transform a friendly Lycanthrope and give it +1/+1.', target: LYC,
     effects: [shift('chosen'), buff('chosen', 1, 1)],
   },
   {
-    ...S, id: 'pack_howl', name: 'Pack Howl', art: '🐺', extra: true, cost: 4,
+    ...S, id: 'pack_howl', name: 'Pack Howl', art: '🐺', extra: true, cost: 5,
     text: 'Give your Beast Forms +2 Attack and Rush this turn.',
     effects: [{ op: 'buff', target: FRIENDLY_BEASTS, attack: 2, temporary: true, temporaryKeywords: ['Rush'] }],
   },
@@ -317,7 +317,7 @@ export const LYCANTHROPE_CARDS = [
     trap: { on: 'attackDeclared', filter: { player: 'enemy', source: 'enemyMinion' }, effects: [{ op: 'damage', target: 'eventSource', amount: 3, freeze: true }] },
   },
   {
-    ...S, id: 'feral_feast', name: 'Feral Feast', art: '🍖', extra: true, cost: 3,
+    ...S, id: 'feral_feast', name: 'Feral Feast', art: '🍖', extra: true, cost: 4,
     text: 'Destroy an enemy minion with 3 or less Health. Give a random friendly Beast Form +2 Attack.',
     target: { type: 'minion', side: 'enemy', maxHealth: 3 },
     effects: [{ op: 'destroy', target: 'chosen' }, buff({ randomOf: FRIENDLY_BEASTS }, 2, 0)],

@@ -221,7 +221,7 @@ test('Break the Leash (Quick Play): when an enemy attacks, a Humanoid becomes a 
 
 test('Wild Pack: Weregrizzly gives Armor, Werebat can attack the turn it transforms', () => {
   const g = put(0, 'ridgeback_weregrizzly'); transform(0, g);
-  if (pl(0).hero.armor !== 3) return `armor ${pl(0).hero.armor}`;
+  if (pl(0).hero.armor !== 2) return `armor ${pl(0).hero.armor}`;
   const b = put(0, 'duskwing_werebat'); b.sick = true;
   transform(0, b);
   if (!getLegalActions(s).some((a) => a.type === 'attack' && a.attacker === b.uid)) return 'bat cannot attack';
