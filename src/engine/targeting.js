@@ -26,6 +26,7 @@ function minionPasses(m, f) {
   if (f.hasUpgrade && !(m.upgrades > 0)) return false;   // Robots
   if (f.minUpgrades != null && (m.upgrades ?? 0) < f.minUpgrades) return false;
   if (f.hasWeapon && !m.weapon) return false;
+  if (f.keyword && !hasKeyword(m, f.keyword)) return false;
   if (f.holyFlame != null && (m.holyFlame > 0) !== f.holyFlame) return false; // Divine (The Holy Pyre)
   if (f.hasRelic != null && !!m.relic !== f.hasRelic) return false; // Ghosts (Cursed Armory)
   if (f.heroOrTribe && !m.tribes.includes(f.heroOrTribe)) return false; // a Hero (always allowed) or a minion of this tribe

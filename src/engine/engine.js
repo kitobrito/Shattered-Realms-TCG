@@ -12,7 +12,7 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
 } from './core.js';
-import { checkCondition, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
+import { checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -492,6 +492,15 @@ function declareAttack(state, { player: p, attacker, defender }) {
   if (a.kind === 'hero' && a.weapon) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon' }, ctx: { self: a.uid, controller: p } });
 }
 
+// Acid Hide: `hide` touched `other` in a fight. A minion is Corroded by 1; a Hero loses its Weapon,
+// or 2 Armor if it has none.
+function acidHideTouch(state, hide, other) {
+  if (!hide || !other || hide.kind !== 'minion' || !hasKeyword(hide, 'Acid Hide')) return;
+  if (other.kind === 'minion') { if (other.health > 0 && !other.destroyed) resolveEffect(state, { op: 'corrode', target: { uid: other.uid }, amount: 1 }, { self: hide.uid, controller: hide.controller }); return; }
+  if (other.weapon) { log(state, `🧪 ${nameOf(state, hide)}'s Acid Hide melts ${other.weapon.name}!`); dropHeroWeapon(state, other, 'melts'); }
+  else if (other.armor > 0) { const n = Math.min(2, other.armor); other.armor -= n; log(state, `🧪 Acid Hide eats ${n} of ${nameOf(state, other)}'s Armor.`); }
+}
+
 // ---- Auras ---------------------------------------------------------------
 
 // Continuous effects ("Your other Vampire minions have +1 Health") are
@@ -502,6 +511,7 @@ function applyAuras(state) {
   const bonusKw = new Map();
   for (const s of minionsInOrder(state)) {
     // aura: one { target, attack?, health?, keywords?, if? } or a list of them (Swarm Commander).
+    if (s.textLost) continue; // Meltdown ate its card text
     for (const aura of [].concat(getCard(s.cardId).aura ?? [])) {
       const ctx = { self: s.uid, controller: s.controller };
       if (aura.if && !checkCondition(state, aura.if, ctx)) continue;
@@ -681,6 +691,8 @@ const STEPS = {
     const wasPrey = d.kind === 'minion' && d.prey;
     const dealt = dealDamage(state, a.uid, d.uid, huntDmg);
     dealDamage(state, d.uid, a.uid, dDmg);
+    // Acidic (Half-Digested): Acid Hide melts whatever attacks it.
+    acidHideTouch(state, d, a);
     // Scarred Leviathan: damage to Marked Prey heals your Hero by as much.
     if (wasPrey && dealt > 0 && a.kind === 'minion' && getCard(a.cardId).leechPrey) heal(state, heroOf(state, a.controller).uid, dealt, { source: a.uid });
     // Great White: killing Marked Prey lets it attack again this turn (once).
@@ -941,6 +953,11 @@ const STEPS = {
     state.turn += 1;
     state.activePlayer = p;
     const pl = state.players[p];
+    // Acidic (Half-Digested): Regenerate X — damaged minions heal X at the start of their turn.
+    for (const m of [...pl.board]) {
+      const r = m.regen ?? getCard(m.cardId).regenerate ?? 0;
+      if (r > 0 && m.health > 0 && m.health < m.maxHealth && heal(state, m.uid, r) > 0) emit(state, { type: 'regenerated', source: m.uid, player: p });
+    }
     // Sub-Space Jump: banished minions come back with their buff.
     for (const entry of [...(pl.limbo ?? [])]) {
       if (entry.returnAt !== p) continue;

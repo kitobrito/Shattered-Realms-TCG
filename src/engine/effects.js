@@ -22,7 +22,7 @@ import {
   hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
   applyBurn, burnCards, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
-  corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame,
+  corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -1077,6 +1077,7 @@ export const EFFECT_OPS = {
       const base = bonus ? getCard(cardId) : null;
       const m = summonMinion(state, p, cardId, { attack: bonus ? base.attack + bonus.attack : e.attack, health: bonus ? base.health + bonus.health : e.health, keywords: e.keywords });
       if (m) ctx.summoned = m.uid;
+      if (m && e.regen) m.regen = e.regen; // Acidic: Regenerate on a summoned copy
       if (m && e.loseKeywords) for (const k of e.loseKeywords) removeKeyword(m, k);
       if (m && e.randomKeywords) {
         for (const k of randomKeywords(state, RANDOM_KEYWORD_POOL, m.keywords, e.randomKeywords)) addKeyword(m, k, false, state);
@@ -1377,6 +1378,7 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (c) => {
       if (c.kind !== 'minion') return;
       if (e.noExit) c.noExit = true;
+      if (e.obliterate) c.obliterate = true; // removed: no Graveyard, Exit or Reborn (Return to the Stomach)
       c.destroyed = true;
       c.lastDamagedBy = ctx.self;
       c.lastDamagedByController = ctx.controller;
@@ -1935,6 +1937,39 @@ export const EFFECT_OPS = {
     log(state, `${nameOf(state, hero)}'s ${w.name} becomes ${w.attack}/${w.durability}.`);
   },
 
+  // ---- Acidic (The Half-Digested): melting gear ----
+  // { side: 'enemy' | 'friendly' } — that Hero's Weapon is destroyed (Dissolve Arms, Peptic Snare).
+  destroyHeroWeapon(state, e, ctx) {
+    const hero = heroOf(state, e.side === 'friendly' ? ctx.controller : opponentOf(ctx.controller));
+    if (hero.weapon) dropHeroWeapon(state, hero, 'melts');
+  },
+
+  // { side, amount } — that Hero loses up to `amount` Armor (all if amount is 'all').
+  loseArmor(state, e, ctx) {
+    const hero = heroOf(state, e.side === 'friendly' ? ctx.controller : opponentOf(ctx.controller));
+    const n = e.amount === 'all' ? hero.armor : Math.min(hero.armor, e.amount);
+    if (n > 0) { hero.armor -= n; log(state, `🧪 ${nameOf(state, hero)} loses ${n} Armor.`); }
+  },
+
+  // The Undigested King: every enemy Weapon and Relic melts and the enemy Hero's Armor is gone;
+  // this minion gains +1/+1 for each Weapon or Relic destroyed.
+  meltEnemyArsenal(state, e, ctx) {
+    const foe = state.players[opponentOf(ctx.controller)];
+    let n = 0;
+    if (foe.hero.weapon) { dropHeroWeapon(state, foe.hero, 'melts'); n++; }
+    for (const m of foe.board) {
+      if (m.relic) { dropMinionRelic(state, m); n++; }
+      if (m.weapon) {
+        m.attack = Math.max(0, m.attack - (m.weapon.attack ?? 0));
+        m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.weapon);
+        m.weapon = null; n++;
+      }
+    }
+    if (foe.hero.armor > 0) { log(state, `🧪 ${nameOf(state, foe.hero)}'s Armor dissolves.`); foe.hero.armor = 0; }
+    const me = findCharacter(state, ctx.self);
+    if (me && n) applyBuff(state, me, { attack: n, health: n });
+  },
+
   // ---- Divine (The Holy Pyre): Holy Flame and Reduce to Ash ----
   // { target, amount } — set the targets alight with Holy Flame (adds to any already there).
   holyFlame(state, e, ctx) {
@@ -2058,6 +2093,8 @@ export function resolveEffect(state, effect, ctx) {
 }
 
 // The Hero loses its Weapon (it broke or was replaced): its Attack and its effects go.
+export { dropMinionRelic };
+
 export function dropHeroWeapon(state, hero, how = 'breaks') {
   const w = hero.weapon;
   if (!w) return;
@@ -2065,18 +2102,8 @@ export function dropHeroWeapon(state, hero, how = 'breaks') {
   hero.grantedTriggers = (hero.grantedTriggers ?? []).filter((t) => !t.weapon);
   hero.weapon = null;
   if (how === 'moves') return;
-  log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : `${nameOf(state, hero)} drops the ${w.name}.`);
+  log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : how === 'melts' ? `🧪 ${nameOf(state, hero)}'s ${w.name} melts away.` : `${nameOf(state, hero)} drops the ${w.name}.`);
   // A Relic's last gasp when it breaks (Soulforge Relic).
   if (how === 'breaks') for (const x of getCard(w.cardId)?.relic?.hero?.onBreak ?? []) resolveEffect(state, x, { self: hero.uid, controller: hero.controller });
 }
 
-// A Ghost lets go of its Relic (it took up another): the Relic's stats, keywords and effects go.
-export function dropMinionRelic(state, m) {
-  const r = m.relic;
-  if (!r) return;
-  m.attack = Math.max(0, m.attack - r.attack);
-  if (r.health) { m.maxHealth -= r.health; m.health = Math.min(m.health, m.maxHealth); }
-  for (const k of r.keywords) removeKeyword(m, k);
-  m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.relic);
-  m.relic = null;
-}
