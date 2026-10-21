@@ -29,8 +29,8 @@ export const expansionCards = (f) => (FACTION_POOLS[f] ?? []).filter((id) => !(F
 // (`out`) for others (`in`), one for one, to land near a 50% win rate.
 export const EXPANSION_TUNING = {
   // 70% untuned: its cheapest standard cards made it too fast. Slower, swingier picks in.
-  Demons: { out: ['pit_lord', 'infernal_ravager', 'blood_pact', 'unholy_empowerment', 'abyssal_brute', 'hellhound', 'soul_imp'],
-    in: ['soul_collector', 'dread_summoner', 'doom_herald', 'soul_snare', 'blood_price', 'gateway_collapse', 'desperate_pact'] },
+  Demons: { out: ['pit_lord', 'infernal_ravager', 'blood_pact', 'unholy_empowerment', 'abyssal_brute', 'hellhound', 'soul_imp', 'soulflayer'],
+    in: ['soul_collector', 'dread_summoner', 'doom_herald', 'soul_snare', 'blood_price', 'gateway_collapse', 'desperate_pact', 'soul_sacrifice'] },
   Dragons: { out: ['dragons_breath', 'magma_behemoth', 'furnace_dragon', 'ashen_tyrant', 'scorching_breath', 'ember_whelp', 'blazewing', 'fireball'],
     in: ['cinder_drake', 'charcoal_drake', 'ashen_curse', 'firebreak', 'flash_ignition', 'feed_the_flames', 'scorched_hand', 'molten_hide'] },
   Ultraterrestrials: { out: ['phase_skitter', 'scale_paradox', 'observer_outside_time'],

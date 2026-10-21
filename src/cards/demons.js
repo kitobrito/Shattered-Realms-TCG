@@ -284,13 +284,13 @@ export const DEMON_CARDS = [
   },
   // ---- The Circles of Hell (Kings of Hell, part two): the Descent's legendaries ----
   {
-    ...DM, id: 'baphomet_king_of_the_sabbath', name: 'Baphomet, King of the Sabbath', art: '🐐', extra: true, cost: 8, attack: 6, health: 7,
+    ...DM, id: 'baphomet_king_of_the_sabbath', name: 'Baphomet, King of the Sabbath', art: '🐐', extra: true, cost: 8, attack: 5, health: 6,
     text: 'Arrival: Sink one circle deeper. Your other minions have +1 Attack for each circle sunk.',
     aura: { target: { minions: { side: 'friendly', excludeSelf: true } }, attackPerDepth: 1 },
     triggers: [{ on: 'battlecry', effects: [{ op: 'descend' }] }],
   },
   {
-    ...DM, id: 'lilith_queen_of_the_night', name: 'Lilith, Queen of the Night', art: '🌙', extra: true, cost: 6, attack: 4, health: 6, keywords: ['Lifesteal'],
+    ...DM, id: 'lilith_queen_of_the_night', name: 'Lilith, Queen of the Night', art: '🌙', extra: true, cost: 7, attack: 4, health: 6, keywords: ['Lifesteal'],
     text: 'Lifesteal. At the end of your turn, summon a 1/1 Lilim for each circle sunk (up to 3).',
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'summon', cardId: 'lilim', countPerDepth: { max: 3 } }] }],
   },
