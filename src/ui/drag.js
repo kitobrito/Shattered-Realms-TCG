@@ -274,6 +274,14 @@ function onDown(e) {
   if (e.button !== 0 || !api.canAct()) return;
   if (aim) return; // clicks during aiming are handled on pointerup
   const legal = api.legal();
+  // Lycanthropes: the moon button on a minion Transforms it.
+  const shiftEl = e.target.closest('[data-shift]');
+  if (shiftEl) {
+    const action = legal.find((a) => a.type === 'transform' && a.minion === Number(shiftEl.dataset.shift));
+    e.preventDefault();
+    if (action) api.act(action, { from: shiftEl });
+    return;
+  }
   const handEl = handCardAt(e);
   const hsEl = e.target.closest('[data-hs]');
   const charEl = e.target.closest('[data-char]');

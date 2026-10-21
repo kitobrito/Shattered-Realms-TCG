@@ -27,7 +27,7 @@ import {
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
 import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL } from './rules.js';
-import { resolveSelector, targetCandidates } from './targeting.js';
+import { minionPasses, resolveSelector, targetCandidates } from './targeting.js';
 import { enterBattlefield, queueSelfTrigger, selfTriggerSteps } from './triggers.js';
 
 const each = (state, sel, ctx, fn) => {
@@ -150,6 +150,44 @@ export function surfaceMinion(state, m, opts = {}) {
   for (let i = 0; i < (twice ? 2 : 1); i++) steps.push(...selfTriggerSteps(state, card, 'surface', { self: m.uid, controller: m.controller }));
   if (steps.length) pushFront(state, steps);
   emit(state, { type: 'minionSurfaced', source: m.uid, player: m.controller });
+  return true;
+}
+
+// ---- Lycanthropes: Transform -------------------------------------------------------
+// A Lycanthrope is two cards: its Humanoid Form (the card you play) and its Beast Form (a
+// hidden twin, `beastForm` / `humanForm` link them). Transforming swaps which card the minion
+// is, so its art, abilities and auras change with it. Changes made to it carry over: the
+// difference between the two printed stat lines is applied on top, damage stays (but never
+// kills: at least 1 Health is left), and so do buffs and granted keywords.
+export const formOf = (m) => getCard(m.cardId)?.form ?? null;
+export function canShift(m) {
+  const card = m && m.kind === 'minion' ? getCard(m.cardId) : null;
+  return !!(card && (card.beastForm || card.humanForm) && m.health > 0 && !m.destroyed);
+}
+
+export function shiftMinion(state, m, to = null) {
+  if (!canShift(m)) return false;
+  const old = getCard(m.cardId);
+  const intoId = old.beastForm ?? old.humanForm;
+  const nw = getCard(intoId);
+  if (to && nw.form !== to) return false;
+  // Safety net: no chain of effects can flip one minion back and forth forever.
+  m.shifts ??= { turn: state.turn, n: 0 };
+  if (m.shifts.turn !== state.turn) m.shifts = { turn: state.turn, n: 0 };
+  if (++m.shifts.n > 6) return false;
+  const damage = Math.max(0, m.maxHealth - m.health);
+  m.attack = Math.max(0, m.attack + (nw.attack ?? 0) - (old.attack ?? 0));
+  m.maxHealth = Math.max(1, m.maxHealth + (nw.health ?? 0) - (old.health ?? 0));
+  m.health = Math.max(1, Math.min(m.maxHealth, m.maxHealth - damage));
+  const oldKw = old.keywords ?? [];
+  const newKw = nw.keywords ?? [];
+  m.keywords = m.keywords.filter((k) => !oldKw.includes(k) || newKw.includes(k));
+  if (!m.keywords.includes('Silenced')) for (const k of newKw) if (!m.keywords.includes(k)) m.keywords.push(k);
+  const oldSt = old.statics ?? [];
+  m.statics = [...(m.statics ?? []).filter((x) => !oldSt.includes(x)), ...(nw.statics ?? [])];
+  m.cardId = intoId;
+  log(state, `🌕 ${old.name} transforms into its ${nw.form === 'beast' ? 'Beast' : 'Humanoid'} Form!`);
+  emit(state, { type: 'minionTransformed', source: m.uid, player: m.controller, form: nw.form });
   return true;
 }
 
@@ -1215,8 +1253,8 @@ export const EFFECT_OPS = {
   gainStatsPerCount(state, e, ctx) {
     const self = findCharacter(state, ctx.self);
     if (!self) return;
-    const n = resolveSelector(state, e.count, ctx).length;
-    applyBuff(state, self, { attack: n * (e.attack ?? 0), health: n * (e.health ?? 0) });
+    const n = Math.min(e.max ?? 99, resolveSelector(state, e.count, ctx).length);
+    if (n > 0) applyBuff(state, self, { attack: n * (e.attack ?? 0), health: n * (e.health ?? 0) });
   },
 
   // { per, attack?, health? } — per `per` Health your Hero is currently missing.
@@ -1603,6 +1641,34 @@ export const EFFECT_OPS = {
     enterBattlefield(state, m);
     emit(state, { type: 'chestburst', source: m.uid, player: ctx.controller });
     if (controls(state, ctx.controller, 'instantEvolve')) evolveChestburster(state, m);
+  },
+
+  // ---- Lycanthropes ----
+  // { target, to?: 'beast' | 'human', drawPer? } — Transform the targets (only those that would end in
+  // `to`, if given). drawPer: draw a card for every N that transformed (Primal Unleashing).
+  // selfPer: N — this minion gains +N/+N for each one (The First Beast). then: effects run for each
+  // minion that transformed, as 'chosen' (Instinctive Defense: it gains Taunt).
+  shift(state, e, ctx) {
+    let n = 0;
+    each(state, e.target, ctx, (m) => {
+      if (!shiftMinion(state, m, e.to ?? null)) return;
+      n += 1;
+      for (const sub of e.then ?? []) resolveEffect(state, sub, { ...ctx, chosen: m.uid });
+    });
+    if (e.drawPer && n >= e.drawPer) drawCards(state, ctx.controller, Math.floor(n / e.drawPer));
+    const self = e.selfPer && n ? findCharacter(state, ctx.self) : null;
+    if (self) applyBuff(state, self, { attack: n * e.selfPer, health: n * e.selfPer });
+  },
+  // { target, filter: { form?, full?, ...minion filters }, effects, else? } — effects only for a
+  // target that passes (Instinct Surge: "if it is in Beast Form"; Primal Recovery: "if at full Health").
+  ifTarget(state, e, ctx) {
+    for (const id of resolveSelector(state, e.target, ctx)) {
+      const c = findCharacter(state, id);
+      if (!c) continue;
+      const f = e.filter ?? {};
+      const ok = c.kind === 'minion' && (f.full == null || (c.health >= c.maxHealth) === f.full) && minionPasses(c, f);
+      for (const sub of (ok ? e.effects : e.else) ?? []) resolveEffect(state, sub, { ...ctx, chosen: id });
+    }
   },
 
   // Sand Sharks. { target } — Burrow the targets (Dig In, Duck Under, Sandstorm Stalker).

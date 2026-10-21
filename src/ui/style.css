@@ -3435,6 +3435,12 @@ body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .a
 .big-card.shard.f-acidic, .minion.shardm.f-acidic { --accent: #c8ff2a; }
 .arena.f-acidic { --felt: #2a3a14; --felt-2: #0e1406; --rim: #c8ff2a; }
 .medallion.f-acidic { --fc: #c8ff2a; } .ts-guide.f-acidic { --fc: #c8ff2a; }
+.big-card.f-lycanthropes { --frame: #2a3450; --frame-hi: #c8d8ff; --body: #0c1020; }
+.big-card.t-spell.f-lycanthropes { --frame: #4a2a3a; --frame-hi: #ff8a9a; --body: #160a10; }
+.big-card.t-trap.f-lycanthropes { --frame: #2a3a2a; --frame-hi: #9ab89a; --body: #0a100a; }
+.big-card.shard.f-lycanthropes, .minion.shardm.f-lycanthropes { --accent: #c8d8ff; }
+.arena.f-lycanthropes { --felt: #1a2436; --felt-2: #080c16; --rim: #c8d8ff; }
+.medallion.f-lycanthropes { --fc: #c8d8ff; } .ts-guide.f-lycanthropes { --fc: #c8d8ff; }
 .fx-p.acid { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #c8ff2a 45%, #6a9a0a 75%, transparent 80%); box-shadow: 0 0 6px #c8ff2a; }
 /* Corrosion on the board: a dripping acid badge with the total, and Acid-coated sheen. */
 .minion .corr-mark { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding: 0 0.25em; border-radius: 0.8em;
@@ -3764,28 +3770,28 @@ body.reduced-motion .mbg-mist, body.reduced-motion .ts-logo-sheen, body.reduced-
    and press down when clicked. (The chain of :not()s keeps the special game buttons, End Turn,
    Hero Spells, the painted PLAY button and the like, on their own looks, and outranks the
    older per-screen button colours.) */
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option) {
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift) {
   font-family: var(--font-title); font-weight: 700; letter-spacing: 0.03em; color: #2a1606; text-shadow: 0 1px 0 #fff4d655;
   background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); border: 1px solid #3a2208; border-radius: 10px;
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -2px 0 #6a3e1088, 0 3px 0 #2a1806, 0 6px 14px #000a;
   transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, color 0.12s ease; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):hover:not(:disabled) { background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); filter: brightness(1.08); transform: translateY(-2px);
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):hover:not(:disabled) { background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); filter: brightness(1.08); transform: translateY(-2px);
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -2px 0 #6a3e1088, 0 5px 0 #2a1806, 0 9px 18px #000a, 0 0 18px #e7b55255; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):active:not(:disabled) { transform: translateY(2px); filter: brightness(0.96); transition-duration: 0.05s;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):active:not(:disabled) { transform: translateY(2px); filter: brightness(0.96); transition-duration: 0.05s;
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -1px 0 #6a3e1088, 0 1px 0 #2a1806, 0 2px 6px #000a; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):focus-visible { outline: 2px solid #ffe6a0; outline-offset: 3px; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):disabled { opacity: 0.45; filter: grayscale(0.5); cursor: default; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option).ghost { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920); border-color: #a8834a99;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):focus-visible { outline: 2px solid #ffe6a0; outline-offset: 3px; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):disabled { opacity: 0.45; filter: grayscale(0.5); cursor: default; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).ghost { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920); border-color: #a8834a99;
   box-shadow: inset 0 1px 0 #ffffff1c, 0 3px 0 #0a080c, 0 6px 12px #0009; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option).ghost:hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; border-color: #e7b552; filter: none;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).ghost:hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; border-color: #e7b552; filter: none;
   box-shadow: inset 0 1px 0 #ffffff26, 0 5px 0 #0a080c, 0 9px 16px #0009, 0 0 14px #e7b55233; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option).ghost:active:not(:disabled) { box-shadow: inset 0 1px 0 #ffffff1c, 0 1px 0 #0a080c, 0 2px 6px #0009; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option).on { color: #2a1606; text-shadow: 0 1px 0 #fff4d655; background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); border-color: #3a2208;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).ghost:active:not(:disabled) { box-shadow: inset 0 1px 0 #ffffff1c, 0 1px 0 #0a080c, 0 2px 6px #0009; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).on { color: #2a1606; text-shadow: 0 1px 0 #fff4d655; background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); border-color: #3a2208;
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -2px 0 #6a3e1088, 0 2px 0 #2a1806, 0 0 14px #e7b55244; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option).danger { color: #fff1ee; text-shadow: 0 1px 2px #3a0006; background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); border-color: #3a0a10;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).danger { color: #fff1ee; text-shadow: 0 1px 2px #3a0006; background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); border-color: #3a0a10;
   box-shadow: inset 0 1px 0 #ffd0c8, inset 0 -2px 0 #5a0a1488, 0 3px 0 #2a0408, 0 6px 14px #000a; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option).danger:hover:not(:disabled) { background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); box-shadow: inset 0 1px 0 #ffd0c8, 0 5px 0 #2a0408, 0 9px 18px #000a, 0 0 18px #ff4a5a44; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option) small { font-family: var(--font-body); letter-spacing: 0.04em; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).danger:hover:not(:disabled) { background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); box-shadow: inset 0 1px 0 #ffd0c8, 0 5px 0 #2a0408, 0 9px 18px #000a, 0 0 18px #ff4a5a44; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift) small { font-family: var(--font-body); letter-spacing: 0.04em; }
 /* Toggles sit flush, side by side. */
 .format-toggle button, .seg button { border-radius: 0; }
 .format-toggle button:first-child, .seg button:first-child { border-radius: 10px 0 0 10px; }
@@ -3795,11 +3801,11 @@ button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote
   stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .corner-buttons .ui-ico, .card-zoom .ui-ico, .log-head .ui-ico { margin: 0; width: 1.25em; height: 1.25em; }
 .coach .ui-ico, .coach b .ui-ico { color: #ffd877; }
-@media (prefers-reduced-motion: reduce) { button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift) { transition: none; } }
 /* In a row of toggles, the ones that are off read as secondary. */
-.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.on), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.on) { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920);
+.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on) { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920);
   border-color: #a8834a99; box-shadow: inset 0 1px 0 #ffffff1c, 0 3px 0 #0a080c; }
-.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.on):hover:not(:disabled), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.on):hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; filter: none; }
+.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on):hover:not(:disabled), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on):hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; filter: none; }
 .format-toggle { border: none; overflow: visible; }
 
 /* ==== Loading screen ==== */
@@ -4626,5 +4632,21 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 /* Acidic (The Half-Digested): Acid Hide and Regenerate chips. */
 .st.st-acidhide { background: radial-gradient(circle at 40% 35%, #eaff9a, #9be22a 45%, #4a7a0a); box-shadow: 0 0 8px #b6ff3a; }
 .st.st-regen { background: radial-gradient(circle at 40% 35%, #d8ffe0, #4ad86a 45%, #1a7a3a); }
+
+/* ---- Lycanthropes: form badge, the Transform (moon) button, and the shapeshift flash ---- */
+.minion .m-form { position: absolute; left: 4%; top: 4%; z-index: 7; font-size: clamp(9px, 1.6cqmin, 14px); line-height: 1; font-style: normal;
+  padding: 2px 3px; border-radius: 6px; background: rgba(10, 14, 30, 0.7); box-shadow: 0 0 0 1px rgba(200, 216, 255, 0.5); pointer-events: none; }
+.minion .m-form.beast { box-shadow: 0 0 0 1px rgba(255, 138, 154, 0.7); }
+.arena .minion .m-shift { position: absolute; right: -6%; top: -6%; z-index: 9; width: 34%; aspect-ratio: 1; min-width: 26px; min-height: 26px;
+  border-radius: 50% !important; border: 2px solid #e8eeff !important; background: radial-gradient(circle at 40% 35%, #ffffff, #b8c8ff 45%, #3a4a8a) !important; color: #fff; min-height: 0; text-transform: none; letter-spacing: 0;
+  font-size: clamp(13px, 2.4cqmin, 20px); line-height: 1; padding: 0 !important; cursor: pointer; display: grid; place-items: center; right: -8%; top: -8%;
+  box-shadow: 0 0 10px rgba(200, 216, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.6); animation: moon-pulse 1.8s ease-in-out infinite; }
+.arena .minion .m-shift.beast { background: radial-gradient(circle at 40% 35%, #fff2f2, #ff9aa8 45%, #6a1a2a) !important; border-color: #ffe0e4 !important; }
+.arena .minion .m-shift:hover { transform: scale(1.12); }
+@keyframes moon-pulse { 0%, 100% { box-shadow: 0 0 6px rgba(200, 216, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.6); } 50% { box-shadow: 0 0 16px rgba(220, 230, 255, 1), 0 2px 4px rgba(0, 0, 0, 0.6); } }
+.minion.shifting { animation: shapeshift 0.52s ease-in-out; }
+.minion.shifting .m-art { filter: brightness(2.2) saturate(0.3) drop-shadow(0 0 12px #dfe8ff); transition: filter 0.25s; }
+@keyframes shapeshift { 0% { transform: scale(1); } 25% { transform: scale(1.1) rotate(-4deg); } 50% { transform: scale(0.92) rotate(4deg); } 75% { transform: scale(1.08) rotate(-2deg); } 100% { transform: scale(1); } }
+body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shifting { animation: none; }
 
 .zoom-locked { margin: 6px 0; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); color: #ffd98a; font-weight: 700; font-size: 0.9em; }

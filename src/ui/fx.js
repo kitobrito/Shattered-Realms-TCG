@@ -497,6 +497,7 @@ const PARTICLES = {
   Ultraterrestrials: { cls: 'shard', gravity: -0.2 },
   Sharks: { cls: 'bubble', gravity: -0.5 },
   Acidic: { cls: 'acid', gravity: -0.4 },
+  Lycanthropes: { cls: 'wisp', gravity: -0.3 },
 };
 export function particles(rect, faction, power = 1) {
   const kind = PARTICLES[faction] ?? { cls: 'spark', gravity: 0.3 };
@@ -700,7 +701,7 @@ export function flashScreen(color = '#ff7a3a') {
 
 // ---- Spells ------------------------------------------------------------------
 
-const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a' };
+const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff' };
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
@@ -1014,6 +1015,7 @@ export function deathFx(rect, faction) {
     case 'Ultraterrestrials': particles(rect, 'Ultraterrestrials', 12); break;
     case 'Sharks': particles(rect, 'Sharks', 12); particles(rect, 'Vampires', 6); break;
     case 'Acidic': particles(rect, 'Acidic', 14); fling(rect, '🫧', 2, { rise: 1, spread: 0.6 }); break;
+    case 'Lycanthropes': particles(rect, 'Lycanthropes', 12); fling(rect, '🐾', 3, { rise: 0.8, spread: 0.9 }); break;
     case 'Ghosts': particles(rect, 'Ghosts', 12); fling(rect, '👻', 1, { rise: 1.4, spread: 0.2, size: 26, duration: 1300 }); break;
     case 'Robots': particles(rect, 'Robots', 14); fling(rect, '⚙️', 3, { rise: 0.5, spread: 0.9 }); fling(rect, '🔩', 2, { rise: 0.4 }); break;
     case 'Divine': particles(rect, 'Divine', 12); fling(rect, '🪶', 4, { rise: 1.1, spread: 0.8 }); break;
@@ -1039,7 +1041,7 @@ export function deathFx(rect, faction) {
 const KILL_COLOR = {
   Vampires: ['#ff2a44', '#ff6a7a'], Zombies: ['#9cff4a', '#4a7a1a'], Dinosaurs: ['#f0d8a8', '#8a5a2a'], Plants: ['#7dff6a', '#2f8a2a'],
   Dragons: ['#ff8a1a', '#ffd25a'], Demons: ['#ff2a3a', '#3a0006'], Radioactive: ['#a8ff3a', '#3aff7a'], Fungus: ['#c98cff', '#6a2bb0'],
-  Divine: ['#ffe8a0', '#fff6d8'], Aliens: ['#5affd8', '#2affa0'], Robots: ['#7fd0ff', '#2a8aff'], Bees: ['#ffc21a', '#3a2a06'], Ghosts: ['#8ff0ff', '#e8fbff'], Ultraterrestrials: ['#b48cff', '#ffd76a'], Sharks: ['#ff2a2a', '#4ab8ff'], Acidic: ['#c8ff2a', '#ffe23a'],
+  Divine: ['#ffe8a0', '#fff6d8'], Aliens: ['#5affd8', '#2affa0'], Robots: ['#7fd0ff', '#2a8aff'], Bees: ['#ffc21a', '#3a2a06'], Ghosts: ['#8ff0ff', '#e8fbff'], Ultraterrestrials: ['#b48cff', '#ffd76a'], Sharks: ['#ff2a2a', '#4ab8ff'], Acidic: ['#c8ff2a', '#ffe23a'], Lycanthropes: ['#c8d8ff', '#6a7a9a'],
 };
 
 function addFx(cls, style) {
@@ -1689,6 +1691,7 @@ const HITS = {
   Sharks: ({ c, size }) => ring(c, size * 0.8, '#ff2a2a', { width: 3, to: 1.2, duration: 380 }),
   Acidic: ({ c, rect, size }) => { particles(rect, 'Acidic', 8); return ring(c, size * 0.8, '#c8ff2a', { width: 3, to: 1.3, duration: 460 }); },
   Ultraterrestrials: ({ c, size }) => ring(c, size * 0.9, '#b48cff', { width: 2, to: 0.4, duration: 480 }),
+  Lycanthropes: ({ c, rect, size }) => { fling(rect, '🐾', 2, { rise: 0.5, spread: 0.8, size: 14 }); return ring(c, size * 0.85, '#c8d8ff', { width: 3, to: 1.3, duration: 460 }); },
   Ghosts: ({ c, size }) => ring(c, size * 0.85, '#8ff0ff', { width: 3, to: 1.35, duration: 520 }),
   Bees: ({ c, rect, size }) => { fling(rect, '🐝', 2, { rise: 0.6, spread: 0.9, size: 14 }); return ring(c, size * 0.8, '#ffc21a', { width: 3, to: 1.25, duration: 440 }); },
 };

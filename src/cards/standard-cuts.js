@@ -112,6 +112,12 @@ export const STANDARD_CUTS = {
     'echoes_of_blood', 'nothing_escapes_the_current',
     'beneath_the_sand', 'the_killing_current', 'scent_through_stone', 'intercept',
   ],
+  // Keeps: the cheap shifters, the pack leaders and the mass Transforms.
+  Lycanthropes: [
+    'bogskip_werefrog', 'scaleweaver_werelizard', 'nightveil_werepanther',
+    'controlled_shift', 'primal_recovery', 'moonblood_evolution',
+    'false_calm', 'instinctive_defense', 'reflexive_shift', 'back_to_reason',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their

@@ -17,6 +17,7 @@ export const BOARD_ART = {
   Ultraterrestrials: 'art/boards-v2/ultraterrestrials.jpg',
   Sharks: 'art/boards-v2/sharks.jpg',
   Acidic: 'art/boards-v2/acidic.jpg',
+  Lycanthropes: 'art/boards-v2/lycanthropes.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -56,6 +57,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Lycanthropes: { src: 'art/boards-portrait/lycanthropes.jpg', opp: [202, 28, 256, 94, 'arch'], me: [197, 919, 261, 1001, 'circle'], field: [120, 900],
+    props: [P([10, 15, 100, 100], 'glow', '#dfe8ff', { sound: 'chime', glyph: '🌕' }), P([310, 25, 420, 120], 'sway', '#c8d0e0', { sound: 'clink', glyph: '⛓️' }),
+      P([15, 920, 105, 1010], 'wobble', '#e8e8f0', { sound: 'growl' }), P([340, 915, 455, 1015], 'glow', '#bcd0ff', { sound: 'rustle', glyph: '🐺' })] },
   Acidic: { src: 'art/boards-portrait/acidic.jpg', opp: [198, 22, 261, 98, 'arch'], me: [188, 910, 270, 992, 'circle'], field: [120, 880],
     props: [P([30, 0, 130, 105], 'steam', '#c8ff2a', { sound: 'bloop', glyph: '🧪' }), P([330, 0, 440, 110], 'glow', '#ff8a5a', { sound: 'clink' }),
       P([20, 890, 140, 1015], 'steam', '#c8ff2a', { sound: 'bloop' }), P([340, 860, 450, 1015], 'glow', '#d8ff9a', { sound: 'chime' })] },
@@ -110,6 +114,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Lycanthropes: { src: 'art/boards-v2/lycanthropes.jpg', opp: [473, 37, 550, 130], me: [470, 441, 552, 545], field: [120, 150, 900, 425],
+    props: [P([20, 10, 150, 140], 'glow', '#dfe8ff', { sound: 'chime', glyph: '🌕' }), P([810, 30, 970, 160], 'sway', '#c8d0e0', { sound: 'clink', glyph: '⛓️' }),
+      P([40, 420, 170, 550], 'wobble', '#e8e8f0', { sound: 'growl' }), P([820, 400, 1000, 560], 'glow', '#bcd0ff', { sound: 'rustle', glyph: '🐺' })] },
   Acidic: { src: 'art/boards-v2/acidic.jpg', opp: [467, 30, 556, 132], me: [460, 431, 558, 535], field: [110, 150, 915, 420],
     props: [P([55, 10, 200, 140], 'steam', '#c8ff2a', { sound: 'bloop', glyph: '🧪' }), P([850, 10, 990, 170], 'glow', '#ff8a5a', { sound: 'clink' }),
       P([50, 400, 200, 560], 'steam', '#c8ff2a', { sound: 'bloop' }), P([870, 360, 1010, 560], 'glow', '#d8ff9a', { sound: 'chime' })] },

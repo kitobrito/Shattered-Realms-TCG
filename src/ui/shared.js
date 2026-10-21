@@ -58,7 +58,7 @@ export const playerPortraitHTML = (factions) => {
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${faction.toLowerCase()}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
@@ -154,7 +154,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(health ?? card.health ?? '').length > 1 ? 'two-digit' : ''}">${health ?? card.health ?? '?'}</span>` : ''}
-      ${card.token ? '<span class="bc-token">Token</span>' : ''}
+      ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
 
@@ -192,7 +192,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
     ? `<div class="bc-type lines-${label.split(' · ').length}">${label.split(' · ').map((w) => `<span>${esc(w)}</span>`).join('')}</div>`
     : `<div class="bc-type"><span>${esc(label)}</span></div>`) : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(hp).length > 1 ? 'two-digit' : ''}">${hp}</span>` : ''}
-      ${card.token ? '<span class="bc-token">Token</span>' : ''}
+      ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
 

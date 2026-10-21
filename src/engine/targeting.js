@@ -18,8 +18,9 @@ export function canBeChosenBy(target, controller, bySpell = false, spec = null) 
 }
 
 // Extra minion conditions shared by target specs and selectors.
-function minionPasses(m, f) {
+export function minionPasses(m, f) {
   if (f.tribe && !m.tribes.includes(f.tribe)) return false;
+  if (f.form && getCard(m.cardId).form !== f.form) return false; // Lycanthropes: 'beast' | 'human'
   if (f.tribes && !f.tribes.some((t) => m.tribes.includes(t))) return false;
   if (f.notTribe && m.tribes.includes(f.notTribe)) return false;
   if (f.darkOrUndead && !isDarkOrUndead(m)) return false;
@@ -192,6 +193,12 @@ export function matchFilter(state, filter, ctx) {
       if ((state.players[ev.player]?.hand.length ?? 0) < want) return false;
       continue;
     }
+    // Lycanthropes: the listening minion is still alive ("whenever this survives damage").
+    if (key === 'selfAlive') {
+      const me = findCharacter(state, ctx.self);
+      if (!!(me && me.health > 0 && !me.destroyed) !== want) return false;
+      continue;
+    }
     if (key === 'cardType') {
       if (ev.cardType !== want) return false;
       continue;
@@ -294,6 +301,8 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.implanted != null && (c.implanted != null) !== want.implanted) return false;
     if (want.frozen != null && hasKeyword(c, 'Frozen') !== want.frozen) return false;
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;
+    if (want.form && getCard(c.cardId).form !== want.form) return false; // Lycanthropes
+    if (want.alive && (c.health <= 0 || c.destroyed)) return false;
     return true;
   }
   switch (want) {

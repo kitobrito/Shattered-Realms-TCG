@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  Lycanthropes: {
+    greetings: "Lovely night for a howl.",
+    wellPlayed: "Well played. You hunt like one of the pack.",
+    thanks: "Thanks. I owe you a bone.",
+    wow: "Now that's a transformation!",
+    oops: "Oops. Wrong form.",
+    threaten: "Wait until the moon is up.",
+  },
   Acidic: {
     greetings: "Hello! Mind the drips.",
     wellPlayed: "Well played. That stung a little.",
