@@ -30,13 +30,16 @@ SKIP_ART = {'boards', 'boards-portrait-old', 'app'}
 NOT_PACKED = {'board-props', 'boards-portrait', 'boards-v2', 'fonts', 'frames', 'fx', 'music', 'ui'} | SKIP_ART
 IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.webp')
 QUALITY = 72  # visually identical to the source JPGs at full size, under half the bytes
-PACK_LIMIT = 5 * 1024 * 1024  # start a new pack part past this many bytes
+PACK_LIMIT = 2 * 1024 * 1024  # start a new pack part past this many bytes (small parts: a card's art arrives sooner)
+MAX_SIDE = 768  # cards never show art bigger than this on screen, even zoomed on a sharp phone
 EAGER = ('heroes', 'backs')  # the menus show these at once
 
 
 def to_webp(path):
     im = Image.open(os.path.join(ROOT, path))
     im = im.convert('RGBA' if 'A' in im.getbands() or 'transparency' in im.info else 'RGB')
+    if max(im.size) > MAX_SIDE:
+        im.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
     buf = io.BytesIO()
     im.save(buf, 'WEBP', quality=QUALITY, method=5)
     return path, buf.getvalue()
