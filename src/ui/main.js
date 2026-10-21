@@ -3425,7 +3425,8 @@ async function boot() {
   const jobs = [
     document.fonts?.ready ?? Promise.resolve(),
     ...['art/ui/logo.png', 'art/ui/menu-bg.jpg', 'art/ui/play-button.png', 'art/ui/divider.png',
-      'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-quickplay.png', 'art/frames/painted-trap.png'].map(img),
+      'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-quickplay.png', 'art/frames/painted-trap.png',
+      'art/frames/legendary-minion.png', 'art/frames/legendary-spell.png', 'art/frames/legendary-trap.png'].map(img),
     ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${f.toLowerCase()}.jpg`)]),
   ];
   let done = 0;

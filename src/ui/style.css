@@ -4650,3 +4650,30 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shifting { animation: none; }
 
 .zoom-locked { margin: 6px 0; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); color: #ffd98a; font-weight: 700; font-size: 0.9em; }
+
+/* ==== Legendary frames (art/frames/legendary-<type>.png, 728x1024): 7+ Mana cards ====
+   Openings measured from the paintings, in % of the card. */
+.big-card.shard.legend { box-shadow: 0 0 1.2em #ffd25a88, 0 2em 5em #000c; }
+.big-card.shard.legend::after { display: none; }
+.big-card.shard.legend.t-minion .bc-art { left: 12.9% !important; top: 10.8% !important; width: 73.5% !important; height: 39.4% !important; }
+.big-card.shard.legend.t-minion .bc-text { left: 10.9% !important; top: 64.9% !important; width: 79.3% !important; height: 24.4% !important; }
+.big-card.shard.legend.t-minion .bc-atk { left: 6.3% !important; top: 52.8% !important; width: 17.7% !important; height: 11.1% !important; }
+.big-card.shard.legend.t-minion .bc-hp, .big-card.shard.legend.t-minion .bc-hp.two-digit { left: 76.9% !important; top: 53.1% !important; width: 17.3% !important; height: 10.4% !important; }
+.big-card.shard.legend.t-minion .bc-type { left: 40.8% !important; top: 91.6% !important; width: 19.2% !important; height: 6.6% !important; }
+.big-card.shard.legend.t-minion .sh-sigil { left: 83.7%; top: 7.1%; width: 9.6%; height: 7.1%; }
+.big-card.shard.legend.t-minion .bc-cost { left: 2.6% !important; top: 2.4% !important; width: 18.5% !important; height: 16.6% !important; }
+.big-card.shard.legend.t-spell .bc-art { left: 25.5% !important; top: 13.7% !important; width: 49% !important; height: 35.3% !important; }
+.big-card.shard.legend.t-spell .bc-banner { left: 5.5% !important; top: 57% !important; width: 88.9% !important; height: 5.6% !important; }
+.big-card.shard.legend.t-spell .bc-text { left: 8.1% !important; top: 66.3% !important; width: 83.8% !important; height: 24.3% !important; }
+.big-card.shard.legend.t-spell .bc-type { left: 31.7% !important; top: 92.5% !important; width: 36.5% !important; height: 5.2% !important; }
+.big-card.shard.legend.t-spell .sh-sigil { left: 84.6%; top: 3.7%; width: 11%; height: 7.8%; }
+.big-card.shard.legend.t-spell .bc-cost { left: 1.6% !important; top: 0.8% !important; width: 17% !important; height: 18% !important; }
+.big-card.shard.legend.t-trap .bc-art { left: 12.4% !important; top: 10.4% !important; width: 75.1% !important; height: 39.6% !important; }
+.big-card.shard.legend.t-trap .bc-banner { left: 5.1% !important; top: 56.4% !important; width: 89.7% !important; height: 5.6% !important; }
+.big-card.shard.legend.t-trap .bc-text { left: 7.8% !important; top: 65.7% !important; width: 84.3% !important; height: 25.4% !important; }
+.big-card.shard.legend.t-trap .bc-type { left: 31.5% !important; top: 93% !important; width: 37.1% !important; height: 5% !important; }
+.big-card.shard.legend.t-trap .sh-sigil { left: 85.2%; top: 4%; width: 10.9%; height: 7.6%; }
+.big-card.shard.legend.t-trap .bc-cost { left: 1.5% !important; top: 1% !important; width: 16.5% !important; height: 18.1% !important; }
+.big-card.shard.legend.t-minion .zoom-foil { --foil-frame: url('../../art/frames/legendary-minion.png'); }
+.big-card.shard.legend.t-spell .zoom-foil { --foil-frame: url('../../art/frames/legendary-spell.png'); }
+.big-card.shard.legend.t-trap .zoom-foil { --foil-frame: url('../../art/frames/legendary-trap.png'); }

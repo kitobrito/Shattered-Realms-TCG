@@ -179,12 +179,15 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
+  // Legendary cards (7+ Mana) wear their own gold frame (art/frames/legendary-<type>.png).
+  const legend = card.cost >= 7 && !card.token;
+  const frameSrc = legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
-    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
+    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
-      <img class="bc-frame" src="art/frames/painted-${frame}.png" alt="" draggable="false">
-      <i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>
+      <img class="bc-frame" src="${frameSrc}" alt="" draggable="false">
+      ${legend ? '' : `<i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>`}
       ${sigilHTML(card)}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
       <div class="bc-banner"><span>${esc(card.name)}</span></div>
