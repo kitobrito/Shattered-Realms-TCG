@@ -1551,15 +1551,9 @@ export const EFFECT_OPS = {
   acidCoat(state, e, ctx) {
     each(state, e.target, ctx, (c) => acidCoat(state, c));
   },
-  // { target, defenseOnly?, fallback?, repeatIfAttackAtLeast?, ifDefense?: [effects] }
-  // Dissolve (core dissolve). ifDefense runs when a defensive effect was removed (Shield-Eater).
+  // { target } — Dissolve (core dissolve): destroy it, distilling it into a spell for you.
   dissolve(state, e, ctx) {
-    each(state, e.target, ctx, (c) => {
-      const times = e.repeatIfAttackAtLeast != null && effectiveAttack(c) >= e.repeatIfAttackAtLeast ? 2 : 1;
-      let defense = false;
-      for (let i = 0; i < times; i++) if (dissolve(state, c, ctx.controller, e) === 'defense') defense = true;
-      if (defense) for (const sub of e.ifDefense ?? []) resolveEffect(state, sub, { ...ctx, chosen: c.uid });
-    });
+    each(state, e.target, ctx, (c) => dissolve(state, c, ctx.controller));
   },
   // { target } — Molecular Breakdown: its temporary buffs are removed.
   removeTempBuffs(state, e, ctx) {

@@ -194,13 +194,11 @@ test('Living Flask heals 2 when you play a Corrosion spell (not other spells)', 
   play(0, give(0, 'strip_the_plating'), e.uid);
   if (pl(0).hero.health !== 22) return `Strip the Plating healed: ${pl(0).hero.health}`;
 });
-test('Dissolver Mantis strips a defensive keyword, else corrodes 2', () => {
+test('Dissolver Mantis Dissolves an enemy minion', () => {
   const e = foe(4, 9); e.keywords = ['Evade', 'Taunt'];
+  Object.assign(pl(0).mana, { max: 10, current: 10, base: 10 });
   play(0, give(0, 'dissolver_mantis'), e.uid);
-  if (hasKeyword(e, 'Evade') || !hasKeyword(e, 'Taunt') || atkOf(e) !== 4) return `kw ${e.keywords} atk ${atkOf(e)}`;
-  const f = foe(4, 9);
-  play(0, give(0, 'dissolver_mantis'), f.uid);
-  if (atkOf(f) !== 2) return `plain ${atkOf(f)}`;
+  if (onBoard(e)) return 'survived';
 });
 test('Ooze Mimic copies the Attack, then corrodes the enemy by 2', () => {
   const e = foe(7, 9);
@@ -233,25 +231,33 @@ test('The Great Dissolution: Corrosion 2 to all, then 3 damage to those at 0 Att
 });
 
 // ---- Spells -------------------------------------------------------------------------------
-test('Strip the Plating removes temporary buffs, repeats on 5+ Attack', () => {
-  const e = foe(6, 6); e.tempAttack = 2; e.keywords = ['Evade'];
+test('Strip the Plating Dissolves: destroys the enemy minion', () => {
+  const e = foe(6, 6); e.keywords = ['Evade'];
   play(0, give(0, 'strip_the_plating'), e.uid);
-  if (e.tempAttack !== 0 || hasKeyword(e, 'Evade')) return `temp ${e.tempAttack} kw ${e.keywords}`;
+  if (onBoard(e)) return 'still on board';
 });
-test('Dissolve distills what it strips into a Distilled Essence card for you', () => {
-  const e = foe(4, 6); e.tempAttack = 2; e.tempKeywords = ['Lifesteal'];
-  play(0, give(0, 'strip_the_plating'), e.uid);
-  const inst = pl(0).hand.find((h) => getCard(h.cardId).name === 'Distilled Essence');
-  if (!inst) return `hand ${hand(0)}`;
-  const mine = put(0, 'bubble_slime');
-  play(0, inst, mine.uid);
-  if (atkOf(mine) !== 3 || !hasKeyword(mine, 'Lifesteal')) return `mine ${atkOf(mine)} ${mine.keywords}`;
-});
-test('Dissolving a defensive keyword gives an Essence carrying that keyword', () => {
-  const e = foe(4, 6); e.keywords = ['Taunt'];
-  play(0, give(0, 'strip_the_plating'), e.uid);
-  const inst = pl(0).hand.find((h) => getCard(h.cardId).name === 'Distilled Essence');
-  if (!inst || !getCard(inst.cardId).text.includes('Taunt')) return `essence ${inst && getCard(inst.cardId).text}`;
+test('Dissolve gives an Essence holding one random piece: original Attack, original Health or keywords', () => {
+  const seen = new Set();
+  for (let n = 0; n < 30; n++) {
+    pl(0).hand = [];
+    const e = foe(4, 6); e.keywords = ['Lifesteal'];
+    const card = getCard(e.cardId);
+    Object.assign(pl(0).mana, { max: 10, current: 10, base: 10 });
+    play(0, give(0, 'strip_the_plating'), e.uid);
+    const inst = pl(0).hand.find((h) => getCard(h.cardId).name.startsWith('Essence of'));
+    if (!inst) return `hand ${hand(0)}`;
+    const mine = put(0, 'bubble_slime');
+    const a0 = atkOf(mine); const h0 = mine.maxHealth;
+    Object.assign(pl(0).mana, { max: 10, current: 10, base: 10 });
+    play(0, inst, mine.uid);
+    const da = atkOf(mine) - a0, dh = mine.maxHealth - h0, kw = hasKeyword(mine, 'Lifesteal');
+    if (da === card.attack && !dh && !kw) seen.add('attack');
+    else if (dh === card.health && !da && !kw) seen.add('health');
+    else if (kw && !da && !dh) seen.add('keywords');
+    else return `bad essence ${da}/${dh}/${kw}`;
+    pl(0).board = []; pl(1).board = [];
+  }
+  if (seen.size !== 3) return `only saw ${[...seen]}`;
 });
 test('Caustic Bath draws a card per enemy brought to 0 Attack (max 2)', () => {
   foe(1, 5); foe(1, 5); foe(1, 5); foe(4, 5);
@@ -317,12 +323,11 @@ test('Emergency Neutralizer stops the attack if the attacker hits 0 Attack', () 
   attack(1, a.uid, pl(0).hero.uid, qp('emergency_neutralizer'));
   if (pl(0).hero.health !== s.rules.startingHealth || atkOf(a) !== 0) return `hero ${pl(0).hero.health} attacker ${atkOf(a)}`;
 });
-test('Shield-Eater dissolves Evade and then deals 2 damage', () => {
-  give(0, 'shield_eater'); endTurn();
-  const a = foe(3, 9); a.keywords = ['Evade']; a.sick = false;
-  const b = foe(3, 9); b.sick = false;
-  attack(1, b.uid, pl(0).hero.uid, (legal) => legal.find((x) => x.type === 'quickPlay' && x.target === a.uid));
-  if (hasKeyword(a, 'Evade') || a.health !== 7) return `kw ${a.keywords} hp ${a.health}`;
+test('Shield-Eater Dissolves an enemy minion', () => {
+  const a = foe(3, 9); a.keywords = ['Evade'];
+  Object.assign(pl(0).mana, { max: 10, current: 10, base: 10 });
+  play(0, give(0, 'shield_eater'), a.uid);
+  if (onBoard(a)) return 'survived';
 });
 test('Reactive Spill undoes an enemy buff and corrodes 2', () => {
   give(0, 'reactive_spill'); endTurn();
@@ -371,10 +376,10 @@ test('Brimstone Bile: lose 3, Corrosion 3 and 3 damage', () => {
   fusion('brimstone_bile', e.uid);
   if (pl(0).hero.health !== hp - 3 || atkOf(e) !== 2 || e.health !== 6) return `hero ${pl(0).hero.health} enemy ${atkOf(e)}/${e.health}`;
 }, 'Demons');
-test('Purifying Solvent corrodes Dark or Undead targets after dissolving them', () => {
+test('Purifying Solvent Dissolves an enemy minion', () => {
   const e = foe(5, 9);
   fusion('purifying_solvent', e.uid);
-  if (atkOf(e) !== 2) return `gargoyle (Dark) ${atkOf(e)}`;
+  if (onBoard(e)) return 'survived';
 }, 'Divine', ['Vampires', 'Robots']);
 test('Etching Drill: the upgraded minion corrodes what it attacks', () => {
   const m = put(0, 'bubble_slime'); const e = foe(4, 9);
