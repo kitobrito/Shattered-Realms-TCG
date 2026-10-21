@@ -3770,28 +3770,28 @@ body.reduced-motion .mbg-mist, body.reduced-motion .ts-logo-sheen, body.reduced-
    and press down when clicked. (The chain of :not()s keeps the special game buttons, End Turn,
    Hero Spells, the painted PLAY button and the like, on their own looks, and outranks the
    older per-screen button colours.) */
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift) {
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow) {
   font-family: var(--font-title); font-weight: 700; letter-spacing: 0.03em; color: #2a1606; text-shadow: 0 1px 0 #fff4d655;
   background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); border: 1px solid #3a2208; border-radius: 10px;
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -2px 0 #6a3e1088, 0 3px 0 #2a1806, 0 6px 14px #000a;
   transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, color 0.12s ease; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):hover:not(:disabled) { background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); filter: brightness(1.08); transform: translateY(-2px);
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):hover:not(:disabled) { background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); filter: brightness(1.08); transform: translateY(-2px);
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -2px 0 #6a3e1088, 0 5px 0 #2a1806, 0 9px 18px #000a, 0 0 18px #e7b55255; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):active:not(:disabled) { transform: translateY(2px); filter: brightness(0.96); transition-duration: 0.05s;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):active:not(:disabled) { transform: translateY(2px); filter: brightness(0.96); transition-duration: 0.05s;
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -1px 0 #6a3e1088, 0 1px 0 #2a1806, 0 2px 6px #000a; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):focus-visible { outline: 2px solid #ffe6a0; outline-offset: 3px; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):disabled { opacity: 0.45; filter: grayscale(0.5); cursor: default; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).ghost { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920); border-color: #a8834a99;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):focus-visible { outline: 2px solid #ffe6a0; outline-offset: 3px; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):disabled { opacity: 0.45; filter: grayscale(0.5); cursor: default; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow).ghost { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920); border-color: #a8834a99;
   box-shadow: inset 0 1px 0 #ffffff1c, 0 3px 0 #0a080c, 0 6px 12px #0009; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).ghost:hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; border-color: #e7b552; filter: none;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow).ghost:hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; border-color: #e7b552; filter: none;
   box-shadow: inset 0 1px 0 #ffffff26, 0 5px 0 #0a080c, 0 9px 16px #0009, 0 0 14px #e7b55233; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).ghost:active:not(:disabled) { box-shadow: inset 0 1px 0 #ffffff1c, 0 1px 0 #0a080c, 0 2px 6px #0009; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).on { color: #2a1606; text-shadow: 0 1px 0 #fff4d655; background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); border-color: #3a2208;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow).ghost:active:not(:disabled) { box-shadow: inset 0 1px 0 #ffffff1c, 0 1px 0 #0a080c, 0 2px 6px #0009; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow).on { color: #2a1606; text-shadow: 0 1px 0 #fff4d655; background: linear-gradient(180deg, #fbe7ae 0%, #e4b964 38%, #b9822f 72%, #8c5a1d 100%); border-color: #3a2208;
   box-shadow: inset 0 1px 0 #fff8d8, inset 0 -2px 0 #6a3e1088, 0 2px 0 #2a1806, 0 0 14px #e7b55244; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).danger { color: #fff1ee; text-shadow: 0 1px 2px #3a0006; background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); border-color: #3a0a10;
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow).danger { color: #fff1ee; text-shadow: 0 1px 2px #3a0006; background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); border-color: #3a0a10;
   box-shadow: inset 0 1px 0 #ffd0c8, inset 0 -2px 0 #5a0a1488, 0 3px 0 #2a0408, 0 6px 14px #000a; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift).danger:hover:not(:disabled) { background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); box-shadow: inset 0 1px 0 #ffd0c8, 0 5px 0 #2a0408, 0 9px 18px #000a, 0 0 18px #ff4a5a44; }
-button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift) small { font-family: var(--font-body); letter-spacing: 0.04em; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow).danger:hover:not(:disabled) { background: linear-gradient(180deg, #f08a7a 0%, #c9404a 45%, #8a1626 100%); box-shadow: inset 0 1px 0 #ffd0c8, 0 5px 0 #2a0408, 0 9px 18px #000a, 0 0 18px #ff4a5a44; }
+button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow) small { font-family: var(--font-body); letter-spacing: 0.04em; }
 /* Toggles sit flush, side by side. */
 .format-toggle button, .seg button { border-radius: 0; }
 .format-toggle button:first-child, .seg button:first-child { border-radius: 10px 0 0 10px; }
@@ -3801,11 +3801,11 @@ button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote
   stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .corner-buttons .ui-ico, .card-zoom .ui-ico, .log-head .ui-ico { margin: 0; width: 1.25em; height: 1.25em; }
 .coach .ui-ico, .coach b .ui-ico { color: #ffd877; }
-@media (prefers-reduced-motion: reduce) { button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow) { transition: none; } }
 /* In a row of toggles, the ones that are off read as secondary. */
-.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on) { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920);
+.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):not(.on), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):not(.on) { color: #ecdcc0; text-shadow: 0 1px 2px #000; background: linear-gradient(180deg, #34303a, #1c1920);
   border-color: #a8834a99; box-shadow: inset 0 1px 0 #ffffff1c, 0 3px 0 #0a080c; }
-.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on):hover:not(:disabled), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.on):hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; filter: none; }
+.seg button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):not(.on):hover:not(:disabled), .format-toggle button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote-btn):not(.book-tab):not(.log-tab):not(.qp-option):not(.m-shift):not(.zoom-flip-arrow):not(.on):hover:not(:disabled) { background: linear-gradient(180deg, #3e3944, #221e27); color: #fff3d6; filter: none; }
 .format-toggle { border: none; overflow: visible; }
 
 /* ==== Loading screen ==== */
@@ -4681,13 +4681,16 @@ body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shiftin
 /* ---- Lycanthropes in the collection: the Beast Form card peeks out behind the Humanoid Form ---- */
 .card:has(> .beast-behind) { isolation: isolate; }
 .card > .beast-behind { position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  transform: translate(11%, -5%) rotate(7deg); transform-origin: 50% 100%; filter: brightness(0.82) saturate(0.95); }
+  transform: translate(5%, -3.5%); filter: brightness(0.7); }
 .card > .beast-behind .big-card { width: 100%; height: 100%; }
-.card:hover > .beast-behind { transform: translate(16%, -7%) rotate(10deg); transition: transform 0.25s; }
-/* The full-size view shows the Beast Form alongside. */
-.zoom-beast { margin: 4px 0 10px; }
-.zoom-beast > .card { width: 190px; max-width: 60%; }
+/* The full-size view flips between the two forms with an arrow. */
+.zoom-flip { width: 100%; margin: 6px 0; }
+.zoom-wrap { position: relative; }
+.zoom-flip-arrow { position: absolute; z-index: 9; left: 50%; top: -22px; transform: translateX(-50%); pointer-events: auto; width: 46px; height: 46px; padding: 0 !important;
+  border-radius: 50% !important; font-size: 24px; line-height: 1; display: grid; place-items: center;
+  background: radial-gradient(circle at 40% 35%, #ffffff, #b8c8ff 45%, #3a4a8a) !important; border: 2px solid #e8eeff !important; color: #1a2040;
+  box-shadow: 0 0 12px rgba(200, 216, 255, 0.9), 0 3px 6px #000a; }
 
-/* A picked realm grows and gets a ring: keep its name clear below it, on top. */
-.faction.medallion.picked .medal-name { position: relative; z-index: 3; transform: translateY(6px); text-shadow: 0 1px 3px #000, 0 0 6px #000; }
-.faction.medallion.picked { margin-bottom: 6px; }
+/* The selection ring hugs the portrait at every size, and names sit clear below it. */
+.ts-fit .fg .medal-ring { width: calc(var(--m) + 14px); height: calc(var(--m) + 14px); top: -7px; margin-left: calc((var(--m) + 14px) / -2); }
+.faction.medallion .medal-name { position: relative; z-index: 3; margin-top: 7px; text-shadow: 0 1px 3px #000, 0 0 6px #000; }

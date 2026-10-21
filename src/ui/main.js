@@ -44,6 +44,7 @@ let animating = false;     // input is locked while an action animates
 let reactionTimer = null;  // Quick Play countdown: { key, deadline, interval }
 let zoomId = null;         // card id expanded in the collection / deck builder
 let zoomArt = false;       // showing the zoomed card's full, uncropped art
+let zoomBeast = false;     // Lycanthropes: the full-size view is showing the Beast Form side
 let mullMarked = [];       // mulligan: hand uids marked to swap
 let galleryOrder = [];     // card ids in collection order (for arrow-key paging)
 let history = [];          // play-history strip entries
@@ -2455,6 +2456,9 @@ function playZoomAnim(a) {
     app.querySelector('.zoom-overlay').animate([{ backgroundColor: 'rgba(0,0,0,0)', backdropFilter: 'blur(0px)' }, { backgroundColor: 'rgba(8,5,7,0.88)', backdropFilter: 'blur(7px)' }], { duration: 300, easing: 'ease-out' });
   } else if (a.dir) {
     card.animate([{ transform: `translateX(${a.dir * 70}px) rotate(${a.dir * 2}deg)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: ease });
+  } else if (a.flip) {
+    // Lycanthropes: the card turns over to its other form.
+    card.animate([{ transform: 'perspective(900px) rotateY(90deg)', filter: 'brightness(1.8)' }, { transform: 'none', filter: 'none' }], { duration: 320, easing: ease });
   }
   app.querySelector('.zoom-side')?.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: a.from ? 140 : 60, easing: ease, fill: 'backwards' });
   card.classList.add('foil-sweep');
@@ -2463,8 +2467,11 @@ const zoomFrom = (el) => { const r = (el.closest('.card') ?? el).getBoundingClie
 
 // The collection / builder zoom: the big card plus its keyword glossary. On phones the side
 // arrows give way to a nav bar above the card (and swiping), and the whole view scrolls.
-function zoomHTML(card) {
-  const i = galleryOrder.indexOf(card.id);
+function zoomHTML(base) {
+  const i = galleryOrder.indexOf(base.id);
+  // Lycanthropes: the arrow flips between the Humanoid and Beast Form cards.
+  const twin = base.beastForm ? getCard(base.beastForm) : null;
+  const card = twin && zoomBeast ? twin : base;
   const first = i <= 0, last = i >= galleryOrder.length - 1;
   const art = artOf(card);
   return `
@@ -2477,15 +2484,15 @@ function zoomHTML(card) {
           <button class="ghost" data-act="closeZoom" title="Close">✕</button>
         </div>
         <button class="zoom-arrow" data-act="zoomPrev" ${first ? 'disabled' : ''} title="Previous (←)">‹</button>
-        ${bigCardHTML(card).replace(/<\/div>\s*$/, '<i class="zoom-foil"></i></div>')}
+        ${bigCardHTML(card).replace(/<\/div>\s*$/, `<i class="zoom-foil"></i>${twin ? `<button class="zoom-flip-arrow" data-act="zoomFlip" title="Show the ${zoomBeast ? 'Humanoid' : 'Beast'} Form">⟲</button>` : ''}</div>`)}
         <aside class="zoom-side">
           <header class="zoom-head">
             <span class="zoom-faction">${crestHTML(card.faction)}<span>${esc(card.faction)}</span></span>
             <span class="zoom-count">${i + 1} / ${galleryOrder.length}</span>
             <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
           </header>
-          <div class="zoom-kind">${esc(kindOf(card))}</div>
-          ${card.beastForm && getCard(card.beastForm) ? `<div class="zoom-sub">Beast Form</div><div class="zoom-beast">${cardHTML(getCard(card.beastForm))}</div>` : ''}
+          <div class="zoom-kind">${card.form === 'beast' ? `Beast Form · ${card.cost}-Mana Minion` : esc(kindOf(card))}</div>
+          ${twin ? `<button class="zoom-flip ghost" data-act="zoomFlip">⟲ Show ${zoomBeast ? 'Humanoid' : 'Beast'} Form</button>` : ''}
           ${isLocked(card.id) ? '<div class="zoom-locked">🔒 Locked · every win unlocks 2 new cards</div>' : ''}
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
           ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}
@@ -3146,7 +3153,8 @@ function onButton(name) {
     case 'howtoPrev': howtoPage = Math.max(0, howtoPage - 1); sound.play('draw'); return render();
     case 'howtoNext': howtoPage = Math.min(HOWTO_PAGES - 1, howtoPage + 1); sound.play('draw'); return render();
     case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; howtoPage = 0; app.scrollTop = 0; return render();
-    case 'closeZoom': zoomId = null; zoomArt = false; return render();
+    case 'closeZoom': zoomId = null; zoomArt = false; zoomBeast = false; return render();
+    case 'zoomFlip': zoomBeast = !zoomBeast; zoomAnim = { flip: true }; return render();
     case 'zoomArt': zoomArt = true; return render();
     case 'closeArt': zoomArt = false; return render();
     case 'firstBegin':
@@ -3185,7 +3193,7 @@ function onButton(name) {
     case 'zoomPrev': case 'zoomNext': {
       const next = galleryOrder[Math.max(0, Math.min(galleryOrder.length - 1, galleryOrder.indexOf(zoomId) + (name === 'zoomNext' ? 1 : -1)))];
       if (next === zoomId) return;
-      zoomId = next; zoomAnim = { dir: name === 'zoomNext' ? 1 : -1 }; return render();
+      zoomId = next; zoomBeast = false; zoomAnim = { dir: name === 'zoomNext' ? 1 : -1 }; return render();
     }
     case 'menu':
       clearTimeout(aiTimer); drag.cancel(); hidePreview();
