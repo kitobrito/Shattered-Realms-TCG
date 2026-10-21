@@ -14,6 +14,9 @@ const DV = { faction: 'Divine', type: 'minion', tribes: ['Divine'] };
 const S = { faction: 'Divine', type: 'spell' };
 const T = { faction: 'Divine', type: 'trap' };
 
+// The Holy Pyre: Holy Flame on a target.
+const flame = (target, amount) => ({ op: 'holyFlame', target, amount });
+const ENEMY_MINION_T = { type: 'minion', side: 'enemy' };
 const heal = (target, amount) => ({ op: 'heal', target, amount, overheal: true });
 const FRIENDLY_CHARACTER = { type: 'character', side: 'friendly' };
 const FRIENDLY_MINION = { type: 'minion', side: 'friendly' };
@@ -218,4 +221,88 @@ export const DIVINE_CARDS = [
 
   // ---- Tokens ----
   { ...DV, id: 'spirit', name: 'Spirit', art: '👻', token: true, cost: 1, attack: 1, health: 1, keywords: ['Taunt'], text: 'Taunt.' },
+  // ---- The Holy Pyre expansion (unlockable): Holy Flame and Reduce to Ash ----
+  // Holy Flame: at the end of your turn each burning enemy takes its Holy Flame as damage (double
+  // to Dark / Undead), then it burns down by 1, and a burning character can't be healed. A minion that
+  // dies while burning is Reduced to Ash: removed, with no Graveyard, Exit or Reborn (engine).
+  {
+    ...DV, id: 'candle_acolyte', name: 'Candle Acolyte', art: '🕯️', extra: true, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Give an enemy minion 1 Holy Flame.',
+    target: ENEMY_MINION_T,
+    triggers: [{ on: 'battlecry', effects: [flame('chosen', 1)] }],
+  },
+  {
+    ...S, id: 'smite', name: 'Smite', art: '⚡', extra: true, cost: 1,
+    text: 'Deal 2 damage to a minion. If it is Dark or Undead, also give it 2 Holy Flame.',
+    target: { type: 'minion', side: 'any' },
+    effects: [{ op: 'damage', target: 'chosen', amount: 2 }, { ...flame('chosen', 2), if: { subject: 'chosen', darkOrUndead: true } }],
+  },
+  {
+    ...DV, id: 'sunlit_censer_bearer', name: 'Sunlit Censer-Bearer', art: '🪔', extra: true, cost: 2, attack: 1, health: 3,
+    text: 'At the end of your turn, give a random enemy 1 Holy Flame.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [flame({ randomOf: { characters: { side: 'enemy' } } }, 1)] }],
+  },
+  {
+    ...S, id: 'brand_of_the_righteous', name: 'Brand of the Righteous', art: '✝️', extra: true, cost: 2,
+    text: 'Give an enemy minion 3 Holy Flame. If it is Dark or Undead, draw a card.',
+    target: ENEMY_MINION_T,
+    effects: [flame('chosen', 3), { op: 'draw', count: 1, if: { subject: 'chosen', darkOrUndead: true } }],
+  },
+  {
+    ...DV, id: 'pyre_warden', name: 'Pyre Warden', art: '🛡️', extra: true, cost: 3, attack: 2, health: 4, keywords: ['Taunt'],
+    text: 'Taunt. Whenever an enemy is Reduced to Ash, restore 2 Health to your Hero.',
+    triggers: [{ on: 'minionAshed', filter: { player: 'enemy' }, effects: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }],
+  },
+  {
+    ...S, id: 'purging_light', name: 'Purging Light', art: '🌟', extra: true, cost: 3,
+    text: 'Quick Play: When an enemy minion attacks, give it 2 Holy Flame and -2 Attack this turn.',
+    quickPlay: { windows: ['attackDeclared'], filter: { source: 'enemyMinion' } },
+    effects: [flame('eventSource', 2), { op: 'buff', target: 'eventSource', attack: -2, temporary: true }],
+  },
+  {
+    ...DV, id: 'seraph_of_embers', name: 'Seraph of Embers', art: '👼', extra: true, cost: 3, attack: 3, health: 3, keywords: ['Elusive'], holyFlameBonus: true,
+    text: 'Elusive. Your Holy Flame deals 1 extra damage.',
+  },
+  {
+    ...T, id: 'halo_shatter', name: 'Halo Shatter', art: '💫', extra: true, cost: 3,
+    text: 'Trap: When your opponent Haunts a minion, Reduce it to Ash.',
+    trap: { on: 'minionHaunted', filter: { player: 'enemy' }, effects: [{ op: 'reduceToAsh', target: 'eventSource' }] },
+  },
+  {
+    ...DV, id: 'ashen_penitent', name: 'Ashen Penitent', art: '🧎', extra: true, cost: 4, attack: 4, health: 4,
+    text: "Arrival: Gain +1/+1 for each enemy you've Reduced to Ash this game (up to +3/+3).",
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: 'self', perAshed: { max: 3 } }] }],
+  },
+  {
+    ...S, id: 'judgment_bell', name: 'Judgment Bell', art: '🔔', extra: true, cost: 4,
+    text: 'Every enemy minion with Holy Flame takes damage equal to its Holy Flame.',
+    effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, perHolyFlame: true }],
+  },
+  {
+    ...DV, id: 'inquisitor_of_the_pyre', name: 'Inquisitor of the Pyre', art: '🏮', extra: true, cost: 5, attack: 4, health: 5,
+    text: 'Arrival: Give all enemy Dark and Undead minions 2 Holy Flame.',
+    triggers: [{ on: 'battlecry', effects: [flame({ minions: { side: 'enemy', darkOrUndead: true } }, 2)] }],
+  },
+  {
+    ...S, id: 'wall_of_holy_fire', name: 'Wall of Holy Fire', art: '🔥', extra: true, cost: 5,
+    text: 'Give all enemy minions 1 Holy Flame. Your minions get +1 Health.',
+    effects: [flame({ minions: { side: 'enemy' } }, 1), { op: 'buff', target: { minions: { side: 'friendly' } }, health: 1 }],
+  },
+  {
+    ...S, id: 'sacred_immolation', name: 'Sacred Immolation', art: '🕊️', extra: true, cost: 6,
+    text: 'Destroy an enemy minion with Holy Flame (it is Reduced to Ash). Gain Armor equal to its Attack.',
+    target: { type: 'minion', side: 'enemy', holyFlame: true },
+    effects: [{ op: 'gainArmor', amountFromAttackOf: 'chosen' }, { op: 'destroy', target: 'chosen' }],
+  },
+  {
+    ...DV, id: 'archon_of_the_final_pyre', name: 'Archon of the Final Pyre', art: '⚔️', extra: true, cost: 8, attack: 5, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: Deal 2 damage to all enemies and give them 1 Holy Flame.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: { characters: { side: 'enemy' } }, amount: 2 }, flame({ characters: { side: 'enemy' } }, 1)] }],
+  },
+  {
+    ...DV, id: 'dawnbreaker_the_cleansing_sun', name: 'Dawnbreaker, the Cleansing Sun', art: '☀️', extra: true, cost: 9, attack: 6, health: 6,
+    text: 'Arrival: Reduce every enemy minion with Holy Flame to Ash. Summon a 1/1 Ember Spirit for each.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'ashTheBurning' }] }],
+  },
+  { ...DV, id: 'ember_spirit', name: 'Ember Spirit', art: '✨', token: true, cost: 1, attack: 1, health: 1, text: '' },
 ];

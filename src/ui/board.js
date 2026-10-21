@@ -86,6 +86,7 @@ const kwIcon = (k, title) => `<img class="kw-ico" src="art/icons/${k}.png" alt="
 const STATUS_DEFS = [
   { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
   { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },
+  { k: 'holyflame', label: 'Holy', ico: '✨', test: (m) => m.holyFlame > 0, n: (m) => m.holyFlame, tip: (m) => `Holy Flame ${m.holyFlame}: takes ${m.holyFlame} damage at the end of its enemy's turn (double if Dark or Undead), can't be healed, and is Reduced to Ash if it dies` },
   { k: 'infected', label: 'Infected', ico: '🦠', test: (m) => m.infected != null, tip: 'Infected: when it dies, a 2/1 Rage Runner is summoned for the Infecting side' },
   { k: 'implanted', label: 'Implant', ico: '🥚', test: (m) => m.implanted != null, tip: 'Implanted: when it dies, a Chestburster bursts out for the other side' },
   { k: 'irradiated', label: 'Rad', ico: '☢', test: (m) => radiationOf(m) > 0, n: (m) => radiationOf(m), tip: (m) => `Radiation ${radiationOf(m)}: other characters without Radiation have ${radiationOf(m)} less Health` },
@@ -329,6 +330,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
       <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
+        ${h.holyFlame > 0 ? `<span class="hero-holy" title="Holy Flame ${h.holyFlame}: takes ${h.holyFlame} damage at the end of the enemy's turn and can't be healed">✨${h.holyFlame}</span>` : ''}
         ${radHTML(h)}${radHitHTML(h)}
         ${cracksSVG(crackStage(h))}
         <span class="m-ice"></span>

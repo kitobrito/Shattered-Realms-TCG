@@ -22,7 +22,7 @@ import {
   hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
   applyBurn, burnCards, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
-  corrode, acidCoat, dissolve, removeTempBuffs,
+  corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame,
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -304,6 +304,7 @@ export function checkCondition(state, cond, ctx) {
     if (cond.dead && !dead) return false;
     if (cond.alive && dead) return false;
     if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
+    if (cond.darkOrUndead && !isDarkOrUndead(c)) return false;
     if (cond.notTribe && (c.tribes ?? []).includes(cond.notTribe)) return false;
     if (cond.cardId && c.cardId !== cond.cardId) return false;
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
@@ -446,6 +447,12 @@ export const EFFECT_OPS = {
     }
     // attackPerEventAmount: +N Attack per unit of the event's amount (Fungal Colossus, per Mushroom).
     if (e.attackPerEventAmount) resolved = { ...resolved, attack: e.attackPerEventAmount * (ctx.event?.amount ?? 0) };
+    // perAshed: { max } — +1/+1 per enemy you've Reduced to Ash this game (Ashen Penitent).
+    if (e.perAshed) {
+      const n = Math.min(e.perAshed.max ?? 99, state.players[ctx.controller].ashed ?? 0);
+      if (!n) return;
+      resolved = { ...resolved, attack: n, health: n };
+    }
     // perRelicsPlayed: { max } — +1/+1 per Relic you've played this game (The Hollow Knight).
     if (e.perRelicsPlayed) {
       const n = Math.min(e.perRelicsPlayed.max ?? 99, state.players[ctx.controller].relicsPlayed ?? 0);
@@ -489,7 +496,8 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (c) => {
       // burningBonus: extra damage to a target that is Burning (Dragons).
       // darkBonus: extra holy damage to a Dark or Undead minion (Divine).
-      const amount = base + (e.burningBonus && isBurning(c) ? e.burningBonus : 0) + (e.darkBonus && isDarkOrUndead(c) ? e.darkBonus : 0)
+      if (e.perHolyFlame && !(c.holyFlame > 0)) return;
+      const amount = (e.perHolyFlame ? c.holyFlame : base) + (e.burningBonus && isBurning(c) ? e.burningBonus : 0) + (e.darkBonus && isDarkOrUndead(c) ? e.darkBonus : 0)
         + (e.irradiatedBonus && radiationOf(c) > 0 ? e.irradiatedBonus : 0);
       const responder = opponentOf(state.activePlayer);
       const event = { type: 'wouldTakeDamage', source: ctx.self, target: c.uid, player: c.controller, amount };
@@ -1895,7 +1903,9 @@ export const EFFECT_OPS = {
 
   // { amount } — friendly hero gains Armor.
   gainArmor(state, e, ctx) {
-    heroOf(state, ctx.controller).armor += e.amount;
+    // amountFromAttackOf: the Armor equals that character's Attack (Sacred Immolation).
+    const n = e.amountFromAttackOf ? effectiveAttack(findCharacter(state, resolveSelector(state, e.amountFromAttackOf, ctx)[0]) ?? { attack: 0, tempAttack: 0 }) : e.amount;
+    heroOf(state, ctx.controller).armor += n;
   },
 
   // ---- Robots (Arsenal Protocol): Hero Weapons ----
@@ -1923,6 +1933,28 @@ export const EFFECT_OPS = {
     w.durability += e.durability ?? 0;
     w.maxDurability = Math.max(w.maxDurability, w.durability);
     log(state, `${nameOf(state, hero)}'s ${w.name} becomes ${w.attack}/${w.durability}.`);
+  },
+
+  // ---- Divine (The Holy Pyre): Holy Flame and Reduce to Ash ----
+  // { target, amount } — set the targets alight with Holy Flame (adds to any already there).
+  holyFlame(state, e, ctx) {
+    each(state, e.target, ctx, (c) => applyHolyFlame(state, c, e.amount ?? 1, ctx.controller));
+  },
+
+  // { target } — Reduce a minion to Ash now (Halo Shatter).
+  reduceToAsh(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion') return;
+      c.holyFlame = Math.max(1, c.holyFlame ?? 0);
+      c.destroyed = true;
+    });
+  },
+
+  // Dawnbreaker: every enemy minion in Holy Flame is Reduced to Ash; a 1/1 Ember Spirit for each.
+  ashTheBurning(state, e, ctx) {
+    const burning = state.players[opponentOf(ctx.controller)].board.filter((m) => m.holyFlame > 0 && m.health > 0 && !m.destroyed);
+    for (const m of burning) m.destroyed = true;
+    if (burning.length) EFFECT_OPS.summon(state, { cardId: e.cardId ?? 'ember_spirit', count: burning.length }, ctx);
   },
 
   // ---- Ghosts (The Cursed Armory): Relics ----

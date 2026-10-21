@@ -257,6 +257,6 @@ export const DECK_TYPES = [
 export const EXPANSION_NAMES = {
   Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
   Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
-  Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
+  Divine: 'The Holy Pyre', Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
   Sharks: 'Sand Sharks',
 };
