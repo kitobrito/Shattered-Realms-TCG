@@ -104,11 +104,11 @@ test('Regenerate heals at the start of your turn (not past full)', () => {
   if (h.health !== 2) return 'overhealed';
 });
 
-test('Regurgitate returns a friendly minion; it costs 1 less', () => {
+test('Regurgitate returns a friendly minion', () => {
   const m = put(0, 'the_chewed_one');
   play(0, give(0, 'regurgitate'), m.uid);
   const inst = pl(0).hand.find((c) => c.cardId === 'the_chewed_one');
-  if (!inst || inst.costMod !== -1) return `${inst?.costMod}`;
+  if (!inst || inst.costMod) return `${inst?.costMod}`;
 });
 
 test('Stomach Lining Plate: +0/+2 and Acid Hide', () => {
@@ -173,7 +173,7 @@ test('The Undigested King melts the enemy Weapon, Relics and Armor and grows', (
   play(0, give(0, 'the_undigested_king'));
   const k = find(0, 'the_undigested_king');
   if (hero(1).weapon || g.relic || hero(1).armor) return 'something survived';
-  if (effectiveAttack(k) !== 8 || k.health !== 8) return `${effectiveAttack(k)}/${k.health}`;
+  if (effectiveAttack(k) !== 7 || k.health !== 7) return `${effectiveAttack(k)}/${k.health}`;
 });
 
 test('Return to the Stomach: removes the enemy (no Graveyard) and gives you a 2/2 Acid Hide copy', () => {

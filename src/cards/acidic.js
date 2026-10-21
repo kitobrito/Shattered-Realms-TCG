@@ -230,9 +230,9 @@ export const ACIDIC_CARDS = [
   },
   {
     ...S, id: 'regurgitate', name: 'Regurgitate', art: '🤮', extra: true, cost: 1,
-    text: 'Return a friendly minion to your hand. It costs 1 less.',
+    text: 'Return a friendly minion to your hand.',
     target: { type: 'minion', side: 'friendly' },
-    effects: [{ op: 'returnToHand', target: 'chosen', costChange: -1 }],
+    effects: [{ op: 'returnToHand', target: 'chosen' }],
   },
   {
     ...K, id: 'half_melted_hound', name: 'Half-Melted Hound', art: '🐕', extra: true, cost: 2, attack: 2, health: 2, keywords: ['Acid Hide'], regenerate: 1,
@@ -292,7 +292,7 @@ export const ACIDIC_CARDS = [
     text: 'Taunt. Acid Hide. Regenerate 2.',
   },
   {
-    ...K, id: 'the_undigested_king', name: 'The Undigested King', art: '👑', extra: true, cost: 9, attack: 6, health: 6, keywords: ['Acid Hide'], regenerate: 2,
+    ...K, id: 'the_undigested_king', name: 'The Undigested King', art: '👑', extra: true, cost: 9, attack: 5, health: 5, keywords: ['Acid Hide'], regenerate: 2,
     text: 'Acid Hide. Regenerate 2. Arrival: Destroy all enemy Weapons and Relics, and remove the enemy Hero\'s Armor. Gain +1/+1 for each Weapon or Relic destroyed.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'meltEnemyArsenal' }] }],
   },
