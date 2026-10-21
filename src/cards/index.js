@@ -31,6 +31,43 @@ import { VAMPIRE_CARDS } from './vampires.js';
 
 registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...FUSION_CARDS]);
 
+// Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
+// gold legendary frame (shared.js). A Lycanthrope's Beast Form is legendary with it.
+export const LEGENDARY = new Set([
+  'the_crimson_king',
+  'queen_of_the_red_veil',
+  'overmind_xalat',
+  'hive_queen_xaral',
+  'the_overgrowth',
+  'titan_arum',
+  'the_spore_queen',
+  'the_rot_king',
+  'tarman',
+  'the_outbreak',
+  'the_worldflame',
+  'glacius_the_winter_queen',
+  'the_world_eater',
+  'bael_first_king_of_hell',
+  'asmoday_king_of_greed',
+  'beleth_king_of_wrath',
+  'paimon_king_of_secrets',
+  'the_first_light',
+  'dawnbreaker_the_cleansing_sun',
+  'colossus_prime',
+  'the_irradiated_genius',
+  'the_hornet_empress',
+  'the_unburied_king',
+  'the_hollow_knight',
+  'the_unplaceable',
+  'the_teacher_beyond',
+  'king_of_the_red_wake',
+  'the_great_dissolution',
+  'the_undigested_king',
+  'the_first_beast',
+  'elder_of_the_first_moon',
+]);
+for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
+
 const isDeckCard = (c) => !c.token && !c.heroSpell;
 
 // The designer's standard list per faction (exactly 30). Expansion cards

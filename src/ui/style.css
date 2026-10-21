@@ -4677,3 +4677,17 @@ body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shiftin
 .big-card.shard.legend.t-minion .zoom-foil { --foil-frame: url('../../art/frames/legendary-minion.png'); }
 .big-card.shard.legend.t-spell .zoom-foil { --foil-frame: url('../../art/frames/legendary-spell.png'); }
 .big-card.shard.legend.t-trap .zoom-foil { --foil-frame: url('../../art/frames/legendary-trap.png'); }
+
+/* ---- Lycanthropes in the collection: the Beast Form card peeks out behind the Humanoid Form ---- */
+.card:has(> .beast-behind) { isolation: isolate; }
+.card > .beast-behind { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  transform: translate(11%, -5%) rotate(7deg); transform-origin: 50% 100%; filter: brightness(0.82) saturate(0.95); }
+.card > .beast-behind .big-card { width: 100%; height: 100%; }
+.card:hover > .beast-behind { transform: translate(16%, -7%) rotate(10deg); transition: transform 0.25s; }
+/* The full-size view shows the Beast Form alongside. */
+.zoom-beast { margin: 4px 0 10px; }
+.zoom-beast > .card { width: 190px; max-width: 60%; }
+
+/* A picked realm grows and gets a ring: keep its name clear below it, on top. */
+.faction.medallion.picked .medal-name { position: relative; z-index: 3; transform: translateY(6px); text-shadow: 0 1px 3px #000, 0 0 6px #000; }
+.faction.medallion.picked { margin-bottom: 6px; }
