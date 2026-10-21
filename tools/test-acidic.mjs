@@ -323,12 +323,10 @@ test('Emergency Neutralizer stops the attack if the attacker hits 0 Attack', () 
   attack(1, a.uid, pl(0).hero.uid, qp('emergency_neutralizer'));
   if (pl(0).hero.health !== s.rules.startingHealth || atkOf(a) !== 0) return `hero ${pl(0).hero.health} attacker ${atkOf(a)}`;
 });
-test('Shield-Eater Dissolves an attacker as a Quick Play', () => {
-  give(0, 'shield_eater'); endTurn();
-  const a = foe(3, 9); a.keywords = ['Evade']; a.sick = false;
-  const b = foe(3, 9); b.sick = false;
+test('Shield-Eater Dissolves an enemy minion', () => {
+  const a = foe(3, 9); a.keywords = ['Evade'];
   Object.assign(pl(0).mana, { max: 10, current: 10, base: 10 });
-  attack(1, b.uid, pl(0).hero.uid, (legal) => legal.find((x) => x.type === 'quickPlay' && x.target === a.uid));
+  play(0, give(0, 'shield_eater'), a.uid);
   if (onBoard(a)) return 'survived';
 });
 test('Reactive Spill undoes an enemy buff and corrodes 2', () => {

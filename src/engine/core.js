@@ -385,7 +385,7 @@ export function removeTempBuffs(state, m) {
 
 // Dissolving a minion distills it into a spell in the dissolver's hand that gives one
 // of their own minions one random piece of it for good: its printed Attack, its printed
-// Health, or its keywords. Stats cost half their total; keywords cost 1.
+// Health, or its keywords. It costs the stats it gives, or 2 for keywords.
 function distill(state, by, taken) {
   if (by == null || (!taken.attack && !taken.health && !taken.keywords.length)) return;
   const parts = [
@@ -394,7 +394,7 @@ function distill(state, by, taken) {
   ].filter(Boolean);
   const card = {
     id: `essence_${state.nextUid++}`, custom: true, token: true, faction: 'Acidic', type: 'spell',
-    name: `Essence of ${taken.name}`, art: '🧪', artFrom: taken.cardId, cost: Math.max(1, Math.round((taken.attack + taken.health) / 2) + (taken.keywords.length ? 1 : 0)),
+    name: `Essence of ${taken.name}`, art: '🧪', artFrom: taken.cardId, cost: Math.max(1, taken.attack + taken.health + (taken.keywords.length ? 2 : 0)),
     text: `Give a friendly minion ${parts.join(' and ')}.`,
     target: { type: 'minion', side: 'friendly' },
     effects: [{ op: 'buff', target: 'chosen',

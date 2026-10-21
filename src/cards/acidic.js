@@ -22,7 +22,7 @@ const once = (key, effects) => ({ op: 'oncePerTurn', key, effects });
 export const ACIDIC_CARDS = [
   // ---- Hero Spell ----
   {
-    ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 2, corrodes: true,
+    ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 3, corrodes: true,
     text: 'Apply Corrosion 1 to an enemy minion. At the start of each of your turns, if it survived, apply Corrosion 1 to it again.',
     // Ruling: one Reservoir target at a time; using it on a new minion moves the drip there.
     // Balance: the designer's first hit was Corrosion 2; 1 brought Acidic from 76% to ~50%.
@@ -85,7 +85,7 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'corrosiveSpell', filter: { player: 'friendly' }, effects: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }],
   },
   {
-    ...K, id: 'dissolver_mantis', name: 'Dissolver Mantis', art: '🦗', cost: 7, attack: 4, health: 3,
+    ...K, id: 'dissolver_mantis', name: 'Dissolver Mantis', art: '🦗', cost: 9, attack: 3, health: 3,
     text: 'Arrival: Dissolve an enemy minion.',
     target: ENEMY_MINION,
     triggers: [{ on: 'battlecry', effects: [dissolve('chosen')] }],
@@ -112,7 +112,7 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'battlecry', effects: [corrode({ minions: { side: 'enemy', minAttack: 4 } }, 3)] }],
   },
   {
-    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 9, attack: 6, health: 8,
+    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 8,
     text: 'Arrival: Apply Corrosion 2 to all enemy minions. Then deal 3 damage to each enemy minion with 0 Attack.',
     triggers: [{ on: 'battlecry', effects: [corrode(ENEMY_MINIONS, 2), { op: 'damage', target: { minions: { side: 'enemy', maxAttack: 0 } }, amount: 3 }] }],
   },
@@ -124,7 +124,7 @@ export const ACIDIC_CARDS = [
     target: { type: 'minion', side: 'any' }, effects: [corrode('chosen', 2)],
   },
   {
-    ...S, id: 'strip_the_plating', name: 'Strip the Plating', art: '🛡️', cost: 5,
+    ...S, id: 'strip_the_plating', name: 'Strip the Plating', art: '🛡️', cost: 7,
     text: 'Dissolve an enemy minion.',
     target: ENEMY_MINION, effects: [dissolve('chosen')],
   },
@@ -144,7 +144,7 @@ export const ACIDIC_CARDS = [
     target: ENEMY_MINION, effects: [{ op: 'removeTempBuffs', target: 'chosen' }, corrode('chosen', 4)],
   },
   {
-    ...S, id: 'total_dissolution', name: 'Total Dissolution', art: '☣️', cost: 8, corrodes: true,
+    ...S, id: 'total_dissolution', name: 'Total Dissolution', art: '☣️', cost: 9, corrodes: true,
     text: 'Apply Corrosion 3 to all enemy minions, then destroy any with 0 Attack.',
     effects: [corrode(ENEMY_MINIONS, 3), { op: 'destroy', target: { minions: { side: 'enemy', maxAttack: 0 } } }],
   },
@@ -183,8 +183,8 @@ export const ACIDIC_CARDS = [
     effects: [corrode('eventSource', 2)],
   },
   {
-    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 6, quickPlay: {},
-    text: 'Quick Play: Dissolve an enemy minion.',
+    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 8,
+    text: 'Dissolve an enemy minion.',
     target: ENEMY_MINION,
     effects: [dissolve('chosen')],
   },
@@ -274,7 +274,7 @@ export const ACIDIC_CARDS = [
     text: 'Acid Hide. Regenerate 2. Has +2 Attack while damaged.',
   },
   {
-    ...S, id: 'melting_embrace', name: 'Melting Embrace', art: '🫂', extra: true, cost: 7, corrodes: true,
+    ...S, id: 'melting_embrace', name: 'Melting Embrace', art: '🫂', extra: true, cost: 9, corrodes: true,
     text: 'Dissolve an enemy minion. Corrode all other enemy minions by 1.',
     target: ENEMY_MINION,
     effects: [dissolve('chosen'), corrode(ENEMY_MINIONS, 1)],
