@@ -12,6 +12,7 @@ import { AI_SPEEDS, applySettings, closeSettings, difficultySliderHTML, getSetti
 import { clearTips, HOWTO_PAGES, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
+import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
 import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
@@ -153,6 +154,19 @@ function storeSlots(factions, list) {
   try { localStorage.setItem(SLOTS_KEY, JSON.stringify(all)); } catch { flash('Could not save your decks.'); }
 }
 const sameDeck = (a, b) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
+// The decks you can pick for these factions: the premade decks (Classic, Expansion), then your saved ones.
+const deckChoices = (factions) => [
+  ...premadeDecks(factions).map((d) => ({ ...d, mine: false })),
+  ...deckSlots(factions).map((d) => ({ name: d.name, deck: d.deck, blurb: 'One of your saved decks.', mine: true })),
+];
+const lockedIn = (deck) => [...new Set(deck.filter(isLocked))];
+// The deck builder's complaint about a deck: locked cards first, then the deck rules.
+function builderProblem(factions, deck) {
+  const locked = lockedIn(deck);
+  if (locked.length) return `${locked.length} locked card${locked.length === 1 ? '' : 's'} in your deck: click ${locked.length === 1 ? 'it' : 'one'} in the list to swap it for a card you own, or remove ${locked.length === 1 ? 'it' : 'them'}.`;
+  return deckProblem(factions, deck);
+}
+let replaceFor = null; // deck builder: the locked card whose replacements are showing
 let draftDeck = null; // deck builder: { cardId: copies }
 const deckSizeFor = (factions) => (factions.length === 1 ? DEFAULT_RULES.singleDeckSize : DEFAULT_RULES.pairDeckSize);
 const countsOf = (deck) => deck.reduce((m, id) => ({ ...m, [id]: (m[id] ?? 0) + 1 }), {});
@@ -1977,6 +1991,19 @@ function onDesync() {
 
 // ---- Screens --------------------------------------------------------------
 
+// The deck picker under the deck line: premade decks and your saved ones. One that needs
+// locked cards shows a lock; picking it opens it in the deck builder to swap those out.
+function deckChoicesHTML() {
+  const current = pairDeckFor(picked);
+  return `<div class="deck-choices"><span class="ds-label">Decks:</span>${deckChoices(picked).map((d, i) => {
+    const locked = lockedIn(d.deck);
+    const on = !locked.length && sameDeck(d.deck, current);
+    const tip = locked.length ? `${d.blurb} Needs ${locked.length} locked card${locked.length === 1 ? '' : 's'}: opens in the deck builder so you can swap ${locked.length === 1 ? 'it' : 'them'} out.` : d.blurb;
+    return `<button class="ghost dc-chip ${on ? 'on' : ''} ${locked.length ? 'locked' : ''} ${d.mine ? 'mine' : ''}" data-pickdeck="${i}" title="${esc(tip)}">${esc(d.name)}${locked.length ? ` <span class="dc-lock">🔒${locked.length}</span>` : ''}</button>`;
+  }).join('')}</div>`;
+}
+// The name of the deck you'll play, if it matches a premade or saved deck.
+const currentDeckName = () => deckChoices(picked).find((d) => sameDeck(d.deck, pairDeckFor(picked)))?.name ?? null;
 function deckLineHTML() {
   if (picked.length !== pickNeeded()) return `<p class="deck-line sub">Pick ${pickNeeded() === 1 ? 'a faction' : `${pickNeeded()} factions`} to build your deck.</p>`;
   if (format === 'single') {
@@ -1986,9 +2013,9 @@ function deckLineHTML() {
     const doubles = Object.values(countsOf(deck)).filter((n) => n > 1).length;
     return `
     <div class="deck-line">
-      <div><b>Your deck: ${deck.length} cards</b> <span class="sub">${esc(f)} · ${custom ? 'your deck' : 'recommended deck'}${doubles ? ` · ${doubles} doubled` : ''}</span></div>
+      <div><b>Your deck: ${esc(currentDeckName() ?? `${deck.length} cards`)}</b> <span class="sub">${esc(f)} · ${deck.length} cards${doubles ? ` · ${doubles} doubled` : ''}</span></div>
       <button data-act="editCuts">${custom ? 'Edit my deck' : 'Build my deck'}</button>
-      ${custom ? '<button data-act="resetCuts" class="ghost">Use recommended deck</button>' : ''}
+      ${deckChoicesHTML()}
     </div>`;
   }
   const custom = customDeckFor(picked);
@@ -1997,9 +2024,9 @@ function deckLineHTML() {
   const doubles = Object.values(countsOf(deck)).filter((n) => n > 1).length;
   return `
     <div class="deck-line">
-      <div><b>Your deck: ${deck.length} cards</b> <span class="sub">${esc(picked.join(' + '))} · ${custom ? 'your deck' : 'recommended deck'} (${esc(split)}${doubles ? ` · ${doubles} doubled` : ''})</span></div>
+      <div><b>Your deck: ${esc(currentDeckName() ?? `${deck.length} cards`)}</b> <span class="sub">${esc(picked.join(' + '))} · ${deck.length} cards (${esc(split)}${doubles ? ` · ${doubles} doubled` : ''})</span></div>
       <button data-act="editCuts">${custom ? 'Edit my deck' : 'Build my deck'}</button>
-      ${custom ? '<button data-act="resetCuts" class="ghost">Use recommended deck</button>' : ''}
+      ${deckChoicesHTML()}
     </div>`;
 }
 
@@ -2252,7 +2279,7 @@ function renderBuilder() {
   const need = deckSizeFor(picked);
   const deck = deckOf(draftDeck);
   const n = deck.length;
-  const problem = deckProblem(picked, deck);
+  const problem = builderProblem(picked, deck);
   const pool = (f) => galleryCards(f).filter((c) => FACTION_POOLS[f].includes(c.id));
   galleryOrder = picked.flatMap((f) => pool(f).map((c) => c.id));
   const heroSpells = picked.flatMap((f) => galleryCards(f).filter((c) => c.heroSpell));
@@ -2270,8 +2297,8 @@ function renderBuilder() {
   const deckPanel = `<aside class="deck-panel" data-deckdrop>
       <header><b>Your deck</b><span class="${!problem ? 'done' : ''}">${n} / ${need}</span></header>
       ${manaCurveHTML(deck)}
-      <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${c.faction.toLowerCase()}" data-deckrow="${c.id}" title="Drag out or click to remove one">
-        <span class="dr-cost">${c.cost}</span><span class="dr-name">${esc(c.name)}</span>${artOf(c) ? `<i class="dr-art" style="background-image:url('${artOf(c)}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
+      <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${c.faction.toLowerCase()} ${isLocked(c.id) ? 'locked' : ''}" data-deckrow="${c.id}" title="${isLocked(c.id) ? 'Locked: click to swap it for a card you own' : 'Drag out or click to remove one'}">
+        <span class="dr-cost">${c.cost}</span><span class="dr-name">${isLocked(c.id) ? '🔒 ' : ''}${esc(c.name)}</span>${artOf(c) ? `<i class="dr-art" style="background-image:url('${artOf(c)}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
     </aside>`;
   // One faction's cards at a time (tabs), a page at a time.
@@ -2300,6 +2327,8 @@ function renderBuilder() {
       </div>
       ${problem && n ? `<p class="builder-hint">${esc(problem)}</p>` : ''}
       <div class="deck-slots">
+        <span class="ds-label">Premade:</span>
+        ${premadeDecks(picked).map((d, i) => { const lk = lockedIn(d.deck).length; return `<span class="ds-chip ${sameDeck(d.deck, deck) ? 'on' : ''}"><button class="ghost" data-premade="${i}" title="${esc(d.blurb)}${lk ? ` ${lk} of its cards are locked.` : ''}">${esc(d.name)}${lk ? ` 🔒${lk}` : ''}</button></span>`; }).join('')}
         <span class="ds-label">My decks:</span>
         ${deckSlots(picked).map((d, i) => `<span class="ds-chip ${sameDeck(d.deck, deckOf(draftDeck)) ? 'on' : ''}"><button class="ghost" data-slot="${i}" title="Load this deck">${esc(d.name)}</button><button class="ghost ds-del" data-slotdel="${i}" title="Delete this deck">✕</button></span>`).join('') || '<span class="sub">none yet</span>'}
         <input class="ds-name" maxlength="24" placeholder="New deck name">
@@ -2310,6 +2339,7 @@ function renderBuilder() {
         ${deckPanel}
       </div>
     </div>
+    ${replaceFor && draftDeck[replaceFor] ? replacePopHTML(replaceFor) : ''}
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
   app.scrollTop = scrollY;
   // The deck list sticks just under the builder bar, whatever height the bar wraps to.
@@ -2322,6 +2352,27 @@ function renderBuilder() {
     deckFly = null;
     builderFlash = null;
   }
+}
+
+// Swapping out a locked card: the closest cards you own (same faction, nearest cost, same type
+// first) that still have room for another copy.
+function replaceOptions(id) {
+  const c = getCard(id);
+  return [...new Set(picked.flatMap((f) => FACTION_POOLS[f]))].map(getCard)
+    .filter((x) => x.id !== id && x.faction === c.faction && !isLocked(x.id) && (draftDeck[x.id] ?? 0) < DEFAULT_RULES.maxCopies)
+    .sort((a, b) => Math.abs(a.cost - c.cost) - Math.abs(b.cost - c.cost) || (a.type === c.type ? 0 : 1) - (b.type === c.type ? 0 : 1) || a.cost - b.cost)
+    .slice(0, 4);
+}
+function replacePopHTML(id) {
+  const c = getCard(id);
+  const k = draftDeck[id] ?? 0;
+  const opts = replaceOptions(id);
+  return `<div class="replace-pop" data-act="replaceCancel"><div class="rp-box" data-stop>
+      <h3>🔒 ${esc(c.name)} is locked</h3>
+      <p class="sub">Pick a card you own to take its place${k > 1 ? ` (one copy at a time, ${k} in your deck)` : ''}:</p>
+      <div class="rp-cards">${opts.map((o) => `<div class="rp-opt" data-replace="${o.id}">${cardHTML(o)}</div>`).join('') || '<p class="sub">No cards left to swap in.</p>'}</div>
+      <div class="rp-buttons"><button class="ghost" data-act="replaceRemove">Just remove it</button><button class="ghost" data-act="replaceCancel">Cancel</button></div>
+    </div></div>`;
 }
 
 // The deck's mana curve: how many cards at each cost (7+ together), as small bars.
@@ -3080,7 +3131,42 @@ app.addEventListener('click', (e) => {
   const pgBtn = e.target.closest('[data-page]');
   if (pgBtn) return pageTurn(pgBtn.closest('.pager'), Number(pgBtn.dataset.page));
   const btn = e.target.closest('[data-act]');
-  if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
+  if (btn && !((btn.classList.contains('zoom-overlay') || btn.classList.contains('replace-pop')) && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
+  // Swapping a locked card in the deck builder for one you own (one copy at a time).
+  const rep = e.target.closest('[data-replace]');
+  if (rep && screen === 'builder' && replaceFor) {
+    const id = rep.dataset.replace;
+    draftDeck = { ...draftDeck, [replaceFor]: (draftDeck[replaceFor] ?? 0) - 1, [id]: (draftDeck[id] ?? 0) + 1 };
+    if (!draftDeck[replaceFor]) { delete draftDeck[replaceFor]; replaceFor = null; }
+    builderFlash = id;
+    sound.play('cardPlay');
+    return render();
+  }
+  // Premade decks in the deck builder: load one, locked cards and all (they're marked).
+  const preBtn = e.target.closest('[data-premade]');
+  if (preBtn && screen === 'builder') {
+    const d = premadeDecks(picked)[Number(preBtn.dataset.premade)];
+    if (d) {
+      draftDeck = countsOf(d.deck);
+      const lk = lockedIn(d.deck).length;
+      flash(lk ? `Loaded "${d.name}". ${lk} of its cards are locked: click a 🔒 card in your deck to swap it.` : `Loaded "${d.name}". Press Save deck to play it.`);
+      return render();
+    }
+  }
+  // The deck picker on the menu: play a premade or saved deck (one with locked cards opens in the builder).
+  const pickBtn = e.target.closest('[data-pickdeck]');
+  if (pickBtn && (screen === 'menu' || screen === 'online')) {
+    const d = deckChoices(picked)[Number(pickBtn.dataset.pickdeck)];
+    if (!d) return;
+    if (lockedIn(d.deck).length) {
+      builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(d.deck); zoomId = null; screen = 'builder'; app.scrollTop = 0;
+      flash(`"${d.name}" needs ${lockedIn(d.deck).length} locked card${lockedIn(d.deck).length === 1 ? '' : 's'}: click a 🔒 card in your deck to swap it, then Save deck.`);
+      return render();
+    }
+    storeDeck(picked, sameDeck(d.deck, recommendedDeck(picked)) ? null : d.deck);
+    flash(`Playing "${d.name}".`);
+    return render();
+  }
   // Named decks in the deck builder: load one, or delete it.
   const slotBtn = e.target.closest('[data-slot]');
   if (slotBtn && screen === 'builder') {
@@ -3122,6 +3208,7 @@ app.addEventListener('click', (e) => {
 
   if (screen === 'builder' && builderMode === 'cut' && builderSuppressClick) { builderSuppressClick = false; return; }
   const deckRow = e.target.closest('[data-deckrow]');
+  if (deckRow && inBuilder() && isLocked(deckRow.dataset.deckrow)) { replaceFor = deckRow.dataset.deckrow; return render(); }
   if (deckRow && inBuilder()) return removeFromDraft(deckRow.dataset.deckrow);
   if (cutCard && inBuilder()) { zoomId = cutCard.dataset.cut; zoomAnim = zoomFrom(cutCard); return render(); }
   if (cutCard && screen === 'builder') {
@@ -3232,7 +3319,7 @@ function onButton(name) {
     case 'milestoneOk': { const m = milestone; milestone = null; sound.play('click'); if (m?.kind === 'fusion') setFormat('pair'); return render(); }
     case 'journeySkip': unlockEverything(); sound.play('click'); flash('Everything is unlocked: all realms, two-faction decks, traps and Quick Plays.'); return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
-    case 'editCuts': builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
+    case 'editCuts': replaceFor = null; builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
     case 'formatPair': setFormat('pair'); return render();
     case 'formatSingle': setFormat('single'); return render();
     case 'resetCuts': storeDeck(picked, null); storeCuts(picked, null); flash('Using the recommended deck.'); return render();
@@ -3247,9 +3334,11 @@ function onButton(name) {
       return render();
     }
     case 'cutClear': draftDeck = {}; return render();
+    case 'replaceCancel': replaceFor = null; return render();
+    case 'replaceRemove': if (replaceFor) { const id = replaceFor; replaceFor = null; removeFromDraft(id); } return;
     case 'slotSave': {
       const deck = deckOf(draftDeck);
-      if (deckProblem(picked, deck)) return flash(deckProblem(picked, deck));
+      if (builderProblem(picked, deck)) return flash(builderProblem(picked, deck));
       const list = deckSlots(picked);
       if (list.length >= 12) return flash('You can keep up to 12 decks for this pair. Delete one first.');
       const name = (app.querySelector('.ds-name')?.value ?? '').trim().slice(0, 24) || `Deck ${list.length + 1}`;
@@ -3260,7 +3349,7 @@ function onButton(name) {
     }
     case 'cutSave': {
       const deck = deckOf(draftDeck);
-      if (deckProblem(picked, deck)) return flash(deckProblem(picked, deck));
+      if (builderProblem(picked, deck)) return flash(builderProblem(picked, deck));
       const rec = countsOf(recommendedDeck(picked));
       const same = Object.keys(rec).length === Object.keys(draftDeck).length && Object.entries(rec).every(([id, k]) => draftDeck[id] === k);
       storeDeck(picked, same ? null : deck);

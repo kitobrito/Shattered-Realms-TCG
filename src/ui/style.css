@@ -4727,3 +4727,24 @@ body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shiftin
 .big-card.shard.legend.t-spell .bc-cost { left: 2.4% !important; top: 1.6% !important; width: 16% !important; height: 12.4% !important; }
 .big-card.shard.legend .bc-cost.cheaper { color: #8affa8 !important; }
 .big-card.shard.legend .bc-cost.pricier { color: #ff9aa4 !important; }
+
+/* Deck picker (menu) and premade decks: Classic, Expansion and your saved decks. */
+.deck-choices { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.deck-choices .ds-label { font-weight: 700; color: #e7c27a; font-size: 13px; }
+.dc-chip { padding: 3px 12px !important; font-size: 13px !important; border-radius: 999px !important; }
+.dc-chip.on { border-color: #ffd25a !important; box-shadow: 0 0 8px #ffd25a88; color: #ffe9a8; }
+.dc-chip.mine::before { content: '★ '; color: #e7c27a; }
+.dc-chip.locked { opacity: 0.75; border-style: dashed !important; }
+.dc-lock { font-size: 0.9em; color: #ffb3a0; }
+.ts-fit .deck-line .deck-choices { flex-wrap: wrap; }
+/* A locked card in the deck list: red-tinted, click it to swap. */
+.deck-row.locked { border-color: #c0504088 !important; background: linear-gradient(90deg, #4a1a14, #2a1410) !important; }
+.deck-row.locked .dr-name { color: #ffb3a0; }
+.deck-row.locked .dr-art { filter: grayscale(0.8) brightness(0.6); }
+.replace-pop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: #000a; padding: 16px; }
+.replace-pop .rp-box { background: #1e1610; border: 2px solid #6a5530; border-radius: 14px; padding: 14px 16px; max-width: min(720px, 100%); max-height: 92vh; overflow: auto; text-align: center; }
+.replace-pop h3 { margin: 0 0 4px; font-family: var(--font-title); color: #ffd98a; }
+.replace-pop .rp-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 12px 0; }
+.replace-pop .rp-opt { cursor: pointer; transition: transform 0.12s; }
+.replace-pop .rp-opt:hover { transform: translateY(-4px) scale(1.03); }
+.replace-pop .rp-buttons { display: flex; justify-content: center; gap: 10px; }
