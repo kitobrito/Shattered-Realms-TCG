@@ -16,7 +16,8 @@ import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
 import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
-import { canPokeBoard, hideBoard, pokeBoard, showBoard } from './board-layer.js';
+import { canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
+import { startCircleFx } from './circle-fx.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
@@ -234,6 +235,9 @@ function startGame(mode, factions = picked, rivalFactions = randomPick()) {
 
 function enterGame(isNew = false) {
   game.stats ??= freshStats();
+  // A new match starts at the surface (a resumed one jumps straight to its circle).
+  resetDescentBoard();
+  pCircle?.ctl?.stop(); pCircle = null;
   endArmed = null;
   concedeAsk = false;
   restoreCustomCards(game.state); // Hybrids etc. from a saved game
@@ -1989,6 +1993,28 @@ function onDesync() {
   link.send({ t: 'needSync' });
 }
 
+// Portrait boards are part of the arena (re-drawn each render), so the circle's living
+// effects re-attach to the new host after every render, reusing the running animation.
+let pCircle = null; // { n, ctl, host }
+function portraitCircleFx(root, depth) {
+  const host = root.querySelector('.pboard-fx');
+  if (!host || !depth) { pCircle?.ctl?.stop(); pCircle = null; return; }
+  if (pCircle && pCircle.n === depth) {
+    if (pCircle.ctl && pCircle.ctl.canvas.parentNode !== host) host.append(pCircle.ctl.canvas);
+    return;
+  }
+  pCircle?.ctl?.stop();
+  const mine = { n: depth, ctl: null };
+  pCircle = mine;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  startCircleFx(host, depth, 'portrait').then((ctl) => {
+    if (pCircle !== mine) { ctl?.stop(); return; }
+    mine.ctl = ctl;
+    const now = app.querySelector('.pboard-fx');
+    if (ctl && now && ctl.canvas.parentNode !== now) now.append(ctl.canvas);
+  }).catch(() => {});
+}
+
 // ---- Screens --------------------------------------------------------------
 
 // The deck picker under the deck line: premade decks and your saved ones. One that needs
@@ -2684,8 +2710,9 @@ function renderGame() {
     canUndo: undoStack.length > 0 && !animating && s.activePlayer === viewer && !s.pending, recap: recap && s.activePlayer === viewer && !s.gameOver ? { ...recap, fresh: Date.now() - recap.at < 600 } : null,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
   });
-  if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0]); else hideBoard();
+  if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0], s.descent?.depth ?? 0); else hideBoard();
   layoutPortraitBoard(app);
+  portraitCircleFx(app, s.descent?.depth ?? 0);
   layoutHands(app);
   // The results panel's numbers count up the first time it appears.
   const summary = app.querySelector('.game-over.fresh');

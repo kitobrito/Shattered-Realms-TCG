@@ -167,3 +167,29 @@ export const LANDSCAPE_BOARDS = {
       P([25, 485, 70, 545], 'wobble', '#c8e8d8', { sound: 'knock' }), P([915, 485, 980, 545], 'blink', '#5aff8a', { sound: 'chime' })] },
 };
 
+
+// ---- Demons: the Circles of Hell (the Descent) --------------------------------------
+// When a Demon player is in the match, the battle sinks through seven circles and BOTH players'
+// boards change to the current circle's painting (board.js picks these over the faction board).
+// Hero frame openings and battlefields measured from each painting like the faction boards.
+// The living effects for each circle are in src/ui/circle-fx-defs.js.
+export const CIRCLE_BOARDS = {
+  land: {
+    1: { src: 'art/boards-v2/circle1.jpg', opp: [467, 34, 556, 124], me: [466, 448, 557, 538], field: [100, 125, 925, 445] },
+    2: { src: 'art/boards-v2/circle2.jpg', opp: [470, 48, 554, 140], me: [470, 436, 554, 528], field: [150, 130, 875, 440] },
+    3: { src: 'art/boards-v2/circle3.jpg', opp: [474, 63, 549, 148], me: [470, 448, 553, 540], field: [150, 140, 875, 440] },
+    4: { src: 'art/boards-v2/circle4.jpg', opp: [472, 24, 552, 125], me: [470, 437, 554, 538], field: [150, 125, 870, 440] },
+    5: { src: 'art/boards-v2/circle5.jpg', opp: [467, 25, 552, 122], me: [466, 434, 555, 538], field: [150, 125, 870, 440] },
+    6: { src: 'art/boards-v2/circle6.jpg', opp: [470, 25, 555, 125], me: [470, 437, 555, 538], field: [100, 110, 925, 450] },
+    7: { src: 'art/boards-v2/circle7.jpg', opp: [470, 30, 555, 125], me: [470, 437, 555, 528], field: [160, 140, 870, 440] },
+  },
+  portrait: {
+    1: { src: 'art/boards-portrait/circle1.jpg', opp: [189, 44, 270, 130, 'arch'], me: [189, 912, 270, 998, 'arch'], field: [140, 890] },
+    2: { src: 'art/boards-portrait/circle2.jpg', opp: [185, 90, 273, 195, 'arch'], me: [188, 858, 271, 958, 'arch'], field: [210, 840] },
+    3: { src: 'art/boards-portrait/circle3.jpg', opp: [192, 125, 267, 210, 'arch'], me: [188, 830, 270, 912, 'arch'], field: [230, 810] },
+    4: { src: 'art/boards-portrait/circle4.jpg', opp: [185, 80, 274, 178, 'arch'], me: [186, 830, 273, 935, 'arch'], field: [200, 810] },
+    5: { src: 'art/boards-portrait/circle5.jpg', opp: [187, 76, 272, 178, 'arch'], me: [183, 815, 275, 918, 'arch'], field: [200, 800] },
+    6: { src: 'art/boards-portrait/circle6.jpg', opp: [185, 125, 273, 225, 'arch'], me: [183, 870, 275, 970, 'arch'], field: [240, 855] },
+    7: { src: 'art/boards-portrait/circle7.jpg', opp: [184, 95, 274, 185, 'arch'], me: [188, 820, 271, 900, 'arch'], field: [215, 800] },
+  },
+};

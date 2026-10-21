@@ -1,12 +1,13 @@
 // The battle screen: a Hearthstone-style table. Pure rendering — input lives
 // in drag.js, animation in fx.js, and the action loop in main.js.
 
-import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, mushroomsIn, radiationOf } from '../engine/core.js';
+import { CIRCLES } from '../engine/rules.js';
+import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, heroSpellCost, mushroomsIn, radiationOf } from '../engine/core.js';
 import { actingPlayer } from '../engine/engine.js';
 import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
-import { BOARD_ART, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
+import { BOARD_ART, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { isMuted, play as playSound } from './sound.js';
 import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
@@ -235,7 +236,7 @@ function fusionHTML(pl, legal, mine) {
       ${ready ? '<span class="fusion-ready">FUSION READY</span>' : ''}</button>`;
 }
 
-function heroSpellsHTML(pl, legal, mine) {
+function heroSpellsHTML(pl, legal, mine, s = null) {
   return pl.heroSpells.map((hs) => {
     const card = getCard(hs.cardId);
     const usable = mine && legal.some((a) => a.type === 'heroSpell' && a.card === hs.cardId);
@@ -243,7 +244,7 @@ function heroSpellsHTML(pl, legal, mine) {
     return `<button class="hero-spell ${usable ? 'usable' : ''} ${hs.uses ? 'used' : ''} ${hs.cooldown > 0 ? 'cooling' : ''}" data-hs="${hs.cardId}" data-preview="${card.id}" ${usable ? '' : 'disabled'}>
       ${hs.cooldown > 0 ? `<span class="cooldown-badge" title="Ready in ${hs.cooldown} turn${hs.cooldown === 1 ? '' : 's'}">⏳${hs.cooldown}</span>` : ''}
       <span class="hs-flip"><span class="hs-face front">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span><span class="hs-face back"></span></span>
-      <b class="hs-cost">${card.cost}</b>
+      <b class="hs-cost ${s && heroSpellCost(s, card) > card.cost ? 'pricier' : ''}">${s ? heroSpellCost(s, card) : card.cost}</b>
       ${hs.cardId === 'infernal_summoning' ? tierHTML(pl) : ''}</button>`;
   }).join('');
 }
@@ -344,7 +345,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
     </div>`;
 }
 
@@ -592,6 +593,18 @@ function propsHTML(props, [W, H], src, cuts = null) {
   }).join('')}</div>`;
 }
 
+// The Descent gauge (Demons' Circles of Hell): seven circles down the side of the battlefield,
+// the current one lit, and how close the battle is to sinking again.
+function descentHTML(d) {
+  const c = CIRCLES[d.depth - 1];
+  const fill = d.depth >= CIRCLES.length ? 1 : d.points / d.need;
+  return `<div class="descent-gauge ${d.depth ? 'sunk' : ''}" title="${esc(c ? `The ${c.ordinal} Circle: ${c.name}. ${c.text}` : 'The battle stands at the gates of Hell.')}${d.depth < CIRCLES.length ? ` ${d.need - d.points} more to sink (Health Demon players pay, and minions dying).` : ''}">
+    <div class="dg-rings">${CIRCLES.map((x) => `<i class="${x.n <= d.depth ? 'past' : ''} ${x.n === d.depth ? 'now' : ''}">${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][x.n - 1]}</i>`).join('')}</div>
+    <div class="dg-fill"><b style="height:${(fill * 100).toFixed(0)}%"></b></div>
+    ${c ? `<div class="dg-name">${esc(c.name)}</div>` : ''}
+  </div>`;
+}
+
 export function boardHTML(ctx) {
   const { s, me, legal, handoff, isAI } = ctx;
   const opp = 1 - me;
@@ -618,26 +631,31 @@ export function boardHTML(ctx) {
   const shiftable = new Set(legal.filter((a) => a.type === 'transform').map((a) => a.minion));
   const faction = mp.factions[0].toLowerCase();
   // The painting itself is drawn by board-layer.js (behind the arena), so it survives re-renders.
-  const board = paintedBoards() && BOARD_ART[mp.factions[0]];
+  // Demons' Descent: once the battle has sunk, BOTH players fight on the current circle's board.
+  const depth = s.descent?.depth ?? 0;
+  const circle = depth > 0 ? depth : null;
+  const board = paintedBoards() && (circle ? CIRCLE_BOARDS.land[circle].src : BOARD_ART[mp.factions[0]]);
   // Portrait: the faction's portrait board (its own painting, lined up by layoutPortraitBoard);
   // without one, the landscape board fills the screen behind the table, darkened.
   const portrait = !board && portraitLayout();
-  const pb = portrait ? PORTRAIT_BOARDS[mp.factions[0]] : null;
+  const pb = portrait ? (circle ? CIRCLE_BOARDS.portrait[circle] : PORTRAIT_BOARDS[mp.factions[0]]) : null;
   // Boards with cut-out props show the clean plate (the props are drawn over it).
-  const art = portrait && (BOARD_CUTS.portrait?.[mp.factions[0]]?.plate ?? pb?.src ?? BOARD_ART[mp.factions[0]]);
+  const art = portrait && (circle ? pb.src : BOARD_CUTS.portrait?.[mp.factions[0]]?.plate ?? pb?.src ?? BOARD_ART[mp.factions[0]]);
   const artUrl = art ? new URL(art, document.baseURI).href : '';
   const artStyle = art ? `style="--art: url('${artUrl}')"` : '';
   const pbCls = pb ? `p-board opp-${pb.opp[4]} me-${pb.me[4]}` : '';
   // Landscape boards with their own layout: frame and battlefield positions as CSS
   // variables (container units of the 16:9 arena), plus the animated corner props.
-  const lb = board ? LANDSCAPE_BOARDS[mp.factions[0]] : null;
+  const lb = board ? (circle ? CIRCLE_BOARDS.land[circle] : LANDSCAPE_BOARDS[mp.factions[0]]) : null;
   const lbStyle = lb ? landscapeVars(lb) : '';
 
   return `
-    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${mp.factions[0]}"` : ''} data-faction="${esc(mp.factions[0])}">
+    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : mp.factions[0]}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
       ${pb ? `<div class="pboard-img" style="background-image: url('${artUrl}')"></div>` : ''}
+      ${pb && circle ? `<div class="pboard-fx" data-circle-fx="${circle}"></div>` : ''}
       ${pb?.props ? propsHTML(pb.props, PORTRAIT_SIZE, artUrl, BOARD_CUTS.portrait?.[mp.factions[0]]?.cuts) : ''}
       ${lb?.props ? propsHTML(lb.props, LANDSCAPE_SIZE, new URL(lb.src, document.baseURI).href, BOARD_CUTS.land?.[mp.factions[0]]?.cuts) : ''}
+      ${s.descent ? descentHTML(s.descent) : ''}
       ${lethal ? '<div class="lethal-tag">Lethal!</div>' : ''}
       ${historyHTML(ctx.history)}
       <div class="table-oval"></div>
@@ -695,7 +713,8 @@ export function boardHTML(ctx) {
 export function layoutPortraitBoard(root) {
   const arena = root.querySelector('.arena.p-board');
   if (!arena) return;
-  const pb = PORTRAIT_BOARDS[arena.dataset.pboard];
+  const key = arena.dataset.pboard;
+  const pb = key.startsWith('circle') ? CIRCLE_BOARDS.portrait[key.slice(6)] : PORTRAIT_BOARDS[key];
   if (!pb) return;
   const [iw, ih] = PORTRAIT_SIZE;
   const W = arena.clientWidth;
