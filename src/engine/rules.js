@@ -100,6 +100,8 @@ export const KEYWORD_TEXT = {
   Trap: 'Set face-down beside your Hero (a purple ? token). Your opponent can\'t see which Trap it is. It goes off automatically when its condition happens.',
   'Hero Spell': 'Always available outside your deck. Once per turn.',
   'Hero Weapon': 'Your Hero equips it and gains its Attack, so your Hero can attack once a turn. Each attack uses 1 Durability; at 0 the Weapon breaks. A new Weapon replaces the old one.',
+  'Holy Flame': 'Holy fire. At the end of your turn each enemy with Holy Flame takes that much damage (double to Dark and Undead minions), then it burns down by 1. It can\'t be healed while it burns.',
+  'Reduced to Ash': 'A minion that dies while it has Holy Flame is removed completely: it doesn\'t go to the Graveyard, its Exit doesn\'t happen and it can\'t be Reborn or Haunted.',
   Relic: 'A haunted item. Equip it to your Hero (it works as a Hero Weapon) or to a friendly Ghost (it gives its stats and effect and never wears out). When a Ghost holding it dies, it drifts to your Hero if your Hero has no Weapon.',
   Armor: 'Soaks up damage to your Hero before Health is lost. It stays until used up.',
   Extinction: 'Every 7 turns: destroy all your Mana Crystals and friendly minions.',
@@ -138,6 +140,8 @@ export const BOARD_EVENTS = [
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)
   'minionReborn',     // a minion came back through Reborn
   'minionHaunted',    // Ghosts: a minion was Haunted from a Graveyard
+  'minionAshed',      // Divine (Holy Pyre): a minion dying in Holy Flame was Reduced to Ash ({ source, player: its controller })
+  'holyFlameApplied', // Divine (Holy Pyre): a character was set alight with Holy Flame
   'minionDisplaced',  // Ultraterrestrials: a minion went Beyond Reality ({ source, player, by })
   'minionReturned',   // Ultraterrestrials: a Displaced minion came back
   'preyMarked',       // Sharks: an enemy minion became Marked Prey

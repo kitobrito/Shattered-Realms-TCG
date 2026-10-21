@@ -4618,3 +4618,8 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 .mc-bar b { position: absolute; top: -2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; font-family: var(--font-title); }
 .mc-bar small { font-size: 9px; color: #b89a6a; line-height: 1; margin-top: 1px; }
 @media (max-height: 520px) { .mana-curve { height: 26px; padding: 2px 6px 1px; } .mc-bar b { display: none; } }
+/* Divine (The Holy Pyre): Holy Flame chip — a golden-white glow. */
+.st.st-holyflame { background: radial-gradient(circle at 40% 35%, #fffbe0, #ffd86a 45%, #c98a1a); color: #3a2400; box-shadow: 0 0 10px #ffe58a, 0 0 2px #000; }
+.st.st-holyflame b { color: #3a2400; text-shadow: none; }
+.hero-holy { position: absolute; left: 50%; bottom: -4%; transform: translateX(-50%); z-index: 6; padding: 1px 8px; border-radius: 10px; font-family: var(--font-title); font-weight: 900;
+  font-size: calc(var(--hero, 120px) * 0.12); color: #3a2400; background: radial-gradient(circle at 40% 35%, #fffbe0, #ffd86a 45%, #c98a1a); box-shadow: 0 0 12px #ffe58a, 0 0 2px #000; pointer-events: auto; }

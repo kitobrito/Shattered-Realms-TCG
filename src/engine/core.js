@@ -224,6 +224,17 @@ export function applyBurn(state, c, amount) {
   emit(state, { type: 'burnApplied', target: c.uid, player: c.controller ?? c.owner, amount: c.burn });
 }
 
+// Holy Flame (Divine, The Holy Pyre): a lasting holy fire. At the end of the burner's turn it deals
+// its value as damage (double to Dark / Undead), then burns down by 1; a burning character can't be healed, and a
+// minion that dies while burning is Reduced to Ash (removed: no Graveyard, Exit or Reborn).
+export function applyHolyFlame(state, c, amount, by) {
+  if (!c || amount <= 0 || c.health <= 0 || c.destroyed) return;
+  c.holyFlame = (c.holyFlame ?? 0) + amount;
+  c.holyBy = by;
+  log(state, `✨ ${nameOf(state, c)} burns with Holy Flame (${c.holyFlame}).`);
+  emit(state, { type: 'holyFlameApplied', target: c.uid, player: c.controller ?? c.owner, amount: c.holyFlame });
+}
+
 // Burning cards: from the hand (random cards) or the top of the deck. Burned
 // cards go to the graveyard without being drawn or played.
 export function burnCards(state, p, from, count, byPlayer) {
@@ -477,6 +488,7 @@ export function heal(state, targetId, amount, opts = {}) {
   // Radiation: a character whose Health a Radiation aura is lowering can't be healed
   // (ignoreRadiation: Irradiated Behemoth's heal still works).
   if ((t.radReduction ?? 0) > 0 && !opts.ignoreRadiation) { log(state, `☢ ${nameOf(state, t)} can't be healed while irradiated.`); return 0; }
+  if ((t.holyFlame ?? 0) > 0) { log(state, `✨ ${nameOf(state, t)} can't be healed while it burns with Holy Flame.`); return 0; }
   let healed = 0;
   if (t.health >= t.maxHealth) {
     if (!opts.overheal) return 0;

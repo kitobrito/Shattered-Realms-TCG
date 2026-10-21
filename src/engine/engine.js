@@ -10,7 +10,7 @@ import {
   addToHand, costOf, createHero, dealDamage, drawCards, effectiveAttack, emit, findCharacter,
   hasKeyword, hooks, log, loseHealth, minionsInOrder, nameOf, opponentOf, pushFront, removeKeyword,
   summonMinion, isBurning, manaFor, payMana, radiationOf,
-  isShark, huntsPrey, heal, heroOf,
+  isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
 } from './core.js';
 import { checkCondition, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
@@ -711,6 +711,15 @@ const STEPS = {
       board.splice(board.indexOf(m), 1);
       // Unique minions (the Queen) can never come back once they have died.
       if (getCard(m.cardId).unique) (state.players[m.owner].uniquesDead ??= []).push(m.cardId);
+      // Divine (The Holy Pyre): a minion dying in Holy Flame is Reduced to Ash — removed like Obliterate.
+      if (m.holyFlame > 0 && !m.obliterate) {
+        m.obliterate = true;
+        const by = state.players[opponentOf(m.controller)];
+        by.ashed = (by.ashed ?? 0) + 1;
+        log(state, `✨ ${nameOf(state, m)} is Reduced to Ash.`);
+        steps.push({ kind: 'event', event: { type: 'minionAshed', source: m.uid, player: m.controller, cardId: m.cardId } });
+        continue;
+      }
       // Obliterate: removed from the game — no graveyard, no Exit, no Reborn, no death events.
       if (m.obliterate) { log(state, `☢ ${nameOf(state, m)} is obliterated.`); continue; }
       state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner, died: true });
@@ -836,6 +845,17 @@ const STEPS = {
       // After its last tick the fire goes out (Burn lasts at most burnTurns turns).
       c.burnLeft = (c.burnLeft ?? 2) - 1;
       if (c.burnLeft <= 0) { c.burn = 0; log(state, `${nameOf(state, c)} stops Burning.`); } else c.burn = n + 1;
+    }
+    // Holy Flame (Divine): each burning enemy takes its Holy Flame (double if Dark or Undead), plus 1
+    // per friendly Seraph of Embers; then it burns down by 1.
+    const bonus = pl.board.filter((m) => getCard(m.cardId).holyFlameBonus && m.health > 0 && !m.destroyed).length;
+    for (const c of [state.players[foe].hero, ...state.players[foe].board]) {
+      if (!(c.holyFlame > 0) || c.health <= 0 || c.destroyed) continue;
+      const n = c.holyFlame * (c.kind === 'minion' && isDarkOrUndead(c) ? 2 : 1) + bonus;
+      log(state, `✨ Holy Flame scorches ${nameOf(state, c)}.`);
+      dealDamage(state, null, c.uid, n, { sourceController: p });
+      // It burns down by 1 each time (a minion that dies from this tick still has it, so it's Reduced to Ash).
+      if (c.health > 0 && !c.destroyed) c.holyFlame -= 1;
     }
   },
 
