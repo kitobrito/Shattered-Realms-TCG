@@ -1010,6 +1010,8 @@ export const ART = {
   honeyfang: 'art/fusion/honeyfang.jpg',
   corrosive_bite: 'art/fusion/corrosive_bite.jpg',
   spectral_wolf: 'art/fusion/spirit_pack.jpg',
+  duskwing_werebat: 'art/lycanthropes/duskwing_werebat.jpg',
+  duskwing_werebat_beast: 'art/lycanthropes/duskwing_werebat_beast.jpg',
 };
 
 // Hero portraits per faction (import with: npm run import-art -- <folder> --heroes).
