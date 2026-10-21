@@ -1012,6 +1012,8 @@ export const ART = {
   spectral_wolf: 'art/fusion/spirit_pack.jpg',
   duskwing_werebat: 'art/lycanthropes/duskwing_werebat.jpg',
   duskwing_werebat_beast: 'art/lycanthropes/duskwing_werebat_beast.jpg',
+  sobek_terror_of_the_museum: 'art/dinosaurs/sobek_terror_of_the_museum.jpg',
+  sobeks_fossil: 'art/dinosaurs/sobeks_fossil.jpg',
 };
 
 // Hero portraits per faction (import with: npm run import-art -- <folder> --heroes).

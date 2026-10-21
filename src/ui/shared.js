@@ -82,7 +82,7 @@ export function cardHTML(card, { uid, playable, selected, back, choice, zoom, co
   return `
     <div class="card t-${card.type} ${isCut ? 'cut' : ''} ${isDupe ? 'dupe' : ''} ${artOf(card) ? 'has-art' : ''} ${card.quickPlay ? 'quick' : ''} ${playable ? 'playable' : ''} ${respond ? 'respond' : ''} ${dim ? 'dim' : ''} ${selected ? 'selected' : ''} ${incomplete.length ? 'incomplete' : ''}"
          data-preview="${card.id}" ${data}>
-      ${(zoom || cuttable) && card.beastForm && getCard(card.beastForm) ? `<div class="beast-behind" aria-hidden="true">${bigCardHTML(getCard(card.beastForm), { small: true })}</div>` : ''}
+      ${(zoom || cuttable) && (card.beastForm ?? card.rebornAs) ? `<div class="beast-behind" aria-hidden="true">${bigCardHTML(getCard(card.beastForm ?? card.rebornAs), { small: true })}</div>` : ''}
       ${bigCardHTML(card, { cost, costClass, small: true })}
       ${incomplete.length ? '<span class="pending-tag">pending</span>' : ''}
       ${cuttable ? `<button class="card-zoom ghost" data-zoom="${card.id}" title="See full size">${icon('search')}</button>` : ''}
@@ -156,7 +156,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(health ?? card.health ?? '').length > 1 ? 'two-digit' : ''}">${health ?? card.health ?? '?'}</span>` : ''}
-      ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.token ? '<span class="bc-token">Token</span>' : ''}
+      ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.formLabel ? `<span class="bc-token">${esc(card.formLabel)}</span>` : card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
 
@@ -197,7 +197,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
     ? `<div class="bc-type lines-${label.split(' · ').length}">${label.split(' · ').map((w) => `<span>${esc(w)}</span>`).join('')}</div>`
     : `<div class="bc-type"><span>${esc(label)}</span></div>`) : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(hp).length > 1 ? 'two-digit' : ''}">${hp}</span>` : ''}
-      ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.token ? '<span class="bc-token">Token</span>' : ''}
+      ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.formLabel ? `<span class="bc-token">${esc(card.formLabel)}</span>` : card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
 }
 

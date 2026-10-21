@@ -64,6 +64,8 @@ export const LEGENDARY = new Set([
   'the_great_dissolution',
   'the_undigested_king',
   'the_first_beast',
+  'sobek_terror_of_the_museum',
+  'sobeks_fossil',
   'elder_of_the_first_moon',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;

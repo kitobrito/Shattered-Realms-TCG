@@ -837,14 +837,18 @@ const STEPS = {
       const i = grave.findIndex((g) => g.uid === uid);
       if (i >= 0) grave.splice(i, 1);
     }
-    const m = summonMinion(state, controller, cardId, { silent: true });
+    // rebornAs: it comes back as a different card, at that card's full Health (Sobek → Sobek's Fossil).
+    const into = getCard(cardId).rebornAs;
+    const m = summonMinion(state, controller, into ?? cardId, { silent: true });
     if (!m) return;
     if (owner != null) m.owner = owner;
     if (hauntTag) m.hauntTag = hauntTag; // still the same Haunted minion
     // The Eternal Swarm: whenever it loses Reborn, a 1/1 Spectral Insect appears.
     if (onRebornSummon) pushFront(state, [{ kind: 'effect', effect: { op: 'summon', cardId: onRebornSummon }, ctx: { controller, self: null } }]);
-    m.health = state.rules.rebornHealth;
-    m.maxHealth = state.rules.rebornHealth;
+    if (!into) {
+      m.health = state.rules.rebornHealth;
+      m.maxHealth = state.rules.rebornHealth;
+    }
     removeKeyword(m, 'Reborn');
     if (resurrected) m.resurrected = true; // Resurrection stays used up
     m.rebornUsed = true; // Divine Intervention can't give it Reborn again

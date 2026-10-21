@@ -323,4 +323,13 @@ export const DINOSAUR_CARDS = [
     text: 'Exit: Summon a random Dinosaur that costs the same as the Dinosaur that became this Egg.',
     triggers: [{ on: 'deathrattle', effects: [{ op: 'summon', randomMinion: { tribe: 'Dinosaur', costFromDead: true } }] }],
   },
+  // ---- Legendary (named): the Spinosaurus that broke loose in the natural history museum ----
+  {
+    ...D, id: 'sobek_terror_of_the_museum', name: 'Sobek, Terror of the Museum', art: '🦖', extra: true, cost: 8, attack: 7, health: 7, keywords: ['Reborn'],
+    rebornAs: 'sobeks_fossil',
+    text: 'Reborn: comes back as Sobek\'s Fossil (5/5, Rush). Arrival: Deal 2 damage to all enemy minions.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }] }],
+  },
+  { ...D, id: 'sobeks_fossil', name: "Sobek's Fossil", art: '🦴', token: true, formLabel: 'Fossil', cost: 8, attack: 5, health: 5, keywords: ['Rush'],
+    text: 'Rush. The skeleton of Sobek, risen from its museum display at full strength.' },
 ];
