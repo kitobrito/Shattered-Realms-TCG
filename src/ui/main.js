@@ -2485,6 +2485,7 @@ function zoomHTML(card) {
             <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
           </header>
           <div class="zoom-kind">${esc(kindOf(card))}</div>
+          ${card.beastForm && getCard(card.beastForm) ? `<div class="zoom-sub">Beast Form</div><div class="zoom-beast">${cardHTML(getCard(card.beastForm))}</div>` : ''}
           ${isLocked(card.id) ? '<div class="zoom-locked">🔒 Locked · every win unlocks 2 new cards</div>' : ''}
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
           ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}

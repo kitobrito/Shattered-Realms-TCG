@@ -3,6 +3,7 @@
 
 import { ART, FUSION_HERO_ART, HERO_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
+import { getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
 
@@ -81,6 +82,7 @@ export function cardHTML(card, { uid, playable, selected, back, choice, zoom, co
   return `
     <div class="card t-${card.type} ${isCut ? 'cut' : ''} ${isDupe ? 'dupe' : ''} ${artOf(card) ? 'has-art' : ''} ${card.quickPlay ? 'quick' : ''} ${playable ? 'playable' : ''} ${respond ? 'respond' : ''} ${dim ? 'dim' : ''} ${selected ? 'selected' : ''} ${incomplete.length ? 'incomplete' : ''}"
          data-preview="${card.id}" ${data}>
+      ${(zoom || cuttable) && card.beastForm && getCard(card.beastForm) ? `<div class="beast-behind" aria-hidden="true">${bigCardHTML(getCard(card.beastForm), { small: true })}</div>` : ''}
       ${bigCardHTML(card, { cost, costClass, small: true })}
       ${incomplete.length ? '<span class="pending-tag">pending</span>' : ''}
       ${cuttable ? `<button class="card-zoom ghost" data-zoom="${card.id}" title="See full size">${icon('search')}</button>` : ''}
@@ -145,7 +147,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
   const faction = card.faction.toLowerCase().replace(/\s+/g, '-');
   if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete });
   return `
-    <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.cost >= 7 && !card.token ? 'legend' : ''}">
+    <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.legendary ? 'legend' : ''}">
       <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <img class="bc-frame" src="art/frames/${card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell'}.png" alt="" draggable="false">
       <i class="bc-sock sock-cost"></i>${card.type === 'minion' ? '<i class="bc-sock sock-atk"></i><i class="bc-sock sock-hp"></i>' : ''}
@@ -180,7 +182,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
   // Legendary cards (7+ Mana) wear their own gold frame (art/frames/legendary-<type>.png).
-  const legend = card.cost >= 7 && !card.token;
+  const legend = !!card.legendary;
   const frameSrc = legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
     <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}">
