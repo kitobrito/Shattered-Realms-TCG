@@ -657,9 +657,11 @@ export function boardHTML(ctx) {
       ${manaHTML(mp, true)}
       <div class="rail">
         ${deckHTML(op, false)}
+        ${ctx.canUndo ? '<button class="undo-btn ghost" data-act="undo" title="Take back your last move">↶ Undo</button>' : ''}
         ${endTurnHTML(s, me, legal, ctx.endArmed)}
         ${deckHTML(mp, true)}
       </div>
+      ${ctx.recap ? `<div class="turn-recap ${ctx.recap.fresh ? 'fresh' : ''}" data-act="closeRecap" title="Tap to close"><b>Opponent's turn</b>${ctx.recap.lines.map((l) => `<span>${esc(l)}</span>`).join('')}${ctx.recap.more ? `<span class="sub">…and ${ctx.recap.more} more (see the log)</span>` : ''}</div>` : ''}
       <div class="corner-buttons">
         <button class="ghost" data-act="toggleLog" title="Game log">${icon('log')}</button>
         <button class="ghost" data-act="mute" title="Sound">${icon(isMuted() ? 'muted' : 'sound')}</button>
