@@ -284,7 +284,7 @@ export const DEMON_CARDS = [
   },
   // ---- The Circles of Hell (Kings of Hell, part two): the Descent's legendaries ----
   {
-    ...DM, id: 'baphomet_king_of_the_sabbath', name: 'Baphomet, King of the Sabbath', art: '🐐', extra: true, cost: 7, attack: 6, health: 7,
+    ...DM, id: 'baphomet_king_of_the_sabbath', name: 'Baphomet, King of the Sabbath', art: '🐐', extra: true, cost: 8, attack: 6, health: 7,
     text: 'Arrival: Sink one circle deeper. Your other minions have +1 Attack for each circle sunk.',
     aura: { target: { minions: { side: 'friendly', excludeSelf: true } }, attackPerDepth: 1 },
     triggers: [{ on: 'battlecry', effects: [{ op: 'descend' }] }],
@@ -295,8 +295,8 @@ export const DEMON_CARDS = [
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'summon', cardId: 'lilim', countPerDepth: { max: 3 } }] }],
   },
   {
-    ...DM, id: 'satan_lord_of_the_pit', name: 'Satan, Lord of the Pit', art: '😈', extra: true, cost: 10, attack: 10, health: 10, costPerDepth: 1,
-    text: 'Costs 1 less for each circle sunk. Arrival: Destroy all other minions. In the Seventh Circle, the enemy Hero also loses half their Health.',
+    ...DM, id: 'satan_lord_of_the_pit', name: 'Satan, Lord of the Pit', art: '😈', extra: true, cost: 10, attack: 10, health: 10, costPerDepth: 1, minCost: 6,
+    text: 'Costs 1 less for each circle sunk (never less than 6). Arrival: Destroy all other minions. In the Seventh Circle, the enemy Hero also loses half their Health.',
     triggers: [{ on: 'battlecry', effects: [
       { op: 'destroy', target: { minions: { excludeSelf: true } } },
       { op: 'satansJudgement', depth: 7 },

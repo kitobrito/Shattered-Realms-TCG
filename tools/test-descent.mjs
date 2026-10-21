@@ -137,6 +137,10 @@ test('Satan: costs 1 less per circle; destroys all other minions', () => {
   if (others.length) return `${others.length} survived`;
   if (pl(1).hero.health !== hp) return 'judgement fired above the 7th circle';
 });
+test('Satan never costs less than 6, even in the Seventh Circle', () => {
+  sinkTo(7);
+  if (costOf(s, addToHand(s, 0, 'satan_lord_of_the_pit')) !== 6) return 'below 6';
+});
 test('Satan in the Seventh Circle: the enemy Hero loses half their Health', () => {
   sinkTo(7);
   pl(1).hero.health = 25;

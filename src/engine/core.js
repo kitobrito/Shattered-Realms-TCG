@@ -150,7 +150,7 @@ export function costOf(state, inst) {
   if (depth === 4 && card.type === 'spell') aura -= 1;
   if (depth === 7 && card.type === 'minion' && card.faction === 'Demons') aura -= 2;
   if (card.costPerDepth) aura -= depth * card.costPerDepth;
-  return Math.max(inst.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
+  return Math.max(inst.minCost ?? card.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
 }
 
 // ---- Demons: The Descent (rules.js CIRCLES) ------------------------------------------
