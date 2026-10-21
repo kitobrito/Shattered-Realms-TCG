@@ -209,7 +209,7 @@ test('Megalodon: destroys a 3-Health Prey; or a Prey in their hand', () => {
   play(0, give(0, 'megalodon'));
   if (pl(1).hand.length) return 'hand Prey survived';
 });
-test('King of the Red Wake: other Sharks +1/+1 when Prey dies', () => {
+test('Prince of the Red Wake: other Sharks +1/+1 when Prey dies', () => {
   put(0, 'king_of_the_red_wake'); const n = put(0, 'reef_nibbler');
   const e = prey(1, 1); e.prey = true;
   play(0, give(0, 'first_blood'), e.uid);
