@@ -4718,3 +4718,11 @@ body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shiftin
 #preview .preview-twin { margin-top: 8px; opacity: 0.95; }
 #preview .preview-twin > span { display: block; text-align: center; font: 700 12px Cinzel, Georgia, serif; color: #ffd98a; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
 #preview .preview-twin .big-card { transform: scale(0.62); transform-origin: top center; margin-bottom: -38%; }
+
+/* Legendary frames paint their own blue mana shield: the cost number sits in it (no second badge). */
+.big-card.shard.legend.t-minion .bc-cost, .big-card.shard.legend.t-spell .bc-cost, .big-card.shard.legend .bc-cost.cheaper, .big-card.shard.legend .bc-cost.pricier {
+  background: none !important; clip-path: none !important; box-shadow: none !important; border: none !important; }
+.big-card.shard.legend.t-minion .bc-cost { left: 4.8% !important; top: 4.4% !important; width: 15.1% !important; height: 11.2% !important; }
+.big-card.shard.legend.t-spell .bc-cost { left: 2.4% !important; top: 1.6% !important; width: 16% !important; height: 12.4% !important; }
+.big-card.shard.legend .bc-cost.cheaper { color: #8affa8 !important; }
+.big-card.shard.legend .bc-cost.pricier { color: #ff9aa4 !important; }
