@@ -3426,7 +3426,8 @@ body:not(.classic-cards) .arena .minion.shardm .hp { left: 63.2% !important; top
 body:not(.classic-cards) .arena .minion.shardm .sm-ward { z-index: 5; }
 body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .arena .minion.shardm .hp { font-size: calc(var(--minion-w) * 0.25) !important; overflow: visible; }
 /* Wide picture windows crop the square art; keep heads in frame by cropping mostly from the bottom. */
-.big-card.shard.t-minion .bc-art img, .big-card.shard.t-trap .bc-art img { object-position: 50% 0%; }
+.big-card.shard.t-minion .bc-art, .big-card.shard.t-trap .bc-art { overflow: hidden; }
+.big-card.shard.t-minion .bc-art img, .big-card.shard.t-trap .bc-art img { width: 135%; height: auto; max-width: none; aspect-ratio: 1; object-fit: cover; transform: translate(-13%, -9%); }
 
 /* ---- Acidic ---- */
 .big-card.f-acidic { --frame: #3a5a1a; --frame-hi: #c8ff2a; --body: #121a06; }
