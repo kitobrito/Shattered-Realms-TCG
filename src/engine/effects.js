@@ -142,6 +142,7 @@ export function burrowMinion(state, m) {
 export function surfaceMinion(state, m, opts = {}) {
   if (!m?.burrowed) return false;
   m.burrowed = false;
+  m.surfacedTurn = state.turn; // Tremor counts the minions that Surfaced this turn
   if (opts.attack) m.attack += opts.attack;
   log(state, `🏜 ${nameOf(state, m)} Surfaces${opts.attack ? ` (+${opts.attack} Attack)` : ''}!`);
   const card = getCard(m.cardId);
@@ -504,6 +505,15 @@ export const EFFECT_OPS = {
       resolved = { ...resolved, attack: n, health: n };
     }
     each(state, e.target, ctx, (c) => applyBuff(state, c, { ...resolved, byController: ctx.controller }));
+  },
+
+  // { effects } — Aftershocks (Tremor): run the effects once, then once more for each other
+  // friendly minion that Surfaced this turn (start-of-turn Surfaces all land before this runs).
+  aftershocks(state, e, ctx) {
+    const others = state.players[ctx.controller].board
+      .filter((m) => m.uid !== ctx.self && m.surfacedTurn === state.turn && m.health > 0 && !m.destroyed).length;
+    if (others) log(state, `🏜 Aftershocks! The quake strikes ${1 + others} times.`);
+    for (let i = 0; i <= others; i++) for (const sub of e.effects) resolveEffect(state, sub, ctx);
   },
 
   // { target } — Swallow Whole (King Meg): the source destroys the target outright and
