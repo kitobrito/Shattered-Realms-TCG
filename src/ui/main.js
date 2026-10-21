@@ -533,6 +533,11 @@ function describe(action, s) {
     const card = getCard(action.card);
     return { cardId: card.id, mine, icon: '★', text: `${pl.name} cast ${card.name}.` };
   }
+  if (action.type === 'transform') {
+    const m = findCharacter(s, action.minion);
+    const into = getCard(getCard(m.cardId).beastForm ?? getCard(m.cardId).humanForm);
+    return { cardId: into.id, mine, icon: '🌕', text: `${pl.name}'s ${into.name} transformed into its ${into.form === 'beast' ? 'Beast' : 'Humanoid'} Form.` };
+  }
   if (action.type === 'attack') {
     const a = findCharacter(s, action.attacker);
     const d = findCharacter(s, action.defender);
@@ -544,6 +549,7 @@ function describe(action, s) {
 // Whose style the hits are drawn in: the attacker's or the played card's faction.
 function sourceFaction(s, action, playedCard) {
   if (playedCard) return playedCard.faction === 'Neutral' ? s.players[action.player].factions[0] : playedCard.faction;
+  if (action.type === 'transform') return 'Lycanthropes';
   if (action.type === 'attack') {
     const a = findCharacter(s, action.attacker);
     if (a?.kind === 'minion') return getCard(a.cardId).faction;
@@ -704,6 +710,11 @@ async function act(action, meta = {}) {
         power: striker ? effectiveAttack(striker) : 2, color: fx.factionColor(before.srcFaction), table: app.querySelector('.arena'),
         style: striker?.kind === 'minion' ? before.srcFaction : null,
       });
+    } else if (action.type === 'transform') {
+      // Lycanthropes: the minion shudders in a flash of moonlight as it changes shape.
+      sound.play('growl');
+      const el = charEl(action.minion);
+      if (el) { el.classList.add('shifting'); await new Promise((r) => setTimeout(r, 520)); }
     } else if (action.type === 'mulligan' && action.replace?.length && action.player === viewer) {
       await animateMulligan(s, action);
     } else if (playedCard && action.type === 'quickPlay') {
@@ -1273,6 +1284,7 @@ const TIPS = [
   'Bees: protect the Hive. When it falls, the Queen emerges, and if she dies your Hero takes 10 damage.',
   "Bees: you don't have to break the Hive to beat the Bees. Their Hero falls at 0 Health like anyone else's.",
   'Bees: Burrow the Queen hides her in a Hidden Nest that can\'t be attacked. Damage that hits every minion is the usual way to dig her out.',
+  'Lycanthropes: tap one of your Lycanthropes and press the moon to Transform it (1 Mana, once per turn each). Damage carries over, but a Transform never kills.',
   'Acidic: Corrosion lowers Attack for good. A minion at 0 Attack can\'t attack until something raises it.',
   'Sharks: enemy minions at 3 Health or less become Marked Prey. Heal them above 3 to shake the hunters off.',
   'Ultraterrestrials: a Displaced minion is gone until the turn named, so it dodges attacks, spells and board wipes, and its abilities stop.',
@@ -2050,7 +2062,7 @@ function renderMenu() {
         <header class="ts-title">
           <div class="ts-runes"></div>
           <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-          <p class="ts-tag">Sixteen realms broke apart. Two of them are yours.</p>
+          <p class="ts-tag">Seventeen realms broke apart. Two of them are yours.</p>
         </header>
 
         <nav class="ts-actions">

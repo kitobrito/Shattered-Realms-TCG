@@ -106,6 +106,13 @@ export const FACTION_INFO = {
     mechanic: 'Corrosion X permanently lowers a minion\'s Attack by X. Caustic Reservoir keeps corroding its target every turn.',
     style: 'Control · Attrition',
   },
+  Lycanthropes: {
+    summary: 'Shapeshifters with two sides: careful humans by day, savage beasts when the moon calls.',
+    strengths: ['Every minion is two cards in one', 'Burst turns when the whole pack transforms', 'Tricks that go off on the enemy turn'],
+    weaknesses: ['Transforming costs Mana each turn', 'Few spells that remove enemy minions', 'Silence and Freeze shut a shifter down'],
+    mechanic: 'Transform: pay 1 Mana to switch a Lycanthrope between Humanoid Form and a stronger Beast Form (once per turn each). Damage carries over, but a Transform never kills.',
+    style: 'Midrange · Tempo',
+  },
   Sharks: {
     summary: 'Relentless hunters: wound enemies, mark them as Prey, then execute them.',
     strengths: ['Finishing off damaged minions', 'Prey can\'t hide in Stealth or behind Elusive', 'Board-wide damage that sets up kills'],
@@ -239,6 +246,22 @@ export const SYNERGY = {
   'Acidic+Ghosts': [3, 'Haunted slimes return to keep dissolving.'],
   'Acidic+Ultraterrestrials': [3, 'Send threats away and get them back melted.'],
   'Acidic+Sharks': [4, 'Toothless prey for the pack.'],
+  'Lycanthropes+Vampires': [4, 'Lifesteal beasts that drink as they shift.'],
+  'Aliens+Lycanthropes': [3, 'Spliced keywords stack on top of the beast form.'],
+  'Dinosaurs+Lycanthropes': [4, 'Two kinds of big beasts, and plenty of Mana for Transforms.'],
+  'Lycanthropes+Plants': [2, 'Slow growth and quick shifts rarely line up.'],
+  'Fungus+Lycanthropes': [2, 'Mushrooms are slow; the pack wants to fight now.'],
+  'Lycanthropes+Zombies': [3, 'Reborn beasts keep coming back.'],
+  'Dragons+Lycanthropes': [3, 'Burn softens enemies before the pack pounces.'],
+  'Demons+Lycanthropes': [4, 'Hellhounds: pay Health, unleash bigger beasts.'],
+  'Divine+Lycanthropes': [3, 'Healing a hurt beast keeps it shifting.'],
+  'Lycanthropes+Robots': [3, 'Upgraded shifters with chrome claws.'],
+  'Lycanthropes+Radioactive': [3, 'Mutated beasts hit very hard, very fast.'],
+  'Bees+Lycanthropes': [3, 'A swarm and a pack: lots of bodies to buff.'],
+  'Ghosts+Lycanthropes': [3, 'Spectral wolves join the hunt.'],
+  'Lycanthropes+Ultraterrestrials': [3, 'Displace blockers while the pack transforms.'],
+  'Lycanthropes+Sharks': [4, 'Predators everywhere: beasts finish off Prey.'],
+  'Acidic+Lycanthropes': [3, 'Corroded enemies cannot fight off the pack.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;
@@ -248,7 +271,7 @@ export const DECK_TYPES = [
   { name: 'Aggro', blurb: 'Hit hard, hit fast, end it early.', factions: ['Demons', 'Sharks'] },
   { name: 'Swarm', blurb: 'Flood the board with many small minions.', factions: ['Zombies', 'Plants', 'Bees'] },
   { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs'] },
-  { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials'] },
+  { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials', 'Lycanthropes'] },
   { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts'] },
   { name: 'Attrition', blurb: 'Protect, outlast and wear them down.', factions: ['Divine', 'Fungus', 'Acidic'] },
 ];
@@ -258,5 +281,5 @@ export const EXPANSION_NAMES = {
   Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
   Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
   Divine: 'The Holy Pyre', Acidic: 'The Half-Digested', Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
-  Sharks: 'Sand Sharks',
+  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack',
 };

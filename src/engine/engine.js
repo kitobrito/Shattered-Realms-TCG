@@ -12,7 +12,7 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
 } from './core.js';
-import { checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
+import { canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -234,6 +234,13 @@ function eligibleQuickPlays(state, p, windowName, windowCtx) {
   return out;
 }
 
+// Lycanthropes: what pressing Transform costs this player (1, less with Elder of the First Moon).
+export const TRANSFORM_COST = 1;
+export function transformCost(state, p) {
+  const off = state.players[p].board.filter((m) => !m.textLost && m.health > 0 && !m.destroyed).reduce((t, m) => t + (getCard(m.cardId).shiftDiscount ?? 0), 0);
+  return Math.max(0, TRANSFORM_COST - off);
+}
+
 export function getLegalActions(state) {
   // Created cards (Hybrids, variants) are looked up from the global registry;
   // make sure it holds *this* game's versions (AI search branches can create
@@ -267,6 +274,11 @@ export function getLegalActions(state) {
     const card = getCard(pl.fusion.cardId);
     if (card.cost <= manaFor(pl, card) && hasRoom(state, p, card)) actions.push(...playOptions(state, p, card, card.id, 'heroSpell'));
   }
+  // Lycanthropes: Transform each of your Lycanthropes once per turn for Mana.
+  const shiftCost = transformCost(state, p);
+  for (const m of pl.board) {
+    if (canShift(m) && m.shiftedTurn !== state.turn && shiftCost <= manaFor(pl, getCard(m.cardId))) actions.push({ type: 'transform', player: p, minion: m.uid });
+  }
   for (const c of [pl.hero, ...pl.board]) {
     if (!canAttack(c)) continue;
     for (const d of defendersFor(state, c)) actions.push({ type: 'attack', player: p, attacker: c.uid, defender: d });
@@ -274,7 +286,7 @@ export function getLegalActions(state) {
   return actions;
 }
 
-const KEY_FIELDS = ['type', 'player', 'card', 'target', 'target2', 'attacker', 'defender', 'index'];
+const KEY_FIELDS = ['type', 'player', 'card', 'target', 'target2', 'attacker', 'defender', 'index', 'minion'];
 const actionKey = (a) => [...KEY_FIELDS.map((k) => a[k] ?? ''), [...(a.replace ?? [])].sort((x, y) => x - y).join(',')].join('|');
 
 export function isLegal(state, action) {
@@ -311,6 +323,9 @@ export function applyAction(state, action) {
       break;
     case 'attack':
       declareAttack(state, action);
+      break;
+    case 'transform':
+      transformAction(state, action);
       break;
     case 'pass':
       state.pending = null;
@@ -468,9 +483,20 @@ function huntDamage(state, a, d, dmg) {
   return dmg;
 }
 
+// Lycanthropes: the player pays to Transform one of their minions (once per minion per turn).
+function transformAction(state, { player: p, minion }) {
+  const pl = state.players[p];
+  const m = findCharacter(state, minion);
+  payMana(pl, getCard(m.cardId), transformCost(state, p));
+  m.shiftedTurn = state.turn;
+  state.queue.push({ kind: 'effect', effect: { op: 'shift', target: { uid: m.uid } }, ctx: { self: m.uid, controller: p } }, { kind: 'deaths' });
+}
+
 function declareAttack(state, { player: p, attacker, defender }) {
   const a = findCharacter(state, attacker);
   a.attacksThisTurn += 1;
+  // Nightveil Werepanther: its Stealth lasts until it attacks.
+  if (a.kind === 'minion' && getCard(a.cardId).stealthUntilAttack && a.keywords.includes('Stealth')) removeKeyword(a, 'Stealth');
   // Blind: the attack hits a random character, friend or foe.
   let blind = false;
   if (hasKeyword(a, 'Blind')) {

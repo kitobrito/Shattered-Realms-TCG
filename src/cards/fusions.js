@@ -26,6 +26,9 @@ const ENEMY_CHARACTER = { type: 'character', side: 'enemy' };
 const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const ENEMY_MINIONS = { minions: { side: 'enemy' } };
 const ENEMY_CHARACTERS = { characters: { side: 'enemy' } };
+const LYCAN = { type: 'minion', side: 'friendly', tribe: 'Lycanthrope' };
+const LYCANS = { minions: { side: 'friendly', tribe: 'Lycanthrope' } };
+const LYCAN_BEASTS = { minions: { side: 'friendly', tribe: 'Lycanthrope', form: 'beast' } };
 const FRIENDLY_INSECT = { type: 'minion', side: 'friendly', tribe: 'Insect' };
 const HIVE = { minions: { side: 'friendly', cardId: 'the_hive' } };
 const HIVE_IN_PLAY = { controls: { cardId: 'the_hive' } };
@@ -532,4 +535,54 @@ export const FUSION_CARDS = [
     text: 'Apply Corrosion 2 to an enemy minion and mark it as Prey.',
     target: ENEMY_MINION,
     effects: [{ op: 'corrode', target: 'chosen', amount: 2 }, { op: 'markPrey', target: 'chosen', force: true }] },
+  // ---- Lycanthropes (Transform between Humanoid and Beast Form) ----
+  { ...F('Vampires', 'Lycanthropes'), id: 'nightblood_hunt', name: 'Nightblood Hunt', art: '🩸', cost: 3,
+    text: 'Transform a friendly Lycanthrope. It gains Lifesteal this turn.', target: LYCAN,
+    effects: [{ op: 'shift', target: 'chosen' }, { op: 'buff', target: 'chosen', temporaryKeywords: ['Lifesteal'] }] },
+  { ...F('Aliens', 'Lycanthropes'), id: 'xeno_mutation', name: 'Xeno-Mutation', art: '🧬', cost: 4,
+    text: 'Transform a friendly Lycanthrope. It gets +2/+2 and a random keyword.', target: LYCAN,
+    effects: [{ op: 'shift', target: 'chosen' }, { op: 'buff', target: 'chosen', attack: 2, health: 2 }, { op: 'giveRandomKeyword', target: 'chosen' }] },
+  { ...F('Dinosaurs', 'Lycanthropes'), id: 'primeval_instinct', name: 'Primeval Instinct', art: '🦖', cost: 4,
+    text: 'Gain 2 Primal Mana this turn. Give a friendly Beast Form +3 Attack this turn.',
+    effects: [{ op: 'gainPrimal', amount: 2 }, { op: 'buff', target: { randomOf: LYCAN_BEASTS }, attack: 3, temporary: true }] },
+  { ...F('Plants', 'Lycanthropes'), id: 'thornhide', name: 'Thornhide', art: '🌹', cost: 3,
+    text: 'Give a friendly Lycanthrope +3 Health. Summon a Seedling.', target: LYCAN,
+    effects: [{ op: 'buff', target: 'chosen', health: 3 }, seedling()] },
+  { ...F('Fungus', 'Lycanthropes'), id: 'spore_rabies', name: 'Spore Rabies', art: '🍄', cost: 3,
+    text: 'Place 2 Mushrooms in the enemy deck. Give your Beast Forms Poisonous this turn.',
+    effects: [mushrooms(2), { op: 'buff', target: LYCAN_BEASTS, temporaryKeywords: ['Poisonous'] }] },
+  { ...F('Zombies', 'Lycanthropes'), id: 'undead_pack', name: 'Undead Pack', art: '🧟', cost: 4,
+    text: 'Give a friendly Lycanthrope Reborn. If it is in Beast Form, it also gets +2 Attack.', target: LYCAN,
+    effects: [{ op: 'buff', target: 'chosen', keywords: ['Reborn'] }, { op: 'ifTarget', target: 'chosen', filter: { form: 'beast' }, effects: [{ op: 'buff', target: 'chosen', attack: 2 }] }] },
+  { ...F('Dragons', 'Lycanthropes'), id: 'wyrmfang_fury', name: 'Wyrmfang Fury', art: '🔥', cost: 4,
+    text: 'Apply Burn 2 to an enemy character. Transform a random friendly Lycanthrope.', target: ENEMY_CHARACTER,
+    effects: [burn('chosen', 2), { op: 'shift', target: { randomOf: LYCANS } }] },
+  { ...F('Demons', 'Lycanthropes'), id: 'hellhound_pact', name: 'Hellhound Pact', art: '😈', cost: 5,
+    text: 'Lose 2 Health. Transform a friendly Lycanthrope. It gets +3/+3.', target: LYCAN,
+    effects: [pay(2), { op: 'shift', target: 'chosen' }, { op: 'buff', target: 'chosen', attack: 3, health: 3 }] },
+  { ...F('Divine', 'Lycanthropes'), id: 'moonblessed', name: 'Moonblessed', art: '😇', cost: 3,
+    text: 'Restore 4 Health to a friendly Lycanthrope and give it Evade.', target: LYCAN,
+    effects: [{ op: 'heal', target: 'chosen', amount: 4 }, { op: 'buff', target: 'chosen', keywords: ['Evade'] }] },
+  { ...F('Robots', 'Lycanthropes'), id: 'cyber_lycan', name: 'Cyber-Lycan', art: '🤖', cost: 4,
+    text: 'Upgrade a friendly Lycanthrope: +2/+2. Transform it.', target: LYCAN,
+    effects: [{ op: 'buff', target: 'chosen', attack: 2, health: 2 }, upgraded(), { op: 'shift', target: 'chosen' }] },
+  { ...F('Ghosts', 'Lycanthropes'), id: 'spirit_pack', name: 'Spirit Pack', art: '👻', cost: 3, needsBoardSpace: true,
+    text: 'Summon a 2/2 Spectral Wolf with Stealth.',
+    effects: [{ op: 'summon', cardId: 'spectral_wolf' }] },
+  { ...F('Radioactive', 'Lycanthropes'), id: 'gamma_moon', name: 'Gamma Moon', art: '☢️', cost: 4,
+    text: 'Transform a friendly Lycanthrope. It gets +3 Attack and takes 1 damage.', target: LYCAN,
+    effects: [{ op: 'shift', target: 'chosen' }, { op: 'buff', target: 'chosen', attack: 3 }, { op: 'damage', target: 'chosen', amount: 1 }] },
+  { ...F('Sharks', 'Lycanthropes'), id: 'bloodtide_frenzy', name: 'Bloodtide Frenzy', art: '🦈', cost: 3,
+    text: 'Give your Beast Forms +2 Attack and Rush this turn.',
+    effects: [{ op: 'buff', target: LYCAN_BEASTS, attack: 2, temporary: true, temporaryKeywords: ['Rush'] }] },
+  { ...F('Ultraterrestrials', 'Lycanthropes'), id: 'cosmic_howl', name: 'Cosmic Howl', art: '🌌', cost: 4,
+    text: 'Transform all friendly Lycanthropes.',
+    effects: [{ op: 'shift', target: LYCANS }] },
+  { ...F('Bees', 'Lycanthropes'), id: 'honeyfang', name: 'Honeyfang', art: '🍯', cost: 3,
+    text: 'Give a friendly Lycanthrope +1/+2 and Venomous.', target: LYCAN,
+    effects: [{ op: 'buff', target: 'chosen', attack: 1, health: 2, keywords: ['Venomous'] }] },
+  { ...F('Acidic', 'Lycanthropes'), id: 'corrosive_bite', name: 'Corrosive Bite', art: '🧪', cost: 3, corrodes: true,
+    text: 'Apply Corrosion 2 to an enemy minion. Transform a random friendly Lycanthrope.', target: ENEMY_MINION,
+    effects: [{ op: 'corrode', target: 'chosen', amount: 2 }, { op: 'shift', target: { randomOf: LYCANS } }] },
+  { faction: 'Fusion', type: 'minion', token: true, id: 'spectral_wolf', name: 'Spectral Wolf', art: '👻', cost: 2, attack: 2, health: 2, keywords: ['Stealth'], text: 'Stealth.' },
 ];

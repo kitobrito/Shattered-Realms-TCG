@@ -579,6 +579,8 @@ export function loseHealth(state, targetId, amount, opts = {}) {
 
 export function addToHand(state, p, cardId, extra = {}) {
   const pl = state.players[p];
+  // Lycanthropes: a card always goes to a hand in its Humanoid Form (the Beast Form is board-only).
+  cardId = getCard(cardId)?.humanForm ?? cardId;
   const inst = { uid: newUid(state), cardId, owner: p, ...extra };
   if (pl.hand.length >= state.rules.maxHandSize) {
     pl.graveyard.push(inst);

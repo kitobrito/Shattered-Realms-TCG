@@ -162,7 +162,8 @@ export function crackTier(m) {
   return lost <= 0 ? '' : lost < 0.34 ? 't1' : lost < 0.67 ? 't2' : 't3';
 }
 
-export function minionHTML(m, s, cls = '') {
+// shift: this minion can be Transformed right now (Lycanthropes) — it gets a moon button.
+export function minionHTML(m, s, cls = '', shift = false) {
   const card = getCard(m.cardId);
   const atk = effectiveAttack(m);
   // A minion remade into another form (Blood Shade) wears that form's art.
@@ -192,6 +193,8 @@ export function minionHTML(m, s, cls = '') {
       <div class="icons">${cornerIcons(m, s)}</div>
       <div class="badges">${badges(m)}</div>
       ${card.cost != null ? `<span class="m-cost" title="Mana cost">${card.cost}</span>` : ''}
+      ${card.form ? `<i class="m-form ${card.form}" title="${card.form === 'beast' ? 'Beast Form' : 'Humanoid Form'}">${card.form === 'beast' ? '🐾' : '👤'}</i>` : ''}
+      ${shift ? `<button class="m-shift ${card.form}" data-shift="${m.uid}" title="Transform into ${card.form === 'beast' ? 'Humanoid' : 'Beast'} Form">🌕</button>` : ''}
       ${taunt ? wardHTML(m) : ''}
       <i class="sm-socket l"></i><i class="sm-socket r"></i>
       <span class="atk ${atk > m.attack ? 'up' : atk < m.attack ? 'down' : ''}">${atk}</span>
@@ -612,6 +615,7 @@ export function boardHTML(ctx) {
   const lowHp = !s.gameOver && mp.hero.health <= 10;
   const attackers = new Set(legal.filter((a) => a.type === 'attack').map((a) => a.attacker));
   const charCls = (uid) => (attackers.has(uid) ? 'can-attack' : '');
+  const shiftable = new Set(legal.filter((a) => a.type === 'transform').map((a) => a.minion));
   const faction = mp.factions[0].toLowerCase();
   // The painting itself is drawn by board-layer.js (behind the arena), so it survives re-renders.
   const board = paintedBoards() && BOARD_ART[mp.factions[0]];
@@ -643,7 +647,7 @@ export function boardHTML(ctx) {
       <div class="midline"></div>
       <div class="rope ${ctx.rope != null ? 'burning' : ''}" style="--burn: ${(ctx.rope ?? 0).toFixed(4)}"><div class="rope-fuse"></div><div class="rope-spark"></div></div>
       ${ctx.thinking ? `<div class="thinking">${esc(ctx.thinking)} is thinking<span class="dots"><b>.</b><b>.</b><b>.</b></span></div>` : ''}
-      <div class="board me" data-board="me">${mp.board.map((m) => minionHTML(m, s, charCls(m.uid))).join('')}</div>
+      <div class="board me" data-board="me">${mp.board.map((m) => minionHTML(m, s, charCls(m.uid), shiftable.has(m.uid))).join('')}</div>
       ${heroZoneHTML(mp, s, legal, true, charCls(mp.hero.uid), ctx.shattered)}
       <div class="my-hand">${handoff ? '' : mp.hand.map((inst) => cardHTML(getCard(inst.cardId), {
         uid: inst.uid, playable: playable.has(inst.uid), cost: costOf(s, inst),
