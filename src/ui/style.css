@@ -4648,3 +4648,5 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 .minion.shifting .m-art { filter: brightness(2.2) saturate(0.3) drop-shadow(0 0 12px #dfe8ff); transition: filter 0.25s; }
 @keyframes shapeshift { 0% { transform: scale(1); } 25% { transform: scale(1.1) rotate(-4deg); } 50% { transform: scale(0.92) rotate(4deg); } 75% { transform: scale(1.08) rotate(-2deg); } 100% { transform: scale(1); } }
 body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shifting { animation: none; }
+
+.zoom-locked { margin: 6px 0; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); color: #ffd98a; font-weight: 700; font-size: 0.9em; }
