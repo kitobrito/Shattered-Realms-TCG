@@ -4695,3 +4695,26 @@ body.reduced-motion .arena .minion .m-shift, body.reduced-motion .minion.shiftin
 /* The selection ring hugs the portrait at every size, and names sit clear below it. */
 .ts-fit .fg .medal-ring { width: calc(var(--m) + 14px); height: calc(var(--m) + 14px); top: -7px; margin-left: calc((var(--m) + 14px) / -2); }
 .faction.medallion .medal-name { position: relative; z-index: 3; margin-top: 7px; text-shadow: 0 1px 3px #000, 0 0 6px #000; }
+
+/* ---- Quality of life: Undo, opponent turn recap, named decks, preview twin ---- */
+.undo-btn { font-size: 13px; padding: 4px 10px !important; margin: 4px auto; display: block; }
+.turn-recap { position: absolute; z-index: 30; left: 64px; top: 34%; max-width: min(340px, 70vw);
+  display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+  background: rgba(12, 10, 20, 0.92); border: 1px solid #e7b552; box-shadow: 0 8px 30px #000c; color: #f3e6c8; font-size: 14px;
+  }
+.turn-recap.fresh { animation: recap-in 0.3s ease-out; }
+.turn-recap b { font-family: Cinzel, Georgia, serif; color: #ffd98a; letter-spacing: 0.06em; text-transform: uppercase; font-size: 13px; }
+.turn-recap span::before { content: '• '; color: #e7b552; }
+.turn-recap span.sub::before { content: ''; }
+@keyframes recap-in { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+.arena.portrait .turn-recap { left: 8px; top: 40%; font-size: 12px; }
+.deck-slots { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 10px; }
+.deck-slots .ds-label { font-weight: 700; color: #e7c27a; }
+.ds-chip { display: inline-flex; border: 1px solid #6a5530; border-radius: 999px; overflow: hidden; }
+.ds-chip.on { border-color: #ffd25a; box-shadow: 0 0 8px #ffd25a88; }
+.ds-chip button { border: none !important; border-radius: 0 !important; padding: 3px 10px !important; font-size: 13px; }
+.ds-chip .ds-del { padding: 3px 8px !important; opacity: 0.7; }
+.ds-name { padding: 4px 8px; border-radius: 8px; border: 1px solid #6a5530; background: #1a1410; color: #f3e6c8; font-size: 13px; width: 160px; }
+#preview .preview-twin { margin-top: 8px; opacity: 0.95; }
+#preview .preview-twin > span { display: block; text-align: center; font: 700 12px Cinzel, Georgia, serif; color: #ffd98a; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+#preview .preview-twin .big-card { transform: scale(0.62); transform-origin: top center; margin-bottom: -38%; }

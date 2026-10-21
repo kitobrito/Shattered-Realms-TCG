@@ -8,7 +8,9 @@ import { journeyDone, restartJourney, unlockEverything } from './journey.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same' };
+// Extra speed-up just for the AI's turns (on top of Game speed).
+export const AI_SPEEDS = { same: 1, fast: 0.55, turbo: 0.3 };
 
 // AI difficulty, easiest first (keys match DIFFICULTIES in ai/smart.js).
 export const DIFFICULTY_LEVELS = [
@@ -85,6 +87,8 @@ export function openSettings() {
       <div class="set-row set-difficulty">${difficultySliderHTML(st.difficulty)}</div>
       <div class="set-row"><span>Game speed</span>
         <div class="seg">${Object.keys(SPEEDS).map((k) => `<button data-speed="${k}" class="${st.speed === k ? 'on' : ''}">${k === 'turbo' ? 'Very fast' : k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
+      <div class="set-row"><span>AI turn speed</span>
+        <div class="seg">${Object.keys(AI_SPEEDS).map((k) => `<button data-aispeed="${k}" class="${st.aiSpeed === k ? 'on' : ''}">${k === 'same' ? 'Same' : k === 'fast' ? 'Fast' : 'Very fast'}</button>`).join('')}</div></div>
       <label class="set-row"><span>Turn timer vs AI</span><input type="checkbox" data-set="turnTimerVsAI" ${st.turnTimerVsAI ? 'checked' : ''}><i>Off: take as long as you like against the computer (online and hot-seat games are always timed)</i></label>
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>
       <label class="set-row"><span>Colour-blind mode</span><input type="checkbox" data-set="colorBlind" ${st.colorBlind ? 'checked' : ''}><i>Blue / orange instead of green / red</i></label>
@@ -116,6 +120,11 @@ export function openSettings() {
     if (t.dataset.set === 'volume') sound.play('click'); // a sample at the new volume
   });
   el.addEventListener('click', (e) => {
+    const ai = e.target.closest('[data-aispeed]');
+    if (ai) {
+      update({ aiSpeed: ai.dataset.aispeed });
+      for (const b of el.querySelectorAll('[data-aispeed]')) b.classList.toggle('on', b === ai);
+    }
     const sp = e.target.closest('[data-speed]');
     if (sp) {
       update({ speed: sp.dataset.speed });

@@ -8,7 +8,7 @@ import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../
 import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { artSrc, ensureArt } from './art-packs.js';
 import { boardArtFor } from '../cards/board-art.js';
-import { applySettings, closeSettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
+import { AI_SPEEDS, applySettings, closeSettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, HOWTO_PAGES, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
@@ -48,6 +48,9 @@ let zoomBeast = false;     // Lycanthropes: the full-size view is showing the Be
 let mullMarked = [];       // mulligan: hand uids marked to swap
 let galleryOrder = [];     // card ids in collection order (for arrow-key paging)
 let history = [];          // play-history strip entries
+let undoStack = [];        // vs the AI: snapshots to take back your own moves this turn
+let recap = null;          // what the opponent did on their last turn (shown as your turn starts)
+let recapFrom = 0;         // history index where the opponent's turn began
 const LOG_KEY = 'faction-ccg-log-open';
 let endArmed = null;       // End Turn asked "Really end?" this turn (turn number)
 let endArmTimer = null;
@@ -139,6 +142,17 @@ function storeDeck(factions, deck) {
   if (deck) all[pairKey(factions)] = deck; else delete all[pairKey(factions)];
   try { localStorage.setItem(DECKS_KEY, JSON.stringify(all)); } catch { flash('Could not save your deck.'); }
 }
+// Named decks: several saved decks per faction pair (or single faction). Loading one into the
+// builder and pressing Save deck makes it the deck you play.
+const SLOTS_KEY = 'faction-ccg-deckslots';
+function allSlots() { try { return JSON.parse(localStorage.getItem(SLOTS_KEY) ?? '{}'); } catch { return {}; } }
+const deckSlots = (factions) => (Array.isArray(allSlots()[pairKey(factions)]) ? allSlots()[pairKey(factions)] : []);
+function storeSlots(factions, list) {
+  const all = allSlots();
+  all[pairKey(factions)] = list;
+  try { localStorage.setItem(SLOTS_KEY, JSON.stringify(all)); } catch { flash('Could not save your decks.'); }
+}
+const sameDeck = (a, b) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
 let draftDeck = null; // deck builder: { cardId: copies }
 const deckSizeFor = (factions) => (factions.length === 1 ? DEFAULT_RULES.singleDeckSize : DEFAULT_RULES.pairDeckSize);
 const countsOf = (deck) => deck.reduce((m, id) => ({ ...m, [id]: (m[id] ?? 0) + 1 }), {});
@@ -211,6 +225,7 @@ function enterGame(isNew = false) {
   restoreCustomCards(game.state); // Hybrids etc. from a saved game
   screen = 'game';
   history = [];
+  undoStack = []; recap = null; recapFrom = 0;
   drag.cancel();
   viewer = game.mode !== 'hotseat' ? humanSeat() : actingPlayer(game.state);
   handoff = false;
@@ -673,6 +688,9 @@ function cleanIncoming(value, depth = 0) {
 
 async function act(action, meta = {}) {
   if (animating || !game) return;
+  // AI turn speed: the computer's moves (and its reactions) can play out faster than yours.
+  fx.setBoost(game.mode === 'ai' && isAI(action.player) ? (AI_SPEEDS[getSettings().aiSpeed] ?? 1) : 1);
+  if (!isAI(action.player)) recap = null; // the recap closes once you start playing
   if (meta.remote) {
     // The other player's move must be legal on our copy of the game.
     const legal = legalMatch(game.state, action);
@@ -773,6 +791,11 @@ async function act(action, meta = {}) {
 
   // ---- Apply.
   const actorBefore = actingPlayer(s);
+  // Undo (vs the AI only): remember the game as it was before this move of yours.
+  const snap = game.mode === 'ai' && !meta.remote && !isAI(action.player) && s.activePlayer === action.player && !s.pending
+    && action.type !== 'endTurn' ? { state: structuredClone(s), history: history.length, stats: structuredClone(game.stats ?? null) } : null;
+  const deckBefore = s.players[action.player]?.deck.length;
+  const turnBefore = s.activePlayer;
   try {
     applyAction(s, action);
   } catch (err) {
@@ -790,6 +813,17 @@ async function act(action, meta = {}) {
   }
   if (entry) history.push(entry);
   recordStats(s, before, action, entry);
+  // A move that drew a card (new information) or ended the turn can't be taken back.
+  if (snap && s.players[action.player].deck.length === deckBefore && !s.gameOver) undoStack = [...undoStack, snap].slice(-10);
+  else undoStack = [];
+  // Turn recap: when the opponent's turn ends and yours begins, sum up what they did.
+  if (turnBefore !== s.activePlayer && game.mode !== 'hotseat') {
+    if (s.activePlayer === viewer) {
+      const theirs = history.slice(recapFrom).filter((h) => !h.mine);
+      recap = theirs.length ? { lines: theirs.map((h) => youText(h.text)).slice(-8), more: Math.max(0, theirs.length - 8), at: Date.now() } : null;
+      if (recap) { const mine = recap; setTimeout(() => { if (recap === mine) { recap = null; if (screen === 'game' && !animating) render(); } }, 8000); }
+    } else { recapFrom = history.length - (entry ? 1 : 0); recap = null; }
+  }
   for (const line of s.log.slice(before.logLen)) {
     const m = /^Trap revealed: (.+)!$/.exec(line.msg);
     if (m) {
@@ -797,7 +831,7 @@ async function act(action, meta = {}) {
       if (card) history.push({ cardId: card.id, mine: s.players[viewer].graveyard.some((g) => g.cardId === card.id), icon: '!', text: `Trap revealed: ${card.name}!` });
     }
   }
-  if (history.length > 40) history = history.slice(-40);
+  if (history.length > 40) { recapFrom = Math.max(0, recapFrom - (history.length - 40)); history = history.slice(-40); }
   if (game.mode === 'hotseat' && actingPlayer(s) !== actorBefore && !s.gameOver) handoff = true;
   render();
 
@@ -1388,7 +1422,8 @@ function scheduleAI() {
   const s = game?.state;
   if (game?.mode === 'online') return drainRemote();
   if (!s || s.gameOver || screen !== 'game' || animating || !isAI(actingPlayer(s))) return;
-  aiTimer = setTimeout(() => act(chooseAction(s, game.difficulty ?? 'medium')), (s.pending?.type === 'reaction' ? 600 : 450) * fx.speedFactor());
+  const aiBoost = game.mode === 'ai' ? (AI_SPEEDS[getSettings().aiSpeed] ?? 1) : 1;
+  aiTimer = setTimeout(() => act(chooseAction(s, game.difficulty ?? 'medium')), (s.pending?.type === 'reaction' ? 600 : 450) * (fx.speedFactor() / fx.boostFactor()) * aiBoost);
 }
 
 // ---- Online play (room codes, see net.js) ----------------------------------------
@@ -2264,6 +2299,12 @@ function renderBuilder() {
         </div>
       </div>
       ${problem && n ? `<p class="builder-hint">${esc(problem)}</p>` : ''}
+      <div class="deck-slots">
+        <span class="ds-label">My decks:</span>
+        ${deckSlots(picked).map((d, i) => `<span class="ds-chip ${sameDeck(d.deck, deckOf(draftDeck)) ? 'on' : ''}"><button class="ghost" data-slot="${i}" title="Load this deck">${esc(d.name)}</button><button class="ghost ds-del" data-slotdel="${i}" title="Delete this deck">✕</button></span>`).join('') || '<span class="sub">none yet</span>'}
+        <input class="ds-name" maxlength="24" placeholder="New deck name">
+        <button class="ghost" data-act="slotSave" ${problem ? 'disabled' : ''}>Save as new deck</button>
+      </div>
       <div class="builder-layout">
         <div class="builder-cards">${section()}</div>
         ${deckPanel}
@@ -2587,6 +2628,7 @@ function renderGame() {
     s, me: viewer, legal: legalForView(), mode: game.mode, handoff, isAI, history, logOpen, mullMarked, shattered: heroesShattered, rope: ropeState(),
     endArmed: endArmed === s.turn, concedeAsk, stats: game.stats, online: game.online, result: game.result, waiting: waitingInQueue(),
     unlocked: game.unlocked, fresh: s.gameOver && heroesShattered && !game.summaryShown,
+    canUndo: undoStack.length > 0 && !animating && s.activePlayer === viewer && !s.pending, recap: recap && s.activePlayer === viewer && !s.gameOver ? { ...recap, fresh: Date.now() - recap.at < 600 } : null,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
   });
   if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0]); else hideBoard();
@@ -2809,7 +2851,10 @@ function showPreview(target) {
   }
   const note = target.dataset.history ? `<div class="preview-note">${esc(target.dataset.history)}</div>` : '';
   const el = previewEl();
-  el.innerHTML = bigCardHTML(card, live) + note;
+  // Lycanthropes: the other form is shown beside it.
+  const twinId = card.beastForm ?? card.humanForm;
+  const twin = twinId ? getCard(twinId) : null;
+  el.innerHTML = bigCardHTML(card, live) + (twin ? `<div class="preview-twin"><span>${twin.form === 'beast' ? 'Beast Form' : 'Humanoid Form'}</span>${bigCardHTML(twin)}</div>` : '') + note;
   const r = target.getBoundingClientRect();
   const right = r.left + r.width / 2 < window.innerWidth / 2;
   el.style.left = right ? `${Math.min(r.right + 16, window.innerWidth - 20)}px` : '';
@@ -3034,6 +3079,20 @@ app.addEventListener('click', (e) => {
   if (pgBtn) return pageTurn(pgBtn.closest('.pager'), Number(pgBtn.dataset.page));
   const btn = e.target.closest('[data-act]');
   if (btn && !(btn.classList.contains('zoom-overlay') && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
+  // Named decks in the deck builder: load one, or delete it.
+  const slotBtn = e.target.closest('[data-slot]');
+  if (slotBtn && screen === 'builder') {
+    const d = deckSlots(picked)[Number(slotBtn.dataset.slot)];
+    if (d) { draftDeck = countsOf(d.deck); flash(`Loaded "${d.name}". Press Save deck to play it.`); return render(); }
+  }
+  const slotDel = e.target.closest('[data-slotdel]');
+  if (slotDel && screen === 'builder') {
+    const list = deckSlots(picked);
+    const [gone] = list.splice(Number(slotDel.dataset.slotdel), 1);
+    storeSlots(picked, list);
+    if (gone) flash(`Deleted "${gone.name}".`);
+    return render();
+  }
   const zoom = e.target.closest('[data-zoom]');
   const lockedCard = (screen === 'gallery' || screen === 'builder') && e.target.closest('.card.locked');
   if (lockedCard) {
@@ -3153,6 +3212,14 @@ function onButton(name) {
     case 'howtoPrev': howtoPage = Math.max(0, howtoPage - 1); sound.play('draw'); return render();
     case 'howtoNext': howtoPage = Math.min(HOWTO_PAGES - 1, howtoPage + 1); sound.play('draw'); return render();
     case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; howtoPage = 0; app.scrollTop = 0; return render();
+    case 'undo': {
+      if (animating || !undoStack.length || !game) return;
+      const u = undoStack.pop();
+      game.state = u.state; game.stats = u.stats; history.length = Math.min(history.length, u.history);
+      drag.cancel(); hidePreview(); sound.play('click');
+      return render();
+    }
+    case 'closeRecap': recap = null; return render();
     case 'closeZoom': zoomId = null; zoomArt = false; zoomBeast = false; return render();
     case 'zoomFlip': zoomBeast = !zoomBeast; zoomAnim = { flip: true }; return render();
     case 'zoomArt': zoomArt = true; return render();
@@ -3178,6 +3245,17 @@ function onButton(name) {
       return render();
     }
     case 'cutClear': draftDeck = {}; return render();
+    case 'slotSave': {
+      const deck = deckOf(draftDeck);
+      if (deckProblem(picked, deck)) return flash(deckProblem(picked, deck));
+      const list = deckSlots(picked);
+      if (list.length >= 12) return flash('You can keep up to 12 decks for this pair. Delete one first.');
+      const name = (app.querySelector('.ds-name')?.value ?? '').trim().slice(0, 24) || `Deck ${list.length + 1}`;
+      storeSlots(picked, [...list, { name, deck }]);
+      storeDeck(picked, deck);
+      flash(`Saved "${name}". It's now the deck you play.`);
+      return render();
+    }
     case 'cutSave': {
       const deck = deckOf(draftDeck);
       if (deckProblem(picked, deck)) return flash(deckProblem(picked, deck));

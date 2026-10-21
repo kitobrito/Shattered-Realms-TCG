@@ -6,10 +6,14 @@ import { fitAllText } from './shared.js';
 // Speed: the player's Game Speed setting, and shorter effects for reduced motion.
 let speedSetting = 1;
 let reducedSetting = false;
+// boost: an extra factor while the AI is taking its turn (Settings: AI turn speed).
+let boost = 1;
 export function setSpeed(factor, reducedMotion = false) { speedSetting = factor; reducedSetting = reducedMotion; }
-export const speedFactor = () => speedSetting;
+export function setBoost(factor) { boost = factor; }
+export const boostFactor = () => boost;
+export const speedFactor = () => speedSetting * boost;
 const reduced = () => reducedSetting || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-const speed = () => (reduced() ? 0.35 : 1) * speedSetting;
+const speed = () => (reduced() ? 0.35 : 1) * speedSetting * boost;
 
 export function layer() {
   let el = document.getElementById('fx-layer');
