@@ -110,7 +110,7 @@ export const SHARK_CARDS = [
     triggers: [{ on: 'battlecry', effects: [{ op: 'executePrey', maxHealth: 3 }] }],
   },
   {
-    ...K, id: 'king_of_the_red_wake', name: 'King of the Red Wake', art: '👑', cost: 9, attack: 7, health: 9,
+    ...K, id: 'king_of_the_red_wake', name: 'Prince of the Red Wake', art: '👑', cost: 9, attack: 7, health: 9,
     text: 'Whenever a Marked Prey dies, give your other Sharks +1/+1.',
     triggers: [{ on: 'minionDied', filter: { deadPrey: true }, effects: [{ op: 'buff', target: { minions: { side: 'friendly', tribe: 'Shark', excludeSelf: true } }, attack: 1, health: 1 }] }],
   },
