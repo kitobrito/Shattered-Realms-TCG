@@ -23,9 +23,9 @@ export const ACIDIC_CARDS = [
   // ---- Hero Spell ----
   {
     ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 2, corrodes: true,
-    text: 'Apply Corrosion 2 to an enemy minion.',
+    text: 'Apply Corrosion 1 to an enemy minion.',
     target: ENEMY_MINION,
-    effects: [corrode('chosen', 2)],
+    effects: [corrode('chosen', 1)],
   },
 
   // ---- Minions (16) ----
