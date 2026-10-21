@@ -506,6 +506,22 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (c) => applyBuff(state, c, { ...resolved, byController: ctx.controller }));
   },
 
+  // { target } — Swallow Whole (King Meg): the source destroys the target outright and
+  // permanently gains its current Attack and Health.
+  swallow(state, e, ctx) {
+    const me = findCharacter(state, ctx.self);
+    if (!me || me.kind !== 'minion' || me.destroyed) return;
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion' || c.destroyed || c.health <= 0) return;
+      const atk = Math.max(0, effectiveAttack(c)), hp = Math.max(0, c.health);
+      c.destroyed = true;
+      c.lastDamagedBy = ctx.self;
+      c.lastDamagedByController = ctx.controller;
+      log(state, `🦈 ${nameOf(state, me)} swallows ${nameOf(state, c)} whole (+${atk}/+${hp}).`);
+      applyBuff(state, me, { attack: atk, health: hp, byController: ctx.controller });
+    });
+  },
+
   // { target, options: [buff params, ...] } — one option at random.
   randomBuff(state, e, ctx) {
     each(state, e.target, ctx, (c) => applyBuff(state, c, pickRandom(state, e.options)));

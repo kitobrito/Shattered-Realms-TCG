@@ -297,6 +297,13 @@ export const SHARK_CARDS = [
     ] },
   },
 
+  {
+    ...K, id: 'king_meg_the_apex_predator', name: 'King Meg, The Apex Predator', art: '🦈', extra: true, cost: 10, attack: 8, health: 10, keywords: ['Rush'],
+    text: 'Rush. Whenever this attacks a Marked Prey, destroy it and permanently gain its Attack and Health.',
+    // Ruling: the Prey is swallowed before combat, so the attack ends without a fight.
+    triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: { prey: true } }, effects: [{ op: 'swallow', target: 'eventTarget' }] }],
+  },
+
   // ---- Tokens ----
   { ...K, id: 'shark_pup', name: 'Shark Pup', art: '🦈', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...K, id: 'sand_lurker', name: 'Sand Lurker', art: '🏖️', token: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'], text: 'Rush.' },
