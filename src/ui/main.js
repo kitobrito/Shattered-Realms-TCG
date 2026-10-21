@@ -2473,6 +2473,7 @@ function zoomHTML(card) {
             <button class="zoom-close ghost" data-act="closeZoom" title="Close (Esc)">✕</button>
           </header>
           <div class="zoom-kind">${esc(kindOf(card))}</div>
+          ${isLocked(card.id) ? '<div class="zoom-locked">🔒 Locked · every win unlocks 2 new cards</div>' : ''}
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
           ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}
         </aside>
@@ -3019,6 +3020,9 @@ app.addEventListener('click', (e) => {
     mfx.rattle(lockedCard);
     const f = getCard(lockedCard.dataset.zoom ?? lockedCard.dataset.cut ?? lockedCard.querySelector('[data-zoom]')?.dataset.zoom)?.faction;
     const left = lockedCount(f);
+    // Locked cards can still be opened full size to read (handy on phones, where they're small).
+    const id = lockedCard.dataset.zoom ?? lockedCard.dataset.cut ?? lockedCard.querySelector('[data-zoom]')?.dataset.zoom;
+    if (id && getCard(id)) { zoomId = id; zoomAnim = zoomFrom(lockedCard); return render(); }
     return flash(`Locked. Every win unlocks 2 new cards${left ? ` · ${left} ${esc(f ?? '')} card${left === 1 ? '' : 's'} still locked (about ${Math.ceil(left / UNLOCKS_PER_WIN)} win${Math.ceil(left / UNLOCKS_PER_WIN) === 1 ? '' : 's'})` : ''}.`);
   }
   if (zoom && (screen === 'gallery' || screen === 'builder' || screen === 'menu')) { zoomId = zoom.dataset.zoom; zoomAnim = zoomFrom(zoom); return render(); }

@@ -4626,3 +4626,5 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 /* Acidic (The Half-Digested): Acid Hide and Regenerate chips. */
 .st.st-acidhide { background: radial-gradient(circle at 40% 35%, #eaff9a, #9be22a 45%, #4a7a0a); box-shadow: 0 0 8px #b6ff3a; }
 .st.st-regen { background: radial-gradient(circle at 40% 35%, #d8ffe0, #4ad86a 45%, #1a7a3a); }
+
+.zoom-locked { margin: 6px 0; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); color: #ffd98a; font-weight: 700; font-size: 0.9em; }
