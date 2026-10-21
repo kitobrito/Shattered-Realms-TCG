@@ -304,6 +304,7 @@ export function corrode(state, m, amount, by = null) {
   // Meltdown: Corrosion on a minion already at 0 Attack eats something else instead.
   if (effectiveAttack(m) <= 0) {
     m.corrosion = (m.corrosion ?? 0) + amount;
+    log(state, `🧪 ${nameOf(state, m)} corrodes further (Corrosion ${m.corrosion}).`);
     meltdown(state, m, by);
     return 0;
   }
@@ -317,35 +318,17 @@ export function corrode(state, m, amount, by = null) {
   const lost = before - after;
   log(state, `🧪 ${nameOf(state, m)} corrodes (Corrosion ${amount}): ${before} → ${after} Attack.`);
   emit(state, { type: 'corrosionApplied', target: m.uid, player: m.controller, by, amount, lost, zeroed: before > 0 && after === 0 });
+  meltdown(state, m, by);
   return lost;
 }
 
-// Meltdown (Acidic): Corrosion on a minion already at 0 Attack eats, instead, in order: its Weapon or Relic,
-// then one of its own keywords (good ones first), then its card text; with nothing left to lose,
-// it takes damage equal to all the Corrosion on it.
+// Meltdown (Acidic): a minion at 0 Attack carrying 5 or more Corrosion is Dissolved.
+export const MELTDOWN_CORROSION = 5;
 function meltdown(state, m, by) {
-  const name = nameOf(state, m);
-  if (m.relic || m.weapon) {
-    const what = (m.relic ?? m.weapon).name;
-    if (m.relic) dropMinionRelic(state, m);
-    else { m.attack = Math.max(0, m.attack - (m.weapon.attack ?? 0)); m.grantedTriggers = (m.grantedTriggers ?? []).filter((t) => !t.weapon); m.weapon = null; }
-    log(state, `🧪 Meltdown: ${name}'s ${what} melts away.`);
-  } else {
-    const own = [...m.keywords, ...(m.tempKeywords ?? []), ...(m.lingerKeywords ?? []).map((x) => x.k)].filter((k) => !NEGATIVE.includes(k));
-    if (own.length) {
-      const k = own[0];
-      removeKeyword(m, k);
-      log(state, `🧪 Meltdown: ${name} loses ${k}.`);
-      emit(state, { type: 'keywordLost', target: m.uid, player: m.controller, keyword: k });
-    } else if (!m.textLost && (getCard(m.cardId).triggers?.length || getCard(m.cardId).aura)) {
-      m.textLost = true;
-      log(state, `🧪 Meltdown: ${name}'s card text melts away.`);
-    } else {
-      log(state, `🧪 Meltdown: ${name} is eaten away (${m.corrosion} damage).`);
-      dealDamage(state, null, m.uid, m.corrosion, { sourceController: by });
-    }
-  }
+  if (effectiveAttack(m) > 0 || (m.corrosion ?? 0) < MELTDOWN_CORROSION) return;
+  log(state, `🧪 Meltdown: ${nameOf(state, m)} has corroded away completely.`);
   emit(state, { type: 'meltdown', target: m.uid, player: m.controller, by });
+  dissolve(state, m, by);
 }
 const NEGATIVE = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
@@ -400,28 +383,28 @@ export function removeTempBuffs(state, m) {
   return { ...taken, health: extra };
 }
 
-// Dissolving an enemy minion distills what was stripped into a 1-Mana spell in the
-// dissolver's hand that gives it to one of their own minions. Ruling: Attack and Health
-// come back for that turn; keywords come back for good.
+// Dissolving a minion distills it into a spell in the dissolver's hand that gives one
+// of their own minions one random piece of it for good: its printed Attack, its printed
+// Health, or its keywords. Stats cost half their total; keywords cost 1.
 function distill(state, by, taken) {
   if (by == null || (!taken.attack && !taken.health && !taken.keywords.length)) return;
   const parts = [
-    taken.attack || taken.health ? `+${taken.attack}/+${taken.health} this turn` : '',
+    taken.attack ? `+${taken.attack} Attack` : '', taken.health ? `+${taken.health} Health` : '',
     taken.keywords.join(', '),
   ].filter(Boolean);
   const card = {
     id: `essence_${state.nextUid++}`, custom: true, token: true, faction: 'Acidic', type: 'spell',
-    name: 'Distilled Essence', art: '🧪', artFrom: 'strip_the_plating', cost: 1,
+    name: `Essence of ${taken.name}`, art: '🧪', artFrom: taken.cardId, cost: Math.max(1, Math.round((taken.attack + taken.health) / 2) + (taken.keywords.length ? 1 : 0)),
     text: `Give a friendly minion ${parts.join(' and ')}.`,
     target: { type: 'minion', side: 'friendly' },
     effects: [{ op: 'buff', target: 'chosen',
-      ...(taken.attack ? { attack: taken.attack, temporary: true } : {}),
-      ...(taken.health ? { health: taken.health, temporaryHealth: true } : {}),
+      ...(taken.attack ? { attack: taken.attack } : {}),
+      ...(taken.health ? { health: taken.health } : {}),
       ...(taken.keywords.length ? { keywords: taken.keywords } : {}) }],
   };
   registerCustom(state, card);
   addToHand(state, by, card.id);
-  log(state, `🧪 ${state.players[by].name} distills the stripped power into ${card.name} (${parts.join(', ')}).`);
+  log(state, `🧪 ${state.players[by].name} distills ${taken.name} into ${card.name} (${parts.join(', ')}).`);
 }
 
 // Rust-Eater Brute: a minion "has buffs" when it is above its printed stats or carries
@@ -433,31 +416,26 @@ export function isBuffed(m) {
   return m.keywords.some((k) => !(card.keywords ?? []).includes(k));
 }
 
-// Dissolve: strip temporary buffs; failing that, one defensive effect; failing that, Corrosion 1.
-// opts.defenseOnly skips the buffs; opts.fallback sets the Corrosion. Returns what happened.
-export function dissolve(state, m, by = null, opts = {}) {
+// Dissolve: destroy a minion and distill its Attack, Health or keywords into a spell
+// in the dissolver's hand (see distill).
+export function dissolve(state, m, by = null) {
   if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed) return null;
-  let result;
-  const enemy = by != null && by !== m.controller;
-  const taken = opts.defenseOnly ? null : removeTempBuffs(state, m);
-  if (taken) {
-    result = 'buffs';
-    if (enemy) distill(state, by, taken);
-  } else {
-    const k = defensiveKeywordOf(m);
-    if (k) {
-      removeKeyword(m, k);
-      if (enemy) distill(state, by, { attack: 0, health: 0, keywords: [k] });
-      emit(state, { type: 'keywordLost', target: m.uid, player: m.controller, keyword: k });
-      log(state, `🧪 ${nameOf(state, m)}'s ${k} dissolves.`);
-      result = 'defense';
-    } else {
-      corrode(state, m, opts.fallback ?? 1, by);
-      result = 'corroded';
-    }
-  }
-  emit(state, { type: 'dissolved', target: m.uid, player: m.controller, by, result });
-  return result;
+  // One random piece of it: its printed Attack, its printed Health, or its keywords.
+  const card = getCard(m.cardId);
+  const keywords = allKeywords(m).filter((k) => ownKeyword(m, k));
+  const options = [
+    ...(card.attack > 0 ? [{ attack: card.attack, health: 0, keywords: [] }] : []),
+    ...(card.health > 0 ? [{ attack: 0, health: card.health, keywords: [] }] : []),
+    ...(keywords.length ? [{ attack: 0, health: 0, keywords }] : []),
+  ];
+  const taken = { name: nameOf(state, m), cardId: m.cardId,
+    ...(options.length ? options[randomInt(state, options.length)] : { attack: 0, health: 0, keywords: [] }) };
+  m.destroyed = true;
+  if (by != null) { m.lastDamagedByController = by; }
+  log(state, `🧪 ${taken.name} dissolves.`);
+  distill(state, by, taken);
+  emit(state, { type: 'dissolved', target: m.uid, player: m.controller, by, result: 'destroyed' });
+  return 'destroyed';
 }
 
 export function emit(state, event) {

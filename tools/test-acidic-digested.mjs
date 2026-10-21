@@ -153,10 +153,11 @@ test('The Chewed One: +2 Attack while damaged', () => {
   if (effectiveAttack(c) !== 5) return `${effectiveAttack(c)}`;
 });
 
-test('Melting Embrace: Dissolve, then Corrode by 3', () => {
-  const m = blank(1, 5, 5); m.keywords = ['Taunt'];
+test('Melting Embrace: Dissolve, then Corrode the rest by 1', () => {
+  const m = blank(1, 5, 5); m.keywords = ['Taunt']; const o = blank(1, 3, 3);
+  Object.assign(pl(0).mana, { max: 10, current: 10, base: 10 });
   play(0, give(0, 'melting_embrace'), m.uid);
-  if (effectiveAttack(m) !== 2 || hasKeyword(m, 'Taunt')) return `${effectiveAttack(m)} ${m.keywords}`;
+  if (pl(1).board.includes(m) || effectiveAttack(o) !== 2) return `${m.destroyed} ${effectiveAttack(o)}`;
 });
 
 test('Gut-Burst Horror: 2 to all other minions, then heals your Acid Hide ones', () => {
@@ -191,24 +192,23 @@ test('No Meltdown above 0 Attack: a 1-Attack minion just drops to 0', () => {
   if (effectiveAttack(m) !== 0 || !hasKeyword(m, 'Taunt')) return `${effectiveAttack(m)} ${m.keywords}`;
 });
 
-test('Meltdown: corroding a minion at 0 Attack strips a keyword first', () => {
-  const m = blank(1, 0, 9); m.keywords = ['Taunt']; m.corrosion = 2;
+test('Meltdown: below 5 Corrosion a 0-Attack minion keeps its keywords', () => {
+  const m = blank(1, 0, 9); m.keywords = ['Taunt']; m.corrosion = 1;
   play(0, give(0, 'dissolve_arms'));
-  if (hasKeyword(m, 'Taunt')) return 'kept Taunt';
+  if (!hasKeyword(m, 'Taunt') || !pl(1).board.includes(m)) return 'changed';
 });
 
-test('Meltdown: with a Relic, the Relic melts first', () => {
-  const g = put(1, 'poltergeist_porter'); g.attack = 0; g.corrosion = 1;
-  s.activePlayer = 1; pl(1).mana.current = 10; play(1, give(1, 'wailing_chains'), g.uid); s.activePlayer = 0;
-  g.attack = 0; // keep it fully corroded after the +2
+test('Meltdown: at 0 Attack with 5 Corrosion it is Dissolved, and you get its Essence', () => {
+  const m = blank(1, 0, 9); m.keywords = ['Taunt']; m.corrosion = 4;
   play(0, give(0, 'dissolve_arms'));
-  if (g.relic) return 'relic survived';
+  if (pl(1).board.includes(m)) return 'survived';
+  if (!pl(0).hand.some((h) => getCard(h.cardId).name.startsWith('Essence of'))) return 'no essence';
 });
 
-test('Meltdown: with nothing left, it takes damage equal to its Corrosion', () => {
-  const m = blank(1, 0, 9); m.corrosion = 4; m.textLost = true; // its card text already melted
+test('Meltdown: corroding down to 0 Attack with 5 total Corrosion Dissolves it', () => {
+  const m = blank(1, 1, 9); m.corrosion = 4;
   play(0, give(0, 'dissolve_arms'));
-  if (m.health !== 4) return `health ${m.health}`; // corrosion 4 + 1 = 5 damage
+  if (pl(1).board.includes(m)) return 'survived';
 });
 
 console.log(`\n${passed} passed, ${failures} failed`);

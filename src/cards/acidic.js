@@ -3,8 +3,8 @@
 //
 // Corrosion X (core.js corrode): permanently lowers a minion's Attack by X, never its Health.
 // At 0 Attack it can't attack until its Attack rises again. It lasts while the minion stays
-// in play. Dissolve (core.js dissolve): strip temporary buffs; failing that, one defensive
-// effect; failing that, Corrosion 1. Acid-coated: the next Corrosion is 1 stronger.
+// in play. Dissolve (core.js dissolve): destroy a minion and put a spell in your hand that
+// gives one of your minions its Attack, Health and keywords. Acid-coated: the next Corrosion is 1 stronger.
 // Caustic: abilities that trigger when Corrosion hits an enemy minion.
 // `corrodes: true` marks spells that apply Corrosion (Living Flask).
 // Rulings made while building are marked "Ruling:".
@@ -16,7 +16,7 @@ const T = { faction: 'Acidic', type: 'trap' };
 const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const ENEMY_MINIONS = { minions: { side: 'enemy' } };
 const corrode = (target, amount, extra = {}) => ({ op: 'corrode', target, amount, ...extra });
-const dissolve = (target, extra = {}) => ({ op: 'dissolve', target, ...extra });
+const dissolve = (target) => ({ op: 'dissolve', target });
 const once = (key, effects) => ({ op: 'oncePerTurn', key, effects });
 
 export const ACIDIC_CARDS = [
@@ -85,10 +85,10 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'corrosiveSpell', filter: { player: 'friendly' }, effects: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }],
   },
   {
-    ...K, id: 'dissolver_mantis', name: 'Dissolver Mantis', art: '🦗', cost: 4, attack: 4, health: 3,
-    text: "Arrival: Dissolve an enemy minion's defensive effect. If it has none, apply Corrosion 2.",
+    ...K, id: 'dissolver_mantis', name: 'Dissolver Mantis', art: '🦗', cost: 7, attack: 4, health: 3,
+    text: 'Arrival: Dissolve an enemy minion.',
     target: ENEMY_MINION,
-    triggers: [{ on: 'battlecry', effects: [dissolve('chosen', { defenseOnly: true, fallback: 2 })] }],
+    triggers: [{ on: 'battlecry', effects: [dissolve('chosen')] }],
   },
   {
     ...K, id: 'ooze_mimic', name: 'Ooze Mimic', art: '🟢', cost: 5, attack: 4, health: 3,
@@ -124,9 +124,9 @@ export const ACIDIC_CARDS = [
     target: { type: 'minion', side: 'any' }, effects: [corrode('chosen', 2)],
   },
   {
-    ...S, id: 'strip_the_plating', name: 'Strip the Plating', art: '🛡️', cost: 2,
-    text: 'Dissolve an enemy minion. Repeat if it has 5 or more Attack.',
-    target: ENEMY_MINION, effects: [dissolve('chosen', { repeatIfAttackAtLeast: 5 })],
+    ...S, id: 'strip_the_plating', name: 'Strip the Plating', art: '🛡️', cost: 5,
+    text: 'Dissolve an enemy minion.',
+    target: ENEMY_MINION, effects: [dissolve('chosen')],
   },
   {
     ...S, id: 'caustic_bath', name: 'Caustic Bath', art: '🛁', cost: 3, corrodes: true,
@@ -183,10 +183,10 @@ export const ACIDIC_CARDS = [
     effects: [corrode('eventSource', 2)],
   },
   {
-    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 2, quickPlay: {},
-    text: 'Quick Play: Dissolve an enemy minion. If a defensive effect was removed, deal 2 damage to it.',
+    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 6, quickPlay: {},
+    text: 'Quick Play: Dissolve an enemy minion.',
     target: ENEMY_MINION,
-    effects: [dissolve('chosen', { ifDefense: [{ op: 'damage', target: 'chosen', amount: 2 }] })],
+    effects: [dissolve('chosen')],
   },
   {
     ...S, id: 'reactive_spill', name: 'Reactive Spill', art: '🧴', cost: 3, corrodes: true,
@@ -274,10 +274,10 @@ export const ACIDIC_CARDS = [
     text: 'Acid Hide. Regenerate 2. Has +2 Attack while damaged.',
   },
   {
-    ...S, id: 'melting_embrace', name: 'Melting Embrace', art: '🫂', extra: true, cost: 4, corrodes: true,
-    text: 'Dissolve an enemy minion, then Corrode it by 3.',
+    ...S, id: 'melting_embrace', name: 'Melting Embrace', art: '🫂', extra: true, cost: 7, corrodes: true,
+    text: 'Dissolve an enemy minion. Corrode all other enemy minions by 1.',
     target: ENEMY_MINION,
-    effects: [dissolve('chosen'), corrode('chosen', 3)],
+    effects: [dissolve('chosen'), corrode(ENEMY_MINIONS, 1)],
   },
   {
     ...K, id: 'gut_burst_horror', name: 'Gut-Burst Horror', art: '😱', extra: true, cost: 5, attack: 4, health: 4,
