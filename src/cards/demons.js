@@ -230,6 +230,7 @@ export const DEMON_CARDS = [
 
   // ---- Tokens ----
   { ...DM, id: 'imp', name: 'Imp', art: '😈', token: true, cost: 1, attack: 1, health: 1, text: '' },
+  { ...DM, id: 'lilim', name: 'Lilim', art: '🦇', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...DM, id: 'lesser_demon', name: 'Lesser Demon', art: '👿', token: true, cost: 3, attack: 3, health: 3, keywords: ['Taunt'], text: 'Taunt.' },
 
   // ---- Kings of Hell expansion (unlockable) ----
@@ -280,6 +281,26 @@ export const DEMON_CARDS = [
     ...DM, id: 'bael_first_king_of_hell', name: 'Bael, First King of Hell', art: '👑', extra: true, cost: 8, attack: 7, health: 7,
     text: 'Arrival: Both players draw until they have 10 cards. Deal 1 damage to the enemy Hero for each card your opponent drew.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'fillHands', max: 10, damagePerEnemyCard: 1 }] }],
+  },
+  // ---- The Circles of Hell (Kings of Hell, part two): the Descent's legendaries ----
+  {
+    ...DM, id: 'baphomet_king_of_the_sabbath', name: 'Baphomet, King of the Sabbath', art: '🐐', extra: true, cost: 7, attack: 6, health: 7,
+    text: 'Arrival: Sink one circle deeper. Your other minions have +1 Attack for each circle sunk.',
+    aura: { target: { minions: { side: 'friendly', excludeSelf: true } }, attackPerDepth: 1 },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'descend' }] }],
+  },
+  {
+    ...DM, id: 'lilith_queen_of_the_night', name: 'Lilith, Queen of the Night', art: '🌙', extra: true, cost: 6, attack: 4, health: 6, keywords: ['Lifesteal'],
+    text: 'Lifesteal. At the end of your turn, summon a 1/1 Lilim for each circle sunk (up to 3).',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'summon', cardId: 'lilim', countPerDepth: { max: 3 } }] }],
+  },
+  {
+    ...DM, id: 'satan_lord_of_the_pit', name: 'Satan, Lord of the Pit', art: '😈', extra: true, cost: 10, attack: 10, health: 10, costPerDepth: 1,
+    text: 'Costs 1 less for each circle sunk. Arrival: Destroy all other minions. In the Seventh Circle, the enemy Hero also loses half their Health.',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'destroy', target: { minions: { excludeSelf: true } } },
+      { op: 'satansJudgement', depth: 7 },
+    ] }],
   },
   {
     ...S, id: 'infernal_contract', name: 'Infernal Contract', art: '📜', extra: true, cost: 1,

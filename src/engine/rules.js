@@ -155,6 +155,7 @@ export const BOARD_EVENTS = [
   'preyMarked',       // Sharks: an enemy minion became Marked Prey
   'corrosionApplied', // Acidic: Corrosion hit a minion ({ target, player, by, amount, lost, zeroed })
   'dissolved',        // Acidic: a minion was Dissolved ({ target, player, by, result })
+  'descended',        // Demons (Circles of Hell): the battle sank a circle deeper ({ depth })
   'corrosiveSpell',   // Acidic: a spell that applies Corrosion was played ({ player, cardId })
   'burnApplied',      // a character's Burn value was set or raised
   'burnDamage',       // a character took Burn damage (end of its enemy's turn)
@@ -202,6 +203,7 @@ export const DEFAULT_RULES = {
   // Going second picks one: Mana Potion or Health Potion. false = always the Mana Potion.
   secondPlayerPotions: ['mana_potion', 'health_potion'],
   maxHandSize: 10,
+  descentPoints: 6,         // Demons: points to sink one circle (doubled when both players are Demons)
   maxBoardSize: 7,
   maxTraps: 5,               // hard limit
   factionDeckSize: 30,       // every faction has one fixed 30-card deck
@@ -220,3 +222,18 @@ export const DEFAULT_RULES = {
   summonTriggersOnPlay: true,  // playing a minion from hand counts as summoning it
   rebornHealth: 1,
 };
+
+// ---- Demons: The Descent (Circles of Hell) ----------------------------------------
+// While a Demon player is in the match, the battle sinks through seven circles. Every
+// Health a Demon player pays and every minion that dies adds a point; DEFAULT_RULES.
+// descentPoints sink one circle (twice that when both players are Demons). Only the
+// current circle's rule is in force, and it applies to BOTH players. Both boards change.
+export const CIRCLES = [
+  { n: 1, ordinal: 'First', name: 'Limbo', text: 'Hero Spells cost 1 more.' },
+  { n: 2, ordinal: 'Second', name: 'Lust', text: 'Minions cost 1 less.' },
+  { n: 3, ordinal: 'Third', name: 'Gluttony', text: 'Draw an extra card at the start of your turn. Hands hold only 7 cards.' },
+  { n: 4, ordinal: 'Fourth', name: 'Greed', text: 'Spells cost 1 less, but casting one costs 1 Health.' },
+  { n: 5, ordinal: 'Fifth', name: 'Wrath', text: 'All minions have +1 Attack.' },
+  { n: 6, ordinal: 'Sixth', name: 'Heresy', text: 'At the end of each turn, deal 1 damage to all minions.' },
+  { n: 7, ordinal: 'Seventh', name: 'Violence', text: 'Demon minions cost 2 less. The bottom of Hell: Satan stirs.' },
+];

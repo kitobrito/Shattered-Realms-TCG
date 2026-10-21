@@ -4,7 +4,7 @@
 
 import { getCard, registerCustom } from './registry.js';
 import { randomInt } from './rng.js';
-import { FACTION_TAGS } from './rules.js';
+import { CIRCLES, FACTION_TAGS } from './rules.js';
 
 export const opponentOf = (p) => 1 - p;
 
@@ -144,8 +144,49 @@ export function costOf(state, inst) {
   if (inst.taxTurn != null && state && inst.taxTurn === state.turn) aura += inst.tax ?? 0;
   // Robots: Chief Engineer — the next Upgrade you play costs less.
   if (card.upgrade && state) aura -= state.players[inst.owner]?.upgradeDiscount ?? 0;
+  // Demons: the Circles of Hell (both players) and Satan's discount per circle sunk.
+  const depth = descentDepth(state);
+  if (depth === 2 && card.type === 'minion') aura -= 1;
+  if (depth === 4 && card.type === 'spell') aura -= 1;
+  if (depth === 7 && card.type === 'minion' && card.faction === 'Demons') aura -= 2;
+  if (card.costPerDepth) aura -= depth * card.costPerDepth;
   return Math.max(inst.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
 }
+
+// ---- Demons: The Descent (rules.js CIRCLES) ------------------------------------------
+export const descentDepth = (state) => state?.descent?.depth ?? 0;
+export const currentCircle = (state) => CIRCLES[descentDepth(state) - 1] ?? null;
+// Starts the Descent if a Demon player is in the match (createGame, or lazily for old saves).
+export function initDescent(state) {
+  if (state.descent) return state.descent;
+  const demons = state.players.filter((p) => p.factions.includes('Demons')).length;
+  if (!demons) return null;
+  state.descent = { depth: 0, points: 0, need: (state.rules.descentPoints ?? 6) * demons };
+  return state.descent;
+}
+// Adds Descent points; every `need` points sink the battle one circle (to the 7th at most).
+export function addDescent(state, n) {
+  const d = initDescent(state);
+  if (!d || n <= 0 || d.depth >= CIRCLES.length) return;
+  d.points += n;
+  while (d.points >= d.need && d.depth < CIRCLES.length) {
+    d.points -= d.need;
+    d.depth += 1;
+    const c = CIRCLES[d.depth - 1];
+    log(state, `🔥 The battle sinks into the ${c.ordinal} Circle: ${c.name}. ${c.text}`);
+    emit(state, { type: 'descended', depth: d.depth });
+  }
+  if (d.depth >= CIRCLES.length) d.points = 0;
+}
+// Sink straight to the next circle (Baphomet).
+export function sinkOneCircle(state) {
+  const d = initDescent(state);
+  if (d) addDescent(state, d.need - d.points);
+}
+// Hero Spells cost 1 more in Limbo (Fusions are unaffected).
+export const heroSpellCost = (state, card) => card.cost + (descentDepth(state) === 1 && !card.fusion ? 1 : 0);
+// Gluttony: hands hold only 7 cards.
+export const maxHand = (state) => (descentDepth(state) === 3 ? Math.min(7, state.rules.maxHandSize) : state.rules.maxHandSize);
 
 export function createHero(state, p) {
   return {
@@ -548,6 +589,8 @@ export function loseHealth(state, targetId, amount, opts = {}) {
     t.healthLost += amount;
     state.players[t.owner].lostHealthTurn = state.turn;
     emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount, source: null, paid: opts.paid !== false, forSummon: !!opts.forSummon });
+    // The Descent: Health a Demon player pays drags the battle deeper.
+    if (opts.paid !== false && state.players[t.owner].factions.includes('Demons')) addDescent(state, amount);
   } else {
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: null });
   }
@@ -560,7 +603,7 @@ export function addToHand(state, p, cardId, extra = {}) {
   // Lycanthropes: a card always goes to a hand in its Humanoid Form (the Beast Form is board-only).
   cardId = getCard(cardId)?.humanForm ?? cardId;
   const inst = { uid: newUid(state), cardId, owner: p, ...extra };
-  if (pl.hand.length >= state.rules.maxHandSize) {
+  if (pl.hand.length >= maxHand(state)) {
     pl.graveyard.push(inst);
     log(state, `${pl.name}'s hand is full; ${getCard(cardId).name} is burned.`);
     return null;
@@ -585,7 +628,7 @@ export function drawCards(state, p, count = 1, filter = null) {
       dealDamage(state, null, pl.hero.uid, pl.fatigue);
       continue;
     }
-    const burned = pl.hand.length >= state.rules.maxHandSize;
+    const burned = pl.hand.length >= maxHand(state);
     if (burned) {
       pl.graveyard.push(card);
       log(state, `${pl.name}'s hand is full; ${getCard(card.cardId).name} is burned.`);

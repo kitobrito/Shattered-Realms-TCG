@@ -23,6 +23,7 @@ import {
   applyBurn, burnCards, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
   corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
+  descentDepth, maxHand, sinkOneCircle,
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -514,6 +515,20 @@ export const EFFECT_OPS = {
       .filter((m) => m.uid !== ctx.self && m.surfacedTurn === state.turn && m.health > 0 && !m.destroyed).length;
     if (others) log(state, `🏜 Aftershocks! The quake strikes ${1 + others} times.`);
     for (let i = 0; i <= others; i++) for (const sub of e.effects) resolveEffect(state, sub, ctx);
+  },
+
+  // Demons (Circles of Hell): sink the battle one circle deeper (Baphomet).
+  descend(state) {
+    sinkOneCircle(state);
+  },
+  // { depth } — Satan: in the deepest circle, the enemy Hero loses half their Health (rounded down).
+  satansJudgement(state, e, ctx) {
+    if (descentDepth(state) < (e.depth ?? 7)) return;
+    const foe = heroOf(state, opponentOf(ctx.controller));
+    const n = Math.floor(foe.health / 2);
+    if (n <= 0) return;
+    log(state, `😈 Judgement from the Pit: ${nameOf(state, foe)} loses half their Health.`);
+    loseHealth(state, foe.uid, n, { paid: false });
   },
 
   // { target } — Swallow Whole (King Meg): the source destroys the target outright and
@@ -1128,9 +1143,10 @@ export const EFFECT_OPS = {
     }
     if (!fixed && !pool?.length) { if (e.fromDeadZombies) log(state, 'No friendly Zombie has died yet.'); return; }
     // countFromCorpses: { per, max } — one per N friendly Corpses (Zombie Apocalypse).
+    // countPerDepth: { max } — one per circle the battle has sunk (Lilith).
     const count = e.countFromCorpses
       ? Math.min(e.countFromCorpses.max ?? 99, Math.floor((state.players[ctx.controller].corpses ?? 0) / e.countFromCorpses.per))
-      : (e.count ?? 1);
+      : e.countPerDepth ? Math.min(e.countPerDepth.max ?? 7, descentDepth(state)) : (e.count ?? 1);
     for (let i = 0; i < count; i++) {
       // distinct: never the same card twice (Sanguine Recollection).
       if (e.distinct && !fixed && !pool.length) break;
@@ -1336,8 +1352,8 @@ export const EFFECT_OPS = {
   // to the enemy Hero for each card the opponent drew (Bael).
   fillHands(state, e, ctx) {
     const me = state.players[ctx.controller], foe = state.players[opponentOf(ctx.controller)];
-    drawCards(state, ctx.controller, Math.max(0, Math.min(e.max, state.rules.maxHandSize) - me.hand.length));
-    const n = Math.max(0, Math.min(e.max, state.rules.maxHandSize) - foe.hand.length);
+    drawCards(state, ctx.controller, Math.max(0, Math.min(e.max, maxHand(state)) - me.hand.length));
+    const n = Math.max(0, Math.min(e.max, maxHand(state)) - foe.hand.length);
     drawCards(state, opponentOf(ctx.controller), n);
     if (n && e.damagePerEnemyCard) dealDamage(state, ctx.self, foe.hero.uid, n * e.damagePerEnemyCard, { sourceController: ctx.controller });
   },
