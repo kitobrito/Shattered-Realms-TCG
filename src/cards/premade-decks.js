@@ -29,12 +29,12 @@ export const expansionCards = (f) => (FACTION_POOLS[f] ?? []).filter((id) => !(F
 // (`out`) for others (`in`), one for one, to land near a 50% win rate.
 export const EXPANSION_TUNING = {
   // 70% untuned: its cheapest standard cards made it too fast. Slower, swingier picks in.
-  Demons: { out: ['pit_lord', 'infernal_ravager', 'blood_pact', 'unholy_empowerment', 'abyssal_brute'],
-    in: ['soul_collector', 'dread_summoner', 'doom_herald', 'soul_snare', 'blood_price'] },
-  Dragons: { out: ['dragons_breath', 'magma_behemoth', 'furnace_dragon', 'ashen_tyrant'],
-    in: ['cinder_drake', 'charcoal_drake', 'ashen_curse', 'firebreak'] },
-  Ultraterrestrials: { out: ['phase_skitter', 'scale_paradox', 'observer_outside_time', 'phase_jelly', 'rift_hunter'],
-    in: ['riftling', 'temporal_reversal', 'paradox_mine', 'spatial_redirection', 'borrowed_seconds'] },
+  Demons: { out: ['pit_lord', 'infernal_ravager', 'blood_pact', 'unholy_empowerment', 'abyssal_brute', 'unleash_the_beast'],
+    in: ['soul_collector', 'dread_summoner', 'doom_herald', 'soul_snare', 'blood_price', 'pain_into_power'] },
+  Dragons: { out: ['dragons_breath', 'magma_behemoth', 'furnace_dragon', 'ashen_tyrant', 'scorching_breath', 'ember_whelp', 'blazewing', 'fireball'],
+    in: ['cinder_drake', 'charcoal_drake', 'ashen_curse', 'firebreak', 'flash_ignition', 'feed_the_flames', 'scorched_hand', 'molten_hide'] },
+  Ultraterrestrials: { out: ['phase_skitter', 'scale_paradox', 'observer_outside_time'],
+    in: ['riftling', 'temporal_reversal', 'borrowed_seconds'] },
   // 34% untuned: its weakest standard cards out, its best big minions back in.
   Aliens: { out: ['abduction_ray', 'experimental_containment', 'probe_drone', 'ufo_interception', 'alien_tripwire'],
     in: ['overmind_xalat', 'subjugator_drone', 'mind_control_beam', 'gene_thief_operative', 'qu_bio_engineer'] },
