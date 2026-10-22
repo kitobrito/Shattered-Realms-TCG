@@ -4896,3 +4896,29 @@ body.descending #board-layer .board-still, body.descending #board-layer canvas.c
 @media (max-width: 520px) { .dp-how { grid-template-columns: 1fr; } .dp-circles li { grid-template-columns: 22px 84px 1fr; gap: 6px; } .dp-circles li b { font-size: 0.92em; } }
 .arena.portrait .descent-gauge { left: 4px; top: 50%; transform: translateY(-50%) scale(0.85); transform-origin: left center; }
 body.reduced-motion .descent { display: none; }
+
+/* Realm picker: two groups to a row (wide, short boxes), each group's name and blurb on one line,
+   and medallions sized from their group's box (container units) so they fill it instead of
+   floating small in the middle. */
+.ts-fit .faction-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
+.ts-fit .fg { container-type: size; justify-content: center; gap: clamp(2px, 0.8vh, 8px); padding: clamp(4px, 1vh, 10px) 10px; }
+.ts-fit .fg-head { flex-direction: row; justify-content: center; align-items: baseline; gap: 10px; margin: 0; padding: 0 0 clamp(2px, 0.6vh, 6px); white-space: nowrap; overflow: hidden; }
+.ts-fit .fg-head span { overflow: hidden; text-overflow: ellipsis; }
+.ts-fit .fg .factions { --m: clamp(44px, min(calc((100cqw - 64px) / 3.5), calc(100cqh - 78px)), 170px); justify-content: center; gap: 4px clamp(8px, 3cqw, 28px) !important; }
+.ts-fit .fg .faction.medallion .medal-name { font-size: clamp(9px, calc(var(--m) * 0.13), 17px); }
+.ts-fit .fg .faction.medallion .medal-name.long { font-size: clamp(8px, calc(var(--m) * 0.105), 14px); }
+.ts-fit .fg .medal-check { width: clamp(18px, calc(var(--m) * 0.24), 34px); height: clamp(18px, calc(var(--m) * 0.24), 34px); }
+@media (max-width: 520px) { .ts-fit .faction-groups { grid-template-columns: 1fr; grid-template-rows: none; } .ts-fit .fg { container-type: inline-size; } }
+/* Narrow panels: the deck line wraps onto two rows instead of squeezing its text into a column. */
+.ts-fit .deck-line { flex-wrap: wrap; justify-content: center; row-gap: 4px; }
+.ts-fit .deck-line > div:first-child { flex: 1 1 200px; }
+.ts-fit .deck-line .deck-choices { flex: 1 1 100%; justify-content: center; flex-wrap: wrap; }
+/* A long deck name never runs past the panel: it trims with an ellipsis (the full name is in the tooltip). */
+.ts-fit .deck-choices .dc-chip { max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Narrow group boxes: the blurb drops under the group name and wraps instead of being cut off,
+   or, when the box is short too, it's left out (the group name says enough). */
+@container (max-width: 460px) and (max-height: 170px) { .ts-fit .fg-head span { display: none; } }
+@container (max-width: 460px) and (min-height: 170px) {
+  .ts-fit .fg-head { flex-direction: column; align-items: center; gap: 0; white-space: normal; text-align: center; }
+  .ts-fit .fg-head span { font-size: 0.85em; line-height: 1.2; overflow: visible; }
+}
