@@ -78,6 +78,7 @@ export const LEGENDARY = new Set([
   'malgrath_the_bloodmoon_behemoth',
   'nyxara_the_crimson_nightstalker',
   'nihilax_the_world_eater',
+  'gargantua_the_living_singularity',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).

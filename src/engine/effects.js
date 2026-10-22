@@ -173,6 +173,29 @@ export function discardFromHand(state, p, uid, ctx) {
   return inst;
 }
 
+// Void (Singularity): Pull — take a card out of the enemy deck into your hand. If your hand
+// was empty (Collapse), a minion gets a random bonus keyword and any other card costs (1) less.
+// Wormhole Stalker's discount applies to every card you Pull while it lives.
+export function pullFromEnemyDeck(state, p, uid, collapse) {
+  const foe = state.players[opponentOf(p)];
+  const i = foe.deck.findIndex((c) => c.uid === uid);
+  if (i < 0) return null;
+  const [taken] = foe.deck.splice(i, 1);
+  const card = getCard(taken.cardId);
+  const pl = state.players[p];
+  const off = pl.board.filter((m) => !m.textLost && m.health > 0 && !m.destroyed).reduce((t, m) => t + (getCard(m.cardId).pullDiscount ?? 0), 0);
+  const extra = { pulled: true };
+  if (taken.mushrooms) extra.mushrooms = taken.mushrooms; // Fungus Mushrooms ride along
+  if (collapse && card.type === 'minion') extra.bonusKeywords = randomKeywords(state, POSITIVE_KEYWORDS, card.keywords ?? [], 1);
+  const costOff = off + (collapse && card.type !== 'minion' ? 1 : 0);
+  if (costOff) extra.costMod = -costOff;
+  const inst = addToHand(state, p, taken.cardId, extra);
+  pl.pulled = (pl.pulled ?? 0) + 1;
+  log(state, `🕳️ ${pl.name} Pulls ${card.name} from ${foe.name}'s deck${collapse ? ` (Collapse: ${extra.bonusKeywords?.length ? `+${extra.bonusKeywords[0]}` : 'costs (1) less'})` : ''}.`);
+  emit(state, { type: 'cardPulled', player: p, cardId: taken.cardId, collapse: !!collapse });
+  return inst;
+}
+
 // ---- Lycanthropes: Transform -------------------------------------------------------
 // A Lycanthrope is two cards: its Humanoid Form (the card you play) and its Beast Form (a
 // hidden twin, `beastForm` / `humanForm` link them). Transforming swaps which card the minion
@@ -583,6 +606,51 @@ export const EFFECT_OPS = {
     const pl = state.players[ctx.controller];
     for (const c of [...pl.hand]) discardFromHand(state, ctx.controller, c.uid, ctx);
     if (ctx.discarded) for (const sub of e.then ?? []) resolveEffect(state, sub, ctx);
+  },
+
+  // { filter?, collapse? (always Collapse), ifCollapse?, repeat? } — Pull: Discover a card from
+  // the enemy deck (3 options) and take it. `ifCollapse` runs after a Collapsed Pull (Quasar Maw);
+  // `repeat` Pulls again that many more times (Gravitational Collapse: one per card discarded).
+  pull(state, e, ctx) {
+    const p = ctx.controller;
+    const repeat = e.repeatPerDiscarded ? Math.min(e.repeatPerDiscarded.max ?? 99, ctx.discarded ?? 0) - 1 : (e.repeat ?? 0);
+    if (repeat < 0) return;
+    const deck = state.players[opponentOf(p)].deck;
+    const byCard = new Map();
+    for (const inst of deck) if (cardMatches(getCard(inst.cardId), e.filter) && !byCard.has(inst.cardId)) byCard.set(inst.cardId, inst.uid);
+    const options = shuffle(state, [...byCard].map(([cardId, uid]) => ({ cardId, uid }))).slice(0, 3);
+    if (!options.length) { log(state, 'Nothing to Pull.'); return; }
+    const collapse = !!e.collapse || state.players[p].hand.length === 0;
+    const next = { ...e, repeat: repeat - 1, repeatPerDiscarded: undefined };
+    const steps = (uid) => [{ op: 'pullCard', uid, collapse }, ...(collapse ? e.ifCollapse ?? [] : []), ...(repeat > 0 ? [next] : [])];
+    if (options.length === 1) { for (const sub of steps(options[0].uid)) resolveEffect(state, sub, ctx); return; }
+    state.pending = {
+      type: 'choice', player: p, prompt: collapse ? 'Pull a card (Collapse!)' : 'Pull a card from the enemy deck', resolve: 'effects', ctx,
+      options: options.map((o) => ({ cardId: o.cardId, label: getCard(o.cardId).name, effects: steps(o.uid) })),
+    };
+  },
+  pullCard(state, e, ctx) {
+    pullFromEnemyDeck(state, ctx.controller, e.uid, e.collapse);
+  },
+  // { filter? } — White Hole Emissary: summon a random minion straight out of the enemy deck.
+  summonFromEnemyDeck(state, e, ctx) {
+    const deck = state.players[opponentOf(ctx.controller)].deck;
+    const pool = deck.filter((c) => getCard(c.cardId).type === 'minion' && cardMatches(getCard(c.cardId), e.filter));
+    const pick = pickRandom(state, pool);
+    if (!pick) { log(state, 'No minion left in the enemy deck.'); return; }
+    deck.splice(deck.indexOf(pick), 1);
+    const m = summonMinion(state, ctx.controller, pick.cardId);
+    if (m) { ctx.summoned = m.uid; log(state, `⚪ The White Hole casts out ${getCard(pick.cardId).name}!`); enterBattlefield(state, m); }
+  },
+  // Gravity Snare: you Pull the card the enemy just drew, out of their hand.
+  pullDrawn(state, e, ctx) {
+    const ev = ctx.event; if (!ev?.cardUid) return;
+    const foe = state.players[ev.player];
+    const i = foe.hand.findIndex((c) => c.uid === ev.cardUid);
+    if (i < 0) return;
+    const [inst] = foe.hand.splice(i, 1);
+    foe.deck.unshift(inst); // briefly back on top, then Pulled like any other card
+    pullFromEnemyDeck(state, ctx.controller, inst.uid, state.players[ctx.controller].hand.length === 0);
   },
 
   // { target } — Swallow Whole (King Meg): the source destroys the target outright and

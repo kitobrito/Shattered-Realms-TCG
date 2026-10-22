@@ -137,6 +137,8 @@ export function costOf(state, inst) {
   // Ghosts: Graveyard Colossus — 1 less for every 2 minions that died this game, to a minimum.
   if (card.costPerDeaths && state) aura -= Math.min(Math.floor((state.deathsThisGame ?? 0) / card.costPerDeaths.per), Math.max(0, card.cost - card.costPerDeaths.min));
   // Fungus: The Rot King — 1 less for each Corpse you have.
+  // Void (Singularity): costPerPulled: { min } — (1) less per card you've Pulled this game (Dark Star).
+  if (card.costPerPulled && state) aura -= Math.min(state.players[inst.owner]?.pulled ?? 0, Math.max(0, card.cost - (card.costPerPulled.min ?? 0)));
   // Void: costPerDiscard: { min } — (1) less per card you've discarded this game (Abyssal Leviathan).
   if (card.costPerDiscard && state) aura -= Math.min(state.players[inst.owner]?.discarded ?? 0, Math.max(0, card.cost - (card.costPerDiscard.min ?? 0)));
   if (card.costPerCorpse && state) aura -= Math.floor((state.players[inst.owner]?.corpses ?? 0) / card.costPerCorpse);

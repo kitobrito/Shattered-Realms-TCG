@@ -270,5 +270,149 @@ test('Evolved Xenos: Lycanthrope and Void hosts have their own forms', () => {
   if (!getCard('umbral_xeno').aura?.if?.handEmpty) return 'Umbral Xeno is not Hollow';
 });
 
+// ---- Singularity (expansion): Pull and Collapse ----
+const foeDeckHas = (id) => pl(1).deck.some((c) => c.cardId === id);
+function stackFoeDeck(ids) { pl(1).deck = ids.map((id, i) => ({ uid: 9500 + i, cardId: id, owner: 1 })); }
+
+test('Singularity: 15 expansion cards with art; Gargantua is legendary', () => {
+  const ids = allCards().filter((c) => c.faction === 'Void' && c.extra).map((c) => c.id);
+  if (ids.length !== 15) return `${ids.length} expansion cards`;
+  for (const id of ids) if (!ART[id] || !existsSync(new URL(`../${ART[id]}`, import.meta.url))) return `no art for ${id}`;
+  if (!getCard('gargantua_the_living_singularity').legendary) return 'Gargantua not legendary';
+});
+
+test('Pull: choose 1 of 3 from the enemy deck; it leaves their deck and joins your hand', () => {
+  stackFoeDeck(['vampire_gargoyle', 'bloodhound', 'crimson_duelist', 'blood_drinker']);
+  give(0, 'shadow_mite'); // a card in hand: no Collapse
+  let offered = [];
+  play(0, give(0, 'wormhole'), null, (opts) => { offered = opts.map((o) => o.cardId); return Math.max(0, opts.findIndex((o) => o.cardId === 'bloodhound')); });
+  if (offered.length !== 3) return `offered ${offered.length}`;
+  if (foeDeckHas('bloodhound') && offered.includes('bloodhound')) return 'still in their deck';
+  const got = pl(0).hand.find((c) => c.pulled);
+  if (!got || !offered.includes(got.cardId)) return 'not in hand';
+  if (got.bonusKeywords?.length) return 'Collapsed with a card in hand';
+  if (pl(1).deck.length !== 3) return `their deck has ${pl(1).deck.length}`;
+});
+
+test('Collapse: Pulling with an empty hand gives a minion a bonus keyword it keeps on the board', () => {
+  stackFoeDeck(['bloodhound']);
+  play(0, give(0, 'wormhole')); // the only card in hand; it's gone when Wormhole resolves
+  const got = pl(0).hand.find((c) => c.pulled);
+  if (!got?.bonusKeywords?.length) return 'no bonus keyword';
+  const k = got.bonusKeywords[0];
+  play(0, got);
+  const m = find(0, 'bloodhound');
+  if (!m || !hasKeyword(m, k)) return `played without ${k}`;
+});
+
+test('Collapse: a Pulled spell costs (1) less instead', () => {
+  stackFoeDeck(['blood_drain']);
+  play(0, give(0, 'wormhole'));
+  const got = pl(0).hand.find((c) => c.pulled);
+  if (!got) return 'nothing pulled';
+  if (costOf(s, got) !== getCard('blood_drain').cost - 1) return `costs ${costOf(s, got)}`;
+});
+
+test('Lensing Wisp Pulls a spell; Spaghettifier Pulls a minion', () => {
+  stackFoeDeck(['vampire_gargoyle', 'bloodhound', 'blood_drain', 'vampire_bite']);
+  give(0, 'shadow_mite');
+  play(0, give(0, 'lensing_wisp'));
+  if (getCard(pl(0).hand.find((c) => c.pulled)?.cardId ?? 'shadow_mite').type !== 'spell') return 'Wisp pulled a non-spell';
+  pl(0).hand = [{ uid: 9600, cardId: 'shadow_mite', owner: 0 }];
+  play(0, give(0, 'spaghettifier'));
+  if (getCard(pl(0).hand.find((c) => c.pulled)?.cardId ?? 'blood_drain').type !== 'minion') return 'Spaghettifier pulled a non-minion';
+});
+
+test('Accretion Serpent grows on each Pull; Wormhole Stalker makes Pulled cards cheaper', () => {
+  const sp = put(0, 'accretion_serpent'); put(0, 'wormhole_stalker');
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle']);
+  give(0, 'shadow_mite');
+  play(0, give(0, 'wormhole'));
+  if (sp.attack !== 3 || sp.health !== 3) return `Serpent ${sp.attack}/${sp.health}`;
+  const got = pl(0).hand.find((c) => c.pulled);
+  if (costOf(s, got) !== getCard(got.cardId).cost - 1) return `Pulled card costs ${costOf(s, got)}`;
+});
+
+test('Pulsar Hound gains Attack when you play a Pulled card', () => {
+  const h = put(0, 'pulsar_hound');
+  stackFoeDeck(['bloodhound']);
+  give(0, 'shadow_mite');
+  play(0, give(0, 'wormhole'));
+  play(0, pl(0).hand.find((c) => c.pulled));
+  if (h.attack !== 4) return `Hound attack ${h.attack}`;
+  play(0, pl(0).hand.find((c) => c.cardId === 'shadow_mite'));
+  if (h.attack !== 4) return 'grew from a normal card';
+});
+
+test('Gargantua Pulls 3 cards, all Collapsed', () => {
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle', 'crimson_duelist', 'blood_drinker', 'blood_drain']);
+  give(0, 'shadow_mite');
+  play(0, give(0, 'gargantua_the_living_singularity'));
+  const got = pl(0).hand.filter((c) => c.pulled);
+  if (got.length !== 3) return `pulled ${got.length}`;
+  for (const c of got) if (getCard(c.cardId).type === 'minion' ? !c.bonusKeywords?.length : !(c.costMod < 0)) return `${c.cardId} not Collapsed`;
+  if (pl(1).deck.length !== 2) return `their deck ${pl(1).deck.length}`;
+});
+
+test('Gravitational Collapse: discard 3, Pull 3 (Collapsed); counts as discards', () => {
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle', 'crimson_duelist', 'blood_drinker', 'blood_drain', 'vampire_bite']);
+  give(0, 'shadow_mite'); give(0, 'voidling'); give(0, 'gloom_lurker');
+  play(0, give(0, 'gravitational_collapse'));
+  const got = pl(0).hand.filter((c) => c.pulled);
+  if (got.length !== 3 || pl(0).hand.length !== 3) return `hand ${pl(0).hand.length}, pulled ${got.length}`;
+  if (pl(0).discarded !== 3) return `discarded ${pl(0).discarded}`;
+  if (pl(0).pulled !== 3) return `pulled count ${pl(0).pulled}`;
+});
+
+test('Quasar Maw Pulls twice only when it Collapses', () => {
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle', 'crimson_duelist', 'blood_drinker']);
+  play(0, give(0, 'quasar_maw'));
+  if (pl(0).hand.filter((c) => c.pulled).length !== 2) return `Collapsed: ${pl(0).hand.length}`;
+  give(0, 'shadow_mite');
+  play(0, give(0, 'quasar_maw'));
+  if (pl(0).hand.filter((c) => c.pulled).length !== 3) return `not Collapsed: ${pl(0).hand.filter((c) => c.pulled).length}`;
+});
+
+test('Dark Star costs (1) less per card Pulled, not below 2', () => {
+  const d = give(0, 'dark_star');
+  pl(0).pulled = 3; if (costOf(s, d) !== 3) return `3 pulled: ${costOf(s, d)}`;
+  pl(0).pulled = 9; if (costOf(s, d) !== 2) return `floor: ${costOf(s, d)}`;
+});
+
+test('White Hole Emissary summons a minion out of the enemy deck', () => {
+  stackFoeDeck(['blood_drain', 'bloodhound']);
+  play(0, give(0, 'white_hole_emissary'));
+  if (!find(0, 'bloodhound')) return 'no Bloodhound on my side';
+  if (foeDeckHas('bloodhound')) return 'still in their deck';
+});
+
+test('Spaghettification Pulls only if the minion dies', () => {
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle']);
+  const big = blank(1, 1, 9), small = blank(1, 1, 2);
+  give(0, 'shadow_mite');
+  play(0, give(0, 'spaghettification'), big.uid);
+  if (pl(0).hand.some((c) => c.pulled)) return 'Pulled after a survivor';
+  play(0, give(0, 'spaghettification'), small.uid);
+  if (!pl(0).hand.some((c) => c.pulled)) return 'no Pull after a kill';
+});
+
+test('Gravity Snare: the card your opponent draws is Pulled into your hand', () => {
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle']);
+  pl(0).traps.push({ uid: 9003, cardId: 'gravity_snare', owner: 0 });
+  give(0, 'shadow_mite');
+  applyAction(s, { type: 'endTurn', player: 0 }); settle();
+  if (!pl(0).hand.some((c) => c.pulled && c.cardId === 'bloodhound')) return `my hand: ${pl(0).hand.map((c) => c.cardId)}`;
+  if (pl(1).hand.some((c) => c.cardId === 'bloodhound')) return 'still in their hand';
+});
+
+test('Hawking Wraith Pulls when it dies', () => {
+  stackFoeDeck(['bloodhound', 'vampire_gargoyle']);
+  const w = put(0, 'hawking_wraith');
+  give(0, 'shadow_mite');
+  play(0, give(0, 'spaghettification'), w.uid);
+  play(0, give(0, 'spaghettification'), w.uid);
+  if (!pl(0).hand.some((c) => c.pulled)) return 'no Pull';
+});
+
 console.log(`\n${passed} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

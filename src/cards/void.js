@@ -18,6 +18,7 @@ const VOIDS = { minions: { side: 'friendly', tribe: 'Void' } };
 const OTHER_VOIDS = { minions: { side: 'friendly', tribe: 'Void', excludeSelf: true } };
 const hollow = (bonus) => ({ aura: { target: 'self', if: HOLLOW, ...bonus } });
 const discard = (then = [], extra = {}) => ({ op: 'discard', then, ...extra });
+const pull = (extra = {}) => ({ op: 'pull', ...extra });
 const spawn = (count, extra = {}) => ({ op: 'summon', cardId: 'void_spawn', count, ...extra });
 
 export const VOID_CARDS = [
@@ -182,6 +183,85 @@ export const VOID_CARDS = [
     ...T, id: 'hungry_silence', name: 'Hungry Silence', art: '🤫', cost: 1,
     text: 'When your Hero takes damage: give your Void minions +1 Attack.',
     trap: { on: 'damageDealt', filter: { target: 'friendlyHero' }, effects: [{ op: 'buff', target: VOIDS, attack: 1 }] },
+  },
+
+  // ---- Singularity (expansion, unlockable) ----
+  // Pull (effects.js pull / pullFromEnemyDeck): Discover a card from the enemy deck (1 of 3) and
+  // take it. Collapse: if your hand was empty, a Pulled minion gets a random bonus keyword and any
+  // other card costs (1) less.
+  {
+    ...K, id: 'singularity_seed', name: 'Singularity Seed', art: '⚫', extra: true, cost: 2, attack: 1, health: 2,
+    text: 'Arrival: Pull a card.',
+    triggers: [{ on: 'battlecry', effects: [pull()] }],
+  },
+  {
+    ...K, id: 'accretion_serpent', name: 'Accretion Serpent', art: '🐍', extra: true, cost: 2, attack: 2, health: 2,
+    text: 'Whenever you Pull a card, gain +1/+1.',
+    triggers: [{ on: 'cardPulled', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...K, id: 'lensing_wisp', name: 'Lensing Wisp', art: '🔮', extra: true, cost: 2, attack: 1, health: 2, keywords: ['Stealth'],
+    text: 'Stealth. Arrival: Pull a spell.',
+    triggers: [{ on: 'battlecry', effects: [pull({ filter: { type: 'spell' } })] }],
+  },
+  {
+    ...K, id: 'spaghettifier', name: 'Spaghettifier', art: '🍝', extra: true, cost: 3, attack: 2, health: 3,
+    text: 'Arrival: Pull a minion.',
+    triggers: [{ on: 'battlecry', effects: [pull({ filter: { type: 'minion' } })] }],
+  },
+  {
+    ...K, id: 'pulsar_hound', name: 'Pulsar Hound', art: '💫', extra: true, cost: 3, attack: 3, health: 3, keywords: ['Rush'],
+    text: 'Rush. Whenever you play a card you Pulled, gain +1 Attack.',
+    triggers: [{ on: 'cardPlayed', filter: { player: 'friendly', pulled: true }, effects: [{ op: 'buff', target: 'self', attack: 1 }] }],
+  },
+  {
+    ...K, id: 'wormhole_stalker', name: 'Wormhole Stalker', art: '🌀', extra: true, cost: 3, attack: 2, health: 2, keywords: ['Elusive'], pullDiscount: 1,
+    text: 'Elusive. Cards you Pull cost (1) less.',
+  },
+  {
+    ...K, id: 'hawking_wraith', name: 'Hawking Wraith', art: '👻', extra: true, cost: 4, attack: 3, health: 4,
+    text: 'Exit: Pull a card.',
+    triggers: [{ on: 'deathrattle', effects: [pull()] }],
+  },
+  {
+    ...K, id: 'white_hole_emissary', name: 'White Hole Emissary', art: '⚪', extra: true, cost: 6, attack: 4, health: 5,
+    text: "Arrival: Summon a random minion from your opponent's deck. It's gone from their deck.",
+    triggers: [{ on: 'battlecry', effects: [{ op: 'summonFromEnemyDeck' }] }],
+  },
+  {
+    ...K, id: 'quasar_maw', name: 'Quasar Maw', art: '🌟', extra: true, cost: 5, attack: 5, health: 4,
+    text: 'Arrival: Pull a card. If it Collapses, Pull another.',
+    triggers: [{ on: 'battlecry', effects: [pull({ ifCollapse: [pull()] })] }],
+  },
+  {
+    ...K, id: 'dark_star', name: 'Dark Star', art: '🌑', extra: true, cost: 6, attack: 6, health: 6, costPerPulled: { min: 2 },
+    text: "Costs (1) less for each card you've Pulled this game (not below 2).",
+  },
+  {
+    ...K, id: 'gargantua_the_living_singularity', name: 'Gargantua, the Living Singularity', art: '🕳️', extra: true, cost: 7, attack: 7, health: 7,
+    text: 'Arrival: Pull 3 cards. They always Collapse.',
+    triggers: [{ on: 'battlecry', effects: [pull({ collapse: true, repeat: 2 })] }],
+  },
+  {
+    ...S, id: 'spaghettification', name: 'Spaghettification', art: '🍝', extra: true, cost: 2,
+    text: 'Deal 3 damage to a minion. If it dies, Pull a card.',
+    target: { type: 'minion', side: 'any' },
+    effects: [{ op: 'damage', target: 'chosen', amount: 3 }, pull({ if: { subject: 'chosen', dead: true } })],
+  },
+  {
+    ...S, id: 'gravitational_collapse', name: 'Gravitational Collapse', art: '💥', extra: true, cost: 3, playIf: { handAtLeast: 2 },
+    text: 'Discard your hand. Pull that many cards (up to 4). They always Collapse.',
+    effects: [{ op: 'discardHand', then: [pull({ collapse: true, repeatPerDiscarded: { max: 4 } })] }],
+  },
+  {
+    ...S, id: 'wormhole', name: 'Wormhole', art: '🌀', extra: true, cost: 1,
+    text: 'Pull a card.',
+    effects: [pull()],
+  },
+  {
+    ...T, id: 'gravity_snare', name: 'Gravity Snare', art: '🪤', extra: true, cost: 3,
+    text: 'When your opponent draws a card: you Pull that card instead.',
+    trap: { on: 'cardDrawn', filter: { player: 'enemy', burned: false }, effects: [{ op: 'pullDrawn' }] },
   },
 
   // ---- Token ----

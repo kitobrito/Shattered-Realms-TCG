@@ -706,6 +706,8 @@ export function boardHTML(ctx) {
       <div class="my-hand">${handoff ? '' : mp.hand.map((inst) => cardHTML(getCard(inst.cardId), {
         uid: inst.uid, playable: playable.has(inst.uid), cost: costOf(s, inst),
         respond: respondable.has(inst.uid), dim: myTurn && !playable.has(inst.uid),
+        // Void (Singularity): a card Pulled from the enemy deck, with its Collapse keyword.
+        tag: inst.bonusKeywords?.length ? `🕳️ +${inst.bonusKeywords.join(', ')}` : inst.pulled ? '🕳️ Pulled' : '',
       })).join('')}</div>
       ${manaHTML(op, false)}
       ${manaHTML(mp, true)}

@@ -74,7 +74,7 @@ export const backStyle = (factions) => (backsOf(factions).length ? `style="${bac
 // A normal-size card (hand, collection, builder, choices). It is the same
 // Hearthstone-style card as the big preview (bigCardHTML), drawn small: the
 // .card wrapper keeps the hand/collection behaviour, the frame scales with it.
-export function cardHTML(card, { uid, playable, selected, back, choice, zoom, cost, cuttable, isCut, cutLabel = 'CUT', isDupe, respond, dim } = {}) {
+export function cardHTML(card, { uid, playable, selected, back, choice, zoom, cost, cuttable, isCut, cutLabel = 'CUT', isDupe, respond, dim, tag } = {}) {
   if (back) return '<div class="card back"><span>✦</span></div>';
   const { incomplete } = validateCard(card);
   const data = uid != null ? `data-hand="${uid}"` : choice != null ? `data-choice="${choice}"`
@@ -86,6 +86,7 @@ export function cardHTML(card, { uid, playable, selected, back, choice, zoom, co
       ${(zoom || cuttable) && (card.beastForm ?? card.rebornAs) ? `<div class="beast-behind" aria-hidden="true">${bigCardHTML(getCard(card.beastForm ?? card.rebornAs), { small: true })}</div>` : ''}
       ${bigCardHTML(card, { cost, costClass, small: true })}
       ${incomplete.length ? '<span class="pending-tag">pending</span>' : ''}
+      ${tag ? `<span class="hand-tag">${esc(tag)}</span>` : ''}
       ${cuttable ? `<button class="card-zoom ghost" data-zoom="${card.id}" title="See full size">${icon('search')}</button>` : ''}
       ${isCut ? `<span class="cut-tag">${cutLabel}</span>` : ''}
       ${isDupe ? '<span class="dupe-tag">×2</span>' : ''}
