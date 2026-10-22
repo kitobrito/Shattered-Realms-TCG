@@ -247,7 +247,7 @@ function heroSpellsHTML(pl, legal, mine, s = null) {
     return `<button class="hero-spell ${usable ? 'usable' : ''} ${hs.uses ? 'used' : ''} ${hs.cooldown > 0 ? 'cooling' : ''}" data-hs="${hs.cardId}" data-preview="${card.id}" ${usable ? '' : 'disabled'}>
       ${hs.cooldown > 0 ? `<span class="cooldown-badge" title="Ready in ${hs.cooldown} turn${hs.cooldown === 1 ? '' : 's'}">⏳${hs.cooldown}</span>` : ''}
       <span class="hs-flip"><span class="hs-face front">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span><span class="hs-face back"></span></span>
-      <b class="hs-cost ${s && heroSpellCost(s, card) > card.cost ? 'pricier' : ''}">${s ? heroSpellCost(s, card) : card.cost}</b>
+      <b class="hs-cost ${s && !card.costsAllMana && heroSpellCost(s, card) > card.cost ? 'pricier' : ''}">${s ? heroSpellCost(s, card, pl) : card.cost}</b>
       ${hs.cardId === 'infernal_summoning' ? tierHTML(pl) : ''}</button>`;
   }).join('');
 }

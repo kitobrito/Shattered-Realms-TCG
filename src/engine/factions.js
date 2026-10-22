@@ -25,6 +25,8 @@ export const FACTION_HOOKS = {
   // The total grows exactly as before; only who can spend it changed.
   Dinosaurs: {
     turnStartMana(state, player) {
+      // Meteorite: normal Mana growth, no Primal Mana.
+      if (player.meteorite) { growMana(state, player, state.rules.manaPerTurn); player.mana.primal = 0; return; }
       const m = player.mana;
       m.base = Math.min(state.rules.maxMana, (m.base ?? 0) + 1);
       if (player.extinction?.shower) {

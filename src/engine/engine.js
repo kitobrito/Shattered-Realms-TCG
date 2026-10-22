@@ -31,8 +31,9 @@ export function fusionFor(factions) {
 }
 export const FUSION_CHARGE = 3;
 
+// altHeroSpell: a Hero Spell that only replaces the usual one (Meteorite's Meteor Strike).
 export function heroSpellsFor(factions) {
-  return allCards().filter((c) => c.heroSpell && factions.includes(c.faction));
+  return allCards().filter((c) => c.heroSpell && !c.altHeroSpell && factions.includes(c.faction));
 }
 
 // A faction whose only Hero Spell is passive (Dinosaurs, Bees) has nothing to press,
@@ -64,7 +65,12 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
     log: [],
   };
   players.forEach((cfg, p) => {
-    const heroSpells = heroSpellsFor(cfg.factions);
+    // Dinosaurs (Meteorite): a deck-rule card is never drawn. It leaves the deck at the start and
+    // swaps Extinction Cycle for Meteor Strike (no Primal Mana, no Extinction).
+    const meteorite = cfg.factions.includes('Dinosaurs') && cfg.deck.includes('meteorite');
+    const deckIds = cfg.deck.filter((id) => id !== 'meteorite');
+    const heroSpells = heroSpellsFor(cfg.factions).filter((c) => !(meteorite && c.id === 'extinction_cycle'))
+      .concat(meteorite ? [getCard('meteor_strike')] : []);
     const pl = {
       index: p, name: cfg.name ?? `Player ${p + 1}`, factions: [...cfg.factions],
       hero: createHero(state, p),
@@ -73,9 +79,10 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
       // Fusion: charges by 1 per Hero Spell use (and every other turn per passive faction); usable at 3.
       fusion: fusionFor(cfg.factions) ? { cardId: fusionFor(cfg.factions).id, charge: 0 } : null,
       passives: heroSpells.filter((c) => c.passive).map((c) => c.id),
-      extinction: cfg.factions.includes('Dinosaurs')
+      extinction: cfg.factions.includes('Dinosaurs') && !meteorite
         ? { turns: 0, nextAt: state.rules.extinctionEvery, mode: 'normal', shower: 0 } : null,
-      deck: cfg.deck.map((cardId) => ({ uid: state.nextUid++, cardId, owner: p })),
+      meteorite,
+      deck: deckIds.map((cardId) => ({ uid: state.nextUid++, cardId, owner: p })),
       hand: [], traps: [], board: [], graveyard: [], fatigue: 0,
       corpses: 0, deadZombies: [], zombieDeathsThisTurn: 0, // Zombies
     };
@@ -269,7 +276,7 @@ export function getLegalActions(state) {
   }
   for (const hs of pl.heroSpells) {
     const card = getCard(hs.cardId);
-    if (hs.uses < state.rules.heroSpellUsesPerTurn && !(hs.cooldown > 0) && heroSpellCost(state, card) <= manaFor(pl, card) && hasRoom(state, p, card)) {
+    if (hs.uses < state.rules.heroSpellUsesPerTurn && !(hs.cooldown > 0) && heroSpellCost(state, card, pl) <= manaFor(pl, card) && hasRoom(state, p, card)) {
       actions.push(...playOptions(state, p, card, hs.cardId, 'heroSpell'));
     }
   }
@@ -421,11 +428,12 @@ function castHeroSpell(state, { player: p, card: cardId, target, target2 }) {
     if (card.cooldown) hs.cooldown = card.cooldown; // Controlled Irradiation: usable again after N turns
     if (pl.fusion) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + 1);
   }
-  payMana(pl, card, heroSpellCost(state, card));
+  const spent = heroSpellCost(state, card, pl);
+  payMana(pl, card, spent);
   log(state, `${pl.name} casts Hero Spell ${card.name}.`);
   const self = state.nextUid++;
   const event = { type: 'cardPlayed', source: self, player: p, cardId, cardType: 'spell', heroSpell: true, target: target ?? null };
-  state.queue.push(...spellSteps(card, { self, controller: p, chosen: target ?? null, chosen2: target2 ?? null, cardId }, event, p));
+  state.queue.push(...spellSteps(card, { self, controller: p, chosen: target ?? null, chosen2: target2 ?? null, cardId, spent }, event, p));
 }
 
 function quickPlay(state, { player: p, card: uid, target, target2 }) {
@@ -1049,7 +1057,7 @@ const STEPS = {
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }
     // Passive Hero Spells (Extinction Cycle, The Living Hive) can't be used, so each
     // such faction charges the Fusion by 1 every other turn instead.
-    const passives = pl.factions.filter(hasPassiveHeroSpell).length;
+    const passives = pl.factions.filter((f) => hasPassiveHeroSpell(f) && !(f === 'Dinosaurs' && pl.meteorite)).length;
     if (pl.fusion && passives && pl.turnsTaken % 2 === 0) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + passives);
     // "Until your next turn" effects that player p applied expire now.
     for (const c of [...state.players.flatMap((x) => [x.hero, ...x.board])]) {
