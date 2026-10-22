@@ -32,6 +32,7 @@ export function minionPasses(m, f) {
   if (f.hasRelic != null && !!m.relic !== f.hasRelic) return false; // Ghosts (Cursed Armory)
   if (f.heroOrTribe && !m.tribes.includes(f.heroOrTribe)) return false; // a Hero (always allowed) or a minion of this tribe
   if (f.faction && getCard(m.cardId).faction !== f.faction) return false;
+  if (f.maxCost != null && (getCard(m.cardId).cost ?? 0) > f.maxCost) return false; // Aliens (Qu Remaker)
   if (f.irradiated != null && (radiationOf(m) > 0) !== f.irradiated) return false;
   if (f.damaged && !(m.health < m.maxHealth)) return false; // took damage and hasn't fully healed
   if (f.cardId && m.cardId !== f.cardId) return false;
@@ -129,6 +130,14 @@ export function resolveSelector(state, sel, ctx) {
     const board = state.players[c.controller].board;
     const i = board.findIndex((m) => m.uid === c.uid);
     return [board[i - 1], sel.includeSelf ? c : null, board[i + 1]].filter(Boolean).map((m) => m.uid);
+  }
+  // { costliest: minion filter } — the matching minion with the highest Mana Cost (a random one on
+  // a tie). Aliens (The Qu, Shapers of Worlds).
+  if (sel.costliest) {
+    const pool = minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.costliest, ctx));
+    if (!pool.length) return [];
+    const top = Math.max(...pool.map((m) => getCard(m.cardId).cost ?? 0));
+    return [pickRandom(state, pool.filter((m) => (getCard(m.cardId).cost ?? 0) === top)).uid];
   }
   if (sel.randomOf) {
     // count: up to N different picks (Tri-Maw Hydra).

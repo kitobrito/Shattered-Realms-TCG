@@ -72,6 +72,7 @@ export const LEGENDARY = new Set([
   'lilith_queen_of_the_night',
   'satan_lord_of_the_pit',
   'elder_of_the_first_moon',
+  'the_qu_shapers_of_worlds',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 

@@ -20,7 +20,8 @@
 //   vortex     a slow spiral of streaks around a centre (a storm eye)
 //   flyers     bats and harpies crossing the sky
 //
-// Tapping the scenery (pokes) makes it react: a sound plus a burst, a strike or a flare.
+// Tapping the scenery (pokes) makes it react: a sound plus a burst, a strike or a flare, and a
+// flash of the circle's light with sparks flying out (flare); its glyph is flung by main.js.
 // Canvas 2D at ~30 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
 import { CIRCLE_MASKS } from '../cards/circle-fx-masks.js';
@@ -720,6 +721,28 @@ export async function startCircleFx(host, n, orient) {
 
   // ---- Frame loop ----
   let raf = 0, running = true, start = performance.now(), prev = start;
+  // Tap flashes: a soft burst of the circle's light, and sparks flung out that fall and fade.
+  const flares = [];
+  function drawFlares(t) {
+    if (!flares.length) return;
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = flares.length - 1; i >= 0; i--) {
+      const f = flares[i], age = t - f.t;
+      if (age > 1) { flares.splice(i, 1); continue; }
+      const R = (30 + 95 * Math.min(1, age / 0.3)) * S;
+      ctx.globalAlpha = Math.max(0, 1 - age);
+      ctx.drawImage(softSprite(f.color, 64, 0.1), f.x * SX - R, f.y * SY - R, R * 2, R * 2);
+      ctx.drawImage(softSprite([255, 255, 255], 64, 0.3), f.x * SX - R * 0.35, f.y * SY - R * 0.35, R * 0.7, R * 0.7);
+      for (const sp of f.sparks) {
+        const d = sp.v * age, r = sp.s * 3.2 * S;
+        const px = (f.x + Math.cos(sp.a) * d) * SX, py = (f.y + Math.sin(sp.a) * d + 60 * age * age) * SY;
+        ctx.globalAlpha = Math.max(0, 1 - age);
+        ctx.drawImage(softSprite(f.color, 32, 0.5), px - r, py - r, r * 2, r * 2);
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
   function frame(now) {
     raf = requestAnimationFrame(frame);
     if (!running) return;
@@ -747,6 +770,7 @@ export async function startCircleFx(host, n, orient) {
         default: break;
       }
     }
+    drawFlares(t);
   }
   raf = requestAnimationFrame(frame);
 
@@ -761,11 +785,15 @@ export async function startCircleFx(host, n, orient) {
     for (const id of [].concat(p.kick ?? [])) { const l = layers.find((q) => q.id === id); if (l) l.kick = t; }
     if (p.strike != null) { const l = layers.find((q) => q.id === p.strike); if (l) strike(l, t, l.zones[p.zone ?? 0]); }
     if (p.loose != null) { const l = layers.find((q) => q.id === p.loose); if (l) loose(l, t, l.shooters[p.shooter ?? 0]); }
+    if (p.flare) {
+      flares.push({ x, y, t, color: p.flare, sparks: Array.from({ length: 18 }, () => ({ a: rand(0, TAU), v: rand(50, 140), s: rand(1.2, 2.4) })) });
+      if (flares.length > 8) flares.shift();
+    }
     if (p.burst) {
       const l = layers.find((q) => q.id === p.burst.layer);
       if (l) for (let i = 0; i < (p.burst.n ?? 12); i++) spawn(l, x + rand(-6, 6), y + rand(-6, 6), p.burst.kind === 'spark' ? {} : {});
     }
-    return true;
+    return p;
   }
   function canPoke(fx, fy) { return (def.pokes ?? []).some((q) => inBox(q.area, fx * IW, fy * IH)); }
 

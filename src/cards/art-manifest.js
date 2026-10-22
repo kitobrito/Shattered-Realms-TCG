@@ -544,7 +544,6 @@ export const ART = {
   purification: 'art/fusion/purification.jpg',
   purifying_solvent: 'art/fusion/purifying_solvent.jpg',
   purifying_spores: 'art/fusion/purifying_spores.jpg',
-  qu_bio_engineer: 'art/aliens/qu_bio_engineer.jpg',
   queen_of_the_red_veil: 'art/vampires/queen_of_the_red_veil.jpg',
   blood_shade: 'art/vampires/blood_shade.jpg',
   rad_mine: 'art/radioactive/rad_mine.jpg',
@@ -1020,6 +1019,19 @@ export const ART = {
   king_meg_the_apex_predator: 'art/sharks/king_meg_the_apex_predator.jpg',
   sobek_terror_of_the_museum: 'art/dinosaurs/sobek_terror_of_the_museum.jpg',
   sobeks_fossil: 'art/dinosaurs/sobeks_fossil.jpg',
+  qu_bio_engineer: 'art/aliens/qu_bio_engineer.jpg',
+  qu_remaker: 'art/aliens/qu_remaker.jpg',
+  qu_gene_priest: 'art/aliens/qu_gene_priest.jpg',
+  the_qu_shapers_of_worlds: 'art/aliens/the_qu_shapers_of_worlds.jpg',
+  the_remaking: 'art/aliens/the_remaking.jpg',
+  the_great_remaking: 'art/aliens/the_great_remaking.jpg',
+  sentence_of_the_qu: 'art/aliens/sentence_of_the_qu.jpg',
+  remade_gravital: 'art/aliens/remade_gravital.jpg',
+  remade_swimmer: 'art/aliens/remade_swimmer.jpg',
+  remade_loper: 'art/aliens/remade_loper.jpg',
+  remade_worm_person: 'art/aliens/remade_worm_person.jpg',
+  remade_snake_person: 'art/aliens/remade_snake_person.jpg',
+  remade_colonial: 'art/aliens/remade_colonial.jpg',
 };
 
 // Hero portraits per faction (import with: npm run import-art -- <folder> --heroes).

@@ -27,7 +27,7 @@ import {
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
-import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL } from './rules.js';
+import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL, REMADE_FORMS } from './rules.js';
 import { minionPasses, resolveSelector, targetCandidates } from './targeting.js';
 import { enterBattlefield, queueSelfTrigger, selfTriggerSteps } from './triggers.js';
 
@@ -1677,6 +1677,29 @@ export const EFFECT_OPS = {
     enterBattlefield(state, m);
     emit(state, { type: 'chestburst', source: m.uid, player: ctx.controller });
     if (controls(state, ctx.controller, 'instantEvolve')) evolveChestburster(state, m);
+  },
+
+  // ---- Aliens (The Qu) ----
+  // { target, into? } — Remake: the minion Transforms into a Remade human (`into`, or a random one).
+  // The Snake Person is cold-blooded: it arrives Frozen and thaws like any Frozen minion.
+  remake(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.health <= 0 || m.destroyed) return;
+      const into = e.into ?? pickRandom(state, REMADE_FORMS.filter((id) => id !== m.cardId));
+      log(state, `🧬 The Qu Remake ${nameOf(state, m)}.`);
+      EFFECT_OPS.transform(state, { target: { uid: m.uid }, into }, ctx);
+      if (getCard(into).arrivesFrozen) addKeyword(m, 'Frozen', false, state);
+      emit(state, { type: 'remade', target: m.uid, player: m.controller, by: ctx.controller });
+    });
+  },
+  // { target } — The Remaking: choose which Remade human it becomes.
+  chooseRemake(state, e, ctx) {
+    const m = findCharacter(state, resolveSelector(state, e.target, ctx)[0]);
+    if (!m || m.kind !== 'minion') return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Choose what it is Remade into', resolve: 'effects', ctx,
+      options: REMADE_FORMS.filter((id) => id !== m.cardId).map((id) => ({ label: getCard(id).name, cardId: id, effects: [{ op: 'remake', target: { uid: m.uid }, into: id }] })),
+    };
   },
 
   // ---- Lycanthropes ----
