@@ -87,6 +87,7 @@ export function playDescent(stage, depth, onSwap) {
       <div class="db-ordinal">The ${circle.ordinal} Circle</div>
       <div class="db-name">${circle.name}</div>
       <div class="db-rule">${circle.text}</div>
+      <div class="db-both">Now the rule for both players</div>
       <div class="db-roman">${ROMAN[depth - 1]}</div>
     </div>`;
   // The old board: a frozen copy of what was on screen, which then falls away.
