@@ -3,7 +3,7 @@
 // getLegalActions(), so every rule lives in the engine.
 
 import { applyAdvantage, chooseAction } from '../ai/smart.js';
-import { buildDeck, buildSingleDeck, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts } from '../cards/index.js';
+import { buildDeck, buildSingleDeck, copyLimit, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts } from '../cards/index.js';
 import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
 import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { artSrc, ensureArt } from './art-packs.js';
@@ -2317,7 +2317,7 @@ function renderBuilder() {
     if (isLocked(c.id)) return cardHTML(c, { cuttable: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ');
     const k = draftDeck[c.id] ?? 0;
     // In the deck: a ×1 / ×2 badge; both copies in: dimmed (like Hearthstone).
-    return cardHTML(c, { cuttable: true }).replace('class="card ', `class="card draggable ${c.extra ? 'expansion ' : ''}${k >= DEFAULT_RULES.maxCopies ? 'maxed' : ''} `)
+    return cardHTML(c, { cuttable: true }).replace('class="card ', `class="card draggable ${c.extra ? 'expansion ' : ''}${k >= copyLimit(c.id) ? 'maxed' : ''} `)
       .replace(/<\/div>\s*$/, `${k ? `<span class="in-deck">×${k}</span>` : ''}</div>`);
   };
   // The deck list (right side; a tray along the bottom on phones): one row per card, by cost.
@@ -2343,7 +2343,7 @@ function renderBuilder() {
         <div>
           <h2>Build your deck</h2>
           <div class="sub builder-help">${esc(picked.join(' + '))} · drag cards into your deck (hold, then drag on a phone) · drag one out or click it in the list to remove it · click a card to see it full size ·
-            ${need} cards${single ? '' : `, at least ${DEFAULT_RULES.minPerFaction} from each faction`}, up to ${DEFAULT_RULES.maxCopies} of a card · Hero Spell${heroSpells.length === 1 ? '' : 's'} always included:
+            ${need} cards${single ? '' : `, at least ${DEFAULT_RULES.minPerFaction} from each faction`}, up to ${DEFAULT_RULES.maxCopies} of a card (1 of a legendary) · Hero Spell${heroSpells.length === 1 ? '' : 's'} always included:
             ${heroSpells.map((c) => esc(c.name)).join(', ')}</div>
         </div>
         <div class="builder-count ${!problem ? 'done' : ''}">Deck <b>${n}</b> / ${need}${single ? '' : `<span class="sub">${esc(picked.map((f) => `${inFaction(f)} ${f}`).join(' · '))}</span>`}</div>
@@ -2388,7 +2388,7 @@ function renderBuilder() {
 function replaceOptions(id) {
   const c = getCard(id);
   return [...new Set(picked.flatMap((f) => FACTION_POOLS[f]))].map(getCard)
-    .filter((x) => x.id !== id && x.faction === c.faction && !isLocked(x.id) && (draftDeck[x.id] ?? 0) < DEFAULT_RULES.maxCopies)
+    .filter((x) => x.id !== id && x.faction === c.faction && !isLocked(x.id) && (draftDeck[x.id] ?? 0) < copyLimit(x.id))
     .sort((a, b) => Math.abs(a.cost - c.cost) - Math.abs(b.cost - c.cost) || (a.type === c.type ? 0 : 1) - (b.type === c.type ? 0 : 1) || a.cost - b.cost)
     .slice(0, 4);
 }
@@ -2420,7 +2420,7 @@ let deckFly = null; // { id, rect }: a card just dropped into the deck flies int
 function addToDraft(id, fromRect = null) {
   if (isLocked(id)) return flash('Locked. Win matches to unlock new cards (2 per win).');
   const k = draftDeck[id] ?? 0;
-  if (k >= DEFAULT_RULES.maxCopies) return flash(`Up to ${DEFAULT_RULES.maxCopies} copies of a card.`);
+  if (k >= copyLimit(id)) return flash(copyLimit(id) === 1 ? 'Legendary: only 1 copy per deck.' : `Up to ${DEFAULT_RULES.maxCopies} copies of a card.`);
   if (deckTotal() >= deckSizeFor(picked)) return flash(`Your deck has ${deckSizeFor(picked)} cards. Take one out first.`);
   draftDeck = { ...draftDeck, [id]: k + 1 };
   builderFlash = id;
@@ -3297,12 +3297,12 @@ app.addEventListener('click', (e) => {
     if (isLocked(id)) return flash('Locked. Win matches to unlock new cards (2 per win).');
     const k = draftDeck[id] ?? 0;
     const total = Object.values(draftDeck).reduce((t, x) => t + x, 0);
-    if (k < DEFAULT_RULES.maxCopies && total >= DEFAULT_RULES.pairDeckSize) {
+    if (k < copyLimit(id) && total >= DEFAULT_RULES.pairDeckSize) {
       if (k === 0) return flash(`Your deck has ${DEFAULT_RULES.pairDeckSize} cards. Take one out first.`);
       draftDeck = { ...draftDeck }; delete draftDeck[id]; return render();
     }
     draftDeck = { ...draftDeck, [id]: k + 1 };
-    if (draftDeck[id] > DEFAULT_RULES.maxCopies) delete draftDeck[id];
+    if (draftDeck[id] > copyLimit(id)) delete draftDeck[id];
     return render();
   }
   const ch = e.target.closest('[data-howto]');

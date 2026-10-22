@@ -11,7 +11,7 @@
 // "Unlock everything" skips it. Anyone who already played before this existed starts with
 // everything (saved decks, unlocked cards or a saved game in this browser count as "played").
 
-import { FACTION_DECKS, PLAYABLE_FACTIONS } from '../cards/index.js';
+import { copyLimit, FACTION_DECKS, PLAYABLE_FACTIONS } from '../cards/index.js';
 import { getCard } from '../engine/registry.js';
 import { DEFAULT_RULES } from '../engine/rules.js';
 
@@ -92,7 +92,7 @@ export function starterDeck(faction) {
   const seconds = simple.filter((c) => c.type === 'minion')
     .sort((a, b) => a.cost - b.cost || words(a) - words(b));
   for (const c of seconds) if (deck.length < DEFAULT_RULES.singleDeckSize) deck.push(c.id);
-  for (const c of simple) if (deck.length < DEFAULT_RULES.singleDeckSize && deck.filter((x) => x === c.id).length < DEFAULT_RULES.maxCopies) deck.push(c.id);
+  for (const c of simple) if (deck.length < DEFAULT_RULES.singleDeckSize && deck.filter((x) => x === c.id).length < copyLimit(c.id)) deck.push(c.id);
   return deck.slice(0, DEFAULT_RULES.singleDeckSize);
 }
 
