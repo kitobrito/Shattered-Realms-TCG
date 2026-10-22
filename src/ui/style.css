@@ -4939,3 +4939,18 @@ body.reduced-motion .descent { display: none; }
 /* Void (Singularity): a Pulled card in hand wears a small violet tag (with its Collapse keyword). */
 .card .hand-tag { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); z-index: 6; white-space: nowrap; pointer-events: none;
   padding: 1px 7px; border-radius: 999px; font: 700 10px/1.4 sans-serif; color: #efe6ff; background: #2a1450; border: 1px solid #b48cff; box-shadow: 0 0 8px #9a6aff99; }
+
+/* Collection search: a box in the top bar; results replace the realm page. */
+.book-head { gap: 12px; }
+.coll-search { position: relative; flex: 1 1 auto; max-width: 460px; display: flex; align-items: center; }
+.coll-search .cs-icon { position: absolute; left: 11px; width: 16px; height: 16px; opacity: 0.7; pointer-events: none; display: grid; place-items: center; }
+.coll-search .cs-icon svg { width: 16px; height: 16px; }
+.coll-search input { width: 100%; padding: 8px 34px 8px 34px; border-radius: 999px; border: 1px solid #6a5530; background: #1a120c; color: #f3e6c8;
+  font: 600 14px/1.2 inherit; outline: none; box-shadow: inset 0 1px 4px #000a; }
+.coll-search input::placeholder { color: #a8946c; }
+.coll-search input:focus { border-color: #e7c27a; box-shadow: inset 0 1px 4px #000a, 0 0 0 2px #e7c27a55; }
+.coll-search input::-webkit-search-cancel-button { display: none; }
+.coll-search .cs-clear { position: absolute; right: 4px; padding: 2px 9px !important; min-height: 0 !important; border-radius: 999px !important; font-size: 13px !important; }
+.search-chips { flex-wrap: wrap; }
+.search-empty { text-align: center; margin: 40px 0; color: #6a5530; font-size: 16px; }
+@media (max-width: 640px) { .book-head { flex-wrap: wrap; } .coll-search { order: 3; flex-basis: 100%; max-width: none; } }

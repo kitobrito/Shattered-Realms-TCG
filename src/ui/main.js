@@ -25,6 +25,7 @@ import * as mfx from './menu-fx.js';
 import { artOf, backArtOf, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
+import { cardMatchesQuery, queryWords } from '../cards/card-search.js';
 import * as sound from './sound.js';
 import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
@@ -2518,19 +2519,51 @@ const setCards = (f) => {
   if (!EXPANSION_NAMES[f] || bookSet === 'all') return cards;
   return cards.filter((c) => !c.token && !c.heroSpell && (bookSet === 'exp') === !!c.extra);
 };
+// Collection search (cards/card-search.js): while there is a query, the page shows the matching
+// cards from every realm instead of one realm's page. The quick filters toggle a word in the query.
+let gallerySearch = '';
+let refocusSearch = false;
+let searchTimer = null;
+const SEARCH_CHIPS = [['legendary', 'Legendary'], ['minion', 'Minions'], ['spell', 'Spells'], ['trap', 'Traps'], ['hero spell', 'Hero Spells'], ['token', 'Tokens'], ['expansion', 'Expansion'], ['7+', '7+ Mana']];
+const chipOn = (word) => ` ${queryWords(gallerySearch).join(' ')} `.includes(` ${word} `);
+function toggleChip(word) {
+  const q = ` ${queryWords(gallerySearch).join(' ')} `;
+  gallerySearch = (chipOn(word) ? q.replace(` ${word} `, ' ') : `${q}${word} `).trim().replace(/\s+/g, ' ');
+}
+function searchResults(factions) {
+  return factions.flatMap((f) => galleryCards(f)).filter((c) => cardMatchesQuery(c, gallerySearch, isLocked(c.id) ? ['locked'] : []));
+}
+function gallerySearchPage(factions) {
+  const hits = searchResults(factions);
+  galleryOrder = hits.map((c) => c.id);
+  return `<section class="book-page search-page">
+    <header class="page-title"><div><h3>Search</h3><span class="sub">${hits.length} card${hits.length === 1 ? '' : 's'} match “${esc(gallerySearch.trim())}” · try a name, a keyword (Taunt, Hollow), a realm, “legendary”, a Mana cost like 3 or 7+, or stats like 3/3</span></div></header>
+    <nav class="set-filter search-chips">${SEARCH_CHIPS.map(([w, label]) => `<button class="ghost ${chipOn(w) ? 'on' : ''}" data-search-chip="${esc(w)}">${esc(label)}</button>`).join('')}</nav>
+    ${hits.length ? pagerHTML(`gal:search:${gallerySearch}`, hits.map((c) => (isLocked(c.id)
+      ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
+      : cardHTML(c, { zoom: true }).replace('class="card ', `class="card ${c.extra ? 'expansion ' : ''}`))).join(''), { chain: true })
+    : '<p class="search-empty">No cards match. Check the spelling, or remove a word or filter.</p>'}
+  </section>`;
+}
+const searchBoxHTML = () => `<div class="coll-search"><span class="cs-icon" aria-hidden="true">${icon('search')}</span>
+  <input data-search type="search" placeholder="Search cards, keywords, legendary…" value="${esc(gallerySearch)}" aria-label="Search cards" autocomplete="off" spellcheck="false">
+  ${gallerySearch ? '<button class="cs-clear ghost" data-clear-search aria-label="Clear search">✕</button>' : ''}</div>`;
+
 function renderGallery() {
   const factions = [...Object.keys(FACTION_LISTS), 'Fusion'];
   bookPage = factions.includes(bookPage) ? bookPage : factions[0];
   galleryOrder = setCards(bookPage).map((c) => c.id);
+  const searching = !!gallerySearch.trim();
   const f = bookPage;
   const art = heroArtOf(f);
   const scrollY = app.scrollTop;
   app.innerHTML = `
     <div class="book">
-      <div class="book-head"><h2>Card collection</h2><button data-act="menu" class="ghost">Back</button></div>
+      <div class="book-head"><h2>Card collection</h2>${searchBoxHTML()}<button data-act="menu" class="ghost">Back</button></div>
       <div class="book-body">
-        <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${x.toLowerCase()} ${x === f ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
+        <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${x.toLowerCase()} ${x === f && !searching ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
           ${crestHTML(x)}<b>${esc(x).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</b></button>`).join('')}</nav>
+        ${searching ? gallerySearchPage(factions) : `
         <section class="book-page f-${f.toLowerCase()} ${bookTurned ? 'turn' : ''}">
           <header class="page-title">${art ? `<img src="${art}" alt="">` : ''}<div><h3>${esc(f)}</h3>
             <span class="sub">${f === 'Fusion'
@@ -2541,13 +2574,27 @@ function renderGallery() {
           ${pagerHTML(`gal:${f}:${bookSet}`, setCards(f).map((c) => (isLocked(c.id)
             ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
             : cardHTML(c, { zoom: true }).replace('class="card ', `class="card ${c.extra ? 'expansion ' : ''}`))).join(''), { chain: true })}
-        </section>
+        </section>`}
       </div>
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
   bookTurned = false;
   app.scrollTop = scrollY;
+  // Typing re-renders the page: keep the cursor in the search box.
+  if (refocusSearch) {
+    refocusSearch = false;
+    const box = app.querySelector('[data-search]');
+    if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
+  }
 }
+
+// Typing in the collection search: re-render shortly after the last keystroke.
+app.addEventListener('input', (e) => {
+  if (!e.target.matches?.('[data-search]') || screen !== 'gallery') return;
+  gallerySearch = e.target.value;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { refocusSearch = true; render(); }, 160);
+});
 
 // One screenful of cards with page arrows (pager.js lays it out after render).
 const pagerHTML = (key, cards, { chain = false, cls = '' } = {}) => `<div class="pager ${cls}" data-pager="${esc(key)}"${chain ? ' data-chain="1"' : ''}>
@@ -3317,7 +3364,11 @@ app.addEventListener('click', (e) => {
     afterRender.push(() => mfx.dealIn(app.querySelector('.pager')));
     return render();
   }
+  const searchChip = e.target.closest('[data-search-chip]');
+  if (searchChip && screen === 'gallery') { toggleChip(searchChip.dataset.searchChip); sound.play('click'); return render(); }
+  if (e.target.closest('[data-clear-search]') && screen === 'gallery') { gallerySearch = ''; refocusSearch = true; return render(); }
   const tab = e.target.closest('[data-book]');
+  if (tab && screen === 'gallery' && gallerySearch) { gallerySearch = ''; bookPage = tab.dataset.book; bookTurned = true; return render(); }
   if (tab && screen === 'gallery') {
     if (tab.dataset.book !== bookPage) { bookPage = tab.dataset.book; bookTurned = true; sound.play('draw'); app.scrollTop = 0; afterRender.push(() => mfx.dealIn(app.querySelector('.pager'))); }
     return render();
