@@ -743,6 +743,12 @@ const STEPS = {
       d.lastDamagedByController = a.controller;
       log(state, `${nameOf(state, d)} succumbs to venom.`);
     }
+    // Varkhul, the Crimson Maw: killing a minion lets it attack again this turn (once).
+    if (d.kind === 'minion' && (d.health <= 0 || d.destroyed) && a.kind === 'minion' && a.health > 0 && getCard(a.cardId).extraAttackOnKill && a.extraAttackTurn !== state.turn) {
+      a.extraAttackTurn = state.turn;
+      a.bonusAttacks = (a.bonusAttacks ?? 0) + 1;
+      log(state, `${nameOf(state, a)} can attack again!`);
+    }
   },
 
   deaths(state) {

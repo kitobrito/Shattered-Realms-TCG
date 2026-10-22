@@ -73,6 +73,9 @@ export const LEGENDARY = new Set([
   'satan_lord_of_the_pit',
   'elder_of_the_first_moon',
   'the_qu_shapers_of_worlds',
+  'varkhul_the_crimson_maw',
+  'malgrath_the_bloodmoon_behemoth',
+  'nyxara_the_crimson_nightstalker',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).

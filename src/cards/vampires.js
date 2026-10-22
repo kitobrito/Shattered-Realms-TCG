@@ -296,7 +296,7 @@ export const VAMPIRE_CARDS = [
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'draw', if: { heroLostHealthThisTurn: true } }] }],
   },
   {
-    ...V, id: 'bloodmoon_gargant', name: 'Bloodmoon Gargant', art: '🦍', extra: true, tribes: ['Vampire', 'Beast'], cost: 5, attack: 5, health: 5,
+    ...V, id: 'bloodmoon_gargant', name: 'Bloodmoon Gargant', art: '🦍', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast', cost: 5, attack: 5, health: 5,
     text: 'Whenever another friendly Vampire dies, gain +1 Health.',
     triggers: [{ on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Vampire', notSelf: true } }, effects: [{ op: 'buff', target: 'self', health: 1 }] }],
   },
@@ -306,6 +306,25 @@ export const VAMPIRE_CARDS = [
     triggers: [{ on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Vampire', notSelf: true } }, effects: [
       { op: 'oncePerTurn', key: 'lord', effects: [{ op: 'summon', cardId: 'vampire_thrall', health: 1 }] },
     ] }],
+  },
+  // ---- Vampire werebeasts (legendary, unlockable): Vampire Lycans locked in beast form for good
+  // (form 'beast' with no other form, so they never Transform but count as Lycans in Beast Form).
+  {
+    ...V, id: 'varkhul_the_crimson_maw', name: 'Varkhul, the Crimson Maw', art: '🐊', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast',
+    cost: 7, attack: 6, health: 6, keywords: ['Rush', 'Lifesteal'], extraAttackOnKill: true,
+    text: 'Rush, Lifesteal. Whenever this destroys a minion, it can attack again (once per turn).',
+  },
+  {
+    ...V, id: 'malgrath_the_bloodmoon_behemoth', name: 'Malgrath, the Bloodmoon Behemoth', art: '🐻', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast',
+    cost: 8, attack: 6, health: 8, keywords: ['Taunt', 'Lifesteal'],
+    text: 'Taunt, Lifesteal. Whenever your Hero loses Health, this gains +1/+1.',
+    triggers: [{ on: 'heroLostHealth', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...V, id: 'nyxara_the_crimson_nightstalker', name: 'Nyxara, the Crimson Nightstalker', art: '🐆', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast',
+    cost: 6, attack: 4, health: 4, keywords: ['Stealth', 'Venomous'], stealthUntilAttack: true,
+    text: 'Stealth until this attacks. Venomous. Whenever this destroys a minion, it regains Stealth.',
+    triggers: [{ on: 'minionDied', filter: { killer: 'self' }, effects: [{ op: 'buff', target: 'self', keywords: ['Stealth'] }] }],
   },
   {
     ...V, id: 'queen_of_the_red_veil', name: 'Queen of the Red Veil', art: '👑', extra: true, cost: 8, attack: 6, health: 7,

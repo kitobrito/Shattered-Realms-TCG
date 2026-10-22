@@ -1032,6 +1032,9 @@ export const ART = {
   remade_worm_person: 'art/aliens/remade_worm_person.jpg',
   remade_snake_person: 'art/aliens/remade_snake_person.jpg',
   remade_colonial: 'art/aliens/remade_colonial.jpg',
+  varkhul_the_crimson_maw: 'art/vampires/varkhul_the_crimson_maw.jpg',
+  malgrath_the_bloodmoon_behemoth: 'art/vampires/malgrath_the_bloodmoon_behemoth.jpg',
+  nyxara_the_crimson_nightstalker: 'art/vampires/nyxara_the_crimson_nightstalker.jpg',
 };
 
 // Hero portraits per faction (import with: npm run import-art -- <folder> --heroes).
