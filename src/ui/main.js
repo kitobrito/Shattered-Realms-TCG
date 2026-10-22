@@ -3157,14 +3157,30 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEmote
 // Board scenery reacts to clicks on empty table space (living boards, board-anim.js).
 // Only bare board counts: cards, heroes and buttons keep their normal behaviour.
 const onBareBoard = (e) => screen === 'game' && e.target.classList?.contains('arena') && !drag.busy();
-document.addEventListener('pointerdown', (e) => { if (e.button === 0 && onBareBoard(e)) pokeBoard(e.clientX, e.clientY); });
+// The portrait Circle of Hell board lives in the arena itself (portraitCircleFx); landscape boards
+// in the board layer. A tap that hits something flings its glyph from the tap.
+function portraitPoint(x, y) {
+  const r = pCircle?.ctl?.canvas.getBoundingClientRect();
+  if (!r?.width || x < r.left || y < r.top || x > r.right || y > r.bottom) return null;
+  return [(x - r.left) / r.width, (y - r.top) / r.height];
+}
+function pokeScenery(x, y) {
+  const pp = portraitPoint(x, y);
+  return pp ? pCircle.ctl.poke(...pp) : pokeBoard(x, y);
+}
+const canPokeScenery = (x, y) => { const pp = portraitPoint(x, y); return pp ? pCircle.ctl.canPoke(...pp) : canPokeBoard(x, y); };
+document.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || !onBareBoard(e)) return;
+  const hit = pokeScenery(e.clientX, e.clientY);
+  if (hit?.glyph && !calmMotion()) fx.popGlyph(new DOMRect(e.clientX - 12, e.clientY - 12, 24, 24), hit.glyph);
+});
 let pokeHoverAt = 0;
 document.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch' || e.timeStamp - pokeHoverAt < 60) return;
   pokeHoverAt = e.timeStamp;
   const arena = app.querySelector('.arena.has-board');
   if (!arena) return;
-  arena.style.cursor = onBareBoard(e) && canPokeBoard(e.clientX, e.clientY) ? 'pointer' : '';
+  arena.style.cursor = onBareBoard(e) && canPokeScenery(e.clientX, e.clientY) ? 'pointer' : '';
 });
 
 

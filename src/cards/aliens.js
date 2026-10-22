@@ -13,6 +13,8 @@ const MY_TURN_END = { on: 'endOfTurn', filter: { player: 'friendly' } };
 // Hive Brood expansion.
 const IMPLANT_RANDOM = { op: 'implant', target: { randomOf: { minions: { side: 'enemy', implanted: false } } } };
 const XENO = { ...M, art: '👽', token: true, cost: 4, evolvedXeno: true };
+// The Qu: the Remade human tokens (not Aliens by blood: no tribe but Remade).
+const REMADE = { faction: 'Aliens', type: 'minion', tribes: ['Remade'], art: '🧍', token: true, cost: 1 };
 
 export const ALIEN_CARDS = [
   // ---- Hero Spell ----
@@ -330,5 +332,63 @@ export const ALIEN_CARDS = [
 
   // ---- Tokens ----
   // Ruling: Facehugger is a token (made by Xeno-Hive Mother), not a deck card.
+  // ---- The Qu (All Tomorrows) (unlockable) ----
+  // Godlike gene-sculptors. Remake: an enemy minion Transforms into a Remade human, a weak
+  // body built wrong on purpose (effects.js remake / chooseRemake, rules.js REMADE_FORMS).
+  {
+    ...M, id: 'qu_remaker', name: 'Qu Remaker', art: '🧬', extra: true, cost: 4, attack: 3, health: 4,
+    text: 'Arrival: Remake an enemy minion that costs (3) or less.',
+    target: { type: 'minion', side: 'enemy', maxCost: 3 },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'remake', target: 'chosen' }] }],
+  },
+  {
+    ...M, id: 'qu_gene_priest', name: 'Qu Gene-Priest', art: '🧪', extra: true, cost: 3, attack: 2, health: 3,
+    text: 'Whenever an enemy minion is Remade, this gains +1/+1 and a random Keyword.',
+    triggers: [{ on: 'remade', filter: { player: 'enemy' }, effects: [
+      { op: 'buff', target: 'self', attack: 1, health: 1 },
+      { op: 'giveRandomKeyword', target: 'self' },
+    ] }],
+  },
+  {
+    ...M, id: 'the_qu_shapers_of_worlds', name: 'The Qu, Shapers of Worlds', art: '🪽', extra: true, cost: 9, attack: 6, health: 8, keywords: ['Evade'],
+    text: 'Evade. Arrival: Remake an enemy minion. At the end of your turn, Remake the most expensive enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [
+      { on: 'battlecry', effects: [{ op: 'remake', target: 'chosen' }] },
+      { ...MY_TURN_END, effects: [{ op: 'remake', target: { costliest: { side: 'enemy', notTribe: 'Remade' } } }] },
+    ],
+  },
+  {
+    ...S, id: 'the_remaking', name: 'The Remaking', art: '🧬', extra: true, cost: 4,
+    text: 'Remake an enemy minion. You choose what it becomes.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'chooseRemake', target: 'chosen' }],
+  },
+  {
+    ...S, id: 'the_great_remaking', name: 'The Great Remaking', art: '🌍', extra: true, cost: 8,
+    text: 'Remake all enemy minions.',
+    effects: [{ op: 'remake', target: { minions: { side: 'enemy' } } }],
+  },
+  {
+    ...T, id: 'sentence_of_the_qu', name: 'Sentence of the Qu', art: '⚖️', extra: true, cost: 3,
+    text: 'When an enemy minion attacks, stop the attack and Remake it.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [
+      { op: 'stopAttack' },
+      { op: 'remake', target: 'eventSource' },
+    ] },
+  },
+  // The Remade humans (tokens): what Remake turns a minion into.
+  { ...REMADE, id: 'remade_gravital', name: 'Gravital', attack: 1, health: 6, cantAttack: true,
+    text: "Can't attack. (Remade by the Qu for a crushing heavy world.)" },
+  { ...REMADE, id: 'remade_swimmer', name: 'Swimmer', attack: 2, health: 1, keywords: ['Blind'],
+    text: 'Blind. (Remade by the Qu for life in the water.)' },
+  { ...REMADE, id: 'remade_loper', name: 'Loper', attack: 3, health: 1, keywords: ['Recoil'],
+    text: 'Recoil. (Remade by the Qu to run the frozen plains.)' },
+  { ...REMADE, id: 'remade_worm_person', name: 'Worm Person', attack: 1, health: 1, keywords: ['Silenced'],
+    text: 'Silenced. (Remade by the Qu to burrow through the dark.)' },
+  { ...REMADE, id: 'remade_snake_person', name: 'Snake Person', attack: 2, health: 3, arrivesFrozen: true,
+    text: 'Arrives Frozen. (Remade by the Qu: cold-blooded and slow.)' },
+  { ...REMADE, id: 'remade_colonial', name: 'Colonial', attack: 2, health: 3, keywords: ['Burned'],
+    text: 'Burned. (Remade by the Qu into a colony of tiny beings.)' },
   { ...M, id: 'facehugger', name: 'Facehugger', art: '🦀', token: true, cost: 1, attack: 1, health: 1, keywords: ['Rush'], text: 'Rush.' },
 ];

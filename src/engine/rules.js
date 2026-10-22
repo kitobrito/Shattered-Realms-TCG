@@ -35,6 +35,8 @@ export const POSITIVE_KEYWORDS = [
 //   Blind     attacks hit a random character, friend or foe
 //   Recoil    takes half (rounded down) of the damage it deals
 //   Burned    loses 1 Health at the end of its controller's turn
+// Aliens (The Qu): what Remake turns a minion into (the Remade human tokens in aliens.js).
+export const REMADE_FORMS = ['remade_gravital', 'remade_swimmer', 'remade_loper', 'remade_worm_person', 'remade_snake_person', 'remade_colonial'];
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
 export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', 'Acid Hide', ...NEGATIVE_KEYWORDS];
@@ -74,6 +76,7 @@ export const KEYWORD_TEXT = {
   Devour: 'Whenever this destroys an enemy minion, it gains +1/+1.',
   Burrow: "Goes underground: it has Stealth until the start of your next turn, then it Surfaces. A minion with Burrow arrives Burrowed.",
   Surface: 'Happens when this comes back up from Burrow (at the start of your turn, or sooner if a card Surfaces it).',
+  Remake: "The Qu rewrite a minion's body: it Transforms into a random Remade human (Gravital, Swimmer, Loper, Worm Person, Snake Person or Colonial), each weak and badly built in its own way.",
   Implant: 'Puts a parasite in an enemy minion. When that minion dies, a 1/1 Chestburster bursts out on your side.',
   Chestburster: "A weak 1/1 newborn that remembers the minion it burst from. After 2 of your turns it Evolves into that realm's Xeno.",
   Evolve: "A Chestburster turns into a stronger Xeno shaped by the realm of the minion it burst from (a Vampire's makes a Xeno Nosferatu, a Robot's a Xeno Mech...).",
@@ -141,6 +144,7 @@ export const BOARD_EVENTS = [
   'minionBurrowed',   // Sand Sharks: a minion Burrowed ({ source, player })
   'minionSurfaced',   // Sand Sharks: a Burrowed minion Surfaced ({ source, player })
   'implanted',        // Aliens (Hive Brood): an enemy minion was Implanted ({ target, player: its controller, by })
+  'remade',           // Aliens (The Qu): an enemy minion was Remade ({ target, player: its controller, by })
   'chestburst',       // Aliens (Hive Brood): a Chestburster burst out ({ source, player })
   'minionEvolved',    // Aliens (Hive Brood): a Chestburster Evolved ({ source, player })
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)

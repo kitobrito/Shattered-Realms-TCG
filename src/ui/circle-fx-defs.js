@@ -432,3 +432,125 @@ export const CIRCLE_FX = {
     ],
   },
 };
+
+// ---- More to tap: extra scenery spots on every circle (checked before the ones above, so a
+// small spot inside a big area wins), and each circle's flair for every spot: a flash of the
+// circle's light with sparks (circle-fx.js flare) and a little symbol flung from the tap
+// (main.js, via the poke's glyph).
+const FLAIR = {
+  1: { flare: [200, 220, 255], glyph: '👻' },
+  2: { flare: [255, 80, 170], glyph: '💔' },
+  3: { flare: [150, 255, 120], glyph: '🍖' },
+  4: { flare: [255, 200, 60], glyph: '🪙' },
+  5: { flare: [90, 255, 215], glyph: '💢' },
+  6: { flare: [255, 120, 40], glyph: '🔥' },
+  7: { flare: [255, 60, 40], glyph: '🩸' },
+};
+const MORE_POKES = {
+  '1-land': [
+    { area: [300, 0, 440, 95], sound: 'chime', flare: [235, 240, 255], glyph: '✨' },
+    { area: [590, 0, 730, 95], sound: 'chime', flare: [235, 240, 255], glyph: '✨' },
+    { area: [165, 470, 430, 572], sound: 'whoosh', kick: ['ghosts'], burst: { layer: 'wisps', n: 6 } },
+    { area: [600, 470, 810, 572], sound: 'whoosh', kick: ['ghosts2'], burst: { layer: 'wisps2', n: 6 } },
+    { area: [875, 240, 940, 330], sound: 'groan', kick: ['runes2'], glyph: '🕯️' },
+    { area: [80, 170, 135, 240], sound: 'chime', kick: ['runes'], glyph: '🕯️' },
+  ],
+  '1-portrait': [
+    { area: [100, 0, 360, 40], sound: 'chime', kick: ['crown'], glyph: '✨' },
+    { area: [130, 900, 300, 1024], sound: 'whoosh', kick: ['ghosts', 'ghosts2'], burst: { layer: 'wisps', n: 6 } },
+    { area: [100, 110, 360, 150], sound: 'chime', kick: ['runes'], glyph: '🕯️' },
+  ],
+  '2-land': [
+    { area: [340, 0, 460, 135], sound: 'heartbeat', glyph: '💋' },
+    { area: [565, 0, 685, 135], sound: 'heartbeat', glyph: '💋' },
+    { area: [340, 465, 460, 572], sound: 'flutter', glyph: '🌹' },
+    { area: [565, 465, 685, 572], sound: 'flutter', glyph: '🌹' },
+    { area: [820, 245, 915, 305], sound: 'heartbeat', glyph: '❤️‍🔥' },
+  ],
+  '2-portrait': [
+    { area: [90, 330, 370, 400], sound: 'heartbeat', glyph: '💋' },
+    { area: [90, 620, 370, 680], sound: 'flutter', glyph: '🌹' },
+    { area: [415, 470, 459, 560], sound: 'heartbeat', glyph: '❤️‍🔥' },
+  ],
+  '3-land': [
+    { area: [700, 15, 905, 145], sound: 'rattle', glyph: '💀' },
+    { area: [330, 0, 445, 55], sound: 'rumble', glyph: '🌀' },
+    { area: [585, 0, 700, 55], sound: 'rumble', glyph: '🌀' },
+    { area: [0, 170, 95, 285], sound: 'clink', glyph: '⛓️' },
+    { area: [0, 300, 95, 400], sound: 'clink', glyph: '⛓️' },
+    { area: [960, 160, 1024, 260], sound: 'clink', glyph: '⛓️' },
+    { area: [930, 290, 1024, 400], sound: 'clink', glyph: '⛓️' },
+  ],
+  '3-portrait': [
+    { area: [250, 100, 459, 230], sound: 'rattle', glyph: '💀' },
+    { area: [0, 800, 70, 880], sound: 'clink', glyph: '⛓️' },
+    { area: [380, 800, 459, 880], sound: 'clink', glyph: '⛓️' },
+  ],
+  '4-land': [
+    { area: [300, 20, 360, 85], sound: 'chime', kick: ['runes'], glyph: 'ᚱ' },
+    { area: [675, 25, 740, 95], sound: 'chime', kick: ['runes'], glyph: 'ᚱ' },
+    { area: [90, 180, 145, 240], sound: 'chime', kick: ['runes'] },
+    { area: [885, 180, 950, 240], sound: 'chime', kick: ['runes'] },
+    { area: [90, 325, 145, 395], sound: 'chime', kick: ['runes'] },
+    { area: [885, 325, 950, 395], sound: 'chime', kick: ['runes'] },
+    { area: [200, 85, 320, 140], sound: 'hiss', kick: ['gold'], burst: { layer: 'hoard', n: 5 } },
+    { area: [700, 85, 820, 140], sound: 'hiss', kick: ['gold'], burst: { layer: 'hoard', n: 5 } },
+    { area: [200, 420, 330, 480], sound: 'hiss', kick: ['gold2'], burst: { layer: 'hoard', n: 5 } },
+    { area: [690, 420, 810, 480], sound: 'hiss', kick: ['gold2'], burst: { layer: 'hoard', n: 5 } },
+  ],
+  '4-portrait': [
+    { area: [0, 300, 60, 700], sound: 'chime', kick: ['runes'], glyph: 'ᚱ' },
+    { area: [400, 280, 459, 700], sound: 'chime', kick: ['runes'], glyph: 'ᚱ' },
+    { area: [60, 150, 110, 400], sound: 'hiss', kick: ['gold'], burst: { layer: 'hoard', n: 4 } },
+    { area: [350, 700, 410, 850], sound: 'hiss', kick: ['gold2'], burst: { layer: 'hoard', n: 4 } },
+  ],
+  '5-land': [
+    { area: [165, 0, 330, 105], sound: 'groan', kick: ['water'], glyph: '😡' },
+    { area: [700, 0, 880, 110], sound: 'groan', kick: ['water'], glyph: '😡' },
+    { area: [130, 445, 340, 572], sound: 'splash', kick: ['water'], glyph: '✋' },
+    { area: [690, 445, 880, 572], sound: 'splash', kick: ['water'], glyph: '✋' },
+    { area: [345, 10, 460, 110], sound: 'rumble', glyph: '⚔️' },
+    { area: [565, 10, 680, 110], sound: 'rumble', glyph: '⚔️' },
+  ],
+  '5-portrait': [
+    { area: [90, 0, 370, 90], sound: 'groan', kick: ['water'], glyph: '😡' },
+    { area: [90, 920, 370, 1024], sound: 'splash', kick: ['water'], glyph: '✋' },
+    { area: [100, 95, 175, 185], sound: 'rumble', glyph: '⚔️' },
+    { area: [285, 95, 360, 185], sound: 'rumble', glyph: '⚔️' },
+  ],
+  '6-land': [
+    { area: [0, 160, 95, 290], sound: 'growl', glyph: '😈' },
+    { area: [0, 300, 85, 425], sound: 'growl', glyph: '😈' },
+    { area: [925, 150, 1024, 290], sound: 'growl', glyph: '😈' },
+    { area: [930, 300, 1024, 425], sound: 'growl', glyph: '😈' },
+    { area: [225, 470, 335, 572], sound: 'growl', kick: ['fires', 'flames'] },
+    { area: [690, 470, 800, 572], sound: 'growl', kick: ['fires', 'flames'] },
+    { area: [240, 0, 330, 90], sound: 'rumble', kick: ['city'], glyph: '🏚️' },
+    { area: [700, 0, 790, 90], sound: 'rumble', kick: ['city'], glyph: '🏚️' },
+  ],
+  '6-portrait': [
+    { area: [0, 220, 60, 420], sound: 'growl', glyph: '😈' },
+    { area: [0, 450, 60, 640], sound: 'growl', glyph: '😈' },
+    { area: [400, 220, 459, 420], sound: 'growl', glyph: '😈' },
+    { area: [400, 450, 459, 640], sound: 'growl', glyph: '😈' },
+    { area: [180, 0, 290, 140], sound: 'rumble', kick: ['city'], glyph: '🏚️' },
+  ],
+  '7-land': [
+    { area: [880, 0, 1024, 220], sound: 'whoosh', glyph: '☄️' },
+    { area: [0, 0, 60, 230], sound: 'whoosh', glyph: '☄️' },
+    { area: [150, 440, 330, 560], sound: 'rumble', glyph: '🏛️' },
+    { area: [930, 370, 1024, 530], sound: 'whoosh', loose: 'arrows', shooter: 2, glyph: '🏹' },
+    { area: [0, 480, 140, 572], sound: 'growl', glyph: '🐎' },
+    { area: [330, 540, 700, 572], sound: 'bloop', kick: ['blood'] },
+  ],
+  '7-portrait': [
+    { area: [0, 840, 120, 1000], sound: 'clink', glyph: '🗡️' },
+    { area: [300, 880, 459, 1024], sound: 'rattle', glyph: '💀' },
+    { area: [150, 880, 300, 930], sound: 'bloop', kick: ['blood'] },
+    { area: [0, 760, 100, 840], sound: 'rumble', glyph: '🏛️' },
+  ],
+};
+for (const [key, def] of Object.entries(CIRCLE_FX)) {
+  const flair = FLAIR[key.split('-')[0]];
+  def.pokes = [...(MORE_POKES[key] ?? []), ...(def.pokes ?? [])].map((p) => ({ flare: flair.flare, glyph: flair.glyph, ...p }));
+}
