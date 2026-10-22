@@ -15,7 +15,7 @@ import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
-import { boardHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
+import { boardHTML, descentCalloutHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startCircleFx } from './circle-fx.js';
 import * as drag from './drag.js';
@@ -57,6 +57,7 @@ const LOG_KEY = 'faction-ccg-log-open';
 let endArmed = null;       // End Turn asked "Really end?" this turn (turn number)
 let endArmTimer = null;
 let concedeAsk = false;     // the Concede confirmation is open
+let descentOpen = false;    // the Descent explanation panel is open
 const freshStats = () => ({ heroDamage: [0, 0], kills: [0, 0], cardsPlayed: [0, 0], healing: [0, 0], bestPlay: null });
 let heroesShattered = false; // game over: the losing hero's portrait has exploded
 let logOpen = (() => { try { return localStorage.getItem(LOG_KEY) === '1'; } catch { return false; } })();
@@ -240,6 +241,7 @@ function enterGame(isNew = false) {
   pCircle?.ctl?.stop(); pCircle = null;
   endArmed = null;
   concedeAsk = false;
+  descentOpen = false;
   restoreCustomCards(game.state); // Hybrids etc. from a saved game
   screen = 'game';
   history = [];
@@ -2107,6 +2109,7 @@ function factionGuideHTML(factions) {
       ${info.weaknesses?.length ? `<div class="ts-good ts-bad">Not so good at:</div>
       <ul class="ts-weak">${info.weaknesses.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
       <p class="ts-mech">${esc(info.mechanic)}</p>
+      ${info.special ? `<p class="ts-mech">${esc(info.special)}</p>` : ''}
     </article>`;
   }).join('')}</div>`;
 }
@@ -2642,6 +2645,39 @@ function markFreshTraps() {
   trapCounts = counts;
 }
 
+// The Descent (Demons): points the battle gains float up off the gauge, and in a player's
+// first few Descent matches a callout beside the gauge says what it is when the match begins.
+const DESCENT_INTROS_KEY = 'shattered-descent-intros';
+function descentNews(s) {
+  const d = s.descent;
+  const gauge = app.querySelector('.descent-gauge');
+  if (!d || !gauge) return;
+  const total = d.depth * d.need + d.points;
+  if (game.descentTotal != null && total > game.descentTotal && !calmMotion()) {
+    const r = gauge.querySelector('.dg-fill').getBoundingClientRect();
+    fx.floater(new DOMRect(r.right + 40, r.bottom - 30, 0, 0), `+${total - game.descentTotal} 🔥`, 'descent-pt');
+    gauge.classList.add('gain');
+  }
+  game.descentTotal = total;
+  if (game.descentIntro === undefined && s.pending?.type !== 'mulligan' && !s.gameOver) {
+    let shown = 0;
+    try { shown = Number(localStorage.getItem(DESCENT_INTROS_KEY) ?? 0); } catch { /* storage unavailable */ }
+    game.descentIntro = shown < 5;
+    if (game.descentIntro) {
+      try { localStorage.setItem(DESCENT_INTROS_KEY, String(shown + 1)); } catch { /* storage unavailable */ }
+      const g = game;
+      setTimeout(() => { if (game === g && g.descentIntro) dismissDescentIntro(); }, 15000);
+      gauge.insertAdjacentHTML('afterend', descentCalloutHTML());
+    }
+  }
+}
+function dismissDescentIntro() {
+  if (!game?.descentIntro) return;
+  game.descentIntro = false;
+  const el = app.querySelector('.descent-callout');
+  if (el) { el.classList.add('leaving'); setTimeout(() => el.remove(), 400); }
+}
+
 // First-game tips (tutorial.js): each one appears once, the first time it applies.
 function coachTips() {
   const s = game?.state;
@@ -2705,7 +2741,7 @@ function renderGame() {
   }
   app.innerHTML = boardHTML({
     s, me: viewer, legal: legalForView(), mode: game.mode, handoff, isAI, history, logOpen, mullMarked, shattered: heroesShattered, rope: ropeState(),
-    endArmed: endArmed === s.turn, concedeAsk, stats: game.stats, online: game.online, result: game.result, waiting: waitingInQueue(),
+    endArmed: endArmed === s.turn, concedeAsk, descentOpen, descentIntro: game.descentIntro === true, stats: game.stats, online: game.online, result: game.result, waiting: waitingInQueue(),
     unlocked: game.unlocked, fresh: s.gameOver && heroesShattered && !game.summaryShown,
     canUndo: undoStack.length > 0 && !animating && s.activePlayer === viewer && !s.pending, recap: recap && s.activePlayer === viewer && !s.gameOver ? { ...recap, fresh: Date.now() - recap.at < 600 } : null,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
@@ -2713,6 +2749,7 @@ function renderGame() {
   if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0], s.descent?.depth ?? 0); else hideBoard();
   layoutPortraitBoard(app);
   portraitCircleFx(app, s.descent?.depth ?? 0);
+  descentNews(s);
   layoutHands(app);
   // The results panel's numbers count up the first time it appears.
   const summary = app.querySelector('.game-over.fresh');
@@ -3436,6 +3473,9 @@ function onButton(name) {
     case 'save': return game?.mode === 'online' ? flash("Online games can't be saved.") : save();
     case 'mute': sound.toggleMute(); refreshMusic(); return render();
     case 'settings': return openSettings();
+    case 'descentInfo': descentOpen = true; dismissDescentIntro(); sound.play('click'); return render();
+    case 'closeDescent': descentOpen = false; sound.play('click'); return render();
+    case 'descentPanel': return; // clicks inside the panel don't close it
     case 'toggleLog':
       logOpen = !logOpen;
       try { localStorage.setItem(LOG_KEY, logOpen ? '1' : '0'); } catch { /* storage unavailable */ }

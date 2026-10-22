@@ -2186,7 +2186,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 .series { font-size: 13px; color: #f3e2b8; white-space: nowrap; }
 .series i { font-style: normal; display: inline-block; width: 1.3em; text-align: center; color: #8a7a62; }
 .series i.won { color: #7dff8a; } .series i.lost { color: #ff7a7a; }
-.online-result .big { font-size: 20px; }
+.online-result .big { font-size: 22px; -webkit-text-stroke: 1px #3a0a02; }
 .online-result .rank-badge, .online-result .series, .online-result .rp { vertical-align: middle; }
 .leaderboard { margin: 10px auto; border-collapse: collapse; min-width: min(560px, 100%); background: #0007; border-radius: 12px; overflow: hidden; }
 .leaderboard th, .leaderboard td { padding: 7px 12px; text-align: left; border-bottom: 1px solid #ffffff12; }
@@ -4821,6 +4821,7 @@ body.descending #board-layer .board-still, body.descending #board-layer canvas.c
   filter: drop-shadow(0 4px 6px #000) drop-shadow(0 0 22px var(--tint)); }
 .descent.named .db-name { animation: descent-burn 1.6s ease-in-out infinite alternate; }
 @keyframes descent-burn { from { filter: drop-shadow(0 4px 6px #000) drop-shadow(0 0 16px var(--tint)); } to { filter: drop-shadow(0 4px 6px #000) drop-shadow(0 0 34px var(--tint)); } }
+.db-both { margin-top: 6px; font: 700 clamp(9px, 1.4vmin, 13px) Cinzel, Georgia, serif; letter-spacing: 0.25em; text-transform: uppercase; color: var(--tint); text-shadow: 0 0 8px #000, 0 1px 2px #000; }
 .db-rule { font-family: Georgia, serif; font-style: italic; color: #f0e2c8; font-size: clamp(13px, 2.2vmin, 22px); text-shadow: 0 2px 4px #000, 0 0 8px #000; }
 .db-roman { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%); z-index: -1; font-family: Cinzel, Georgia, serif; font-weight: 900;
   font-size: clamp(120px, 34vmin, 380px); color: var(--tint); opacity: 0.13; letter-spacing: -0.02em; pointer-events: none; }
@@ -4830,17 +4831,68 @@ body.descending #board-layer .board-still, body.descending #board-layer canvas.c
 #board-layer canvas.circle-fx, .pboard-fx canvas.circle-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
 /* The Descent gauge: seven rings down the left of the battlefield. */
-.descent-gauge { position: absolute; z-index: 6; left: 0.6%; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 4px;
-  pointer-events: auto; cursor: help; }
+.descent-gauge { position: absolute; z-index: 6; left: calc(0.6cqw + clamp(40px, 4cqw, 62px) + 12px); top: 46%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 5px 5px 6px; border-radius: 10px; background: linear-gradient(#1a0806d9, #0c0404d9); border: 1px solid #6a2a12; box-shadow: 0 0 12px #000a, inset 0 0 8px #ff4a1a22;
+  pointer-events: auto; cursor: pointer; transition: border-color 0.3s, box-shadow 0.3s; }
+.descent-gauge:hover { border-color: #ffb44a; box-shadow: 0 0 14px #ff6a1a88; }
+.dg-head { display: flex; flex-direction: column; align-items: center; gap: 1px; font: 700 clamp(7px, 0.95vmin, 10px) Cinzel, Georgia, serif; letter-spacing: 0.08em; text-transform: uppercase; color: #ffcf8a; }
+.dg-head svg { width: clamp(12px, 1.8vmin, 18px); height: clamp(12px, 1.8vmin, 18px); fill: #ff7a2a; stroke: #ffd27a; stroke-width: 1.2; filter: drop-shadow(0 0 4px #ff5a1a); }
+.dg-q { position: absolute; top: -6px; right: -6px; width: 14px; height: 14px; border-radius: 50%; display: grid; place-items: center; font: 700 10px Georgia, serif; font-style: normal;
+  color: #200806; background: #ffcf8a; box-shadow: 0 0 6px #ff8a2a; animation: dg-q 2.4s ease-in-out infinite; }
+@keyframes dg-q { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(1.3); } }
+.dg-body { display: flex; align-items: stretch; gap: 4px; }
 .dg-rings { display: flex; flex-direction: column; gap: 3px; }
 .dg-rings i { display: grid; place-items: center; width: clamp(16px, 2.2vmin, 24px); height: clamp(16px, 2.2vmin, 24px); border-radius: 50%; font: 700 clamp(7px, 1vmin, 10px) Cinzel, Georgia, serif; font-style: normal;
   color: #a08a70; background: #120a08cc; border: 1px solid #4a3020; box-shadow: inset 0 0 4px #000; }
 .dg-rings i.past { color: #ffcf8a; border-color: #8a3a1a; background: radial-gradient(circle, #5a1a0a, #200806); }
 .dg-rings i.now { color: #fff; border-color: #ffb44a; background: radial-gradient(circle, #ff7a2a, #7a1a06); box-shadow: 0 0 10px #ff6a1a, 0 0 2px #fff inset; animation: dg-now 1.6s ease-in-out infinite alternate; }
 @keyframes dg-now { from { box-shadow: 0 0 6px #ff6a1a; } to { box-shadow: 0 0 16px #ff8a2a; } }
-.dg-fill { width: 5px; align-self: stretch; margin: 2px 0; border-radius: 3px; background: #120a08cc; border: 1px solid #4a3020; display: flex; align-items: flex-end; overflow: hidden; }
+.dg-fill { width: 6px; margin: 2px 0; border-radius: 3px; background: #120a08cc; border: 1px solid #4a3020; display: flex; align-items: flex-end; overflow: hidden; }
 .dg-fill b { display: block; width: 100%; background: linear-gradient(to top, #7a1006, #ff6a1a, #ffd27a); box-shadow: 0 0 8px #ff6a1a; transition: height 0.6s ease; }
-.dg-name { position: absolute; left: 100%; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: 0 0; margin-left: 6px; white-space: nowrap;
-  font: 700 clamp(9px, 1.3vmin, 13px) Cinzel, Georgia, serif; letter-spacing: 0.2em; text-transform: uppercase; color: #ffcf8a; text-shadow: 0 1px 3px #000; display: none; }
+.dg-count { font: 700 clamp(10px, 1.4vmin, 14px) Cinzel, Georgia, serif; color: #ffe2b0; text-shadow: 0 0 6px #ff5a1a, 0 1px 2px #000; line-height: 1; }
+.dg-count small { font-size: 0.7em; color: #c8a080; }
+.descent-gauge.gain { animation: dg-gain 0.7s ease-out; }
+@keyframes dg-gain { 0% { box-shadow: 0 0 30px #ffb44a, inset 0 0 14px #ff8a2a; border-color: #ffe2b0; } 100% { box-shadow: 0 0 12px #000a; } }
+.descent-gauge.close { border-color: #ff7a2a; animation: dg-close 1.1s ease-in-out infinite alternate; }
+@keyframes dg-close { from { box-shadow: 0 0 8px #ff4a1a66; } to { box-shadow: 0 0 22px #ff5a1acc, inset 0 0 10px #ff4a1a55; } }
+.descent-gauge.close .dg-fill b { animation: dg-flicker 0.5s steps(2) infinite; }
+@keyframes dg-flicker { 50% { filter: brightness(1.5); } }
+.dg-next { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); width: max-content; max-width: 150px; padding: 5px 8px; border-radius: 8px;
+  background: #1a0806ee; border: 1px solid #ff7a2a; color: #ffcf8a; font: 600 clamp(9px, 1.2vmin, 12px) Georgia, serif; box-shadow: 0 0 10px #ff4a1a66; pointer-events: none; }
+.dg-next b { color: #fff; font-family: Cinzel, Georgia, serif; }
+.dg-next small { display: block; margin-top: 2px; color: #f0d8b8; font-style: italic; font-size: 0.92em; line-height: 1.25; }
+.fx-float.descent-pt { width: max-content; white-space: nowrap; }
+.fx-float.descent-pt span { color: #ffe08a; text-shadow: 0 0 10px #ff4a1a, 0 0 20px #ff2a0a, 0 2px 3px #000; font-size: clamp(24px, 2.6cqw, 34px); -webkit-text-stroke: 1.5px #3a0a02; paint-order: stroke fill; }
+.descent-callout { position: absolute; z-index: 35; left: calc(0.6cqw + clamp(40px, 4cqw, 62px) + 76px); top: 46%; transform: translateY(-50%); width: min(260px, 60vw); padding: 10px 12px; border-radius: 10px;
+  background: linear-gradient(#2a0c06f2, #120404f2); border: 1px solid #ff8a2a; box-shadow: 0 0 22px #ff4a1a77, 0 6px 18px #000c; color: #f0e2c8; font: 13px/1.35 Georgia, serif;
+  pointer-events: auto; cursor: pointer; animation: dc-in 0.5s cubic-bezier(.2,1.4,.4,1) 1.9s both; } /* after the turn banner */
+.descent-callout::before { content: ''; position: absolute; left: -7px; top: 50%; width: 12px; height: 12px; background: #200806; border-left: 1px solid #ff8a2a; border-bottom: 1px solid #ff8a2a; transform: translateY(-50%) rotate(45deg); }
+.descent-callout > b { display: flex; align-items: center; gap: 5px; font: 700 15px Cinzel, Georgia, serif; color: #ffcf8a; letter-spacing: 0.05em; }
+.descent-callout > b svg { width: 16px; height: 16px; fill: #ff7a2a; stroke: #ffd27a; }
+.descent-callout p { margin: 4px 0; }
+.descent-callout u { color: #ffb44a; font-size: 12px; }
+.descent-callout.leaving { animation: dc-out 0.4s ease-in forwards; }
+@keyframes dc-in { from { opacity: 0; transform: translate(-14px, -50%) scale(0.9); } }
+@keyframes dc-out { to { opacity: 0; transform: translate(-10px, -50%) scale(0.95); } }
+.arena.portrait .descent-callout { left: 54px; width: min(230px, 62vw); font-size: 12px; }
+.descent-panel { max-width: 520px; text-align: left; border-color: #ff7a2a; background: linear-gradient(#24090599, #0c0303f0), #140505; box-shadow: 0 0 40px #ff4a1a55; }
+.descent-panel h2 { display: flex; align-items: center; gap: 8px; color: #ffcf8a; font-family: Cinzel, Georgia, serif; }
+.descent-panel h2 svg { width: 24px; height: 24px; fill: #ff7a2a; stroke: #ffd27a; }
+.dp-lead { margin: 4px 0 10px; }
+.dp-how { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dp-how div { padding: 6px 8px; border-radius: 8px; background: #ff5a1a18; border: 1px solid #6a2a12; }
+.dp-how b { display: block; color: #ffd27a; }
+.dp-how span { font-size: 0.85em; color: #c8b098; }
+.dp-need { margin: 8px 0; }
+.dp-circles { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 3px; }
+.dp-circles li { display: grid; grid-template-columns: 26px 78px 1fr; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px; font-size: 0.88em; color: #a8988a; position: relative; }
+.dp-circles li i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #4a3020; font: 700 9px Cinzel, Georgia, serif; font-style: normal; background: #120a08; }
+.dp-circles li b { font-family: Cinzel, Georgia, serif; color: #d8c0a0; }
+.dp-circles li.past { color: #c8a888; }
+.dp-circles li.past i { border-color: #8a3a1a; color: #ffcf8a; background: #3a0e06; }
+.dp-circles li.now { background: #ff5a1a2a; border: 1px solid #ff8a2a; color: #f8e8d0; }
+.dp-circles li.now i { color: #fff; border-color: #ffb44a; background: radial-gradient(circle, #ff7a2a, #7a1a06); box-shadow: 0 0 8px #ff6a1a; }
+.dp-circles li em { position: absolute; right: 6px; top: -7px; font: 700 9px Cinzel, Georgia, serif; font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: #200806; background: #ffb44a; padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 520px) { .dp-how { grid-template-columns: 1fr; } .dp-circles li { grid-template-columns: 22px 84px 1fr; gap: 6px; } .dp-circles li b { font-size: 0.92em; } }
 .arena.portrait .descent-gauge { left: 4px; top: 50%; transform: translateY(-50%) scale(0.85); transform-origin: left center; }
 body.reduced-motion .descent { display: none; }
