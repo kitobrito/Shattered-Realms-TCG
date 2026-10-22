@@ -1068,6 +1068,12 @@ export const ART = {
   hungry_silence: 'art/void/hungry_silence.jpg',
   feed_the_void: 'art/void/feed_the_void.jpg',
   void_spawn: 'art/void/void_spawn.jpg',
+  // Dragons: elemental dragons
+  nessira_wyrm_of_the_deep_loch: 'art/dragons/nessira_wyrm_of_the_deep_loch.jpg',
+  nidhoggr_the_stormfrost_wyrm: 'art/dragons/nidhoggr_the_stormfrost_wyrm.jpg',
+  stormscale_drake: 'art/dragons/stormscale_drake.jpg',
+  the_fourfold_hydra: 'art/dragons/the_fourfold_hydra.jpg',
+  tidepool_whelp: 'art/dragons/tidepool_whelp.jpg',
   accretion_serpent: 'art/void/accretion_serpent.jpg',
   dark_star: 'art/void/dark_star.jpg',
   gargantua_the_living_singularity: 'art/void/gargantua_the_living_singularity.jpg',
