@@ -299,4 +299,35 @@ export const DRAGON_CARDS = [
     text: 'Trap: When an enemy minion attacks your Hero, Freeze it and the minions next to it.',
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [FREEZE({ adjacent: 'eventSource', includeSelf: true })] },
   },
+  // ---- Elemental Dragons (unlockable): lightning, water and the Fourfold Hydra ----
+  {
+    ...D, id: 'tidepool_whelp', name: 'Tidepool Whelp', art: '💧', extra: true, cost: 1, attack: 1, health: 1,
+    text: 'Arrival: Restore 2 Health to your Hero.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }],
+  },
+  {
+    ...D, id: 'stormscale_drake', name: 'Stormscale Drake', art: '⚡', extra: true, cost: 4, attack: 4, health: 3, keywords: ['Rush'],
+    text: 'Rush. After this attacks, chain lightning deals 1 damage to a random enemy.',
+    triggers: [{ on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'damage', target: { randomOf: ENEMY_CHARACTERS }, amount: 1 }] }],
+  },
+  {
+    ...D, id: 'nessira_wyrm_of_the_deep_loch', name: 'Nessira, Wyrm of the Deep Loch', art: '🌊', extra: true, cost: 8, attack: 6, health: 8,
+    text: "Arrival: A tidal wave returns every enemy minion that costs (2) or less to its owner's hand.",
+    triggers: [{ on: 'battlecry', effects: [{ op: 'returnToHand', target: { minions: { side: 'enemy', maxCost: 2 } } }] }],
+  },
+  {
+    ...D, id: 'nidhoggr_the_stormfrost_wyrm', name: 'Nidhöggr, the Stormfrost Wyrm', art: '🌩️', extra: true, cost: 9, attack: 7, health: 7,
+    text: 'Arrival: Lightning strikes 3 times, dealing 2 damage to a random enemy each time. Minions that survive are Frozen.',
+    triggers: [{ on: 'battlecry', effects: [1, 2, 3].map(() => ({ op: 'damage', target: { randomOf: ENEMY_CHARACTERS }, amount: 2, freeze: true })) }],
+  },
+  {
+    ...D, id: 'the_fourfold_hydra', name: 'The Fourfold Hydra', art: '🐲', extra: true, cost: 10, attack: 8, health: 8,
+    text: 'Arrival: Each head strikes. Fire: Burn 2 on the enemy Hero. Ice: Freeze a random enemy minion. Lightning: deal 2 damage to a random enemy minion. Water: restore 3 Health to your Hero.',
+    triggers: [{ on: 'battlecry', effects: [
+      burn('enemyHero', 2),
+      FREEZE({ randomOf: { minions: { side: 'enemy', frozen: false } } }),
+      { op: 'damage', target: { randomOf: ENEMY_MINIONS }, amount: 2 },
+      { op: 'heal', target: 'friendlyHero', amount: 3 },
+    ] }],
+  },
 ];
