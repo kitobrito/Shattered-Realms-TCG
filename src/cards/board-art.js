@@ -18,6 +18,7 @@ export const BOARD_ART = {
   Sharks: 'art/boards-v2/sharks.jpg',
   Acidic: 'art/boards-v2/acidic.jpg',
   Lycanthropes: 'art/boards-v2/lycanthropes.jpg',
+  Void: 'art/boards-v2/void.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -57,6 +58,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Void: { src: 'art/boards-portrait/void.jpg', opp: [183, 59, 276, 174, 'arch'], me: [178, 784, 275, 911, 'circle'], field: [195, 765],
+    props: [P([15, 15, 95, 95], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([355, 15, 450, 100], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
+      P([10, 870, 110, 1010], 'wobble', '#d8d0f0', { sound: 'clink' }), P([360, 915, 459, 1005], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },
   Lycanthropes: { src: 'art/boards-portrait/lycanthropes.jpg', opp: [202, 28, 256, 94, 'arch'], me: [197, 919, 261, 1001, 'circle'], field: [120, 900],
     props: [P([10, 15, 100, 100], 'glow', '#dfe8ff', { sound: 'chime', glyph: '🌕' }), P([310, 25, 420, 120], 'sway', '#c8d0e0', { sound: 'clink', glyph: '⛓️' }),
       P([15, 920, 105, 1010], 'wobble', '#e8e8f0', { sound: 'growl' }), P([340, 915, 455, 1015], 'glow', '#bcd0ff', { sound: 'rustle', glyph: '🐺' })] },
@@ -114,6 +118,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Void: { src: 'art/boards-v2/void.jpg', opp: [472, 43, 551, 132], me: [474, 437, 549, 537], field: [115, 150, 910, 425],
+    props: [P([30, 15, 125, 105], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([895, 15, 1000, 115], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
+      P([25, 420, 125, 555], 'wobble', '#d8d0f0', { sound: 'clink' }), P([890, 465, 1015, 560], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },
   Lycanthropes: { src: 'art/boards-v2/lycanthropes.jpg', opp: [473, 37, 550, 130], me: [470, 441, 552, 545], field: [120, 150, 900, 425],
     props: [P([20, 10, 150, 140], 'glow', '#dfe8ff', { sound: 'chime', glyph: '🌕' }), P([810, 30, 970, 160], 'sway', '#c8d0e0', { sound: 'clink', glyph: '⛓️' }),
       P([40, 420, 170, 550], 'wobble', '#e8e8f0', { sound: 'growl' }), P([820, 400, 1000, 560], 'glow', '#bcd0ff', { sound: 'rustle', glyph: '🐺' })] },
