@@ -296,7 +296,7 @@ export const VAMPIRE_CARDS = [
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'draw', if: { heroLostHealthThisTurn: true } }] }],
   },
   {
-    ...V, id: 'bloodmoon_gargant', name: 'Bloodmoon Gargant', art: '🦍', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast', cost: 5, attack: 5, health: 5,
+    ...V, id: 'bloodmoon_gargant', name: 'Bloodmoon Gargant', art: '🦍', extra: true, tribes: ['Vampire', 'Beast'], cost: 5, attack: 5, health: 5,
     text: 'Whenever another friendly Vampire dies, gain +1 Health.',
     triggers: [{ on: 'minionDied', filter: { source: { side: 'friendly', tribe: 'Vampire', notSelf: true } }, effects: [{ op: 'buff', target: 'self', health: 1 }] }],
   },
