@@ -243,7 +243,11 @@ export function fitAllText(root) {
   for (const el of root.querySelectorAll('.bc-banner span')) items.push({ el, box: el, min: 0.5, wide: true });
   for (const el of root.querySelectorAll('.shard .bc-type span')) items.push({ el, box: el, min: 0.4, wide: true });
   if (!items.length) return;
-  for (const f of items) f.el.style.fontSize = '';
+  for (const f of items) {
+    f.el.style.fontSize = '';
+    // Undo a previous two-line split (the card may have re-rendered at another size).
+    if (f.el.querySelector?.('br') && f.el.closest('.bc-banner')) { f.el.textContent = f.el.textContent.replace(',', ', '); f.el.style.whiteSpace = ''; f.el.style.lineHeight = ''; }
+  }
   const todo = [];
   for (const f of items) {
     if (!overflows(f)) continue;
@@ -261,6 +265,21 @@ export function fitAllText(root) {
     while (overflows(f) && size > f.start * f.min) {
       size -= 0.5;
       f.el.style.fontSize = `${size}px`;
+    }
+    // A long title name ("Malgrath, the Bloodmoon Behemoth") that still doesn't fit on one line
+    // breaks after its comma onto two lines, at a size that fits the banner's height.
+    if (overflows(f) && f.wide && f.el.closest('.bc-banner') && !f.el.querySelector('br') && f.el.textContent.includes(', ')) {
+      const [a, ...rest] = f.el.textContent.split(', ');
+      f.el.innerHTML = `${esc(a)},<br>${esc(rest.join(', '))}`;
+      f.el.style.whiteSpace = 'nowrap';
+      f.el.style.lineHeight = '0.95';
+      size = f.start * 0.62;
+      f.el.style.fontSize = `${size}px`;
+      while ((overflows(f) || f.el.scrollHeight > f.box.parentElement.clientHeight * 1.05) && size > f.start * 0.4) {
+        size -= 0.5;
+        f.el.style.fontSize = `${size}px`;
+      }
+      continue; // not cached: the two-line layout is rebuilt each time
     }
     if (fitCache.size > 3000) fitCache.clear();
     fitCache.set(f.key, size);

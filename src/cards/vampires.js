@@ -307,6 +307,25 @@ export const VAMPIRE_CARDS = [
       { op: 'oncePerTurn', key: 'lord', effects: [{ op: 'summon', cardId: 'vampire_thrall', health: 1 }] },
     ] }],
   },
+  // ---- Vampire werebeasts (legendary, unlockable): Vampire Lycans locked in beast form for good
+  // (form 'beast' with no other form, so they never Transform but count as Lycans in Beast Form).
+  {
+    ...V, id: 'varkhul_the_crimson_maw', name: 'Varkhul, the Crimson Maw', art: '🐊', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast',
+    cost: 7, attack: 6, health: 6, keywords: ['Rush', 'Lifesteal'], extraAttackOnKill: true,
+    text: 'Rush, Lifesteal. Whenever this destroys a minion, it can attack again (once per turn).',
+  },
+  {
+    ...V, id: 'malgrath_the_bloodmoon_behemoth', name: 'Malgrath, the Bloodmoon Behemoth', art: '🐻', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast',
+    cost: 8, attack: 6, health: 8, keywords: ['Taunt', 'Lifesteal'],
+    text: 'Taunt, Lifesteal. Whenever your Hero loses Health, this gains +1/+1.',
+    triggers: [{ on: 'heroLostHealth', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...V, id: 'nyxara_the_crimson_nightstalker', name: 'Nyxara, the Crimson Nightstalker', art: '🐆', extra: true, tribes: ['Vampire', 'Lycan'], form: 'beast',
+    cost: 6, attack: 4, health: 4, keywords: ['Stealth', 'Venomous'], stealthUntilAttack: true,
+    text: 'Stealth until this attacks. Venomous. Whenever this destroys a minion, it regains Stealth.',
+    triggers: [{ on: 'minionDied', filter: { killer: 'self' }, effects: [{ op: 'buff', target: 'self', keywords: ['Stealth'] }] }],
+  },
   {
     ...V, id: 'queen_of_the_red_veil', name: 'Queen of the Red Veil', art: '👑', extra: true, cost: 8, attack: 6, health: 7,
     text: 'Arrival: Your other Vampires with 2 or less Attack become 3/3 Blood Shades. They keep their other abilities.',
