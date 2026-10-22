@@ -75,6 +75,8 @@ export const LEGENDARY = new Set([
   'the_qu_shapers_of_worlds',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
+// How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).
+export const copyLimit = (id) => (allCards().find((c) => c.id === id)?.legendary ? 1 : DEFAULT_RULES.maxCopies);
 
 const isDeckCard = (c) => !c.token && !c.heroSpell;
 
@@ -133,10 +135,10 @@ export function buildDeck(factions, cuts, lineups = {}) {
 
 export function standardDuplicates(faction, lineups = {}) {
   const lineup = lineupOf(faction, lineups);
-  const fixed = (STANDARD_DUPLICATES[faction] ?? []).filter((id) => lineup.includes(id));
+  const fixed = (STANDARD_DUPLICATES[faction] ?? []).filter((id) => lineup.includes(id) && copyLimit(id) > 1);
   if (STANDARD_DUPLICATES[faction] && fixed.length === STANDARD_DUPLICATES[faction].length) return STANDARD_DUPLICATES[faction];
   const cut = new Set(STANDARD_CUTS[faction] ?? []);
-  const rest = lineup.filter((id) => !cut.has(id) && !fixed.includes(id))
+  const rest = lineup.filter((id) => !cut.has(id) && !fixed.includes(id) && copyLimit(id) > 1)
     .map((id, i) => ({ id, i })).sort((a, b) => costOf(a.id) - costOf(b.id) || a.i - b.i).map((x) => x.id);
   return [...fixed, ...rest].slice(0, DEFAULT_RULES.singleFactionDuplicates);
 }
