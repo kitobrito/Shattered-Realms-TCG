@@ -13,9 +13,10 @@ function test(name, fn) { try { const r = fn(); if (r) { failures++; console.log
 for (const f of PLAYABLE_FACTIONS) {
   test(`${f}: Classic and Expansion decks are legal`, () => {
     const ds = premadeDecks([f]);
-    if (ds.length !== 2) return `${ds.length} decks`;
+    if (ds.length !== (expansionCards(f).length ? 2 : 1)) return `${ds.length} decks`;
     for (const d of ds) { const p = deckProblem([f], d.deck); if (p) return `${d.name}: ${p}`; }
     if (ds[0].deck.some((id) => getCard(id).extra)) return 'Classic holds expansion cards';
+    if (ds.length < 2) return null; // no expansion yet (Void)
     const ex = ds[1].deck;
     const missing = expansionCards(f).filter((id) => !ex.includes(id));
     if (missing.length) return `Expansion deck is missing ${missing.join(', ')}`;

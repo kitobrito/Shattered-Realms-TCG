@@ -116,6 +116,8 @@ export const KEYWORD_TEXT = {
   Transform: "Lycanthropes: switch between Humanoid Form and Beast Form. You can Transform each of your Lycanthropes once per turn for 1 Mana (tap it, then the moon button); cards can Transform them too. Damage carries over (it never drops below 1 Health), and so do buffs.",
   'Humanoid Form': 'A Lycanthrope in its human shape. Transform it to bring out the beast.',
   'Beast Form': 'A Lycanthrope in its animal shape: usually stronger, with its own abilities. Transform it to turn back.',
+  Hollow: "Void: a bonus that's on only while your hand is empty. Play out (or discard) every card to wake it.",
+  Discard: 'Throw a card from your hand into your Graveyard. You choose which one (if you hold only one, that one goes).',
   Corpse: 'Left behind when a friendly Zombie or Fungus minion dies. Corpses stay until a card consumes them. A Corpse is not a minion.',
   Mushroom: 'Attached to a card in the enemy deck. When that card is drawn, the enemy Hero takes 1 damage for each Mushroom on it, then they are removed.',
 };
@@ -168,6 +170,7 @@ export const BOARD_EVENTS = [
   'bonusHealth',      // a character's maximum Health rose permanently (Divine)
   'upgradeInstalled', // an Upgrade was played on a Robot (Robots)
   'radiationApplied', // a character gained Radiation (Radioactive)
+  'cardDiscarded',    // Void: a card was discarded from a hand ({ player, cardId, cost })
   'minionTransformed', // Lycanthropes: a minion switched form ({ source, player, form: 'beast' | 'human' })
   'heroLethal',       // Traps only: the Hero would take lethal damage (Last Resort Protocol)
 ];

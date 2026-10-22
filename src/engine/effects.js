@@ -155,6 +155,24 @@ export function surfaceMinion(state, m, opts = {}) {
   return true;
 }
 
+// ---- Void: discarding --------------------------------------------------------------
+// A discarded card goes from its owner's hand to their Graveyard. It counts toward "cards
+// you've discarded this game" (Abyssal Leviathan, Nihilax) and tells the board (Nebula Gnawer).
+// ctx (optional) remembers how many cards this effect discarded and their printed cost.
+export function discardFromHand(state, p, uid, ctx) {
+  const pl = state.players[p];
+  const i = pl.hand.findIndex((c) => c.uid === uid);
+  if (i < 0) return null;
+  const [inst] = pl.hand.splice(i, 1);
+  pl.graveyard.push(inst);
+  pl.discarded = (pl.discarded ?? 0) + 1;
+  const card = getCard(inst.cardId);
+  log(state, `🌑 ${pl.name} discards ${card.name}.`);
+  emit(state, { type: 'cardDiscarded', player: p, cardId: inst.cardId, cost: card.cost });
+  if (ctx) { ctx.discarded = (ctx.discarded ?? 0) + 1; ctx.discardedCost = (ctx.discardedCost ?? 0) + card.cost; }
+  return inst;
+}
+
 // ---- Lycanthropes: Transform -------------------------------------------------------
 // A Lycanthrope is two cards: its Humanoid Form (the card you play) and its Beast Form (a
 // hidden twin, `beastForm` / `humanForm` link them). Transforming swaps which card the minion
@@ -203,7 +221,7 @@ export const XENO_FORMS = {
   Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
   Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
   Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
-  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno',
 };
 const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
 export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
@@ -292,6 +310,9 @@ export function checkCondition(state, cond, ctx) {
   if (cond.heroHasWeapon != null) return !!heroOf(state, ctx.controller).weapon === cond.heroHasWeapon;
   // { eventDeadFaction } — the minion that just died was from this faction (Graceful Return).
   if (cond.eventDeadFaction) return !!ctx.event?.dead?.cardId && getCard(ctx.event.dead.cardId).faction === cond.eventDeadFaction;
+  // Void: { handEmpty } — your hand is empty (Hollow); { handAtLeast: N } — you hold N+ cards.
+  if (cond.handEmpty != null) return (state.players[ctx.controller].hand.length === 0) === cond.handEmpty;
+  if (cond.handAtLeast != null) return state.players[ctx.controller].hand.length >= cond.handAtLeast;
   // { enemyHandEmpty: true } — Ashen Curse.
   if (cond.enemyHandEmpty != null) return (state.players[opponentOf(ctx.controller)].hand.length === 0) === cond.enemyHandEmpty;
   if (cond.controls) {
@@ -505,6 +526,12 @@ export const EFFECT_OPS = {
       if (!n) return;
       resolved = { ...resolved, attack: n, health: n };
     }
+    // perDiscarded: { max } — +1/+1 per card this effect discarded (Starfall Feast, Nihilax).
+    if (e.perDiscarded) {
+      const n = Math.min(e.perDiscarded.max ?? 99, ctx.discarded ?? 0);
+      if (!n) return;
+      resolved = { ...resolved, attack: n * (e.perDiscarded.attack ?? 1), health: n * (e.perDiscarded.health ?? 1) };
+    }
     each(state, e.target, ctx, (c) => applyBuff(state, c, { ...resolved, byController: ctx.controller }));
   },
 
@@ -529,6 +556,33 @@ export const EFFECT_OPS = {
     if (n <= 0) return;
     log(state, `😈 Judgement from the Pit: ${nameOf(state, foe)} loses half their Health.`);
     loseHealth(state, foe.uid, n, { paid: false });
+  },
+
+  // ---- Void ----
+  // { then?, random? } — discard a card from your hand (you choose, unless random or it's your
+  // only card). `then` happens only if a card was discarded ("Discard a card. If you do, ...").
+  discard(state, e, ctx) {
+    const hand = state.players[ctx.controller].hand;
+    if (!hand.length) return;
+    const steps = (uid) => [{ op: 'discardCard', uid }, ...(e.then ?? [])];
+    if (hand.length === 1 || e.random) {
+      const uid = (e.random ? pickRandom(state, hand) : hand[0]).uid;
+      for (const sub of steps(uid)) resolveEffect(state, sub, ctx);
+      return;
+    }
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: e.prompt ?? 'Discard a card', resolve: 'effects', ctx,
+      options: hand.map((c) => ({ cardId: c.cardId, label: getCard(c.cardId).name, effects: steps(c.uid) })),
+    };
+  },
+  discardCard(state, e, ctx) {
+    discardFromHand(state, ctx.controller, e.uid, ctx);
+  },
+  // { then? } — discard your whole hand; `then` happens if at least one card went.
+  discardHand(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    for (const c of [...pl.hand]) discardFromHand(state, ctx.controller, c.uid, ctx);
+    if (ctx.discarded) for (const sub of e.then ?? []) resolveEffect(state, sub, ctx);
   },
 
   // { target } — Swallow Whole (King Meg): the source destroys the target outright and
@@ -569,6 +623,11 @@ export const EFFECT_OPS = {
     // amountFromSelfAttack — as much damage as this minion's Attack (Arsenal Overseer).
     if (e.amountFromSelfAttack) { const me = findCharacter(state, ctx.self); base = me ? effectiveAttack(me) : 0; }
     if ((e.amountFromArmor || e.amountFromSelfAttack) && !base) return;
+    // Void: amountPerDiscarded: { each, max } — per card this effect discarded (Star-Swallower);
+    // amountFromDiscardCost — the discarded cards' printed cost (Eclipse Maw).
+    if (e.amountPerDiscarded) base = Math.min(e.amountPerDiscarded.max ?? 99, (ctx.discarded ?? 0) * (e.amountPerDiscarded.each ?? 1));
+    if (e.amountFromDiscardCost) base = ctx.discardedCost ?? 0;
+    if ((e.amountPerDiscarded || e.amountFromDiscardCost) && !base) return;
     // amountPerCount: { count: selector, each, max } — extra damage per matching character (Colossus Prime).
     if (e.amountPerCount) base += Math.min(e.amountPerCount.max ?? 99, resolveSelector(state, e.amountPerCount.count, ctx).length * (e.amountPerCount.each ?? 1));
     const deferred = [];
@@ -789,7 +848,10 @@ export const EFFECT_OPS = {
     const hit = e.side === 'enemy'
       ? [...state.players[opponentOf(ctx.controller)].board]
       : [...state.players[0].board, ...state.players[1].board];
-    for (const m of hit) dealDamage(state, ctx.self, m.uid, e.amount, { sourceController: ctx.controller });
+    // amountPerDiscarded: { max } — 1 per card this effect discarded (Extinction Event).
+    const amount = e.amountPerDiscarded ? Math.min(e.amountPerDiscarded.max ?? 99, ctx.discarded ?? 0) : e.amount;
+    if (!amount) return;
+    for (const m of hit) dealDamage(state, ctx.self, m.uid, amount, { sourceController: ctx.controller });
     const killed = hit.filter((m) => m.controller !== ctx.controller && (m.health <= 0 || m.destroyed)).length;
     for (let i = 0; i < killed; i++) for (const sub of e.perEnemyKilled ?? []) resolveEffect(state, sub, ctx);
   },

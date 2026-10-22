@@ -174,8 +174,11 @@ export function minionHTML(m, s, cls = '', shift = false) {
   if (wardGame !== s) { wardGame = s; wardSince.clear(); }
   if (!taunt) wardSince.delete(m.uid);
   const faction = (card.faction ?? 'neutral').toLowerCase().replace(/\s+/g, '-');
+  // Void: a Hollow minion glows while its owner's hand is empty (its bonus is on).
+  const hollow = [].concat(card.aura ?? []).some((a) => a.if?.handEmpty) && !m.textLost
+    ? (s.players[m.controller].hand.length === 0 ? 'hollow on' : 'hollow') : '';
   return `
-    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${hollow} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>

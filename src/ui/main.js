@@ -1339,6 +1339,7 @@ const TIPS = [
   'Bees: protect the Hive. When it falls, the Queen emerges, and if she dies your Hero takes 10 damage.',
   "Bees: you don't have to break the Hive to beat the Bees. Their Hero falls at 0 Health like anyone else's.",
   'Bees: Burrow the Queen hides her in a Hidden Nest that can\'t be attacked. Damage that hits every minion is the usual way to dig her out.',
+  'Void: Hollow cards get stronger while your hand is empty. Play out your cheap cards fast, or feed spare ones to the Void.',
   'Lycanthropes: tap one of your Lycanthropes and press the moon to Transform it (1 Mana, once per turn each). Damage carries over, but a Transform never kills.',
   'Acidic: Corrosion lowers Attack for good. A minion at 0 Attack can\'t attack until something raises it.',
   'Sharks: enemy minions at 3 Health or less become Marked Prey. Heal them above 3 to shake the hunters off.',
@@ -2154,7 +2155,7 @@ function renderMenu() {
         <header class="ts-title">
           <div class="ts-runes"></div>
           <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-          <p class="ts-tag">Seventeen realms broke apart. Two of them are yours.</p>
+          <p class="ts-tag">Eighteen realms broke apart. Two of them are yours.</p>
         </header>
 
         <nav class="ts-actions">

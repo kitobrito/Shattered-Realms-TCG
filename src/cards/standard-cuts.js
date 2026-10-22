@@ -112,6 +112,12 @@ export const STANDARD_CUTS = {
     'echoes_of_blood', 'nothing_escapes_the_current',
     'beneath_the_sand', 'the_killing_current', 'scent_through_stone', 'intercept',
   ],
+  // Keeps: the Hollow core, the discard payoffs and the finishers.
+  Void: [
+    'dark_matter_drifter', 'hungering_shade', 'hollow_herald', 'vacuum_stalker',
+    'swallowed_by_darkness', 'event_horizon', 'starfall_feast',
+    'void_ambush', 'swallowing_dark', 'hungry_silence',
+  ],
   // Keeps: the cheap shifters, the pack leaders and the mass Transforms.
   Lycanthropes: [
     'bogskip_werefrog', 'scaleweaver_werelizard', 'nightveil_werepanther',

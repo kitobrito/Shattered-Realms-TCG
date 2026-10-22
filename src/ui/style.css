@@ -4922,3 +4922,17 @@ body.reduced-motion .descent { display: none; }
   .ts-fit .fg-head { flex-direction: column; align-items: center; gap: 0; white-space: normal; text-align: center; }
   .ts-fit .fg-head span { font-size: 0.85em; line-height: 1.2; overflow: visible; }
 }
+
+/* Void: shadow motes — tiny dark-matter orbs with a violet rim, a star of light at the heart. */
+.fx-p.voidmote { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #e8dcff 0 12%, #2a1240 30%, #0a0414 65%, transparent 75%); box-shadow: 0 0 9px #9a6aff, 0 0 3px #b48cff inset; opacity: 0.9; }
+/* Void: a Hollow minion with its bonus on (its owner's hand is empty) breathes a violet shadow inside its frame. */
+.minion.hollow.on .m-art { animation: hollow-breathe 2.4s ease-in-out infinite; }
+@keyframes hollow-breathe { 0%, 100% { box-shadow: inset 0 0 10px #6a3aff88; } 50% { box-shadow: inset 0 0 26px #9a6affee, inset 0 0 6px #e8dcff; } }
+@media (prefers-reduced-motion: reduce) { .minion.hollow.on .m-art { animation: none; box-shadow: inset 0 0 18px #9a6affcc; } }
+/* Void: black-violet frames, lavender trim. */
+.big-card.f-void { --frame: #2a1a40; --frame-hi: #c8a8ff; --body: #0a0614; }
+.big-card.t-spell.f-void { --frame: #1a1a3a; --frame-hi: #8ad8ff; --body: #060a14; }
+.big-card.t-trap.f-void { --frame: #2a1430; --frame-hi: #d88aff; --body: #0e0612; }
+.big-card.shard.f-void, .minion.shardm.f-void { --accent: #b48cff; }
+.arena.f-void { --felt: #1c1430; --felt-2: #07040e; --rim: #b48cff; }
+.medallion.f-void { --fc: #b48cff; } .ts-guide.f-void { --fc: #b48cff; }
