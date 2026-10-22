@@ -1068,6 +1068,17 @@ export const ART = {
   hungry_silence: 'art/void/hungry_silence.jpg',
   feed_the_void: 'art/void/feed_the_void.jpg',
   void_spawn: 'art/void/void_spawn.jpg',
+  // Dinosaurs: Meteorite and new dinosaurs
+  ankylosaurus_bone_crusher: 'art/dinosaurs/ankylosaurus_bone_crusher.jpg',
+  bull_ceratosaurus: 'art/dinosaurs/bull_ceratosaurus.jpg',
+  dilophosaurus_venom_spitter: 'art/dinosaurs/dilophosaurus_venom_spitter.jpg',
+  female_ceratosaurus: 'art/dinosaurs/female_ceratosaurus.jpg',
+  juvenile_ceratosaurus: 'art/dinosaurs/juvenile_ceratosaurus.jpg',
+  meteorite: 'art/dinosaurs/meteorite.jpg',
+  pachycephalosaurus: 'art/dinosaurs/pachycephalosaurus.jpg',
+  pterodactyl_dive_bomber: 'art/dinosaurs/pterodactyl_dive_bomber.jpg',
+  pterodactyl_diveling: 'art/dinosaurs/pterodactyl_diveling.jpg',
+  meteor_strike: 'art/dinosaurs/meteorite.jpg',
   // Dragons: elemental dragons
   nessira_wyrm_of_the_deep_loch: 'art/dragons/nessira_wyrm_of_the_deep_loch.jpg',
   nidhoggr_the_stormfrost_wyrm: 'art/dragons/nidhoggr_the_stormfrost_wyrm.jpg',

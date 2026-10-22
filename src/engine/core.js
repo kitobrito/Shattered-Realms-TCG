@@ -188,7 +188,9 @@ export function sinkOneCircle(state) {
   if (d) addDescent(state, d.need - d.points);
 }
 // Hero Spells cost 1 more in Limbo (Fusions are unaffected).
-export const heroSpellCost = (state, card) => card.cost + (descentDepth(state) === 1 && !card.fusion ? 1 : 0);
+// costsAllMana (Meteor Strike): it spends all the caster's Mana (never less than its printed cost).
+export const heroSpellCost = (state, card, pl = null) => (card.costsAllMana && pl ? Math.max(card.cost, manaFor(pl, card)) : card.cost)
+  + (descentDepth(state) === 1 && !card.fusion ? 1 : 0);
 // Gluttony: hands hold only 7 cards.
 export const maxHand = (state) => (descentDepth(state) === 3 ? Math.min(7, state.rules.maxHandSize) : state.rules.maxHandSize);
 

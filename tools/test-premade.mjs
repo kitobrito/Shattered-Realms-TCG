@@ -18,7 +18,7 @@ for (const f of PLAYABLE_FACTIONS) {
     if (ds[0].deck.some((id) => getCard(id).extra)) return 'Classic holds expansion cards';
     if (ds.length < 2) return null; // no expansion yet (Void)
     const ex = ds[1].deck;
-    const missing = expansionCards(f).filter((id) => !ex.includes(id));
+    const missing = expansionCards(f).filter((id) => !ex.includes(id) && !getCard(id).deckRule);
     if (missing.length) return `Expansion deck is missing ${missing.join(', ')}`;
   });
 }

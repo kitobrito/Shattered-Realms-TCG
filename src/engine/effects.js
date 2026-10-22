@@ -317,7 +317,8 @@ const cardMatches = (card, f = {}) =>
   (f.maxCost == null || card.cost <= f.maxCost) &&
   (!f.tribe || (card.tribes ?? []).includes(f.tribe)) &&
   (!f.tribes || f.tribes.some((t) => (card.tribes ?? []).includes(t))) &&
-  (!f.faction || card.faction === f.faction);
+  (!f.faction || card.faction === f.faction) &&
+  (!f.cardId || card.id === f.cardId);
 
 // ---- Conditions -----------------------------------------------------------
 // { controls: { tribe?, cardId?, excludeSelf? } }  — you control a matching minion
@@ -579,6 +580,31 @@ export const EFFECT_OPS = {
     if (n <= 0) return;
     log(state, `😈 Judgement from the Pit: ${nameOf(state, foe)} loses half their Health.`);
     loseHealth(state, foe.uid, n, { paid: false });
+  },
+
+  // ---- Dinosaurs (Meteorite) ----
+  // Meteor Strike: 1 damage to a random minion (either side) for each Mana spent on it.
+  meteorStrike(state, e, ctx) {
+    const n = ctx.spent ?? 0;
+    log(state, `☄ ${n} meteor${n === 1 ? '' : 's'} fall!`);
+    for (let i = 0; i < n; i++) {
+      const pool = [...state.players[0].board, ...state.players[1].board].filter((m) => m.health > 0 && !m.destroyed);
+      const m = pickRandom(state, pool);
+      if (!m) break;
+      dealDamage(state, ctx.self, m.uid, 1, { sourceController: ctx.controller });
+    }
+  },
+  // { cardId } — Bull Ceratosaurus: put a copy of that card from your hand onto the battlefield.
+  summonFromHand(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const i = pl.hand.findIndex((c) => c.cardId === e.cardId);
+    if (i < 0) return;
+    const [inst] = pl.hand.splice(i, 1);
+    const m = summonMinion(state, ctx.controller, inst.cardId);
+    if (!m) { pl.hand.splice(i, 0, inst); return; }
+    log(state, `${getCard(inst.cardId).name} answers the call!`);
+    ctx.summoned = m.uid;
+    enterBattlefield(state, m);
   },
 
   // ---- Void ----

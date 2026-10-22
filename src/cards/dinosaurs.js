@@ -332,4 +332,54 @@ export const DINOSAUR_CARDS = [
   },
   { ...D, id: 'sobeks_fossil', name: "Sobek's Fossil", art: '🦴', token: true, formLabel: 'Fossil', cost: 8, attack: 5, health: 5, keywords: ['Rush'],
     text: 'Rush. The skeleton of Sobek, risen from its museum display at full strength.' },
+  // ---- Meteorite and the new Dinosaurs (unlockable) ----
+  // Meteorite is a deck rule, not a card you draw: it takes a deck slot, leaves the deck when the
+  // game starts (engine.js createGame) and swaps Extinction Cycle for Meteor Strike.
+  {
+    ...S, id: 'meteorite', name: 'Meteorite', art: '☄️', extra: true, cost: 0, deckRule: true,
+    text: "Never drawn: it takes a deck slot. Your Hero Spell becomes Meteor Strike: spend all your Mana to deal 1 damage to a random minion (yours or the enemy's) for each Mana spent. You no longer gain Primal Mana, and Extinction never comes.",
+    effects: [],
+  },
+  {
+    ...S, id: 'meteor_strike', name: 'Meteor Strike', art: '☄️', heroSpell: true, altHeroSpell: true, costsAllMana: true, cost: 1,
+    text: 'Spend all your Mana. Deal 1 damage to a random minion (yours or the enemy\'s) for each Mana spent. (From Meteorite.)',
+    effects: [{ op: 'meteorStrike' }],
+  },
+  {
+    ...D, id: 'ankylosaurus_bone_crusher', name: 'Ankylosaurus Bone-Crusher', art: '🦕', extra: true, cost: 5, attack: 3, health: 7, keywords: ['Taunt'],
+    text: 'Taunt.',
+  },
+  {
+    ...D, id: 'dilophosaurus_venom_spitter', name: 'Dilophosaurus Venom-Spitter', art: '🦎', extra: true, cost: 4, attack: 2, health: 3, keywords: ['Venomous'],
+    text: 'Venomous.',
+  },
+  {
+    ...D, id: 'pachycephalosaurus', name: 'Pachycephalosaurus', art: '🦖', extra: true, cost: 6, attack: 7, health: 3, keywords: ['Rush'],
+    text: 'Rush.',
+  },
+  {
+    ...D, id: 'juvenile_ceratosaurus', name: 'Juvenile Ceratosaurus', art: '🦖', extra: true, cost: 3, attack: 2, health: 3,
+    text: 'Arrival: Draw a Bull Ceratosaurus from your deck.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'draw', filter: { cardId: 'bull_ceratosaurus' } }] }],
+  },
+  {
+    ...D, id: 'bull_ceratosaurus', name: 'Bull Ceratosaurus', art: '🦖', extra: true, cost: 9, attack: 7, health: 6, keywords: ['Rush'],
+    text: 'Rush. Arrival: Summon a Female Ceratosaurus from your hand.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'summonFromHand', cardId: 'female_ceratosaurus' }] }],
+  },
+  {
+    ...D, id: 'female_ceratosaurus', name: 'Female Ceratosaurus', art: '🦖', extra: true, cost: 6, attack: 6, health: 6,
+    text: 'Whenever this attacks the enemy Hero, summon a Large Dinosaur Egg.',
+    triggers: [{ on: 'afterAttack', filter: { source: 'self', target: 'enemyHero' }, effects: [{ op: 'summon', cardId: 'large_dinosaur_egg' }] }],
+  },
+  {
+    ...D, id: 'pterodactyl_dive_bomber', name: 'Pterodactyl Dive Bomber', art: '🦅', extra: true, cost: 7, attack: 5, health: 4, keywords: ['Elusive'],
+    text: 'Elusive. Arrival: Summon two 2/1 Pterodactyl Divelings. They attack an enemy minion right away.',
+    target: { type: 'minion', side: 'enemy' },
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'summon', cardId: 'pterodactyl_diveling' }, { op: 'fight', attacker: 'summoned', defender: 'chosen' },
+      { op: 'summon', cardId: 'pterodactyl_diveling' }, { op: 'fight', attacker: 'summoned', defender: 'chosen' },
+    ] }],
+  },
+  { ...D, id: 'pterodactyl_diveling', name: 'Pterodactyl Diveling', art: '🦅', token: true, cost: 1, attack: 2, health: 1, text: 'Summoned by the Pterodactyl Dive Bomber.' },
 ];
