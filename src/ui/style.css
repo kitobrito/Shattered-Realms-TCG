@@ -4936,3 +4936,6 @@ body.reduced-motion .descent { display: none; }
 .big-card.shard.f-void, .minion.shardm.f-void { --accent: #b48cff; }
 .arena.f-void { --felt: #1c1430; --felt-2: #07040e; --rim: #b48cff; }
 .medallion.f-void { --fc: #b48cff; } .ts-guide.f-void { --fc: #b48cff; }
+/* Void (Singularity): a Pulled card in hand wears a small violet tag (with its Collapse keyword). */
+.card .hand-tag { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); z-index: 6; white-space: nowrap; pointer-events: none;
+  padding: 1px 7px; border-radius: 999px; font: 700 10px/1.4 sans-serif; color: #efe6ff; background: #2a1450; border: 1px solid #b48cff; box-shadow: 0 0 8px #9a6aff99; }

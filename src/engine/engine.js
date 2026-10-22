@@ -13,7 +13,7 @@ import {
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   addDescent, descentDepth, heroSpellCost, initDescent, maxHand,
 } from './core.js';
-import { canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
+import { addKeyword, canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -386,7 +386,9 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
     const slot = Number.isInteger(position) ? Math.max(0, Math.min(position, pl.board.length)) : undefined;
     const m = summonMinion(state, p, card.id, { silent: true, position: slot, fromHand: true });
     if (!m) { pl.graveyard.push(inst); return; } // it couldn't enter play (a Queen who has already died)
-    const event = { type: 'cardPlayed', source: m.uid, player: p, cardId: card.id, cardType: 'minion', target: chosen };
+    // Void (Singularity): a Pulled minion that Collapsed keeps the keyword it was given.
+    for (const k of inst.bonusKeywords ?? []) addKeyword(m, k, false, state);
+    const event = { type: 'cardPlayed', source: m.uid, player: p, cardId: card.id, cardType: 'minion', target: chosen, pulled: !!inst.pulled };
     const ctx = { self: m.uid, controller: p, chosen, chosen2 };
     const steps = [
       { kind: 'event', event },
@@ -399,13 +401,13 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
   } else if (card.type === 'spell') {
     // The Fourth Circle (Greed): casting a spell costs 1 Health (not a paid cost: it doesn't drive the Descent).
     if (descentDepth(state) === 4) { log(state, '💰 Greed takes its due.'); loseHealth(state, pl.hero.uid, 1, { paid: false }); }
-    const event = { type: 'cardPlayed', source: inst.uid, player: p, cardId: card.id, cardType: 'spell', target: chosen };
+    const event = { type: 'cardPlayed', source: inst.uid, player: p, cardId: card.id, cardType: 'spell', target: chosen, pulled: !!inst.pulled };
     state.queue.push(...spellSteps(card, { self: inst.uid, controller: p, chosen, chosen2, cardId: card.id }, event, p));
     pl.graveyard.push(inst);
   } else if (card.type === 'trap') {
     pl.traps.push(inst);
     // The event is public but reveals only that a Trap was set.
-    state.queue.push({ kind: 'event', event: { type: 'cardPlayed', source: inst.uid, player: p, cardType: 'trap', hidden: true } });
+    state.queue.push({ kind: 'event', event: { type: 'cardPlayed', source: inst.uid, player: p, cardType: 'trap', hidden: true, pulled: !!inst.pulled } });
   }
 }
 

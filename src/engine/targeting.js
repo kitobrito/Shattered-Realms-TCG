@@ -208,6 +208,11 @@ export function matchFilter(state, filter, ctx) {
       if (!!(me && me.health > 0 && !me.destroyed) !== want) return false;
       continue;
     }
+    // Void (Singularity): the played card was Pulled from the enemy deck (Pulsar Hound).
+    if (key === 'pulled') {
+      if (!!ev.pulled !== want) return false;
+      continue;
+    }
     if (key === 'cardType') {
       if (ev.cardType !== want) return false;
       continue;
