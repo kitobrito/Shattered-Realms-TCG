@@ -189,7 +189,8 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   const legend = !!card.legendary;
   // Each faction's legendary minions have their own painted frame (Dragons and fusions use the gold one).
   const own = legend && type === 'minion' && !card.fusion && LEGEND_FRAMES.has(card.faction);
-  const frameSrc = own ? `art/frames/legendary-minion-${card.faction.toLowerCase()}.webp`
+  // ?v=2: the Zombies frame was replaced; the tag makes browsers fetch the fixed picture.
+  const frameSrc = own ? `art/frames/legendary-minion-${card.faction.toLowerCase()}.webp?v=2`
     : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
     <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>
