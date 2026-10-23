@@ -895,7 +895,7 @@ function tauntIn(el) {
   ], { duration: 750, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
 }
 
-function keywordChanges(oldMinions) {
+function keywordChanges(oldMinions, { holdFrozen = false } = {}) {
   const jobs = [];
   let shield = false;
   for (const el of app.querySelectorAll('[data-char][data-kw]')) {
@@ -918,6 +918,8 @@ function keywordChanges(oldMinions) {
       if (was.has(k)) continue;
       const layer = { taunt: '.m-shield', evade: '.m-speed', 'twin-strike': '.m-wind', frozen: '.m-ice', stealth: '.m-smoke', elusive: '.m-camo' }[k];
       const target = layer ? el.querySelector(layer) : el.querySelector('.m-art');
+      // The Great Freeze plays its own freezing wave (afterEffects).
+      if (k === 'frozen' && holdFrozen) continue;
       if (k === 'frozen') sound.play('freeze');
       if (k === 'taunt') { jobs.push(tauntIn(target)); shield = true; continue; }
       jobs.push(fx.animate(target, [
@@ -933,6 +935,17 @@ function keywordChanges(oldMinions) {
 async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   const jobs = [];
   const newLog = s.log.slice(before.logLen).map((l) => l.msg);
+
+  // Ice Age: the characters The Great Freeze just caught keep their ice hidden until the
+  // freezing wave reaches them (set before the first paint of the new board).
+  let greatFreeze = null;
+  if (newLog.some((m) => m.includes('THE GREAT FREEZE'))) {
+    const els = [...app.querySelectorAll('[data-char][data-kw]')];
+    const caught = els.filter((el) => el.dataset.kw.split(' ').includes('frozen') && !oldMinions.get(Number(el.dataset.char))?.kw?.includes('frozen'));
+    const furry = els.filter((el) => el.classList.contains('minion') && el.dataset.kw.split(' ').includes('thick-fur'));
+    for (const el of caught) el.classList.add('gf-pending');
+    greatFreeze = { caught, furry };
+  }
 
   // Extinction: the doomed minions stay on screen while a meteor comes down on them;
   // only after the impact do they crack and fade (the deaths below).
@@ -1139,7 +1152,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   if (hurt) sound.play(biggest >= 5 ? 'bigHit' : 'hit');
   if (biggest >= 5) jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, Math.min(4 + biggest * 1.5, 20)));
   if (healed) setTimeout(() => sound.play('heal'), 150);
-  jobs.push(keywordChanges(oldMinions));
+  jobs.push(keywordChanges(oldMinions, { holdFrozen: !!greatFreeze }));
 
   // Dropping to 10 Health or less: a heartbeat (the screen edges pulse red while low).
   if (before.myHealth > 10 && s.players[viewer].hero.health <= 10 && !s.gameOver) sound.play('heartbeat');
@@ -1261,11 +1274,14 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, 16));
     jobs.push(fx.banner('☄ EXTINCTION', 'extinction'));
   }
-  if (newLog.some((m) => m.includes('THE GREAT FREEZE'))) {
+  if (greatFreeze) {
     sound.play('freeze');
-    fx.flashScreen('#9fe0ff');
-    jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, 8));
     jobs.push(fx.banner('❄ THE GREAT FREEZE', 'great-freeze'));
+    let n = 0;
+    jobs.push(fx.greatFreeze(greatFreeze.caught, greatFreeze.furry, {
+      // A crackle per character, but not a wall of noise when the board is full.
+      onFreeze: () => { if (n++ % 2 === 0) sound.play('freeze'); },
+    }));
   }
   // A Trap that goes off is shown full size (one after another if several fire).
   const traps = newLog.map((m) => /^Trap revealed: (.+)!$/.exec(m)?.[1]).filter(Boolean)

@@ -2117,3 +2117,101 @@ export async function drawShow(items, from, backUrl, { hold = 2000 } = {}) {
   }));
   wraps.forEach((wrap) => wrap.remove());
 }
+
+// ---- Ice Age: The Great Freeze ---------------------------------------------------------
+// A blizzard blows across the table and the board cools to blue-grey while frost ferns
+// grow in from the screen edges. Then everything caught freezes in a wave from left to
+// right, each one crystallising with a crackle (onFreeze), while Thick Fur minions shake
+// the snow off. caught: the elements that were just Frozen (their ice held back with
+// .gf-pending until their moment); furry: the Thick Fur minions it passed by.
+export async function greatFreeze(caught, furry, { onFreeze } = {}) {
+  const W = window.innerWidth, H = window.innerHeight;
+  const total = 2600;
+  const jobs = [];
+  const hold = (el, inAt = 0.18, outAt = 0.78) => done(el, animate(el, [
+    { opacity: 0 }, { opacity: 1, offset: inAt }, { opacity: 1, offset: outAt }, { opacity: 0 },
+  ], { duration: total, easing: 'ease-in-out' }));
+
+  // The cold settles over the board, and the edges of the screen ice over.
+  jobs.push(hold(addFx('fx-gf-tint', {}), 0.22));
+  jobs.push(hold(addFx('fx-gf-frost', {}), 0.3));
+
+  // Frost ferns: crystalline branches that grow inward from the edges, like ice on a window.
+  const svg = fullSvg('fx-gf-ferns');
+  const reach = Math.min(W, H) * (W < 600 ? 0.22 : 0.17);
+  const ferns = W < 600 ? 16 : 28;
+  for (let i = 0; i < ferns; i++) {
+    const side = i % 4;
+    const t = Math.random();
+    const [x, y, ang] = side === 0 ? [t * W, 0, 90] : side === 1 ? [W, t * H, 180] : side === 2 ? [t * W, H, 270] : [0, t * H, 0];
+    const a0 = ((ang + (Math.random() - 0.5) * 50) * Math.PI) / 180;
+    const len = reach * (0.55 + Math.random() * 0.6);
+    const pt = (px, py, a, l) => [px + Math.cos(a) * l, py + Math.sin(a) * l];
+    const [ex, ey] = pt(x, y, a0, len);
+    let d = `M${x.toFixed(1)},${y.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}`;
+    // Pairs of side branches along the stem, shorter towards the tip.
+    for (let k = 1; k <= 4; k++) {
+      const f = k / 5;
+      const [bx, by] = pt(x, y, a0, len * f);
+      const bl = len * 0.42 * (1 - f * 0.7);
+      for (const s of [-1, 1]) {
+        const [cx, cy] = pt(bx, by, a0 + s * 0.75, bl);
+        d += ` M${bx.toFixed(1)},${by.toFixed(1)} L${cx.toFixed(1)},${cy.toFixed(1)}`;
+      }
+    }
+    const path = svgEl('path', { d, 'stroke-width': (1.2 + Math.random() * 1.6).toFixed(1), pathLength: 1 });
+    path.style.strokeDasharray = '1';
+    path.style.strokeDashoffset = '1';
+    svg.appendChild(path);
+    jobs.push(wait(80 + Math.random() * 450).then(() => animate(path, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 750, easing: 'cubic-bezier(.3,.7,.4,1)' })));
+  }
+  jobs.push(hold(svg, 0.25));
+
+  // The blizzard: flakes driven sideways across the whole screen.
+  const flakes = W < 600 ? 45 : 90;
+  for (let i = 0; i < flakes; i++) {
+    const size = 3 + Math.random() * 6;
+    const el = addFx('fx-gf-flake', { left: '0px', top: `${Math.random() * H * 1.1 - H * 0.1}px`, width: `${size}px`, height: `${size}px`, opacity: '0' });
+    const drift = H * (0.06 + Math.random() * 0.25);
+    jobs.push(wait(Math.random() * 1400).then(() => done(el, animate(el, [
+      { transform: 'translate(-30px, 0)', opacity: 0 },
+      { opacity: 0.55 + Math.random() * 0.45, offset: 0.1 },
+      { opacity: 0.8, offset: 0.85 },
+      { transform: `translate(${W + 30}px, ${drift}px)`, opacity: 0 },
+    ], { duration: 650 + Math.random() * 800, easing: 'linear' }))));
+  }
+
+  // The freeze rolls across the table from left to right.
+  const x = (el) => el.getBoundingClientRect().left;
+  const all = [...caught.map((el) => ({ el, fur: false })), ...furry.map((el) => ({ el, fur: true }))].sort((a, b) => x(a.el) - x(b.el));
+  const step = Math.min(140, 1000 / Math.max(1, all.length));
+  all.forEach(({ el, fur }, i) => {
+    jobs.push(wait(650 + i * step).then(() => {
+      const rect = el.getBoundingClientRect();
+      const c = center(rect);
+      if (fur) {
+        // Thick Fur: a shiver, and the snow puffs off it.
+        particles(rect, 'Ice Age', 3);
+        const art = el.querySelector('.m-art') ?? el;
+        return animate(art, [
+          { transform: 'none' }, { transform: 'translateX(-4px) rotate(-3deg)' }, { transform: 'translateX(4px) rotate(3deg)' },
+          { transform: 'translateX(-3px) rotate(-2deg)' }, { transform: 'translateX(2px)' }, { transform: 'none' },
+        ], { duration: 480, fill: 'none' });
+      }
+      el.classList.remove('gf-pending');
+      onFreeze?.();
+      const tag = el.querySelector('.st-frozen');
+      if (tag) animate(tag, [{ transform: 'scale(0)' }, { transform: 'scale(1.4)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 360, fill: 'none' });
+      const ice = el.querySelector('.m-ice');
+      ring(c, Math.max(rect.width, rect.height) * 0.9, '#e8f8ff', { width: 3, from: 0.2, to: 1.25, duration: 520 });
+      shatter(rect, 'ice', 5);
+      return animate(ice, [
+        { transform: 'scale(1.35)', opacity: 0, filter: 'brightness(3)' },
+        { transform: 'scale(0.96)', opacity: 1, filter: 'brightness(1.6)', offset: 0.6 },
+        { transform: 'scale(1)', opacity: 1, filter: 'none' },
+      ], { duration: 460, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none' });
+    }));
+  });
+  await Promise.all(jobs);
+  for (const { el } of all) el.classList.remove('gf-pending');
+}

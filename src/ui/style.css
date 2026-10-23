@@ -620,6 +620,21 @@ body.in-game { overflow: hidden; }
   filter: drop-shadow(0 4px 6px #000); }
 .fx-banner.theirs span { background: linear-gradient(#ffd0d6, #e04461 60%, #7a1528); -webkit-background-clip: text; background-clip: text; }
 .fx-banner.great-freeze span { background: linear-gradient(#ffffff, #9fe0ff 55%, #2c6a9a); -webkit-background-clip: text; background-clip: text; }
+.fx-gf-tint { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 45%, rgba(170, 215, 245, 0.16), rgba(70, 120, 170, 0.42)); mix-blend-mode: multiply; }
+.fx-gf-frost { position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(215, 240, 255, 0.35) 72%, rgba(240, 250, 255, 0.85) 100%);
+  box-shadow: inset 0 0 60px 18px rgba(235, 248, 255, 0.75), inset 0 0 160px 40px rgba(160, 215, 250, 0.35); }
+@media (max-width: 600px) {
+  .fx-gf-frost { background: radial-gradient(ellipse at center, transparent 66%, rgba(215, 240, 255, 0.3) 84%, rgba(240, 250, 255, 0.75) 100%);
+    box-shadow: inset 0 0 30px 8px rgba(235, 248, 255, 0.7), inset 0 0 80px 20px rgba(160, 215, 250, 0.3); }
+}
+.fx-gf-ferns { position: fixed; inset: 0; overflow: visible; }
+.fx-gf-ferns path { fill: none; stroke: #f2fbff; stroke-linecap: round; opacity: 0.85; filter: drop-shadow(0 0 3px #9fe0ff); }
+.fx-gf-flake { position: fixed; border-radius: 50%; background: radial-gradient(circle, #fff 0 40%, rgba(230, 248, 255, 0.6) 60%, transparent 72%); box-shadow: 0 0 6px rgba(200, 240, 255, 0.8); }
+/* Caught by The Great Freeze: the ice waits for the freezing wave. */
+.gf-pending .m-ice { display: none !important; }
+.minion.gf-pending .m-art { filter: none !important; }
+.gf-pending .st-frozen { visibility: hidden; }
 .fx-banner.extinction span { background: linear-gradient(#fff1c4, #ff7a3a 55%, #7a1a04); -webkit-background-clip: text; background-clip: text; }
 .fx-banner.trap span { font-size: clamp(22px, 3.2cqw, 44px); background: linear-gradient(#f2e2ff, #a46bff 60%, #3a1066); -webkit-background-clip: text; background-clip: text; }
 .fx-flash { position: fixed; inset: 0; mix-blend-mode: screen; }
