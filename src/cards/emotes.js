@@ -45,6 +45,14 @@ export const EMOTES = {
     oops: "Whoops!",
     threaten: "Shroom over!",
   },
+  'Ice Age': {
+    greetings: "Cold out, isn't it? Come sit by the fire.",
+    wellPlayed: "Well played. You'd survive the winter.",
+    thanks: "Thanks. The herd remembers.",
+    wow: "Now that's a mammoth play!",
+    oops: "Oops. Slipped on the ice.",
+    threaten: "Winter is long. We are patient.",
+  },
   Void: {
     greetings: "The stars went quiet. Hello.",
     wellPlayed: "Well played. Even the dark noticed.",

@@ -22,7 +22,7 @@ import * as drag from './drag.js';
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
-import { artOf, backArtOf, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
+import { artOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
 import { cardMatchesQuery, queryWords } from '../cards/card-search.js';
@@ -1261,6 +1261,12 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, 16));
     jobs.push(fx.banner('☄ EXTINCTION', 'extinction'));
   }
+  if (newLog.some((m) => m.includes('THE GREAT FREEZE'))) {
+    sound.play('freeze');
+    fx.flashScreen('#9fe0ff');
+    jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, 8));
+    jobs.push(fx.banner('❄ THE GREAT FREEZE', 'great-freeze'));
+  }
   // A Trap that goes off is shown full size (one after another if several fire).
   const traps = newLog.map((m) => /^Trap revealed: (.+)!$/.exec(m)?.[1]).filter(Boolean)
     .map((name) => allCards().find((c) => c.name === name)).filter(Boolean);
@@ -1340,6 +1346,7 @@ const TIPS = [
   'Bees: protect the Hive. When it falls, the Queen emerges, and if she dies your Hero takes 10 damage.',
   "Bees: you don't have to break the Hive to beat the Bees. Their Hero falls at 0 Health like anyone else's.",
   'Bees: Burrow the Queen hides her in a Hidden Nest that can\'t be attacked. Damage that hits every minion is the usual way to dig her out.',
+  'Ice Age: every 4th of your turns the Great Freeze freezes everything without Thick Fur. Line up your furry beasts to swing while the enemy stands still.',
   'Void: Hollow cards get stronger while your hand is empty. Play out your cheap cards fast, or feed spare ones to the Void.',
   'Lycanthropes: tap one of your Lycanthropes and press the moon to Transform it (1 Mana, once per turn each). Damage carries over, but a Transform never kills.',
   'Acidic: Corrosion lowers Attack for good. A minion at 0 Attack can\'t attack until something raises it.',
@@ -1622,7 +1629,7 @@ function lobbySetupHTML(heroes, editable) {
   const open = availableFactions();
   const realms = PLAYABLE_FACTIONS.filter((f) => open.includes(f)).map((f) => {
     const art = heroArtOf(f);
-    return `<span class="ls-realm f-${f.toLowerCase()} ${picked.includes(f) ? 'on' : ''}" data-faction="${esc(f)}" role="button" tabindex="0" title="${esc(f)}">
+    return `<span class="ls-realm f-${fslug(f)} ${picked.includes(f) ? 'on' : ''}" data-faction="${esc(f)}" role="button" tabindex="0" title="${esc(f)}">
       <span class="ls-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span><small>${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</small></span>`;
   }).join('');
   const need = pickNeeded();
@@ -1666,7 +1673,7 @@ function renderLobby() {
   showMenuBackdrop(true);
   const heroes = picked.map((f) => {
     const art = heroArtOf(f);
-    return `<span class="lobby-hero f-${f.toLowerCase()}" title="${esc(f)}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>`;
+    return `<span class="lobby-hero f-${fslug(f)}" title="${esc(f)}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>`;
   }).join('');
   app.innerHTML = `
     <div class="menu tavern title-screen lobby lobby-fit">
@@ -2103,7 +2110,7 @@ function factionGuideHTML(factions) {
   return `<div class="ts-guides">${factions.map((f) => {
     const info = FACTION_INFO[f];
     if (!info) return '';
-    return `<article class="ts-guide f-${f.toLowerCase()}">
+    return `<article class="ts-guide f-${fslug(f)}">
       <header>${crestHTML(f)} <b>${esc(f)}</b> <span class="ts-style">${esc(info.style)}</span></header>
       <p class="ts-summary">${esc(info.summary)}</p>
       <div class="ts-good">Good at:</div>
@@ -2148,7 +2155,7 @@ function renderMenu() {
   };
   const heroCard = (f) => {
     const art = heroArtOf(f);
-    return `<div class="vs-hero f-${f.toLowerCase()}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}<span>${esc(f)}</span></div>`;
+    return `<div class="vs-hero f-${fslug(f)}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}<span>${esc(f)}</span></div>`;
   };
   app.innerHTML = `
     <div class="menu tavern title-screen ts-fit">
@@ -2156,7 +2163,7 @@ function renderMenu() {
         <header class="ts-title">
           <div class="ts-runes"></div>
           <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-          <p class="ts-tag">Eighteen realms broke apart. Two of them are yours.</p>
+          <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
         </header>
 
         <nav class="ts-actions">
@@ -2185,17 +2192,17 @@ function renderMenu() {
         </div>
         ${progress ? `<div class="journey-line"><span>${esc(progress)}</span><button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>` : ''}
         <div class="faction-groups">
-          ${deckGroups(playable).map((g) => `<div class="fg">
+          ${deckGroups(playable).map((g) => `<div class="fg n${g.factions.length}">
             <div class="fg-head"><b>${esc(g.name)}</b><span>${esc(g.blurb)}</span></div>
             <div class="factions">${g.factions.map((f) => {
             const art = heroArtOf(f);
             const on = picked.includes(f);
             if (!open.includes(f)) {
-              return `<span class="faction medallion sealed f-${f.toLowerCase()}" data-sealed="${esc(f)}" title="${esc(f)} · opens as you play">
+              return `<span class="faction medallion sealed f-${fslug(f)}" data-sealed="${esc(f)}" title="${esc(f)} · opens as you play">
               <span class="medal-ring"></span><span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : ''}<i class="medal-lock">🔒</i></span>
               <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span></span>`;
             }
-            return `<span class="faction medallion f-${f.toLowerCase()} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}">
+            return `<span class="faction medallion f-${fslug(f)} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}">
               <span class="medal-ring"></span>
               <span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
               <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span>${on ? '<span class="medal-check">✓</span>' : ''}</span>`;
@@ -2228,7 +2235,7 @@ function firstPickHTML() {
     const art = heroArtOf(f);
     const on = firstPicks.includes(f);
     const info = FACTION_INFO[f] ?? {};
-    return `<div class="fp-realm f-${f.toLowerCase()} ${on ? 'on' : ''}" data-first="${esc(f)}" role="button" tabindex="0" aria-pressed="${on}">
+    return `<div class="fp-realm f-${fslug(f)} ${on ? 'on' : ''}" data-first="${esc(f)}" role="button" tabindex="0" aria-pressed="${on}">
       <span class="fp-art">${art ? `<img src="${art}" alt="" draggable="false">` : ''}${on ? '<i class="fp-check">✓</i>' : ''}</span>
       <b>${esc(f)}</b><small>${esc(info.style ?? '')}</small><span class="fp-sum">${esc(info.summary ?? '')}</span></div>`;
   };
@@ -2244,7 +2251,7 @@ function firstPickHTML() {
 
 // What the last match opened up on the new-player path (journey.js).
 function milestoneHTML(m) {
-  const realm = (f) => { const art = heroArtOf(f); return `<div class="ms-realm f-${f.toLowerCase()}">${art ? `<img src="${art}" alt="">` : ''}<b>${esc(f)}</b><small>${esc(FACTION_INFO[f]?.style ?? '')}</small></div>`; };
+  const realm = (f) => { const art = heroArtOf(f); return `<div class="ms-realm f-${fslug(f)}">${art ? `<img src="${art}" alt="">` : ''}<b>${esc(f)}</b><small>${esc(FACTION_INFO[f]?.style ?? '')}</small></div>`; };
   let body = '';
   if (m.kind === 'reactive') {
     body = `<h2>Traps &amp; Quick Plays</h2><img class="ui-divider" src="art/ui/divider.png" alt="">
@@ -2328,7 +2335,7 @@ function renderBuilder() {
   const deckPanel = `<aside class="deck-panel" data-deckdrop>
       <header><b>Your deck</b><span class="${!problem ? 'done' : ''}">${n} / ${need}</span></header>
       ${manaCurveHTML(deck)}
-      <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${c.faction.toLowerCase()} ${isLocked(c.id) ? 'locked' : ''}" data-deckrow="${c.id}" title="${isLocked(c.id) ? 'Locked: click to swap it for a card you own' : 'Drag out or click to remove one'}">
+      <div class="deck-rows">${rows.length ? rows.map(({ c, k }) => `<div class="deck-row f-${fslug(c.faction)} ${isLocked(c.id) ? 'locked' : ''}" data-deckrow="${c.id}" title="${isLocked(c.id) ? 'Locked: click to swap it for a card you own' : 'Drag out or click to remove one'}">
         <span class="dr-cost">${c.cost}</span><span class="dr-name">${isLocked(c.id) ? '🔒 ' : ''}${esc(c.name)}</span>${artOf(c) ? `<i class="dr-art" style="background-image:url('${artOf(c)}')"></i>` : ''}<span class="dr-n">${k > 1 ? `×${k}` : ''}</span></div>`).join('')
         : '<p class="deck-empty">Drag cards here to build your deck.</p>'}</div>
     </aside>`;
@@ -2561,10 +2568,10 @@ function renderGallery() {
     <div class="book">
       <div class="book-head"><h2>Card collection</h2>${searchBoxHTML()}<button data-act="menu" class="ghost">Back</button></div>
       <div class="book-body">
-        <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${x.toLowerCase()} ${x === f && !searching ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
+        <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${fslug(x)} ${x === f && !searching ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
           ${crestHTML(x)}<b>${esc(x).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</b></button>`).join('')}</nav>
         ${searching ? gallerySearchPage(factions) : `
-        <section class="book-page f-${f.toLowerCase()} ${bookTurned ? 'turn' : ''}">
+        <section class="book-page f-${fslug(f)} ${bookTurned ? 'turn' : ''}">
           <header class="page-title">${art ? `<img src="${art}" alt="">` : ''}<div><h3>${esc(f)}</h3>
             <span class="sub">${f === 'Fusion'
     ? `${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells · one per faction pair · charges as you use your Hero Spells (3 uses) · click a card to see it full size`
@@ -3740,7 +3747,7 @@ async function boot() {
     ...['art/ui/logo.png', 'art/ui/menu-bg.jpg', 'art/ui/play-button.png', 'art/ui/divider.png',
       'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-quickplay.png', 'art/frames/painted-trap.png',
       'art/frames/legendary-minion.png', 'art/frames/legendary-spell.png', 'art/frames/legendary-trap.png'].map(img),
-    ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${f.toLowerCase()}.jpg`)]),
+    ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${fslug(f)}.jpg`)]),
   ];
   let done = 0;
   const step = () => {

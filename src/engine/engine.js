@@ -30,6 +30,18 @@ export function fusionFor(factions) {
   return allCards().find((c) => c.fusion && c.fusion.every((f) => factions.includes(f))) ?? null;
 }
 export const FUSION_CHARGE = 3;
+// Ice Age: The Great Freeze comes at the end of every 4th turn of the Ice Age player.
+export const GREAT_FREEZE_EVERY = 4;
+function greatFreeze(state, p) {
+  const pl = state.players[p];
+  log(state, `❄ THE GREAT FREEZE! Everything without Thick Fur is Frozen.`);
+  for (const c of state.players.flatMap((x) => [x.hero, ...x.board])) {
+    if (c.health <= 0 || c.destroyed || hasKeyword(c, 'Thick Fur')) continue;
+    addKeyword(c, 'Frozen', false, state);
+  }
+  pl.greatFreeze.turns = 0;
+  emit(state, { type: 'greatFreeze', player: p });
+}
 
 // altHeroSpell: a Hero Spell that only replaces the usual one (Meteorite's Meteor Strike).
 export function heroSpellsFor(factions) {
@@ -79,6 +91,8 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
       // Fusion: charges by 1 per Hero Spell use (and every other turn per passive faction); usable at 3.
       fusion: fusionFor(cfg.factions) ? { cardId: fusionFor(cfg.factions).id, charge: 0 } : null,
       passives: heroSpells.filter((c) => c.passive).map((c) => c.id),
+      // Ice Age: the Great Freeze comes every GREAT_FREEZE_EVERY of this player's turns.
+      greatFreeze: cfg.factions.includes('Ice Age') ? { turns: 0, every: GREAT_FREEZE_EVERY } : null,
       extinction: cfg.factions.includes('Dinosaurs') && !meteorite
         ? { turns: 0, nextAt: state.rules.extinctionEvery, mode: 'normal', shower: 0 } : null,
       meteorite,
@@ -940,6 +954,8 @@ const STEPS = {
   extinction(state, { player: p }) {
     const ext = state.players[p].extinction;
     if (ext && ext.turns >= ext.nextAt) extinction(state, p);
+    const gf = state.players[p].greatFreeze;
+    if (gf && gf.turns >= gf.every) greatFreeze(state, p);
     // Meteor Shower: one random minion is destroyed at the end of each turn,
     // 3 times, starting with the Extinction turn itself. No Primal Mana meanwhile.
     for (const pl of state.players) {
@@ -986,7 +1002,7 @@ const STEPS = {
     // Frozen minions thaw once they've missed one of their controller's turns, but not while
     // their opponent has a minion that keeps them frozen (Glacius, the Winter Queen).
     const holdsFrost = state.players[opponentOf(p)].board.some((m) => getCard(m.cardId).holdsFrost && m.health > 0 && !m.destroyed);
-    for (const m of holdsFrost ? [] : state.players[p].board) {
+    for (const m of holdsFrost ? [] : [state.players[p].hero, ...state.players[p].board]) {
       if (m.thawAfter == null || !hasKeyword(m, 'Frozen')) continue;
       m.thawAfter -= 1;
       if (m.thawAfter <= 0) { removeKeyword(m, 'Frozen'); m.thawAfter = null; log(state, `${nameOf(state, m)} thaws.`); }
@@ -1052,6 +1068,7 @@ const STEPS = {
     state.deathsThisTurn = 0;
     pl.turnsTaken += 1;
     if (pl.extinction) pl.extinction.turns += 1;
+    if (pl.greatFreeze) pl.greatFreeze.turns += 1;
     factionHook(pl, 'turnStartMana')(state, pl);
     pl.hero.attacksThisTurn = 0;
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }

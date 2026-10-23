@@ -518,6 +518,8 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     log(state, `${nameOf(state, t)} Evades the damage.`);
     return 0;
   }
+  // Ice Age: Hardy takes 1 less damage from each hit (never below 1).
+  if (amount > 1 && hasKeyword(t, 'Hardy')) amount -= 1;
   const src = findCharacter(state, sourceId);
   const srcController = src ? src.controller : (opts.sourceController ?? null);
   if (t.kind === 'hero') {

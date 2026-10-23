@@ -73,17 +73,20 @@ test('Void is a playable realm: 30 standard cards, a Hero Spell and a token, in 
   if (!getCard('void_spawn')?.token) return 'no Void Spawn token';
   const aggro = DECK_TYPES.find((d) => d.name === 'Aggro');
   if (!aggro.factions.includes('Void') || aggro.factions.length !== 3) return `Aggro row: ${aggro.factions}`;
-  if (DECK_TYPES.some((d) => d.factions.length !== 3)) return 'a row is not three realms';
+  if (DECK_TYPES.some((d) => d.factions.length < 3)) return 'a row has fewer than three realms';
 });
 
 test('every Void card, fusion, Xeno and hero has art on disk; Nihilax is legendary and one-of', () => {
   for (const id of [...VOID_IDS, ...FUSION_IDS, 'xeno_lycan', 'umbral_xeno']) {
     if (!ART[id] || !existsSync(new URL(`../${ART[id]}`, import.meta.url))) return `no art for ${id}`;
   }
-  if (FUSION_IDS.length !== 17) return `${FUSION_IDS.length} Void fusions`;
+  if (FUSION_IDS.length !== PLAYABLE_FACTIONS.length - 1) return `${FUSION_IDS.length} Void fusions`;
   if (!existsSync(new URL(`../${HERO_ART.Void}`, import.meta.url))) return 'no hero';
   const others = PLAYABLE_FACTIONS.filter((f) => f !== 'Void');
-  for (const f of others) if (!FUSION_HERO_ART[`void-${f.toLowerCase()}`]) return `no fusion hero with ${f}`;
+  for (const f of others) {
+    const slug = f.toLowerCase().replace(/\s+/g, '-');
+    if (!FUSION_HERO_ART[`void-${slug}`] && !FUSION_HERO_ART[`${slug}-void`]) return `no fusion hero with ${f}`;
+  }
   for (const f of ['backs/void.jpg', 'boards-v2/void.jpg', 'boards-portrait/void.jpg', 'frames/legendary-minion-void.webp']) {
     if (!existsSync(new URL(`../art/${f}`, import.meta.url))) return `missing art/${f}`;
   }

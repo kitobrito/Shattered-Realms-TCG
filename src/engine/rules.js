@@ -5,7 +5,7 @@ export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Lycanthropes', 'Aquatic', 'Radioactive', 'Old Gods',
-  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic',
+  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -39,7 +39,7 @@ export const POSITIVE_KEYWORDS = [
 export const REMADE_FORMS = ['remade_gravital', 'remade_swimmer', 'remade_loper', 'remade_worm_person', 'remade_snake_person', 'remade_colonial'];
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
-export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', 'Acid Hide', ...NEGATIVE_KEYWORDS];
+export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', 'Acid Hide', 'Thick Fur', 'Hardy', ...NEGATIVE_KEYWORDS];
 
 // Player-facing rules text for keywords and card terms (collection glossary, tooltips).
 export const KEYWORD_TEXT = {
@@ -116,6 +116,9 @@ export const KEYWORD_TEXT = {
   Transform: "Lycanthropes: switch between Humanoid Form and Beast Form. You can Transform each of your Lycanthropes once per turn for 1 Mana (tap it, then the moon button); cards can Transform them too. Damage carries over (it never drops below 1 Health), and so do buffs.",
   'Humanoid Form': 'A Lycanthrope in its human shape. Transform it to bring out the beast.',
   'Beast Form': 'A Lycanthrope in its animal shape: usually stronger, with its own abilities. Transform it to turn back.',
+  'Thick Fur': "Ice Age: can't be Frozen. The Great Freeze passes it by.",
+  Hardy: 'Ice Age: takes 1 less damage from each hit (never less than 1).',
+  'Great Freeze': 'Ice Age: at the end of every 4th turn of the Ice Age player, every character without Thick Fur (both sides, Heroes too) is Frozen.',
   Hollow: "Void: a bonus that's on only while your hand is empty. Play out (or discard) every card to wake it.",
   Pull: "Void: Discover a card from your opponent's deck (pick 1 of 3) and take it into your hand. It's gone from their deck.",
   Collapse: 'If your hand is empty when you Pull, the card gets a bonus: a minion gains a random keyword, any other card costs (1) less.',
@@ -172,6 +175,7 @@ export const BOARD_EVENTS = [
   'bonusHealth',      // a character's maximum Health rose permanently (Divine)
   'upgradeInstalled', // an Upgrade was played on a Robot (Robots)
   'radiationApplied', // a character gained Radiation (Radioactive)
+  'greatFreeze',      // Ice Age: the Great Freeze froze the board ({ player })
   'cardPulled',       // Void (Singularity): a card was Pulled from the enemy deck ({ player, cardId, collapse })
   'cardDiscarded',    // Void: a card was discarded from a hand ({ player, cardId, cost })
   'minionTransformed', // Lycanthropes: a minion switched form ({ source, player, form: 'beast' | 'human' })

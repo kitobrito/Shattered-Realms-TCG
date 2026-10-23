@@ -511,6 +511,11 @@ body.in-game { overflow: hidden; }
 .extinction-badge b { position: absolute; bottom: -6px; right: -6px; background: #ff7a3a; color: #1a0a04; border-radius: 50%; width: 22px; height: 22px;
   display: grid; place-items: center; font-family: var(--font-title); font-size: 13px; }
 .extinction-badge.soon { animation: pulse 0.8s infinite alternate; }
+.freeze-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle, #2c5a78, #08182a); border: 3px solid #9fe0ff; font-size: calc(var(--hero) * 0.18); color: #e8f8ff; }
+.freeze-badge b { position: absolute; bottom: -6px; right: -6px; background: #9fe0ff; color: #08182a; border-radius: 50%; width: 22px; height: 22px;
+  display: grid; place-items: center; font-family: var(--font-title); font-size: 13px; }
+.freeze-badge.soon { animation: pulse 0.8s infinite alternate; }
 .traps { display: flex; gap: 4px; min-width: calc(var(--hero) * 0.7); justify-content: flex-end; }
 .trap-token { width: 24px; height: 28px; display: grid; place-items: center; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
   background: linear-gradient(160deg, #7a3ab8, #2a0d40); color: #e9d2ff; font-family: var(--font-title); font-weight: 900; font-size: 13px; }
@@ -614,6 +619,7 @@ body.in-game { overflow: hidden; }
   background: linear-gradient(#fff3c4, #e7b552 60%, #8a5a12); -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 4px 6px #000); }
 .fx-banner.theirs span { background: linear-gradient(#ffd0d6, #e04461 60%, #7a1528); -webkit-background-clip: text; background-clip: text; }
+.fx-banner.great-freeze span { background: linear-gradient(#ffffff, #9fe0ff 55%, #2c6a9a); -webkit-background-clip: text; background-clip: text; }
 .fx-banner.extinction span { background: linear-gradient(#fff1c4, #ff7a3a 55%, #7a1a04); -webkit-background-clip: text; background-clip: text; }
 .fx-banner.trap span { font-size: clamp(22px, 3.2cqw, 44px); background: linear-gradient(#f2e2ff, #a46bff 60%, #3a1066); -webkit-background-clip: text; background-clip: text; }
 .fx-flash { position: fixed; inset: 0; mix-blend-mode: screen; }
@@ -764,6 +770,7 @@ body.in-game { overflow: hidden; }
 .badges .b-lifesteal { border-color: #ff4d6a; }
 .badges .b-poison { border-color: #6aff7d; }
 .badges .b-venom { border-color: #c87dff; }
+.badges .b-fur { border-color: #9fe0ff; } .badges .b-hardy { border-color: #c8b89a; }
 
 /* Keyword gained / lost effects (fx layer). */
 .fx-shard { position: fixed; width: 14px; height: 18px; background: linear-gradient(135deg, #fff6c8, #ffd25a); clip-path: polygon(50% 0, 100% 60%, 30% 100%, 0 40%);
@@ -1111,7 +1118,7 @@ body.in-game { overflow: hidden; }
 .arena.has-board .hero-zone.opp .traps { top: 13.6cqh; }
 .arena.has-board .hero-zone.me .traps { top: 84cqh; }
 .arena.has-board .hero-spell { width: calc(var(--hero) * 0.62); height: calc(var(--hero) * 0.62); }
-.arena.has-board .extinction-badge { width: calc(var(--hero) * 0.48); height: calc(var(--hero) * 0.48); }
+.arena.has-board .extinction-badge, .arena.has-board .freeze-badge { width: calc(var(--hero) * 0.48); height: calc(var(--hero) * 0.48); }
 
 /* Right rail: End Turn in its painted slot; deck counts on the painted deck piles. */
 .arena.has-board .rail { inset: 0; width: auto; display: block; pointer-events: none; }
@@ -2395,7 +2402,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 .arena.portrait .hero-zone .traps { min-width: calc(var(--hero) * 0.6); }
 .arena.portrait .hero-spell { width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-width: 2px; }
 .arena.portrait .hero-spell .hs-cost { width: 18px; height: 18px; font-size: 11px; top: -6px; }
-.arena.portrait .extinction-badge { width: calc(var(--hero) * 0.46); height: calc(var(--hero) * 0.46); }
+.arena.portrait .extinction-badge, .arena.portrait .freeze-badge { width: calc(var(--hero) * 0.46); height: calc(var(--hero) * 0.46); }
 /* Portrait: deck piles sit in the battlefield box's right corners (enemy top, yours bottom), clear of the Hero Spells. */
 .arena.portrait .deck-pile { flex-direction: row; align-items: center; gap: 4px; }
 .arena.portrait .deck-pile .pile { width: calc(var(--card-w) * 0.28); height: calc(var(--card-w) * 0.39); }
@@ -3075,7 +3082,7 @@ body.reduced-motion .ts-play.play-art, body.reduced-motion .play-art .pa-glow, b
    badge, and never smaller than a comfortable tap target. */
 .arena.portrait .hero-spell { width: max(30px, calc(var(--hero) * 0.5)); height: max(30px, calc(var(--hero) * 0.5)); }
 .arena.portrait .hero-zone .hero-powers { gap: max(12px, calc(var(--hero) * 0.2)) max(10px, calc(var(--hero) * 0.14)); }
-.arena.portrait .hero-zone .hero-powers > .extinction-badge, .arena.portrait .hero-zone .hero-powers > .hive-badge,
+.arena.portrait .hero-zone .hero-powers > .extinction-badge, .arena.portrait .hero-zone .hero-powers > .freeze-badge, .arena.portrait .hero-zone .hero-powers > .hive-badge,
 .arena.portrait .hero-zone .hero-powers > .corpse-badge { min-width: 26px; min-height: 26px; }
 /* Keep the enemy's stacked Hero Spells on screen when their hero sits right at the top. */
 .arena.p-board .hero-zone.opp .hero-powers { top: max(calc(var(--oh-y) + var(--oh-h) / 2),
@@ -4491,6 +4498,7 @@ body:not(.in-game) #app.fit-screen > .ts-fit { zoom: 1; }
 @media (max-height: 560px) {
   .ts-fit.title-screen .factions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 2px; }
   .ts-fit.title-screen .faction.medallion { width: 100%; }
+  .ts-fit.title-screen .fg.n4 .factions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ts-fit .fg .faction.medallion .medal-name { font-size: 8px; max-width: 100%; overflow: hidden; }
   .ts-fit .fg .faction.medallion .medal-name.long { font-size: 7px; }
 }
@@ -4905,6 +4913,8 @@ body.reduced-motion .descent { display: none; }
 .ts-fit .fg-head { flex-direction: row; justify-content: center; align-items: baseline; gap: 10px; margin: 0; padding: 0 0 clamp(2px, 0.6vh, 6px); white-space: nowrap; overflow: hidden; }
 .ts-fit .fg-head span { overflow: hidden; text-overflow: ellipsis; }
 .ts-fit .fg .factions { --m: clamp(44px, min(calc((100cqw - 64px) / 3.5), calc(100cqh - 78px)), 170px); justify-content: center; gap: 4px clamp(8px, 3cqw, 28px) !important; }
+/* A row of four realms (Attrition) packs its medallions a little smaller so it never overflows. */
+.ts-fit .fg.n4 .factions { --m: clamp(40px, min(calc((100cqw - 84px) / 4.7), calc(100cqh - 78px)), 150px); gap: 4px clamp(6px, 2cqw, 20px) !important; }
 .ts-fit .fg .faction.medallion .medal-name { font-size: clamp(9px, calc(var(--m) * 0.13), 17px); }
 .ts-fit .fg .faction.medallion .medal-name.long { font-size: clamp(8px, calc(var(--m) * 0.105), 14px); }
 .ts-fit .fg .medal-check { width: clamp(18px, calc(var(--m) * 0.24), 34px); height: clamp(18px, calc(var(--m) * 0.24), 34px); }
@@ -4925,6 +4935,7 @@ body.reduced-motion .descent { display: none; }
 
 /* Void: shadow motes — tiny dark-matter orbs with a violet rim, a star of light at the heart. */
 .fx-p.voidmote { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #e8dcff 0 12%, #2a1240 30%, #0a0414 65%, transparent 75%); box-shadow: 0 0 9px #9a6aff, 0 0 3px #b48cff inset; opacity: 0.9; }
+.fx-p.snowflake { width: 9px; height: 9px; background: #f2fbff; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); filter: drop-shadow(0 0 4px #9fe0ff); opacity: 0.95; }
 /* Void: a Hollow minion with its bonus on (its owner's hand is empty) breathes a violet shadow inside its frame. */
 .minion.hollow.on .m-art { animation: hollow-breathe 2.4s ease-in-out infinite; }
 @keyframes hollow-breathe { 0%, 100% { box-shadow: inset 0 0 10px #6a3aff88; } 50% { box-shadow: inset 0 0 26px #9a6affee, inset 0 0 6px #e8dcff; } }
@@ -4936,6 +4947,12 @@ body.reduced-motion .descent { display: none; }
 .big-card.shard.f-void, .minion.shardm.f-void { --accent: #b48cff; }
 .arena.f-void { --felt: #1c1430; --felt-2: #07040e; --rim: #b48cff; }
 .medallion.f-void { --fc: #b48cff; } .ts-guide.f-void { --fc: #b48cff; }
+.big-card.f-ice-age { --frame: #2a4258; --frame-hi: #c8f0ff; --body: #0a141c; }
+.big-card.t-spell.f-ice-age { --frame: #4a3a2a; --frame-hi: #ffb86a; --body: #140e08; }
+.big-card.t-trap.f-ice-age { --frame: #3a3a32; --frame-hi: #d8c8a0; --body: #100e0a; }
+.big-card.shard.f-ice-age, .minion.shardm.f-ice-age { --accent: #9fe0ff; }
+.arena.f-ice-age { --felt: #2a3036; --felt-2: #0c1014; --rim: #9fe0ff; }
+.medallion.f-ice-age { --fc: #9fe0ff; } .ts-guide.f-ice-age { --fc: #9fe0ff; }
 /* Void (Singularity): a Pulled card in hand wears a small violet tag (with its Collapse keyword). */
 .card .hand-tag { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); z-index: 6; white-space: nowrap; pointer-events: none;
   padding: 1px 7px; border-radius: 999px; font: 700 10px/1.4 sans-serif; color: #efe6ff; background: #2a1450; border: 1px solid #b48cff; box-shadow: 0 0 8px #9a6aff99; }

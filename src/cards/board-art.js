@@ -19,6 +19,7 @@ export const BOARD_ART = {
   Acidic: 'art/boards-v2/acidic.jpg',
   Lycanthropes: 'art/boards-v2/lycanthropes.jpg',
   Void: 'art/boards-v2/void.jpg',
+  'Ice Age': 'art/boards-v2/ice-age.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -58,6 +59,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [204, 20, 256, 80, 'arch'], me: [201, 929, 258, 1003, 'circle'], field: [110, 910],
+    props: [P([5, 5, 110, 100], 'wobble', '#f0e8d8', { sound: 'rattle', glyph: '🦴' }), P([370, 5, 455, 90], 'sparkle', '#bfefff', { sound: 'chime', glyph: '❄️' }),
+      P([10, 940, 110, 1015], 'smoke', '#d8d0c8', { sound: 'whoosh', glyph: '🔥' }), P([350, 940, 455, 1015], 'glow', '#ff6a4a', { sound: 'knock', glyph: '✋' })] },
   Void: { src: 'art/boards-portrait/void.jpg', opp: [183, 59, 276, 174, 'arch'], me: [178, 784, 275, 911, 'circle'], field: [195, 765],
     props: [P([15, 15, 95, 95], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([355, 15, 450, 100], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
       P([10, 870, 110, 1010], 'wobble', '#d8d0f0', { sound: 'clink' }), P([360, 915, 459, 1005], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },
@@ -118,6 +122,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [470, 26, 554, 124], me: [470, 435, 554, 546], field: [110, 150, 915, 425],
+    props: [P([30, 10, 210, 165], 'wobble', '#f0e8d8', { sound: 'rattle', glyph: '🦴' }), P([880, 15, 1005, 140], 'sparkle', '#bfefff', { sound: 'chime', glyph: '❄️' }),
+      P([20, 445, 150, 545], 'smoke', '#d8d0c8', { sound: 'whoosh', glyph: '🔥' }), P([860, 450, 1015, 560], 'glow', '#ff6a4a', { sound: 'knock', glyph: '✋' })] },
   Void: { src: 'art/boards-v2/void.jpg', opp: [472, 43, 551, 132], me: [474, 437, 549, 537], field: [115, 150, 910, 425],
     props: [P([30, 15, 125, 105], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([895, 15, 1000, 115], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
       P([25, 420, 125, 555], 'wobble', '#d8d0f0', { sound: 'clink' }), P([890, 465, 1015, 560], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },

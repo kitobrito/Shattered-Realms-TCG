@@ -1,4 +1,4 @@
-// The new-player path. A brand-new player doesn't meet all eighteen realms, two-faction decks,
+// The new-player path. A brand-new player doesn't meet all nineteen realms, two-faction decks,
 // traps and Quick Plays at once; the game opens up over their first matches:
 //
 //   first launch choose your first three realms from six easy ones (STARTERS)
@@ -6,7 +6,7 @@
 //                Plays, short card text) on both sides
 //   matches 3-4  the full decks of those three: traps and Quick Plays appear
 //   match 5+     two-faction decks and Fusions unlock
-//   then         two more realms open after every match, until all eighteen are there
+//   then         two more realms open after every match, until all nineteen are there
 //
 // "Unlock everything" skips it. Anyone who already played before this existed starts with
 // everything (saved decks, unlocked cards or a saved game in this browser count as "played").
@@ -23,7 +23,7 @@ const PER_MATCH = 2;    // realms that open after each later match
 export const STARTERS = ['Vampires', 'Dragons', 'Plants', 'Zombies', 'Divine', 'Robots'];
 export const FIRST_PICKS = 3;
 // After the starters, the other realms open in this order (most straightforward first).
-const LATER = ['Demons', 'Sharks', 'Dinosaurs', 'Bees', 'Aliens', 'Fungus', 'Ghosts', 'Radioactive', 'Acidic', 'Lycanthropes', 'Void', 'Ultraterrestrials'];
+const LATER = ['Demons', 'Sharks', 'Dinosaurs', 'Bees', 'Aliens', 'Fungus', 'Ghosts', 'Radioactive', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Ultraterrestrials'];
 
 // Anything only someone who has played leaves behind (tips seen in a match, decks, settings...).
 const PLAYED_BEFORE = ['shattered-unlocks', 'shattered-tips-seen', 'shattered-token', 'faction-ccg-decks', 'faction-ccg-save',
