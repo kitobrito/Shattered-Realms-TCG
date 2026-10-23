@@ -300,4 +300,11 @@ export const ACIDIC_CARDS = [
     target: ENEMY_MINION,
     effects: [{ op: 'summon', copyOf: 'chosen', attack: 2, health: 2, keywords: ['Acid Hide'], regen: 1 }, { op: 'destroy', target: 'chosen', obliterate: true }],
   },
+
+  // ---- Legendary add-on ----
+  {
+    ...K, id: 'slimungous_the_acid_hydra', name: 'Slimungous, the Acid Hydra', art: '🐍', extra: true, cost: 8, attack: 5, health: 8, keywords: ['Acid Hide'],
+    text: 'Acid Hide. At the end of your turn, apply Corrosion 2 to two different random enemy minions.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [corrode({ randomOf: ENEMY_MINIONS, count: 2 }, 2)] }],
+  },
 ];

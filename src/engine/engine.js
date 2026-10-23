@@ -491,6 +491,8 @@ function resolveChoice(state, { player: p, index }) {
 // Sharks: extra damage when a Shark attacks. Blood in the Water gives +2 against Marked Prey
 // once per turn; Pack Hunters +1 each; Mako Sprinter doubles it; Goblin Shark +1 to wounded minions.
 function huntDamage(state, a, d, dmg) {
+  // Sky Piercer Drill Unit: extra damage when it attacks the enemy Hero.
+  if (a.kind === 'minion' && d.kind === 'hero') dmg += getCard(a.cardId).heroAttackBonus ?? 0;
   if (a.kind !== 'minion' || d.kind !== 'minion') return dmg;
   const card = getCard(a.cardId);
   if (d.prey && isShark(a)) {

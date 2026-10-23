@@ -214,6 +214,8 @@ export function createMinion(state, cardId, controller) {
     statics: [...(card.statics ?? [])],
     tribes: [...(card.tribes ?? [])],
     faction: card.faction,
+    // Built-in permanent Radiation (The Elephant's Foot).
+    ...(card.radiation ? { radPerm: card.radiation } : {}),
     sick: true, attacksThisTurn: 0,
     lastDamagedBy: null, lastDamagedByController: null,
     destroyed: false, tempControl: null, returnAtEndOfTurn: false,
