@@ -6,6 +6,7 @@ import { buildDeck, FACTION_DECKS, PLAYABLE_FACTIONS } from '../src/cards/index.
 import { addToHand, dealDamage, effectiveAttack, hasKeyword, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame, getLegalActions, GREAT_FREEZE_EVERY } from '../src/engine/engine.js';
 import { allCards, getCard } from '../src/engine/registry.js';
+import { evolveChestburster } from '../src/engine/effects.js';
 import { ART, FUSION_HERO_ART, HERO_ART } from '../src/cards/art-manifest.js';
 import { DECK_TYPES } from '../src/cards/faction-info.js';
 import { BOARD_ART, LANDSCAPE_BOARDS, PORTRAIT_BOARDS } from '../src/cards/board-art.js';
@@ -274,6 +275,15 @@ for (const id of FUSION_IDS) {
     if (/Lose (\d)/.test(txt) && hero(0).health !== hpBefore - Number(txt.match(/Lose (\d)/)[1])) return `Hero ${hpBefore} -> ${hero(0).health}`;
   }, ['Ice Age', FUSION_PARTNER(id)]);
 }
+
+test('a Chestburster from an Ice Age minion Evolves into the Woolly Xeno', () => {
+  const cb = put(0, 'chestburster');
+  cb.hostFaction = 'Ice Age';
+  evolveChestburster(s, cb);
+  const x = pl(0).board.find((m) => m.uid === cb.uid);
+  if (x?.cardId !== 'woolly_xeno' || !hasKeyword(x, 'Thick Fur')) return `became ${x?.cardId}`;
+  if (!ART.woolly_xeno || !existsSync(ART.woolly_xeno)) return 'no art';
+});
 
 console.log(`\n${passed} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

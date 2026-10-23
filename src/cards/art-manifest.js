@@ -1175,6 +1175,7 @@ export const ART = {
   abyssal_feeding: 'art/fusion/abyssal_feeding.jpg',
   xeno_lycan: 'art/aliens/xeno_lycan.jpg',
   umbral_xeno: 'art/aliens/umbral_xeno.jpg',
+  woolly_xeno: 'art/aliens/woolly_xeno.jpg',
 };
 
 // Hero portraits per faction (import with: npm run import-art -- <folder> --heroes).
