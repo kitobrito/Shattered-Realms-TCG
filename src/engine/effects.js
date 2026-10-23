@@ -244,7 +244,7 @@ export const XENO_FORMS = {
   Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
   Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
   Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
-  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno',
 };
 const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
 export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
