@@ -112,6 +112,12 @@ export const STANDARD_CUTS = {
     'echoes_of_blood', 'nothing_escapes_the_current',
     'beneath_the_sand', 'the_killing_current', 'scent_through_stone', 'intercept',
   ],
+  // Keeps: the walls, the Thick Fur beasts, the Freeze payoffs and both legendaries.
+  'Ice Age': [
+    'neanderthal_gatherer', 'cave_hyena', 'neanderthal_firekeeper', 'giant_beaver',
+    'thick_fur_cloak', 'huddle_for_warmth', 'survival_of_the_fittest',
+    'pitfall_snare', 'hidden_den', 'hunker_down',
+  ],
   // Keeps: the Hollow core, the discard payoffs and the finishers.
   Void: [
     'dark_matter_drifter', 'hungering_shade', 'hollow_herald', 'vacuum_stalker',

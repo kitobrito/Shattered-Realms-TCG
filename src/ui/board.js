@@ -9,7 +9,7 @@ import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
 import { BOARD_ART, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { isMuted, play as playSound } from './sound.js';
-import { artOf, backStyle, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
+import { artOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
 // ---- Pieces ------------------------------------------------------------------
 
@@ -53,6 +53,8 @@ function badges(m) {
     hasKeyword(m, 'Poisonous') ? `<i class="b-poison">${kwIcon('poisonous', 'Poisonous')}</i>` : '',
     hasKeyword(m, 'Venomous') ? `<i class="b-venom">${kwIcon('venomous', 'Venomous')}</i>` : '',
     hasKeyword(m, 'Recoil') ? '<i class="b-recoil" title="Recoil">↯</i>' : '',
+    hasKeyword(m, 'Thick Fur') ? '<i class="b-fur" title="Thick Fur: can\'t be Frozen">🧥</i>' : '',
+    hasKeyword(m, 'Hardy') ? '<i class="b-hardy" title="Hardy: takes 1 less damage from each hit (never below 1)">🪨</i>' : '',
   ].join('');
 }
 
@@ -173,7 +175,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
   const taunt = kws.includes('taunt');
   if (wardGame !== s) { wardGame = s; wardSince.clear(); }
   if (!taunt) wardSince.delete(m.uid);
-  const faction = (card.faction ?? 'neutral').toLowerCase().replace(/\s+/g, '-');
+  const faction = fslug(card.faction ?? 'neutral');
   // Void: a Hollow minion glows while its owner's hand is empty (its bonus is on).
   const hollow = [].concat(card.aura ?? []).some((a) => a.if?.handEmpty) && !m.textLost
     ? (s.players[m.controller].hand.length === 0 ? 'hollow on' : 'hollow') : '';
@@ -212,7 +214,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
 function portraitHTML(pl) {
   const art = playerHeroArt(pl.factions);
   const second = pl.factions[1] && art === heroArtOf(pl.factions[0]) ? heroArtOf(pl.factions[1]) : null;
-  if (!art) return `<div class="portrait-placeholder f-${pl.factions[0].toLowerCase()}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
+  if (!art) return `<div class="portrait-placeholder f-${fslug(pl.factions[0])}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
   // Each portrait is drawn twice: the scene behind, and the figure (a soft cut-out of the middle)
   // in front; they drift a little against each other so the hero seems to stand out and breathe.
   const layers = (src, cls = '') => `<img class="portrait-img ${cls}" src="${src}" alt="" draggable="false">`
@@ -296,6 +298,16 @@ function extinctionHTML(pl, s) {
     <span>☄</span><b>${left}</b></div>`;
 }
 
+// Ice Age: countdown to The Great Freeze (passive Hero Spell).
+function freezeHTML(pl, s) {
+  const gf = pl.greatFreeze;
+  if (!gf) return '';
+  const left = Math.max(0, gf.every - gf.turns);
+  const tip = `The Great Freeze ${left ? `in ${left} turn${left === 1 ? '' : 's'}` : 'at the end of this turn'}: everything without Thick Fur is Frozen`;
+  return `<div class="freeze-badge ${left <= 1 && s.activePlayer === pl.index ? 'soon' : ''}" title="${esc(tip)}" data-preview="the_great_freeze">
+    <span>❄</span><b>${left}</b></div>`;
+}
+
 // Bees: The Living Hive (passive Hero Spell). Shows whether the Hive stands, the Queen is out, or both are gone.
 function hiveHTML(pl) {
   if (!pl.factions.includes('Bees')) return '';
@@ -348,7 +360,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${extinctionHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${extinctionHTML(pl, s)}${freezeHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
     </div>`;
 }
 
@@ -664,7 +676,7 @@ export function boardHTML(ctx) {
   const attackers = new Set(legal.filter((a) => a.type === 'attack').map((a) => a.attacker));
   const charCls = (uid) => (attackers.has(uid) ? 'can-attack' : '');
   const shiftable = new Set(legal.filter((a) => a.type === 'transform').map((a) => a.minion));
-  const faction = mp.factions[0].toLowerCase();
+  const faction = fslug(mp.factions[0]);
   // The painting itself is drawn by board-layer.js (behind the arena), so it survives re-renders.
   // Demons' Descent: once the battle has sunk, BOTH players fight on the current circle's board.
   const depth = s.descent?.depth ?? 0;

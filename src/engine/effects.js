@@ -334,6 +334,8 @@ export function checkCondition(state, cond, ctx) {
   if (cond.heroHasWeapon != null) return !!heroOf(state, ctx.controller).weapon === cond.heroHasWeapon;
   // { eventDeadFaction } — the minion that just died was from this faction (Graceful Return).
   if (cond.eventDeadFaction) return !!ctx.event?.dead?.cardId && getCard(ctx.event.dead.cardId).faction === cond.eventDeadFaction;
+  // Ice Age: { enemyFrozen } — an enemy minion is Frozen (Dire Wolf).
+  if (cond.enemyFrozen != null) return state.players[opponentOf(ctx.controller)].board.some((m) => hasKeyword(m, 'Frozen') && m.health > 0 && !m.destroyed) === cond.enemyFrozen;
   // Void: { handEmpty } — your hand is empty (Hollow); { handAtLeast: N } — you hold N+ cards.
   if (cond.handEmpty != null) return (state.players[ctx.controller].hand.length === 0) === cond.handEmpty;
   if (cond.handAtLeast != null) return state.players[ctx.controller].hand.length >= cond.handAtLeast;
@@ -344,7 +346,7 @@ export function checkCondition(state, cond, ctx) {
     // min: how many such minions (Omega Assembly); minUpgrades / hasWeapon: Robots.
     const n = state.players[ctx.controller].board.filter((m) =>
       (!f.tribe || m.tribes.includes(f.tribe)) && (!f.cardId || m.cardId === f.cardId) &&
-      (!f.excludeSelf || m.uid !== ctx.self) &&
+      (!f.excludeSelf || m.uid !== ctx.self) && (f.minHealth == null || m.health >= f.minHealth) &&
       (f.minUpgrades == null || (m.upgrades ?? 0) >= f.minUpgrades) && (!f.hasWeapon || !!m.weapon)).length;
     return n >= (f.min ?? 1);
   }
@@ -426,6 +428,8 @@ export function checkCondition(state, cond, ctx) {
 // lingerUntil = a player index: the keyword lasts until that player's next turn.
 // With `state`, gaining a new keyword raises keywordGained (Probe Drone).
 export function addKeyword(c, k, temporary = false, state = null, lingerUntil = null) {
+  // Ice Age: Thick Fur can't be Frozen.
+  if (k === 'Frozen' && hasKeyword(c, 'Thick Fur')) return;
   if (k === 'Silenced') {
     for (const old of allKeywords(c)) state ? loseKeyword(state, c, old) : null;
     c.keywords = []; c.tempKeywords = []; c.lingerKeywords = [];
@@ -580,6 +584,15 @@ export const EFFECT_OPS = {
     if (n <= 0) return;
     log(state, `😈 Judgement from the Pit: ${nameOf(state, foe)} loses half their Health.`);
     loseHealth(state, foe.uid, n, { paid: false });
+  },
+
+  // ---- Ice Age ----
+  // Cave Painter: the next Great Freeze comes N turns sooner.
+  hastenFreeze(state, e, ctx) {
+    const gf = state.players[ctx.controller].greatFreeze;
+    if (!gf) return;
+    gf.turns += e.turns ?? 1;
+    log(state, `❄ The Great Freeze draws nearer.`);
   },
 
   // ---- Dinosaurs (Meteorite) ----

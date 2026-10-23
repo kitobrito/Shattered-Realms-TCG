@@ -503,6 +503,7 @@ const PARTICLES = {
   Acidic: { cls: 'acid', gravity: -0.4 },
   Lycanthropes: { cls: 'wisp', gravity: -0.3 },
   Void: { cls: 'voidmote', gravity: -0.15 },
+  'Ice Age': { cls: 'snowflake', gravity: 0.25, spin: true },
 };
 export function particles(rect, faction, power = 1) {
   const kind = PARTICLES[faction] ?? { cls: 'spark', gravity: 0.3 };
@@ -706,7 +707,7 @@ export function flashScreen(color = '#ff7a3a') {
 
 // ---- Spells ------------------------------------------------------------------
 
-const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff' };
+const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff' };
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
@@ -1022,6 +1023,8 @@ export function deathFx(rect, faction) {
     case 'Acidic': particles(rect, 'Acidic', 14); fling(rect, '🫧', 2, { rise: 1, spread: 0.6 }); break;
     // Void: swallowed by the dark — the shadow motes fall inward as a ring collapses on the spot.
     case 'Void': { particles(rect, 'Void', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.1, '#b48cff', { width: 4, from: 1.2, to: 0.1, duration: 620 }); break; }
+    // Ice Age: buried in a flurry of snow under a cold ring of frost.
+    case 'Ice Age': { particles(rect, 'Ice Age', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.05, '#c8f0ff', { width: 4, to: 1.4, duration: 600 }); break; }
     case 'Lycanthropes': particles(rect, 'Lycanthropes', 12); fling(rect, '🐾', 3, { rise: 0.8, spread: 0.9 }); break;
     case 'Ghosts': particles(rect, 'Ghosts', 12); fling(rect, '👻', 1, { rise: 1.4, spread: 0.2, size: 26, duration: 1300 }); break;
     case 'Robots': particles(rect, 'Robots', 14); fling(rect, '⚙️', 3, { rise: 0.5, spread: 0.9 }); fling(rect, '🔩', 2, { rise: 0.4 }); break;
@@ -1050,6 +1053,7 @@ const KILL_COLOR = {
   Dragons: ['#ff8a1a', '#ffd25a'], Demons: ['#ff2a3a', '#3a0006'], Radioactive: ['#a8ff3a', '#3aff7a'], Fungus: ['#c98cff', '#6a2bb0'],
   Divine: ['#ffe8a0', '#fff6d8'], Aliens: ['#5affd8', '#2affa0'], Robots: ['#7fd0ff', '#2a8aff'], Bees: ['#ffc21a', '#3a2a06'], Ghosts: ['#8ff0ff', '#e8fbff'], Ultraterrestrials: ['#b48cff', '#ffd76a'], Sharks: ['#ff2a2a', '#4ab8ff'], Acidic: ['#c8ff2a', '#ffe23a'], Lycanthropes: ['#c8d8ff', '#6a7a9a'],
   Void: ['#9a6aff', '#1a0a2e'],
+  'Ice Age': ['#c8f0ff', '#5a8aaa'],
 };
 
 function addFx(cls, style) {
@@ -1700,6 +1704,7 @@ const HITS = {
   Acidic: ({ c, rect, size }) => { particles(rect, 'Acidic', 8); return ring(c, size * 0.8, '#c8ff2a', { width: 3, to: 1.3, duration: 460 }); },
   Ultraterrestrials: ({ c, size }) => ring(c, size * 0.9, '#b48cff', { width: 2, to: 0.4, duration: 480 }),
   Void: ({ c, rect, size }) => { particles(rect, 'Void', 6); return ring(c, size * 1.1, '#9a6aff', { width: 3, from: 1.2, to: 0.3, duration: 440 }); },
+  'Ice Age': ({ c, rect, size }) => { particles(rect, 'Ice Age', 5); return ring(c, size * 0.95, '#9fe0ff', { width: 3, to: 1.3, duration: 460 }); },
   Lycanthropes: ({ c, rect, size }) => { fling(rect, '🐾', 2, { rise: 0.5, spread: 0.8, size: 14 }); return ring(c, size * 0.85, '#c8d8ff', { width: 3, to: 1.3, duration: 460 }); },
   Ghosts: ({ c, size }) => ring(c, size * 0.85, '#8ff0ff', { width: 3, to: 1.35, duration: 520 }),
   Bees: ({ c, rect, size }) => { fling(rect, '🐝', 2, { rise: 0.6, spread: 0.9, size: 14 }); return ring(c, size * 0.8, '#ffc21a', { width: 3, to: 1.25, duration: 440 }); },

@@ -19,7 +19,7 @@ export const CLASSIC_DECK_NAMES = {
   Fungus: 'Spore Circle', Zombies: 'Shambling Horde', Dragons: 'Dragonfire', Demons: 'Infernal Pact',
   Divine: 'Holy Vanguard', Robots: 'Assembly Line', Radioactive: 'Fallout', Bees: 'The Hive',
   Ghosts: 'Haunted Halls', Ultraterrestrials: 'Beyond the Stars', Sharks: 'The Red Wake', Acidic: 'Corrosion Court',
-  Lycanthropes: 'Full Moon', Void: 'Endless Night',
+  Lycanthropes: 'Full Moon', Void: 'Endless Night', 'Ice Age': 'The Long Winter',
 };
 
 const cost = (id) => getCard(id).cost;

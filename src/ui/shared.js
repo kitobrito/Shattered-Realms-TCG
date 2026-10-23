@@ -28,6 +28,8 @@ const ICON_PATHS = {
 };
 export const icon = (name) => `<svg class="ui-ico" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name] ?? ''}</svg>`;
 
+// A realm name as used in class names and file paths ('Ice Age' -> 'ice-age').
+export const fslug = (f) => String(f ?? '').toLowerCase().replace(/\s+/g, '-');
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Per-card nudges for where the wide picture window crops the square art (CSS object-position Y;
@@ -42,7 +44,7 @@ export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[fac
 // Art path of the fused hero for a two-faction deck (either order), if there is one.
 export const fusionHeroPath = (factions) => {
   if (factions?.length !== 2) return undefined;
-  const [a, b] = factions.map((f) => f.toLowerCase());
+  const [a, b] = factions.map(fslug);
   return FUSION_HERO_ART[`${a}-${b}`] ?? FUSION_HERO_ART[`${b}-${a}`];
 };
 // The portrait path a player shows: their pair's fused hero, else their first faction's hero.
@@ -60,8 +62,8 @@ export const playerPortraitHTML = (factions) => {
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void'];
-export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${faction.toLowerCase()}.jpg`) : undefined);
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age'];
+export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${fslug(faction)}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
 export const backsOf = (factions) => {
@@ -146,7 +148,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
   const label = card.fusion ? `Fusion · ${card.fusion.join(' + ')}` : card.heroSpell ? 'Hero Spell' : card.quickPlay ? 'Spell ⚡'
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
     : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap' : 'Spell';
-  const faction = card.faction.toLowerCase().replace(/\s+/g, '-');
+  const faction = fslug(card.faction);
   if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete });
   return `
     <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.legendary ? 'legend' : ''}">
@@ -180,7 +182,7 @@ function sigilHTML(card) {
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes',
-  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies']);
+  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
@@ -190,7 +192,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   // Each faction's legendary minions have their own painted frame (Dragons and fusions use the gold one).
   const own = legend && type === 'minion' && !card.fusion && LEGEND_FRAMES.has(card.faction);
   // ?v=2: the Zombies frame was replaced; the tag makes browsers fetch the fixed picture.
-  const frameSrc = own ? `art/frames/legendary-minion-${card.faction.toLowerCase()}.webp?v=2`
+  const frameSrc = own ? `art/frames/legendary-minion-${fslug(card.faction)}.webp?v=2`
     : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
     <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>

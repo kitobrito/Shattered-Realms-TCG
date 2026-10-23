@@ -3,6 +3,7 @@
 // deck list. Each is a short one-off played right after a render (main.js calls these).
 
 import * as fx from './fx.js';
+import { fslug } from './shared.js';
 
 const calm = () => document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -17,7 +18,7 @@ export function realmPicked(root, faction) {
     fx.shockwave(r, fx.factionColor(faction));
     medal.animate([{ transform: 'scale(1.25)', filter: 'brightness(2)' }, { transform: 'scale(1.05)', filter: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
   }
-  const hero = root.querySelector(`.ts-matchup .vs-hero.f-${faction.toLowerCase()}`);
+  const hero = root.querySelector(`.ts-matchup .vs-hero.f-${fslug(faction)}`);
   hero?.animate([
     { transform: 'translateY(-40px) scale(0.6) rotate(-8deg)', opacity: 0, filter: 'brightness(2.5)' },
     { transform: 'translateY(4px) scale(1.06) rotate(1deg)', opacity: 1, offset: 0.7 },
