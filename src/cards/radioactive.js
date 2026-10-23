@@ -305,4 +305,18 @@ export const RADIOACTIVE_CARDS = [
 
   // ---- Token ----
   { ...RM, id: 'feral_ghoul', name: 'Feral Ghoul', art: '🧟', token: true, cost: 2, attack: 3, health: 2, keywords: ['Rush'], text: 'Rush.' },
+
+  // ---- Legendary add-ons ----
+  {
+    ...RM, id: 'ogrus_kamikaze_trooper', name: 'Ogrus, Kamikaze Trooper', art: '💣', extra: true, cost: 6, attack: 5, health: 5, keywords: ['Rush'],
+    text: 'Rush. After Ogrus attacks, he explodes (destroy him). Exit: Deal 3 damage to all enemies and give them Radiation 1 for 2 turns.',
+    triggers: [
+      { on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'destroy', target: 'self' }] },
+      { on: 'deathrattle', effects: [{ op: 'damage', target: { characters: { side: 'enemy' } }, amount: 3 }, rad({ characters: { side: 'enemy' } }, 1, 2)] },
+    ],
+  },
+  {
+    ...RM, id: 'the_elephants_foot', name: "The Elephant's Foot", art: '🦶', extra: true, cost: 8, attack: 1, health: 10, keywords: ['Taunt'], radiation: 3, cantAttack: true,
+    text: "Taunt. Radiation 3. Can't attack.",
+  },
 ];

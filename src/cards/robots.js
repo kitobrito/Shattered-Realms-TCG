@@ -339,4 +339,15 @@ export const ROBOT_CARDS = [
   { ...S, id: 'titan_cannon', name: 'Titan Cannon', art: '💥', token: true, cost: 5, heroWeapon: { attack: 5, durability: 3 }, text: 'A 5/3 Hero Weapon from Titan Mech Suit.', effects: [weapon('titan_cannon', 'Titan Cannon', 5, 3)] },
   { ...R, id: 'drone', name: 'Drone', art: '🛸', token: true, tribes: ['Robot', 'Drone'], cost: 1, attack: 1, health: 1, text: '' },
   { ...MECH, id: 'combat_mech', name: 'Combat Mech', art: '🤖', token: true, cost: 4, attack: 4, health: 4, keywords: ['Taunt'], text: 'Taunt.' },
+
+  // ---- Legendary add-ons ----
+  {
+    ...MECH, id: 'giant_death_laser', name: 'Giant Death Laser', art: '🔴', extra: true, cost: 9, attack: 9, health: 1,
+    text: 'Arrival: Deal 9 damage to an enemy.', target: { type: 'character', side: 'enemy' },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: 'chosen', amount: 9 }] }],
+  },
+  {
+    ...MECH, id: 'sky_piercer_drill_unit', name: 'Sky Piercer Drill Unit', art: '🪛', extra: true, cost: 10, attack: 6, health: 10, heroAttackBonus: 6,
+    text: 'Deals 6 extra damage when it attacks the enemy Hero.',
+  },
 ];
