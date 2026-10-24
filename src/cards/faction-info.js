@@ -60,8 +60,8 @@ export const FACTION_INFO = {
   },
   Divine: {
     summary: 'Heal past full Health, shield your allies and smite the darkness.',
-    strengths: ['Healing that raises maximum Health (Overheal)', 'Protecting your minions', 'Extra damage against Dark and Undead'],
-    weaknesses: ['Dealing damage and closing out games', 'Radiation, which blocks healing', 'Enemies that are not Dark or Undead'],
+    strengths: ['Healing that raises maximum Health (Overheal)', 'Protecting your minions', 'Extra damage against Dark minions'],
+    weaknesses: ['Dealing damage and closing out games', 'Radiation, which blocks healing', 'Enemies that are not Dark'],
     mechanic: "Summoner's Grace: restore 2 Health, with Overheal.",
     style: 'Defensive · Anti-dark',
   },

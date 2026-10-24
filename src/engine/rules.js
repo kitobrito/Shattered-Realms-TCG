@@ -51,8 +51,7 @@ export const KEYWORD_TEXT = {
   Overheal: 'Healing a character already at full Health raises its maximum Health by the amount instead.',
   'Temporary Health': 'Extra Health that absorbs damage first and goes away when its time is up.',
   'Bonus Health': 'A permanent increase to maximum (and current) Health.',
-  Dark: 'A tag on Vampires, Demons and other creatures of darkness. Divine cards punish it.',
-  Undead: 'A tag on Zombies, Vampires and other undead. Divine cards punish it.',
+  Dark: 'A tag on Vampires, Zombies, Ghosts, Demons, Lycanthropes and the Void. Divine cards punish it.',
   'Primal Mana': 'Gold Mana Crystals from Extinction Cycle. They can only pay for Dinosaur cards.',
   Burn: "At the end of its enemy's turn (the player who set it on fire), takes damage equal to its Burn value, then the value rises by 1. Lasts 2 turns. Applying Burn X sets the value to X, or adds X if it is already X or more (adding doesn't extend the 2 turns).",
   Burning: 'Has a Burn value (see Burn).',
@@ -106,7 +105,7 @@ export const KEYWORD_TEXT = {
   'Acid Hide': 'Whatever attacks it melts. A minion that attacks it is Corroded by 1. A Hero that attacks it loses its Weapon (or 2 Armor if it has no Weapon).',
   Meltdown: 'A minion at 0 Attack with 6 or more Corrosion on it is Dissolved by whoever corroded it.',
   Regenerate: 'At the start of your turn, this minion restores that much Health.',
-  'Holy Flame': 'Holy fire. At the end of your turn each enemy with Holy Flame takes that much damage (double to Dark and Undead minions), then it burns down by 1. It can\'t be healed while it burns.',
+  'Holy Flame': 'Holy fire. At the end of your turn each enemy with Holy Flame takes that much damage (double to Dark minions), then it burns down by 1. It can\'t be healed while it burns.',
   'Reduced to Ash': 'A minion that dies while it has Holy Flame is removed completely: it doesn\'t go to the Graveyard, its Exit doesn\'t happen and it can\'t be Reborn or Haunted.',
   Relic: 'A haunted item. Equip it to your Hero (it works as a Hero Weapon) or to a friendly Ghost (it gives its stats and effect and never wears out). When a Ghost holding it dies, it drifts to your Hero if your Hero has no Weapon.',
   Armor: 'Soaks up damage to your Hero before Health is lost. It stays until used up.',
@@ -193,12 +192,12 @@ export const TRIGGER_EVENTS = [...SELF_TRIGGERS, ...BOARD_EVENTS];
 export const REACTION_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn', 'wouldTakeDamage', 'damageDealt', 'burnDamage', 'friendlyAttack', 'heroLostHealth', 'enemyIrradiated', 'enemyBuffed'];
 export const DEFAULT_QUICK_PLAY_WINDOWS = ['cardPlayed', 'attackDeclared', 'minionDied', 'endOfTurn'];
 
-// Dark / Undead (Divine's "holy" targets): a shared tag, not a faction name.
+// Dark (Divine's "holy" targets): a shared tag, not a faction name.
 // A card can set its own `tags`; otherwise it gets its faction's default tags.
 export const FACTION_TAGS = {
-  Vampires: ['Dark', 'Undead'],
-  Zombies: ['Undead'],
-  Ghosts: ['Undead'],
+  Vampires: ['Dark'],
+  Zombies: ['Dark'],
+  Ghosts: ['Dark'],
   Demons: ['Dark'],
   Lycanthropes: ['Dark'],
   Void: ['Dark'],
