@@ -46,7 +46,11 @@ export const ZOMBIE_CARDS = [
     text: 'Exit: Summon three 1/2 Walkers.',
     triggers: [{ on: 'deathrattle', effects: [walkers(3)] }],
   },
-  { ...Z, id: 'tarman', name: 'Tarman', art: '🛢️', cost: 6, attack: 6, health: 2, keywords: ['Reborn', 'Lifesteal'], text: 'Reborn. Lifesteal.' },
+  {
+    ...Z, id: 'tarman', name: 'Tarman', art: '🛢️', cost: 7, attack: 6, health: 3, keywords: ['Reborn', 'Lifesteal'],
+    text: 'Reborn. Lifesteal. Exit: Drag a random enemy minion down into the tar with him (destroy it).',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'tarPit', target: RANDOM_ENEMY }] }],
+  },
   {
     ...Z, id: 'crawling_corpse', name: 'Crawling Corpse', art: '🦴', cost: 1, attack: 1, health: 1,
     text: 'Exit: Summon a 1/1 Zombie.',
