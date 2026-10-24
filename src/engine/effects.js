@@ -20,7 +20,7 @@ function exitOnLeave(state, m) {
 import {
   addToHand, allKeywords, dealDamage, drawCards, effectiveAttack, emit, findCharacter, hasKeyword, heal, heroOf,
   hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
-  applyBurn, burnCards, isBurning, isDarkOrUndead,
+  applyBurn, burnCards, hasTribe, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
   corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
   descentDepth, maxHand, sinkOneCircle,
@@ -61,7 +61,7 @@ function deadEntries(state, ctx, from = 'either', f = {}) {
     const c = getCard(g.cardId);
     if (c.type !== 'minion' || c.unique || c.isHive) return false;
     if (f.maxCost != null && c.cost > f.maxCost) return false;
-    if (f.tribe && !(c.tribes ?? []).includes(f.tribe)) return false;
+    if (f.tribe && !hasTribe(c.tribes, f.tribe)) return false;
     return true;
   }));
 }
@@ -315,8 +315,8 @@ const cardMatches = (card, f = {}) =>
   (!f.type || card.type === f.type) &&
   (!f.upgrade || !!card.upgrade) &&
   (f.maxCost == null || card.cost <= f.maxCost) &&
-  (!f.tribe || (card.tribes ?? []).includes(f.tribe)) &&
-  (!f.tribes || f.tribes.some((t) => (card.tribes ?? []).includes(t))) &&
+  (!f.tribe || hasTribe(card.tribes, f.tribe)) &&
+  (!f.tribes || f.tribes.some((t) => hasTribe(card.tribes, t))) &&
   (!f.faction || card.faction === f.faction) &&
   (!f.cardId || card.id === f.cardId);
 
@@ -345,7 +345,7 @@ export function checkCondition(state, cond, ctx) {
     const f = cond.controls;
     // min: how many such minions (Omega Assembly); minUpgrades / hasWeapon: Robots.
     const n = state.players[ctx.controller].board.filter((m) =>
-      (!f.tribe || m.tribes.includes(f.tribe)) && (!f.cardId || m.cardId === f.cardId) &&
+      (!f.tribe || hasTribe(m.tribes, f.tribe)) && (!f.cardId || m.cardId === f.cardId) &&
       (!f.excludeSelf || m.uid !== ctx.self) && (f.minHealth == null || m.health >= f.minHealth) &&
       (f.minUpgrades == null || (m.upgrades ?? 0) >= f.minUpgrades) && (!f.hasWeapon || !!m.weapon)).length;
     return n >= (f.min ?? 1);
@@ -390,9 +390,9 @@ export function checkCondition(state, cond, ctx) {
     const dead = c.health <= 0 || c.destroyed;
     if (cond.dead && !dead) return false;
     if (cond.alive && dead) return false;
-    if (cond.tribe && !(c.tribes ?? []).includes(cond.tribe)) return false;
+    if (cond.tribe && !hasTribe(c.tribes, cond.tribe)) return false;
     if (cond.darkOrUndead && !isDarkOrUndead(c)) return false;
-    if (cond.notTribe && (c.tribes ?? []).includes(cond.notTribe)) return false;
+    if (cond.notTribe && hasTribe(c.tribes, cond.notTribe)) return false;
     if (cond.cardId && c.cardId !== cond.cardId) return false;
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
@@ -1301,7 +1301,7 @@ export const EFFECT_OPS = {
       const tribes = e.fromGraveyard.tribes;
       pool = [...new Set(state.players[ctx.controller].graveyard.map((g) => g.cardId).filter((id) => {
         const c = getCard(id);
-        return c.type === 'minion' && !c.token && (!tribes || tribes.some((t) => (c.tribes ?? []).includes(t)));
+        return c.type === 'minion' && !c.token && (!tribes || tribes.some((t) => hasTribe(c.tribes, t)));
       }))];
       if (!pool.length) { log(state, 'No such minion has died yet.'); return; }
     }

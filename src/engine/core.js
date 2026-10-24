@@ -222,6 +222,10 @@ export function createMinion(state, cardId, controller) {
   };
 }
 
+// Tribes: a card that asks for a Robot also takes a Mech (a piloted machine), so Robot
+// synergies keep working on Mechs.
+export const hasTribe = (tribes, t) => (tribes ?? []).includes(t) || (t === 'Robot' && (tribes ?? []).includes('Mech'));
+
 // ---- Dark / Undead (Divine) --------------------------------------------------
 export function tagsOf(c) {
   if (!c || c.kind !== 'minion') return [];

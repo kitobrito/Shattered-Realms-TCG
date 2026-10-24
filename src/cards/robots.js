@@ -7,10 +7,11 @@
 // Robot; the Robot counts its Upgrades (m.upgrades) — effects check "has an
 // Upgrade" / "at least 2 Upgrades". Weapon: an Upgrade with an Attack bonus and an
 // effect; one Weapon slot, a new one replaces the old (effects equipWeapon).
-// Tribes: every Robot minion is a 'Robot'; Mechs are also 'Mech'; Drones also 'Drone'.
+// Tribes: machines that run themselves are 'Robot' (Drones also 'Drone'); anything a person pilots,
+// from inside or at a distance, is a 'Mech' instead. Robot synergies also take Mechs (core hasTribe).
 
 const R = { faction: 'Robots', type: 'minion', tribes: ['Robot'] };
-const MECH = { ...R, tribes: ['Robot', 'Mech'] };
+const MECH = { ...R, tribes: ['Mech'] };
 const S = { faction: 'Robots', type: 'spell' };
 const T = { faction: 'Robots', type: 'trap' };
 
@@ -91,7 +92,7 @@ export const ROBOT_CARDS = [
     ] }],
   },
   {
-    ...R, id: 'adaptive_warframe', name: 'Adaptive Warframe', art: '🤖', cost: 4, attack: 3, health: 5,
+    ...MECH, id: 'adaptive_warframe', name: 'Adaptive Warframe', art: '🤖', cost: 4, attack: 3, health: 5,
     text: 'Arrival: Choose one: gain +2 Attack, gain +2 Health, or gain Taunt and +1 Health.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'chooseOne', prompt: 'Adaptive Warframe', options: [
       { label: '+2 Attack', effects: [{ op: 'buff', target: 'self', attack: 2 }] },
@@ -127,14 +128,14 @@ export const ROBOT_CARDS = [
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'heal', target: 'self', amount: 2, if: { subject: 'self', minUpgrades: 2 } }] }],
   },
   {
-    ...MECH, id: 'omega_assembly', name: 'Omega Assembly', art: '🏗️', cost: 8, attack: 7, health: 7,
+    ...R, id: 'omega_assembly', name: 'Omega Assembly', art: '🏗️', cost: 8, attack: 7, health: 7,
     text: 'Arrival: If you control at least two other Robots, give this +3/+3 and Taunt.',
     triggers: [{ on: 'battlecry', effects: [
       { op: 'buff', target: 'self', attack: 3, health: 3, keywords: ['Taunt'], if: { controls: { tribe: 'Robot', excludeSelf: true, min: 2 } } },
     ] }],
   },
   {
-    ...MECH, id: 'colossus_prime', name: 'Colossus Prime', art: '🗿', cost: 10, attack: 8, health: 10,
+    ...R, id: 'colossus_prime', name: 'Colossus Prime', art: '🗿', cost: 10, attack: 8, health: 10,
     text: "Arrival: Deal 3 damage to all enemies. Enemy minions take 1 more for each friendly Robot with an Upgrade (up to 3 more).",
     triggers: [{ on: 'battlecry', effects: [
       { op: 'damage', target: 'enemyHero', amount: 3 },
@@ -321,7 +322,7 @@ export const ROBOT_CARDS = [
       effects: [{ op: 'damage', target: { adjacent: 'eventTarget' }, amount: 2 }] }])],
   },
   {
-    ...R, id: 'arsenal_overseer', name: 'Arsenal Overseer', art: '🎖️', extra: true, cost: 6, attack: 4, health: 4,
+    ...MECH, id: 'arsenal_overseer', name: 'Arsenal Overseer', art: '🎖️', extra: true, cost: 6, attack: 4, health: 4,
     text: "Arrival: Give your Hero's Weapon +1/+1. Whenever your Hero attacks, this deals damage equal to its Attack to the same target.",
     triggers: [
       { on: 'battlecry', effects: [{ op: 'buffHeroWeapon', attack: 1, durability: 1 }] },
@@ -342,7 +343,7 @@ export const ROBOT_CARDS = [
 
   // ---- Legendary add-ons ----
   {
-    ...MECH, id: 'giant_death_laser', name: 'Giant Death Laser', art: '🔴', extra: true, cost: 9, attack: 9, health: 1,
+    ...R, id: 'giant_death_laser', name: 'Giant Death Laser', art: '🔴', extra: true, cost: 9, attack: 9, health: 1,
     text: 'Arrival: Deal 9 damage to an enemy.', target: { type: 'character', side: 'enemy' },
     triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: 'chosen', amount: 9 }] }],
   },
