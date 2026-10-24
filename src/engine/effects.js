@@ -1623,6 +1623,15 @@ export const EFFECT_OPS = {
   },
 
   // { target, noExit? }
+  // Tarman: { target } — drags a minion down into the tar (destroyed), with a log line the UI animates.
+  tarPit(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      if (c.kind !== 'minion' || c.health <= 0 || c.destroyed) return;
+      log(state, `🛢 ${nameOf(state, c)} is dragged down into the tar!`);
+      EFFECT_OPS.destroy(state, { target: { uid: c.uid } }, ctx);
+    });
+  },
+
   destroy(state, e, ctx) {
     each(state, e.target, ctx, (c) => {
       if (c.kind !== 'minion') return;

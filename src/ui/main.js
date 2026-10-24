@@ -1283,6 +1283,21 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       onFreeze: () => { if (n++ % 2 === 0) sound.play('freeze'); },
     }));
   }
+  // Tarman: the tar swallows his spot when he goes down, and every minion he drags under.
+  const tarred = newLog.map((m) => /^🛢 (.+) is dragged down into the tar!$/.exec(m)?.[1]).filter(Boolean);
+  if (tarred.length || newLog.some((m) => m === 'Tarman dies.')) {
+    const left = [...tarred];
+    for (const [uid, old] of oldMinions) {
+      if (charEl(uid)) continue;
+      const id = old.clone.dataset.preview;
+      const name = id ? getCard(id)?.name : null;
+      const i = left.indexOf(name);
+      if (i >= 0) left.splice(i, 1);
+      else if (name !== 'Tarman') continue;
+      jobs.push(fx.tarPit(old.rect));
+    }
+    sound.play('squelch');
+  }
   // A Trap that goes off is shown full size (one after another if several fire).
   const traps = newLog.map((m) => /^Trap revealed: (.+)!$/.exec(m)?.[1]).filter(Boolean)
     .map((name) => allCards().find((c) => c.name === name)).filter(Boolean);

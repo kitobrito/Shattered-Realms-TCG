@@ -2215,3 +2215,59 @@ export async function greatFreeze(caught, furry, { onFreeze } = {}) {
   await Promise.all(jobs);
   for (const { el } of all) el.classList.remove('gf-pending');
 }
+
+// ---- Zombies: Tarman's tar pit ------------------------------------------------------
+// A pool of black tar spreads under the spot, glossy tendrils reach up out of it and pull
+// down, the tar swallows the spot from the bottom up, and bubbles rise and pop.
+export async function tarPit(rect) {
+  const c = center(rect);
+  const w = rect.width, h = rect.height;
+  const base = rect.top + h * 0.92;
+  const jobs = [];
+  const pool = addFx('fx-tar-pool', { left: `${c.x - w * 1.1}px`, top: `${base - w * 0.3}px`, width: `${w * 2.2}px`, height: `${w * 0.6}px` });
+  jobs.push(done(pool, animate(pool, [
+    { transform: 'scale(0.1, 0.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1, offset: 0.25 },
+    { transform: 'scale(1.05)', opacity: 1, offset: 0.75 }, { transform: 'scale(0.6, 0.4)', opacity: 0 },
+  ], { duration: 1500, easing: 'ease-out' })));
+  // The tar climbs up over the spot, then drains away.
+  const cover = addFx('fx-tar-cover', { left: `${rect.left}px`, top: `${rect.top}px`, width: `${w}px`, height: `${h}px` });
+  jobs.push(done(cover, animate(cover, [
+    { transform: 'scaleY(0)', opacity: 1 }, { transform: 'scaleY(1)', opacity: 0.95, offset: 0.45 },
+    { transform: 'scaleY(1)', opacity: 0.9, offset: 0.7 }, { transform: 'scaleY(0.2)', opacity: 0 },
+  ], { duration: 1500, easing: 'cubic-bezier(.4,.1,.4,1)' })));
+  // Tendrils reach up and drag down.
+  for (let i = 0; i < 6; i++) {
+    const tw = w * (0.16 + Math.random() * 0.08);
+    const th = h * (0.9 + Math.random() * 0.5);
+    const x = rect.left - w * 0.15 + w * 1.3 * (i / 5) + (Math.random() - 0.5) * w * 0.08;
+    const el = addFx('fx-tar-tendril', { left: `${x - tw / 2}px`, top: `${base - th}px`, width: `${tw}px`, height: `${th}px` });
+    const lean = (Math.random() - 0.5) * 24;
+    jobs.push(done(el, animate(el, [
+      { transform: `rotate(${lean}deg) scaleY(0)`, opacity: 1 },
+      { transform: `rotate(${-lean / 2}deg) scaleY(1)`, opacity: 1, offset: 0.4 },
+      { transform: `rotate(${lean / 3}deg) scaleY(0.9)`, opacity: 1, offset: 0.55 },
+      { transform: 'rotate(0deg) scaleY(0)', opacity: 0.9 },
+    ], { duration: 1200, delay: 80 + i * 70, easing: 'cubic-bezier(.3,.7,.4,1)' })));
+  }
+  // Gobs of tar fling out and fall back.
+  for (let i = 0; i < 8; i++) {
+    const s = 7 + Math.random() * 9;
+    const el = addFx('fx-tar-bubble', { left: `${c.x}px`, top: `${base - h * 0.3}px`, width: `${s}px`, height: `${s}px` });
+    const dx = (Math.random() - 0.5) * w * 2.2, up = h * (0.4 + Math.random() * 0.6);
+    jobs.push(wait(150 + Math.random() * 250).then(() => done(el, animate(el, [
+      { transform: 'translate(-50%, 0)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx * 0.6}px), ${-up}px)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(calc(-50% + ${dx}px), ${h * 0.25}px) scale(0.6)`, opacity: 0 },
+    ], { duration: 800, easing: 'cubic-bezier(.3,.6,.5,1)' }))));
+  }
+  // Bubbles rise and pop.
+  for (let i = 0; i < 7; i++) {
+    const s = 6 + Math.random() * 10;
+    const el = addFx('fx-tar-bubble', { left: `${c.x + (Math.random() - 0.5) * w}px`, top: `${base - Math.random() * h * 0.3}px`, width: `${s}px`, height: `${s}px` });
+    jobs.push(wait(300 + Math.random() * 700).then(() => done(el, animate(el, [
+      { transform: 'translate(-50%, 0) scale(0.3)', opacity: 0 }, { transform: 'translate(-50%, -10px) scale(1)', opacity: 1, offset: 0.6 },
+      { transform: 'translate(-50%, -16px) scale(1.5)', opacity: 0 },
+    ], { duration: 520, easing: 'ease-out' }))));
+  }
+  await Promise.all(jobs);
+}
