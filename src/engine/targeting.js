@@ -1,7 +1,7 @@
 // Targeting: who a card may choose, how effect selectors resolve to
 // characters at resolution time, and how trigger filters match events.
 
-import { allKeywords, defensiveKeywordOf, effectiveAttack, findCharacter, hasKeyword, heroOf, isBuffed, isBurning, isDarkOrUndead, minionsInOrder, opponentOf, radiationOf } from './core.js';
+import { allKeywords, defensiveKeywordOf, hasTribe, effectiveAttack, findCharacter, hasKeyword, heroOf, isBuffed, isBurning, isDarkOrUndead, minionsInOrder, opponentOf, radiationOf } from './core.js';
 import { getCard } from './registry.js';
 import { pickRandom } from './rng.js';
 
@@ -19,10 +19,10 @@ export function canBeChosenBy(target, controller, bySpell = false, spec = null) 
 
 // Extra minion conditions shared by target specs and selectors.
 export function minionPasses(m, f) {
-  if (f.tribe && !m.tribes.includes(f.tribe)) return false;
+  if (f.tribe && !hasTribe(m.tribes, f.tribe)) return false;
   if (f.form && getCard(m.cardId).form !== f.form) return false; // Lycanthropes: 'beast' | 'human'
-  if (f.tribes && !f.tribes.some((t) => m.tribes.includes(t))) return false;
-  if (f.notTribe && m.tribes.includes(f.notTribe)) return false;
+  if (f.tribes && !f.tribes.some((t) => hasTribe(m.tribes, t))) return false;
+  if (f.notTribe && hasTribe(m.tribes, f.notTribe)) return false;
   if (f.darkOrUndead && !isDarkOrUndead(m)) return false;
   if (f.hasUpgrade && !(m.upgrades > 0)) return false;   // Robots
   if (f.minUpgrades != null && (m.upgrades ?? 0) < f.minUpgrades) return false;
@@ -30,7 +30,7 @@ export function minionPasses(m, f) {
   if (f.keyword && !hasKeyword(m, f.keyword)) return false;
   if (f.holyFlame != null && (m.holyFlame > 0) !== f.holyFlame) return false; // Divine (The Holy Pyre)
   if (f.hasRelic != null && !!m.relic !== f.hasRelic) return false; // Ghosts (Cursed Armory)
-  if (f.heroOrTribe && !m.tribes.includes(f.heroOrTribe)) return false; // a Hero (always allowed) or a minion of this tribe
+  if (f.heroOrTribe && !hasTribe(m.tribes, f.heroOrTribe)) return false; // a Hero (always allowed) or a minion of this tribe
   if (f.faction && getCard(m.cardId).faction !== f.faction) return false;
   if (f.maxCost != null && (getCard(m.cardId).cost ?? 0) > f.maxCost) return false; // Aliens (Qu Remaker)
   if (f.irradiated != null && (radiationOf(m) > 0) !== f.irradiated) return false;
@@ -301,7 +301,7 @@ function matchRef(state, id, want, ctx, ev) {
     if (c?.kind !== 'minion') return false;
     if (want.side === 'friendly' && !friendly) return false;
     if (want.side === 'enemy' && friendly) return false;
-    if (want.tribe && !c.tribes.includes(want.tribe)) return false;
+    if (want.tribe && !hasTribe(c.tribes, want.tribe)) return false;
     if (want.cardId && c.cardId !== want.cardId) return false;
     if (want.notCardId && c.cardId === want.notCardId) return false;
     if (want.notSelf && id === ctx.self) return false;
