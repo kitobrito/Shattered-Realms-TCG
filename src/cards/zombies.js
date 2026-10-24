@@ -296,6 +296,10 @@ export const ZOMBIE_CARDS = [
     text: 'Arrival: Infect all enemy minions. While you control this, your Rage Runners from Infections have +2/+2.',
     triggers: [{ on: 'battlecry', effects: [infect({ minions: { side: 'enemy', alive: true } })] }],
   },
+  {
+    ...Z, tribes: ['Zombie', 'Beast'], id: 'la_brea_the_tar_pit_mammoth', name: 'La Brea, the Tar Pit Mammoth', art: '🦣', extra: true, cost: 8, attack: 6, health: 8,
+    keywords: ['Taunt', 'Thick Fur', 'Reborn'], text: 'Taunt. Thick Fur. Reborn.',
+  },
 
   // ---- Tokens ----
   { ...Z, id: 'zombie', name: 'Zombie', art: '🧟', token: true, cost: 1, attack: 1, health: 1, text: '' },

@@ -51,6 +51,7 @@ export const ART = {
   sealed_ward: 'art/zombies/sealed_ward.jpg',
   silverback_abomination: 'art/zombies/silverback_abomination.jpg',
   the_outbreak: 'art/zombies/the_outbreak.jpg',
+  la_brea_the_tar_pit_mammoth: 'art/zombies/la_brea_the_tar_pit_mammoth.jpg',
   abducted_beyond: 'art/fusion/abducted_beyond.jpg',
   abduction_ray: 'art/aliens/abduction_ray.jpg',
   abduction_rite: 'art/fusion/abduction_rite.jpg',

@@ -46,6 +46,7 @@ export const LEGENDARY = new Set([
   'the_rot_king',
   'tarman',
   'the_outbreak',
+  'la_brea_the_tar_pit_mammoth',
   'the_worldflame',
   'glacius_the_winter_queen',
   'the_world_eater',
