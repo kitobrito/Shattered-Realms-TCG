@@ -59,7 +59,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...DV, id: 'gravebane_initiate', name: 'Gravebane Initiate', art: '⚔️', cost: 2, attack: 2, health: 3,
-    text: 'Arrival: Deal 2 damage to an enemy Dark or Undead minion.',
+    text: 'Arrival: Deal 2 damage to an enemy Dark minion.',
     target: { type: 'minion', ...ENEMY_DARK },
     triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: 'chosen', amount: 2 }] }],
   },
@@ -81,7 +81,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...DV, id: 'consecrated_knight', name: 'Consecrated Knight', art: '🗡️', cost: 4, attack: 4, health: 4,
-    text: 'Whenever this attacks a Dark or Undead minion, gain +2 Attack for that attack.',
+    text: 'Whenever this attacks a Dark minion, gain +2 Attack for that attack.',
     triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: { side: 'enemy', darkOrUndead: true } }, effects: [{ op: 'buff', target: 'self', attack: 2, temporary: true }] }],
   },
   {
@@ -96,7 +96,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...DV, id: 'dawns_avenger', name: "Dawn's Avenger", art: '🌅', cost: 5, attack: 4, health: 5,
-    text: 'Arrival: Deal 3 damage to all enemy Dark or Undead minions.',
+    text: 'Arrival: Deal 3 damage to all enemy Dark minions.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'damage', target: { minions: ENEMY_DARK }, amount: 3 }] }],
   },
   {
@@ -119,7 +119,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...DV, id: 'the_first_light', name: 'The First Light', art: '☀️', cost: 10, attack: 8, health: 10,
-    text: 'Arrival: Deal 5 damage to all enemy minions and 5 damage to the enemy Hero. Dark or Undead enemies take 3 additional damage.',
+    text: 'Arrival: Deal 5 damage to all enemy minions and 5 damage to the enemy Hero. Dark enemies take 3 additional damage.',
     triggers: [{ on: 'battlecry', effects: [
       { op: 'damage', target: ENEMY_MINIONS, amount: 5, darkBonus: 3 },
       { op: 'damage', target: 'enemyHero', amount: 5 },
@@ -146,7 +146,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...S, id: 'cleanse_corruption', name: 'Cleanse Corruption', art: '💧', cost: 3,
-    text: 'Remove all Keywords from an enemy minion and deal 2 damage to it. If it is Dark or Undead, deal 2 additional damage.',
+    text: 'Remove all Keywords from an enemy minion and deal 2 damage to it. If it is Dark, deal 2 additional damage.',
     target: { type: 'minion', side: 'enemy' },
     effects: [{ op: 'stripKeywords', target: 'chosen' }, { op: 'damage', target: 'chosen', amount: 2, darkBonus: 2 }],
   },
@@ -161,7 +161,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...S, id: 'judgment_of_dawn', name: 'Judgment of Dawn', art: '⚖️', cost: 6,
-    text: 'Deal 4 damage to all enemy minions. Dark or Undead minions take 3 additional damage.',
+    text: 'Deal 4 damage to all enemy minions. Dark minions take 3 additional damage.',
     effects: [{ op: 'damage', target: ENEMY_MINIONS, amount: 4, darkBonus: 3 }],
   },
 
@@ -184,7 +184,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...S, id: 'sanctified_counter', name: 'Sanctified Counter', art: '✝️', cost: 2,
-    text: 'When your opponent plays a Dark or Undead minion: Deal 2 damage to it and give it -2 Attack this turn.',
+    text: 'When your opponent plays a Dark minion: Deal 2 damage to it and give it -2 Attack this turn.',
     quickPlay: { windows: ['cardPlayed'], filter: { player: 'enemy', cardType: 'minion', source: ENEMY_DARK } },
     effects: [{ op: 'damage', target: 'eventSource', amount: 2 }, { op: 'buff', target: 'eventSource', attack: -2, temporary: true }],
   },
@@ -198,7 +198,7 @@ export const DIVINE_CARDS = [
   // ---- Traps (4) ----
   {
     ...T, id: 'consecration_trap', name: 'Consecration Trap', art: '🔆', cost: 2,
-    text: 'When your opponent summons a Dark or Undead minion: Deal 3 damage to it.',
+    text: 'When your opponent summons a Dark minion: Deal 3 damage to it.',
     // Ruling (Q16): "summons" = plays a minion from hand.
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion', source: ENEMY_DARK }, effects: [{ op: 'damage', target: 'eventSource', amount: 3 }] },
   },
@@ -215,7 +215,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...T, id: 'purge_the_unholy', name: 'Purge the Unholy', art: '🔥', cost: 4,
-    text: 'When your opponent plays a Dark or Undead minion with 3 or less Attack: Destroy it.',
+    text: 'When your opponent plays a Dark minion with 3 or less Attack: Destroy it.',
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion', source: { ...ENEMY_DARK, maxAttack: 3 } }, effects: [{ op: 'destroy', target: 'eventSource' }] },
   },
 
@@ -233,7 +233,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...S, id: 'smite', name: 'Smite', art: '⚡', extra: true, cost: 1,
-    text: 'Deal 2 damage to a minion. If it is Dark or Undead, also give it 2 Holy Flame.',
+    text: 'Deal 2 damage to a minion. If it is Dark, also give it 2 Holy Flame.',
     target: { type: 'minion', side: 'any' },
     effects: [{ op: 'damage', target: 'chosen', amount: 2 }, { ...flame('chosen', 2), if: { subject: 'chosen', darkOrUndead: true } }],
   },
@@ -244,7 +244,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...S, id: 'brand_of_the_righteous', name: 'Brand of the Righteous', art: '✝️', extra: true, cost: 2,
-    text: 'Give an enemy minion 3 Holy Flame. If it is Dark or Undead, draw a card.',
+    text: 'Give an enemy minion 3 Holy Flame. If it is Dark, draw a card.',
     target: ENEMY_MINION_T,
     effects: [flame('chosen', 3), { op: 'draw', count: 1, if: { subject: 'chosen', darkOrUndead: true } }],
   },
@@ -280,7 +280,7 @@ export const DIVINE_CARDS = [
   },
   {
     ...DV, id: 'inquisitor_of_the_pyre', name: 'Inquisitor of the Pyre', art: '🏮', extra: true, cost: 5, attack: 4, health: 5,
-    text: 'Arrival: Give all enemy Dark and Undead minions 2 Holy Flame.',
+    text: 'Arrival: Give all enemy Dark minions 2 Holy Flame.',
     triggers: [{ on: 'battlecry', effects: [flame({ minions: { side: 'enemy', darkOrUndead: true } }, 2)] }],
   },
   {

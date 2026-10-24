@@ -1387,7 +1387,7 @@ const TIPS = [
   'Radioactive: an irradiated minion lowers the Health of everything else without Radiation, on both sides.',
   "Characters losing Health to Radiation can't be healed. Obliterated minions skip their Exit effects.",
   'Robots hold one Weapon at a time; equipping a new one replaces the old.',
-  'Divine cards deal extra damage to Dark and Undead minions: Vampires, Zombies and Demons.',
+  'Divine cards deal extra damage to Dark minions: Vampires, Zombies, Ghosts, Demons, Lycanthropes and the Void.',
   'Going second, you choose a Mana Potion or a Health Potion.',
   'Traps stay hidden until their condition happens. Watch the ? tokens.',
 ];

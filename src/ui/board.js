@@ -89,7 +89,7 @@ const kwIcon = (k, title) => `<img class="kw-ico" src="art/icons/${k}.png" alt="
 const STATUS_DEFS = [
   { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
   { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },
-  { k: 'holyflame', label: 'Holy', ico: '✨', test: (m) => m.holyFlame > 0, n: (m) => m.holyFlame, tip: (m) => `Holy Flame ${m.holyFlame}: takes ${m.holyFlame} damage at the end of its enemy's turn (double if Dark or Undead), can't be healed, and is Reduced to Ash if it dies` },
+  { k: 'holyflame', label: 'Holy', ico: '✨', test: (m) => m.holyFlame > 0, n: (m) => m.holyFlame, tip: (m) => `Holy Flame ${m.holyFlame}: takes ${m.holyFlame} damage at the end of its enemy's turn (double if Dark), can't be healed, and is Reduced to Ash if it dies` },
   { k: 'acidhide', label: 'Acid Hide', ico: '🧪', test: (m) => hasKeyword(m, 'Acid Hide'), tip: 'Acid Hide: a minion that fights it is Corroded by 1; a Hero that does loses its Weapon (or 2 Armor)' },
   { k: 'regen', label: 'Regen', ico: '💚', test: (m) => (m.regen ?? getCard(m.cardId).regenerate ?? 0) > 0, n: (m) => m.regen ?? getCard(m.cardId).regenerate, tip: (m) => `Regenerate ${m.regen ?? getCard(m.cardId).regenerate}: heals that much at the start of its turn` },
   { k: 'infected', label: 'Infected', ico: '🦠', test: (m) => m.infected != null, tip: 'Infected: when it dies, a 2/1 Rage Runner is summoned for the Infecting side' },

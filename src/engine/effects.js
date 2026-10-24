@@ -740,7 +740,7 @@ export const EFFECT_OPS = {
     const deferred = [];
     each(state, e.target, ctx, (c) => {
       // burningBonus: extra damage to a target that is Burning (Dragons).
-      // darkBonus: extra holy damage to a Dark or Undead minion (Divine).
+      // darkBonus: extra holy damage to a Dark minion (Divine).
       if (e.perHolyFlame && !(c.holyFlame > 0)) return;
       const amount = (e.perHolyFlame ? c.holyFlame : base) + (e.burningBonus && isBurning(c) ? e.burningBonus : 0) + (e.darkBonus && isDarkOrUndead(c) ? e.darkBonus : 0)
         + (e.irradiatedBonus && radiationOf(c) > 0 ? e.irradiatedBonus : 0);

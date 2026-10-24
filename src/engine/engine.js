@@ -940,7 +940,7 @@ const STEPS = {
       c.burnLeft = (c.burnLeft ?? 2) - 1;
       if (c.burnLeft <= 0) { c.burn = 0; log(state, `${nameOf(state, c)} stops Burning.`); } else c.burn = n + 1;
     }
-    // Holy Flame (Divine): each burning enemy takes its Holy Flame (double if Dark or Undead), plus 1
+    // Holy Flame (Divine): each burning enemy takes its Holy Flame (double if Dark), plus 1
     // per friendly Seraph of Embers; then it burns down by 1.
     const bonus = pl.board.filter((m) => getCard(m.cardId).holyFlameBonus && m.health > 0 && !m.destroyed).length;
     for (const c of [state.players[foe].hero, ...state.players[foe].board]) {
