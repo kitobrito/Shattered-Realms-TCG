@@ -826,8 +826,8 @@ const STEPS = {
       }
       // Ghosts (Cursed Armory): a Relic outlives its Ghost and drifts to its Hero (if the Hero is unarmed).
       if (m.relic) steps.push({ kind: 'effect', effect: { op: 'equipRelic', toHero: true, cardId: m.relic.cardId, lingering: true }, ctx: { controller: m.controller } });
-      // Zombies: a friendly Zombie that dies leaves a Corpse.
-      if (m.tribes.includes('Zombie')) {
+      // Zombies: a friendly Zombie (or living Infected) that dies leaves a Corpse.
+      if (m.tribes.includes('Zombie') || m.tribes.includes('Infected')) {
         const zp = state.players[m.controller];
         zp.corpses = (zp.corpses ?? 0) + 1;
         (zp.deadZombies ??= []).push(m.cardId);
