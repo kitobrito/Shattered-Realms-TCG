@@ -65,10 +65,8 @@ export const fusionHeroPath = (factions) => {
 // The portrait path a player shows: their pair's fused hero, else their first faction's hero.
 export const playerHeroPath = (factions) => fusionHeroPath(factions) ?? HERO_ART?.[factions[0]];
 export const playerHeroArt = (factions) => { const p = playerHeroPath(factions); return p && artSrc(p); };
-// A fused hero comes alive: the scene drifts slowly, the figure (a soft cut-out of the middle)
-// breathes in front of it, and a glint of light sweeps across now and then. Fills its box.
-export const livingPortraitHTML = (src) => `<span class="living"><img class="lv-scene" src="${src}" alt="" draggable="false">`
-  + `<img class="lv-figure" src="${src}" alt="" draggable="false" aria-hidden="true"><i class="lv-glint"></i></span>`;
+// A fused hero's portrait, a still picture that fills its box.
+export const livingPortraitHTML = (src) => `<span class="living"><img class="lv-scene" src="${src}" alt="" draggable="false"></span>`;
 // A player's portrait as an <img>, or alive when it is their pair's fused hero.
 export const playerPortraitHTML = (factions) => {
   const src = playerHeroArt(factions);

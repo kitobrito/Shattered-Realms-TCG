@@ -3895,14 +3895,11 @@ button:not(.end-turn):not(.hero-spell):not(.play-art):not(.card-zoom):not(.emote
 .arena .minion.aim-over, .arena .hero-portrait.aim-over { scale: 0.95; filter: drop-shadow(0 0 10px #ff3a3aaa); transition: scale 0.15s, filter 0.15s; }
 .arena .minion.aim-over { animation-play-state: paused; }
 
-/* Heroes: the portrait breathes; below 10 Health it sags, darkens and breathes heavily. */
-.arena .hero-portrait .portrait-img { animation: hero-breathe 5s ease-in-out infinite; transform-origin: 50% 90%; }
-@keyframes hero-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.02; } }
-.arena .hero-portrait.weary .portrait-img { animation: hero-weary 2.4s ease-in-out infinite; filter: saturate(0.6) brightness(0.85); }
-@keyframes hero-weary { 0%, 100% { scale: 1; translate: 0 2px; rotate: -1deg; } 45% { scale: 1.03; translate: 0 0; rotate: 0deg; } }
+/* Heroes are still pictures; below 10 Health the portrait darkens. */
+.arena .hero-portrait.weary .portrait-img { filter: saturate(0.6) brightness(0.85); }
 
-body.reduced-motion .arena .minion, body.reduced-motion .arena .minion .m-art, body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .arena .minion, .arena .minion .m-art, .arena .hero-portrait .portrait-img { animation: none !important; } }
+body.reduced-motion .arena .minion, body.reduced-motion .arena .minion .m-art { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .arena .minion, .arena .minion .m-art { animation: none !important; } }
 
 /* ==== Ready to attack: your minions that can attack lean forward with a pulse; sleepers slump ==== */
 .arena .minion.can-attack { animation: ready-lean 1.6s ease-in-out var(--idle, 0s) infinite; }
@@ -3935,15 +3932,6 @@ body.reduced-motion .arena .minion.can-attack, body.reduced-motion .arena .minio
 /* ==== Spell cast flourish ==== */
 .fx-cast { position: fixed; left: 50%; top: 46%; z-index: 9; pointer-events: none; transform-style: preserve-3d; filter: drop-shadow(0 20px 30px #000c); }
 
-/* ==== Living portraits: the figure layer breathes and drifts against the scene ==== */
-.hero-portrait .portrait-front { position: absolute !important; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none;
-  -webkit-mask: radial-gradient(ellipse 34% 46% at 50% 46%, #000 55%, transparent 100%); mask: radial-gradient(ellipse 34% 46% at 50% 46%, #000 55%, transparent 100%); }
-.arena .hero-portrait .portrait-img:not(.portrait-front) { animation: portrait-scene 9s ease-in-out infinite; }
-.arena .hero-portrait .portrait-front { animation: portrait-figure 5s ease-in-out infinite; transform-origin: 50% 85%; }
-@keyframes portrait-scene { 0%, 100% { translate: 1.5px 0; scale: 1.04; } 50% { translate: -1.5px 1px; scale: 1.05; } }
-@keyframes portrait-figure { 0%, 100% { translate: -1px 0; scale: 1.04; } 50% { translate: 1px -1.5px; scale: 1.065; } }
-.arena .hero-portrait.weary .portrait-front { animation: hero-weary 2.4s ease-in-out infinite; }
-body.reduced-motion .arena .hero-portrait .portrait-img { animation: none !important; }
 .minion .infect-mark { display: inline-grid; place-items: center; font-size: 1.5em; filter: drop-shadow(0 0 4px #ff2a2a) drop-shadow(0 0 2px #000); }
 
 /* ---- App shell: the game is a fixed screen, not a web page ----
@@ -4144,30 +4132,13 @@ body:not(.in-game) #app :is(.sub, .ts-soon, .deck-line, .fg-head span, .journey-
 .vs-hero.mystery small { font-size: 12px; color: #d9c8a0; letter-spacing: 0.08em; margin-top: -2px; }
 @media (max-width: 700px) { .vs-hero.mystery .vs-mystery { width: 84px; height: 84px; font-size: 44px; } }
 
-/* ==== Living fused heroes (shared.js livingPortraitHTML) ====
-   The scene drifts slowly, the figure (a soft cut-out of the middle) breathes in front of it,
-   and a glint of light sweeps across every few seconds. */
-.living { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; isolation: isolate; }
+/* ==== Fused hero portraits (shared.js livingPortraitHTML): a still picture filling its box ==== */
+.living { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; }
 .living > img { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; margin: 0 !important;
   border: 0 !important; border-radius: 0 !important; box-shadow: none !important; object-fit: cover; object-position: center 22%; display: block; }
-.living > .lv-scene { animation: lv-scene 11s ease-in-out infinite; }
-.living > .lv-figure { -webkit-mask: radial-gradient(ellipse 36% 48% at 50% 46%, #000 55%, transparent 100%); mask: radial-gradient(ellipse 36% 48% at 50% 46%, #000 55%, transparent 100%);
-  transform-origin: 50% 85%; animation: lv-figure 5.5s ease-in-out infinite; }
-@keyframes lv-scene { 0%, 100% { transform: scale(1.06) translate(1.2%, 0.4%); } 50% { transform: scale(1.1) translate(-1.2%, -0.6%); } }
-@keyframes lv-figure { 0%, 100% { transform: scale(1.06) translate(-0.6%, 0) rotate(-0.4deg); } 50% { transform: scale(1.1) translate(0.6%, -1.2%) rotate(0.4deg); } }
-.living > .lv-glint, .hero-portrait .portrait-glint { position: absolute; inset: -10%; z-index: 2; pointer-events: none; mix-blend-mode: screen;
-  background: linear-gradient(115deg, transparent 38%, #fff6d855 47%, #ffffffaa 50%, #fff6d855 53%, transparent 62%);
-  transform: translateX(-120%); animation: lv-glint 7s ease-in-out infinite 1.2s; }
-@keyframes lv-glint { 0%, 70% { transform: translateX(-120%); } 88%, 100% { transform: translateX(120%); } }
 .vs-hero .living { width: 120px; height: 120px; border-radius: 16px; border: 3px solid #e7b552; box-shadow: 0 0 0 2px #000, 0 0 22px #ffb04066, 0 10px 20px #000c; }
 @media (max-width: 700px) { .vs-hero .living { width: 84px; height: 84px; } }
 .go-medal .living { border-radius: 50%; border: 3px solid #1a1008; }
-/* On the board: the fused hero's layers move a touch more than a single hero's, with the glint. */
-.hero-portrait .portrait-glint { border-radius: inherit; inset: 0; overflow: hidden; }
-.arena .hero-portrait .portrait-img.fused:not(.portrait-front) { animation: lv-scene 11s ease-in-out infinite; }
-.arena .hero-portrait .portrait-front.fused { animation: lv-figure 5.5s ease-in-out infinite; }
-body.reduced-motion .living > *, body.reduced-motion .hero-portrait .portrait-glint { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .living > *, .hero-portrait .portrait-glint { animation: none !important; } }
 
 /* ---- Sand Sharks: a Burrowed minion sinks into a sand mound (it has Stealth until it Surfaces) ---- */
 .minion.burrowed .m-art { filter: sepia(0.7) saturate(0.85) brightness(0.6) contrast(1.05); }
