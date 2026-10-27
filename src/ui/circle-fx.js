@@ -1,6 +1,13 @@
-// Living Circles of Hell boards (Demons' Descent). A canvas over the painting brings each
-// circle to life from a list of layers (circle-fx-defs.js), all placed in the painting's own
-// pixels (landscape 1024x572, portrait 459x1024):
+// Living boards: the Circles of Hell (Demons' Descent) and the realm boards. A canvas over the
+// painting brings each board to life from a list of layers (circle-fx-defs.js for the circles,
+// board-fx-defs.js for the realms), all placed in the painting's own pixels (landscape
+// 1024x572, portrait 459x1024):
+//
+//   plate      (automatic) the painting with the moving sprites painted out, drawn first, so no
+//              still copy shows behind anything that moves (tools/board-fx.py)
+//   sprites    every grass tuft, twig, reed or frond cut out on its own (tools/board-fx.py),
+//              each swaying around its own root with its own phase; gusts of wind roll
+//              across the board and bend them in turn
 //
 //   mask       a light mask cut from the painting (tools/circle-fx-masks.py), drawn glowing:
 //              anim pulse | flicker | wave (a band of light travelling along it) | seq (runes
@@ -8,7 +15,8 @@
 //   echo       a feathered copy of part of the painting that moves (sway, bob, rock, breathe):
 //              ghosts drifting, hands clawing, boulders straining, flames licking
 //   particles  embers, ash, motes, wisps, rain, bubbles, petals, sparks, glints (sampled from a
-//              mask, so coins glint only on coins), drips, flies, smoke
+//              mask, so coins glint only on coins), drips, flies, smoke, snow (drifting flakes at
+//              three depths, nearer ones bigger and faster, pushed along by the gusts)
 //   fog        soft banks of mist drifting along an edge
 //   rays       shafts of light, breathing
 //   glow       point lights: windows flicker, eyes blink, embers pulse
@@ -22,14 +30,18 @@
 //
 // Tapping the scenery (pokes) makes it react: a sound plus a burst, a strike or a flare, and a
 // flash of the circle's light with sparks flying out (flare); its glyph is flung by main.js.
-// Canvas 2D at ~30 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
+// Any layer can wait for a tap: `idle` scales it at rest (0 = hidden until kicked) and
+// `kickDur` sets how long a kick lasts (a campfire flaring up for a few seconds).
+// Canvas 2D at 60 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
+import { BOARD_MASKS } from '../cards/board-fx-masks.js';
 import { CIRCLE_MASKS } from '../cards/circle-fx-masks.js';
+import { BOARD_FX } from './board-fx-defs.js';
 import { CIRCLE_FX } from './circle-fx-defs.js';
 import { play } from './sound.js';
 
 const TAU = Math.PI * 2;
-const FPS = 30;
+const FPS = 60;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 // A soft, non-repeating wobble from a few sines (deterministic per seed).
@@ -130,12 +142,18 @@ function boltPath(a, b, jag, depth = 0) {
   return { main: pts, branches };
 }
 
-export async function startCircleFx(host, n, orient) {
-  const def = CIRCLE_FX[`${n}-${orient}`];
+// Which boards have living effects: a circle number (1-9) or a realm board's file name.
+export const hasBoardFx = (key, orient) => !!(typeof key === 'number' ? CIRCLE_FX : BOARD_FX)[`${key}-${orient}`];
+export const startCircleFx = (host, n, orient) => startBoardFx(host, n, orient);
+
+export async function startBoardFx(host, key, orient) {
+  const circle = typeof key === 'number';
+  const def = (circle ? CIRCLE_FX : BOARD_FX)[`${key}-${orient}`];
   if (!def) return null;
   const [IW, IH] = CIRCLE_SIZE[orient];
-  const maskInfo = CIRCLE_MASKS[`${n}-${orient}`] ?? {};
-  const boardSrc = orient === 'land' ? `art/boards-v2/circle${n}.jpg` : `art/boards-portrait/circle${n}.jpg`;
+  const maskInfo = (circle ? CIRCLE_MASKS : BOARD_MASKS)[`${key}-${orient}`] ?? {};
+  const file = circle ? `circle${key}` : key;
+  const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
   const needBoard = def.layers.some((l) => l.type === 'echo');
   const usedMasks = new Set(def.layers.flatMap((l) => [l.mask, l.area?.mask, l.flashMask].filter(Boolean)));
   const masks = {};
@@ -145,6 +163,8 @@ export async function startCircleFx(host, n, orient) {
     masks[name] = { ...info, img: await loadImage(info.src) };
   }));
   const board = needBoard ? await loadImage(boardSrc) : null;
+  // The clean plate goes under everything once the sprites cut from it are moving.
+  const plate = maskInfo._plate && def.layers.some((l) => l.type === 'sprites') ? await loadImage(maskInfo._plate) : null;
 
   const canvas = document.createElement('canvas');
   canvas.className = 'circle-fx';
@@ -154,10 +174,13 @@ export async function startCircleFx(host, n, orient) {
   const offCtx = off.getContext('2d');
   let W = 1, H = 1, S = 1, SX = 1, SY = 1;
   let last = 0;
+  // The canvas can be moved to a fresh host (portrait boards re-render), so size it from
+  // whatever it sits in now; the frame loop re-checks that every frame.
   const resize = () => {
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    W = Math.max(1, Math.round(host.clientWidth * dpr));
-    H = Math.max(1, Math.round(host.clientHeight * dpr));
+    const box = canvas.parentElement ?? host;
+    W = Math.max(1, Math.round(box.clientWidth * dpr));
+    H = Math.max(1, Math.round(box.clientHeight * dpr));
     canvas.width = W; canvas.height = H;
     SX = W / IW; SY = H / IH; S = (SX + SY) / 2;
     last = 0;
@@ -170,6 +193,13 @@ export async function startCircleFx(host, n, orient) {
   const layers = def.layers.map((l, i) => {
     const st = { ...l, i, seed: Math.random() * 100, parts: [], acc: 0, kick: -99, next: rand(...(l.every ?? [3, 8])) };
     if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6);
+    if (l.type === 'sprites' && masks[l.mask]?.parts) {
+      // Each part: its box, its spot in the atlas, its root (bottom centre) and its own rhythm.
+      st.parts = masks[l.mask].parts.map(([x0, y0, x1, y1, ax, ay]) => ({
+        x0, y0, x1, y1, ax, ay, w: x1 - x0, h: y1 - y0, px: (x0 + x1) / 2, py: y1,
+        ph: Math.random() * TAU, per: rand(...(l.period ?? [2.6, 4.2])), stiff: rand(0.75, 1.25), kick: -99,
+      }));
+    }
     if (l.type === 'particles' && l.area?.mask && masks[l.area.mask]) st.points = maskPoints(masks[l.area.mask].img, masks[l.area.mask].box);
     if (l.type === 'fog') {
       st.puffs = Array.from({ length: l.count ?? 8 }, () => ({
@@ -195,6 +225,34 @@ export async function startCircleFx(host, n, orient) {
   });
 
   const at = (p, l) => p ?? l;
+  // How strongly a layer was kicked by a tap (1 right after, fading to 0 over its kickDur).
+  const kicked = (st, t, dur) => Math.max(0, 1 - (t - st.kick) / (st.kickDur ?? dur));
+  const idleK = (st, t, dur) => (st.idle ?? 1) * (1 - kicked(st, t, dur)) + kicked(st, t, dur);
+
+  // ---- Wind: gusts roll across the board now and then, bending grass and pushing the snow. ----
+  const W0 = def.wind ?? null;
+  const gusts = [];
+  let gustNext = W0 ? rand(...(W0.every ?? [5, 11])) : Infinity;
+  function stepWind(dt) {
+    if (!W0) return;
+    gustNext -= dt;
+    if (gustNext <= 0) {
+      const width = rand(...(W0.width ?? [140, 260]));
+      gusts.push({ x: (W0.dir ?? 1) > 0 ? -width : IW + width, width, v: rand(...(W0.speed ?? [180, 300])) * (W0.dir ?? 1), str: rand(0.6, 1) });
+      gustNext = rand(...(W0.every ?? [5, 11]));
+    }
+    for (const g of gusts) g.x += g.v * dt;
+    for (let i = gusts.length - 1; i >= 0; i--) if (gusts[i].x < -2 * gusts[i].width - IH || gusts[i].x > IW + 2 * gusts[i].width + IH) gusts.splice(i, 1);
+  }
+  // 0..1: how hard the wind is blowing at a spot right now (fronts lean with the height).
+  function gustAt(x, y) {
+    let g = 0;
+    for (const q of gusts) {
+      const d = (x + (y - IH / 2) * (W0.lean ?? 0.35) - q.x) / q.width;
+      if (d > -1 && d < 1) g += q.str * Math.cos(d * Math.PI / 2) ** 2;
+    }
+    return Math.min(1, g);
+  }
   const along = (st, s) => {
     s = ((s % st.total) + st.total) % st.total;
     for (const g of st.segs) {
@@ -215,6 +273,7 @@ export async function startCircleFx(host, n, orient) {
     const sp = st.speed ?? 1;
     if (k === 'ember') { p.vx = rand(-4, 4) * sp; p.vy = rand(-26, -12) * sp; }
     else if (k === 'ash') { p.vx = rand(-5, 5) * sp; p.vy = rand(6, 16) * sp; }
+    else if (k === 'snow') { p.z = pick([0.45, 0.7, 1]); p.size *= p.z; p.vx = (st.drift ?? 14) * p.z * rand(0.7, 1.3) * sp; p.vy = rand(-2, 6) * p.z * sp; }
     else if (k === 'mote') { p.vx = rand(-3, 3) * sp; p.vy = rand(-4, 2) * sp; }
     else if (k === 'wisp') { p.vx = rand(-3, 3) * sp; p.vy = rand(-14, -6) * sp; }
     else if (k === 'rain') { p.vx = (st.wind ?? -60) * sp; p.vy = rand(380, 460) * sp; p.len = rand(9, 16); }
@@ -253,6 +312,12 @@ export async function startCircleFx(host, n, orient) {
       if (k === 'wisp' || k === 'mote' || k === 'smoke' || k === 'petal') p.vx += wave(t * 0.8, p.seed) * 6 * dt;
       if (k === 'ember') { p.vx += wave(t * 1.4, p.seed) * 18 * dt; }
       if (k === 'spark') p.vy += 60 * dt;
+      if (k === 'snow') {
+        // Flakes wander, and a passing gust shoves them along (the nearest ones the most).
+        const g = W0 ? gustAt(p.x, p.y) : 0;
+        p.x += (wave(t * 0.7, p.seed) * 6 + g * (st.gustPush ?? 70) * (W0?.dir ?? 1)) * p.z * dt;
+        p.y += wave(t * 0.5, p.seed + 4) * 3 * p.z * dt;
+      }
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (k === 'rain' && st.floor != null && p.y > st.floor) { p.age = p.life; if (Math.random() < 0.35) splashAt(st, p.x, st.floor); }
     }
@@ -263,7 +328,7 @@ export async function startCircleFx(host, n, orient) {
   function drawParticles(st, t) {
     const k = st.kind;
     const c = st.color ?? [255, 200, 120];
-    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' ? 'source-over' : 'lighter');
+    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' ? 'source-over' : 'lighter');
     for (const p of st.parts) {
       const life = p.age / p.life;
       const fade = Math.min(1, p.age / 0.3) * (1 - life);
@@ -290,6 +355,15 @@ export async function startCircleFx(host, n, orient) {
         const g = r * (1 + life * 2.5);
         ctx.globalAlpha = fade * (st.alpha ?? 0.25);
         ctx.drawImage(softSprite(c, 64), x - g, y - g, g * 2, g * 2);
+        ctx.globalAlpha = 1;
+      } else if (k === 'snow') {
+        // A soft flake with a faint shadow on the ground below it (further below the nearer it is).
+        const a = fade * (st.alpha ?? 0.9);
+        const sh = 3 * p.z * S;
+        ctx.globalAlpha = a * 0.22;
+        ctx.drawImage(softSprite([40, 50, 70], 32), x + sh - r * 1.4, y + sh * 1.4 - r * 1.4, r * 2.8, r * 2.8);
+        ctx.globalAlpha = a;
+        ctx.drawImage(softSprite(c, 32, 0.45), x - r * 1.3, y - r * 1.3, r * 2.6, r * 2.6);
         ctx.globalAlpha = 1;
       } else if (k === 'fly') {
         ctx.fillStyle = rgba(c, 0.85);
@@ -332,7 +406,7 @@ export async function startCircleFx(host, n, orient) {
   function maskAlpha(st, t) {
     const [lo, hi] = st.alpha ?? [0.2, 0.8];
     const a = st.anim ?? { kind: 'pulse', period: 3 };
-    const kick = Math.max(0, 1 - (t - st.kick) / 1.2);
+    const kick = kicked(st, t, 1.2);
     let k;
     if (a.kind === 'flicker') k = 0.5 + 0.5 * wave(t * (a.speed ?? 3), st.seed);
     else if (a.kind === 'steady') k = 1;
@@ -359,7 +433,7 @@ export async function startCircleFx(host, n, orient) {
     const [x0, y0, x1, y1] = m.box;
     const dx = x0 * SX, dy = y0 * SY, dw = (x1 - x0) * SX, dh = (y1 - y0) * SY;
     const a = st.anim ?? {};
-    const kick = Math.max(0, 1 - (t - st.kick) / 1.2);
+    const kick = kicked(st, t, 1.2);
     ctx.globalCompositeOperation = st.blend ?? 'lighter';
     if (a.kind === 'wave' || a.kind === 'seq') {
       // The mask, faded through moving light: travelling bands (wave: lava flowing, water running)
@@ -413,13 +487,39 @@ export async function startCircleFx(host, n, orient) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  // ---- Sprites: every tuft and twig on its own root ----
+  function drawSprites(st, t) {
+    const m = masks[st.mask];
+    if (!m || !st.parts.length) return;
+    const bend = st.bend ?? 0.08;         // how far a tip travels at rest, per px of height
+    const gustBend = st.gustBend ?? 0.22; // and when a gust hits it
+    const dir = W0?.dir ?? 1;
+    const kick = kicked(st, t, 1.4);
+    ctx.globalCompositeOperation = 'source-over';
+    for (const p of st.parts) {
+      const g = W0 ? gustAt(p.px, p.py) : 0;
+      const pk = Math.max(kick, Math.max(0, 1 - (t - p.kick) / 1.4));
+      // Idle: a slow lean back and forth; a gust bends it downwind and it shivers there;
+      // a tap nearby sets it thrashing for a moment.
+      const idle = Math.sin(TAU * t / p.per + p.ph) * bend + Math.sin(TAU * t * 2.3 / p.per + p.ph * 2) * bend * 0.25;
+      const gust = g * gustBend * (0.85 + 0.15 * Math.sin(t * 17 + p.ph)) * dir;
+      const shake = pk * Math.sin(t * 22 + p.ph) * bend * 3;
+      const d = (idle + gust + shake) * p.stiff * Math.min(1, p.h / 10);
+      ctx.setTransform(1, 0, -d * SX / SY, 1, p.px * SX, p.py * SY);
+      ctx.drawImage(m.img, p.ax, p.ay, p.w, p.h, (p.x0 - p.px) * SX, (p.y0 - p.py) * SY, p.w * SX, p.h * SY);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
   // ---- Echoes ----
   function drawEcho(st, t) {
     const [x0, y0, x1, y1] = st.box;
     const m = st.motion ?? { kind: 'sway', amp: 1.5, period: 5 };
-    const kick = Math.max(0, 1 - (t - st.kick) / 1.6);
+    const kick = kicked(st, t, 1.6);
     const ph = TAU * t / (m.period ?? 5) + (m.phase ?? st.seed);
-    const amp = (m.amp ?? 1.5) * (1 + kick * 2.5);
+    // kickAmp: still at rest (amp 0), it only shakes when tapped (a skull rattling).
+    const amp = (m.amp ?? 1.5) * (1 + kick * 2.5) + kick * (m.kickAmp ?? 0);
+    if (!amp) return; // nothing moving: the plate already shows it
     let dx = 0, dy = 0, rot = 0, sc = 1;
     if (m.kind === 'bob') dy = Math.sin(ph) * amp;
     else if (m.kind === 'drift') { dx = wave(t * (m.speed ?? 0.4), st.seed) * amp; dy = wave(t * (m.speed ?? 0.4) * 0.7, st.seed + 2) * amp * 0.7; }
@@ -443,7 +543,7 @@ export async function startCircleFx(host, n, orient) {
     const a = st.area;
     ctx.globalCompositeOperation = st.blend ?? 'source-over';
     for (const p of st.puffs) {
-      p.x += p.v * dt;
+      p.x += (p.v + (W0 ? gustAt(p.x, p.y) * (st.gustPush ?? 40) * (W0.dir ?? 1) : 0)) * dt;
       if (p.x - p.r > a[2]) p.x = a[0] - p.r; else if (p.x + p.r < a[0]) p.x = a[2] + p.r;
       const y = p.y + Math.sin(t * 0.3 + p.ph) * 4;
       const al = (st.alpha ?? 0.18) * (0.75 + 0.25 * Math.sin(t * 0.5 + p.ph));
@@ -474,7 +574,7 @@ export async function startCircleFx(host, n, orient) {
   function drawGlows(st, t) {
     const c = st.color ?? [255, 160, 60];
     ctx.globalCompositeOperation = 'lighter';
-    const kick = Math.max(0, 1 - (t - st.kick) / 1.0);
+    const kick = kicked(st, t, 1.0);
     st.points.forEach(([x, y, r], i) => {
       let k;
       const an = st.anim ?? 'pulse';
@@ -493,8 +593,12 @@ export async function startCircleFx(host, n, orient) {
     ctx.globalCompositeOperation = 'source-over';
   }
   function drawFlames(st, t) {
+    const vis = idleK(st, t, 1.2);
+    if (vis <= 0.01) return;
     ctx.globalCompositeOperation = 'lighter';
-    const kick = Math.max(0, 1 - (t - st.kick) / 1.2);
+    const kick = st.idle === 0 ? 0.3 : kicked(st, t, 1.2);
+    ctx.save();
+    ctx.globalAlpha = vis;
     st.points.forEach(([x, y, w, h], i) => {
       const grow = 1 + kick * 0.8;
       for (let j = 0; j < (st.tongues ?? 5); j++) {
@@ -516,10 +620,11 @@ export async function startCircleFx(host, n, orient) {
         ctx.fill();
       }
       // Heat glow under the flames.
-      ctx.globalAlpha = 0.35 + 0.25 * wave(t * 2.5, i) + kick * 0.4;
+      ctx.globalAlpha = vis * (0.35 + 0.25 * wave(t * 2.5, i) + kick * 0.4);
       ctx.drawImage(softSprite([255, 120, 30], 64), (x - w) * SX, (y - h * 0.9) * SY, w * 2 * SX, h * 1.4 * SY);
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = vis;
     });
+    ctx.restore();
     ctx.globalCompositeOperation = 'source-over';
   }
 
@@ -743,17 +848,30 @@ export async function startCircleFx(host, n, orient) {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
   }
-  function frame(now) {
+  function frame() {
+    // One clock for drawing and for taps (the frame callback's own timestamp can run on a different base).
+    const now = performance.now();
     raf = requestAnimationFrame(frame);
     if (!running) return;
-    if (now - last < 1000 / FPS - 2) return;
-    last = now;
+    // Paced to FPS on any screen: each frame is due one interval after the last one was due,
+    // so 120 and 144 Hz screens still get ~60. (A clock that jumps backwards restarts it.)
+    if (now < prev) { last = 0; prev = now; }
+    if (now < last - 2) return;
+    last = Math.max(last + 1000 / FPS, now);
+    const box = canvas.parentElement;
+    if (box) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      if (Math.round(box.clientWidth * dpr) !== W || Math.round(box.clientHeight * dpr) !== H) resize();
+    }
     const dt = Math.min(0.1, (now - prev) / 1000);
     prev = now;
     const t = (now - start) / 1000;
     ctx.clearRect(0, 0, W, H);
+    if (plate) ctx.drawImage(plate, 0, 0, W, H);
+    stepWind(dt);
     for (const st of layers) {
       switch (st.type) {
+        case 'sprites': drawSprites(st, t); break;
         case 'mask': drawMask(st, t); break;
         case 'echo': drawEcho(st, t); break;
         case 'particles': stepParticles(st, dt, t); drawParticles(st, t); break;
@@ -783,15 +901,18 @@ export async function startCircleFx(host, n, orient) {
     const t = (performance.now() - start) / 1000;
     if (p.sound) play(p.sound);
     for (const id of [].concat(p.kick ?? [])) { const l = layers.find((q) => q.id === id); if (l) l.kick = t; }
+    // Grass and twigs right around the tap rustle.
+    for (const l of layers) if (l.type === 'sprites') for (const q of l.parts) if (Math.hypot(q.px - x, q.py - y) < (p.rustle ?? 40)) q.kick = t;
     if (p.strike != null) { const l = layers.find((q) => q.id === p.strike); if (l) strike(l, t, l.zones[p.zone ?? 0]); }
     if (p.loose != null) { const l = layers.find((q) => q.id === p.loose); if (l) loose(l, t, l.shooters[p.shooter ?? 0]); }
     if (p.flare) {
       flares.push({ x, y, t, color: p.flare, sparks: Array.from({ length: 18 }, () => ({ a: rand(0, TAU), v: rand(50, 140), s: rand(1.2, 2.4) })) });
       if (flares.length > 8) flares.shift();
     }
-    if (p.burst) {
-      const l = layers.find((q) => q.id === p.burst.layer);
-      if (l) for (let i = 0; i < (p.burst.n ?? 12); i++) spawn(l, x + rand(-6, 6), y + rand(-6, 6), p.burst.kind === 'spark' ? {} : {});
+    for (const b of [].concat(p.burst ?? [])) {
+      const l = layers.find((q) => q.id === b.layer);
+      const [bx, by] = b.at ?? [x, y];
+      if (l) for (let i = 0; i < (b.n ?? 12); i++) spawn(l, bx + rand(-(b.spread ?? 6), b.spread ?? 6), by + rand(-(b.spread ?? 6), b.spread ?? 6));
     }
     return p;
   }

@@ -18,7 +18,7 @@ import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
 import { boardHTML, descentCalloutHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
-import { startCircleFx } from './circle-fx.js';
+import { startBoardFx } from './circle-fx.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
@@ -2062,21 +2062,24 @@ function onDesync() {
   link.send({ t: 'needSync' });
 }
 
-// Portrait boards are part of the arena (re-drawn each render), so the circle's living
-// effects re-attach to the new host after every render, reusing the running animation.
-let pCircle = null; // { n, ctl, host }
-function portraitCircleFx(root, depth) {
+// Portrait boards are part of the arena (re-drawn each render), so the board's living effects
+// (a circle of Hell, or a living realm board) re-attach to the new host after every render,
+// reusing the running animation.
+let pCircle = null; // { n, ctl }  (n: circle number or realm board key)
+function portraitCircleFx(root) {
   const host = root.querySelector('.pboard-fx');
-  if (!host || !depth) { pCircle?.ctl?.stop(); pCircle = null; return; }
-  if (pCircle && pCircle.n === depth) {
+  const raw = host?.dataset.fx;
+  const n = raw == null ? null : /^\d+$/.test(raw) ? Number(raw) : raw;
+  if (!host || !n) { pCircle?.ctl?.stop(); pCircle = null; return; }
+  if (pCircle && pCircle.n === n) {
     if (pCircle.ctl && pCircle.ctl.canvas.parentNode !== host) host.append(pCircle.ctl.canvas);
     return;
   }
   pCircle?.ctl?.stop();
-  const mine = { n: depth, ctl: null };
+  const mine = { n, ctl: null };
   pCircle = mine;
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  startCircleFx(host, depth, 'portrait').then((ctl) => {
+  startBoardFx(host, n, 'portrait').then((ctl) => {
     if (pCircle !== mine) { ctl?.stop(); return; }
     mine.ctl = ctl;
     const now = app.querySelector('.pboard-fx');
@@ -2855,7 +2858,7 @@ function renderGame() {
   });
   if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0], s.descent?.depth ?? 0); else hideBoard();
   layoutPortraitBoard(app);
-  portraitCircleFx(app, s.descent?.depth ?? 0);
+  portraitCircleFx(app);
   descentNews(s);
   layoutHands(app);
   // The results panel's numbers count up the first time it appears.

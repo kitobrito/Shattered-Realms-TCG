@@ -112,6 +112,10 @@ const SOUNDS = {
   heartbeat: (ac) => { tone(ac, { freq: 70, to: 45, dur: 0.18, gain: 0.45, type: 'sine' }); tone(ac, { freq: 65, to: 42, dur: 0.2, gain: 0.35, type: 'sine', delay: 0.26 }); },
   deny: (ac) => { tone(ac, { freq: 220, to: 160, dur: 0.12, gain: 0.08, type: 'square' }); tone(ac, { freq: 180, to: 130, dur: 0.14, gain: 0.06, type: 'square', delay: 0.1 }); },
   click: (ac) => { tone(ac, { freq: 900, dur: 0.05, gain: 0.05, type: 'square' }); },
+  // Board scenery: a ritual drum, ice cracking, a fire catching.
+  drum: (ac) => { [0, 0.28, 0.46].forEach((d, i) => tone(ac, { freq: i === 2 ? 95 : 75, to: 45, dur: 0.3, gain: 0.4, type: 'sine', delay: d })); noise(ac, { dur: 0.12, freq: 300, gain: 0.15, type: 'bandpass', delay: 0 }); },
+  crack: (ac) => { noise(ac, { dur: 0.08, freq: 3500, gain: 0.3, type: 'highpass' }); noise(ac, { dur: 0.25, freq: 900, gain: 0.18, type: 'bandpass', q: 2, delay: 0.04 }); tone(ac, { freq: 1900, to: 600, dur: 0.2, gain: 0.04, type: 'sine', delay: 0.02 }); },
+  ignite: (ac) => { noise(ac, { dur: 0.7, freq: 500, gain: 0.35, type: 'bandpass', q: 0.7 }); for (let i = 0; i < 6; i++) noise(ac, { dur: 0.03, freq: 3000, gain: 0.12, type: 'highpass', delay: 0.15 + i * 0.09 + Math.random() * 0.05 }); },
 };
 
 // The same sound twice within a few frames (a button that plays its own click, plus the

@@ -5146,3 +5146,15 @@ body.reduced-motion .descent { display: none; }
 @media (min-width: 1100px) { .sel-actions .ts-row { flex-wrap: nowrap; } }
 .stage-portrait { height: min(94%, 56vh); }
 .slab-name.long { font-size: clamp(12px, 2vh, 19px); letter-spacing: 0; }
+
+/* ---- Drawn hero frames: boards whose painting has no frames of its own (board-art.js `frame`).
+   A ring in the board's own material around each hero (stacked rings: dark line, the material
+   with a lit top edge, dark line), sitting on the ground with a soft shadow. ---- */
+.arena.drawn-frame .hero-portrait {
+  --fw: calc(var(--hero) * 0.075);
+  box-shadow: 0 0 0 1.5px var(--fr-line), inset 0 calc(var(--fw) * 0.6) 0 -1px #fff3, 0 0 0 calc(var(--fw) + 1.5px) var(--fr-mid),
+    0 calc(var(--fw) * -0.35) 0 calc(var(--fw) + 1px) var(--fr-hi), 0 0 0 calc(var(--fw) + 3px) var(--fr-line),
+    0 calc(var(--hero) * 0.08) calc(var(--hero) * 0.2) calc(var(--fw)) #000a, inset 0 0 calc(var(--hero) * 0.16) #000c;
+}
+/* Ice Age: weathered bone and ivory, frosted on top. */
+.arena.frame-bone { --fr-line: #3a2c1c; --fr-mid: #cdbd9b; --fr-hi: #f4f8ff; }
