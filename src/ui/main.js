@@ -2792,7 +2792,7 @@ function zoomHTML(base) {
           </header>
           <div class="zoom-kind">${card.form === 'beast' ? `Beast Form · ${card.cost}-Mana Minion` : esc(kindOf(card))}</div>
           ${twin ? `<button class="zoom-flip ghost" data-act="zoomFlip">⟲ Show ${twinName}</button>` : ''}
-          ${isLocked(card.id) ? '<div class="zoom-locked">🔒 Locked · every win unlocks 2 new cards</div>' : ''}
+          ${isLocked(card.id) ? `<div class="zoom-locked">🔒 Locked · win games with ${esc(card.faction)} to unlock its cards</div>` : ''}
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
           ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}
         </aside>
@@ -2911,7 +2911,7 @@ function renderGame() {
     if (game.tutorial) { markTutorialDone(); stopGuide(); }
     else {
       if (game.mode !== 'online') milestone = recordMatch() ?? milestone;
-      if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks();
+      if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks(UNLOCKS_PER_WIN, s.players[viewer].factions);
     }
   }
   app.innerHTML = boardHTML({
@@ -3448,7 +3448,7 @@ app.addEventListener('click', (e) => {
     // Locked cards can still be opened full size to read (handy on phones, where they're small).
     const id = lockedCard.dataset.zoom ?? lockedCard.dataset.cut ?? lockedCard.querySelector('[data-zoom]')?.dataset.zoom;
     if (id && getCard(id)) { zoomId = id; zoomAnim = zoomFrom(lockedCard); return render(); }
-    return flash(`Locked. Every win unlocks 2 new cards${left ? ` · ${left} ${esc(f ?? '')} card${left === 1 ? '' : 's'} still locked (about ${Math.ceil(left / UNLOCKS_PER_WIN)} win${Math.ceil(left / UNLOCKS_PER_WIN) === 1 ? '' : 's'})` : ''}.`);
+    return flash(`Locked. Every win unlocks 2 new cards from the factions you played${left ? ` · ${left} ${esc(f ?? '')} card${left === 1 ? '' : 's'} still locked (about ${Math.ceil(left / UNLOCKS_PER_WIN)} win${Math.ceil(left / UNLOCKS_PER_WIN) === 1 ? '' : 's'})` : ''}.`);
   }
   if (zoom && (screen === 'gallery' || screen === 'builder' || screen === 'menu')) { zoomId = zoom.dataset.zoom; zoomAnim = zoomFrom(zoom); return render(); }
   const swapBtn = e.target.closest('[data-swap]');
