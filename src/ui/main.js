@@ -2203,82 +2203,75 @@ function renderMenu() {
   const ready = picked.length === pickNeeded();
   const fusion = format !== 'single' && ready ? fusionFor(picked) : null;
   galleryOrder = fusion ? [fusion.id] : []; // the full-size view holds just this card
-  // The pair's fused hero; a mystery until you've played a match with this pair.
-  const fusedHeroHTML = (pair) => {
-    if (pair.length !== 2 || !fusionHeroPath(pair)) return '';
-    if (!heroRevealed(pair)) {
-      return `<span class="vs-plus">=</span><div class="vs-hero fused mystery" title="Play a match with this pair to meet your hero"><i class="vs-mystery">?</i><span>Your hero</span><small>Play to reveal</small></div>`;
-    }
-    return `<span class="vs-plus">=</span><div class="vs-hero fused">${livingPortraitHTML(artSrc(fusionHeroPath(pair)))}<span>Your hero</span></div>`;
-  };
-  const heroCard = (f) => {
+  // A floating slab per realm, down both sides like a fighting game's character select.
+  const slab = (f, k) => {
     const art = heroArtOf(f);
-    return `<div class="vs-hero f-${fslug(f)}">${art ? `<img src="${art}" alt="">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}<span>${esc(f)}</span></div>`;
+    const on = picked.includes(f);
+    const sealed = !open.includes(f);
+    const attr = sealed ? `data-sealed="${esc(f)}" title="${esc(f)} · opens as you play"` : `data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}"`;
+    return `<button class="slab f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${attr} style="--fc:${fx.factionColor(f)};--i:${k}">
+      <span class="slab-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
+      <span class="slab-name">${esc(f)}</span>${on ? '<span class="slab-check">✓</span>' : sealed ? '<i class="slab-lock">🔒</i>' : ''}</button>`;
   };
+  const groups = deckGroups(playable);
+  let k = 0;
+  const column = (gs) => gs.map((g) => `<div class="sel-group" title="${esc(g.blurb)}"><h4>${esc(g.name)}</h4>${g.factions.map((f) => slab(f, k++)).join('')}</div>`).join('');
+  // The centre stage: the pair's fused hero (a mystery until played), or the one realm's hero.
+  const mini = (f, side) => `<div class="stage-mini ${side} f-${fslug(f)}" style="--fc:${fx.factionColor(f)}"><img src="${heroArtOf(f) ?? ''}" alt=""><span>${esc(f)}</span></div>`;
+  let portrait;
+  if (format === 'single' && picked.length === 1) {
+    portrait = `<div class="stage-img">${heroArtOf(picked[0]) ? `<img src="${heroArtOf(picked[0])}" alt="">` : ''}</div>`;
+  } else if (ready && fusionHeroPath(picked) && heroRevealed(picked)) {
+    portrait = `<div class="stage-img fused">${livingPortraitHTML(artSrc(fusionHeroPath(picked)))}</div>${mini(picked[0], 'l')}${mini(picked[1], 'r')}`;
+  } else {
+    portrait = `<div class="stage-img mystery ${ready ? 'ready' : ''}"><i>?</i><small>${ready ? 'Play a match to reveal your hero' : `Pick ${pickNeeded() - picked.length} more`}</small></div>${picked[0] ? mini(picked[0], 'l') : ''}${picked[1] ? mini(picked[1], 'r') : ''}`;
+  }
+  const stageName = picked.length ? picked.map(esc).join(' <i>+</i> ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`;
   app.innerHTML = `
-    <div class="menu tavern title-screen ts-fit">
-      <div class="ts-left">
-        <header class="ts-title">
-          <div class="ts-runes"></div>
+    <div class="menu tavern select-screen">
+      <aside class="sel-col sel-left">${column(groups.filter((_, i) => i % 2 === 0))}</aside>
+      <main class="sel-center">
+        <header class="sel-title">
           <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
           <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
         </header>
-
-        <nav class="ts-actions">
-          <button data-act="ai" class="ts-play play-art" aria-label="Play vs AI"><img class="pa-img" src="art/ui/play-button.png" alt="" draggable="false"><i class="pa-glow"></i><i class="pa-shine"></i><span class="pa-sparks">${'<b></b>'.repeat(8)}</span><small>vs AI</small></button>
-          ${difficultySliderHTML()}
-          <div class="ts-row">
-            ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
-            <button data-act="hotseat">${icon('players')} Hot-seat</button>
-            ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
-          </div>
-          <div class="ts-row small">
-            <button data-act="tutorial" class="ghost ${tutorialDone() ? '' : 'new-player'}">🎓 Tutorial${tutorialDone() ? '' : ' <small>New? Start here</small>'}</button>
-            <button data-act="howto" class="ghost">${icon('book')} How to play</button>
-            <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Collection</button>
-            <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
-          </div>
-        </nav>
-      </div>
-
-      <section class="ts-panel">
-        <div class="ts-panel-head">
-          <h3>Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'} <span class="pick-count">${picked.length}/${pickNeeded()}</span></h3>
+        <div class="sel-head">
+          <span class="pick-count">${picked.length}/${pickNeeded()}</span>
           ${pairUnlocked() ? `<div class="format-toggle">
             <button data-act="formatPair" class="${format === 'pair' ? 'on' : 'ghost'}">Two factions</button>
             <button data-act="formatSingle" class="${format === 'single' ? 'on' : 'ghost'}">One faction</button>
           </div>` : ''}
         </div>
         ${progress ? `<div class="journey-line"><span>${esc(progress)}</span><button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>` : ''}
-        <div class="faction-groups">
-          ${deckGroups(playable).map((g) => `<div class="fg n${g.factions.length}">
-            <div class="fg-head"><b>${esc(g.name)}</b><span>${esc(g.blurb)}</span></div>
-            <div class="factions">${g.factions.map((f) => {
-            const art = heroArtOf(f);
-            const on = picked.includes(f);
-            if (!open.includes(f)) {
-              return `<span class="faction medallion sealed f-${fslug(f)}" data-sealed="${esc(f)}" title="${esc(f)} · opens as you play">
-              <span class="medal-ring"></span><span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : ''}<i class="medal-lock">🔒</i></span>
-              <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span></span>`;
-            }
-            return `<span class="faction medallion f-${fslug(f)} ${on ? 'picked' : 'ready'}" data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}">
-              <span class="medal-ring"></span>
-              <span class="medal-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
-              <span class="medal-name ${f.length >= 11 ? 'long' : ''}">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</span>${on ? '<span class="medal-check">✓</span>' : ''}</span>`;
-          }).join('')}</div></div>`).join('')}
-        </div>
-        <div class="ts-bottom">
-          ${ready ? `<div class="ts-matchup">
-            ${picked.map(heroCard).join('<span class="vs-plus">+</span>')}${fusedHeroHTML(picked)}
-          </div>` : ''}
-          <div class="ts-bottom-info">
+        <section class="stage" style="--c1:${picked[0] ? fx.factionColor(picked[0]) : '#8a6cff'};--c2:${picked[1] ? fx.factionColor(picked[1]) : picked[0] ? fx.factionColor(picked[0]) : '#ffd25a'}">
+          <div class="stage-portrait">${portrait}</div>
+          <div class="stage-side">
+          <h2 class="stage-name">${stageName}</h2>
+          <div class="stage-info">
             ${fusion ? `<button class="ghost ts-fusion-btn" data-zoom="${fusion.id}" title="See the Fusion card">🌀 Fusion: <b>${esc(fusion.name)}</b></button>` : ''}
             ${ready && format !== 'single' ? synergyHTML(picked) : ''}
             ${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}
             ${ready ? `<button data-act="guide" class="ghost ts-guide-btn">${icon('book')} Realm guide</button>` : ''}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+        <nav class="ts-actions sel-actions">
+          <div class="sel-play-row">
+            <button data-act="ai" class="ts-play play-art" aria-label="Play vs AI"><img class="pa-img" src="art/ui/play-button.png" alt="" draggable="false"><i class="pa-glow"></i><i class="pa-shine"></i><span class="pa-sparks">${'<b></b>'.repeat(8)}</span><small>vs AI</small></button>
+            ${difficultySliderHTML()}
+          </div>
+          <div class="ts-row">
+            ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
+            <button data-act="hotseat">${icon('players')} Hot-seat</button>
+            ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
+            <button data-act="tutorial" class="ghost ${tutorialDone() ? '' : 'new-player'}">🎓 Tutorial${tutorialDone() ? '' : ' <small>New? Start here</small>'}</button>
+            <button data-act="howto" class="ghost">${icon('book')} How to play</button>
+            <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Collection</button>
+            <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
+          </div>
+        </nav>
+      </main>
+      <aside class="sel-col sel-right">${column(groups.filter((_, i) => i % 2 === 1))}</aside>
     </div>
     ${guideOpen && ready ? `<div class="overlay guide-overlay"><div class="guide-backdrop" data-act="closeGuide"></div><div class="guide-panel">
       <button class="ghost guide-close" data-act="closeGuide">✕</button>${factionGuideHTML(picked)}
