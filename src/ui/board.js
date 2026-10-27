@@ -407,6 +407,19 @@ function deckHTML(pl, mine) {
     <div class="pile ${pl.deck.length ? '' : 'empty'}">${pileLayers(pl.deck.length)}${shrooms ? `<i class="shroom-count">🍄${shrooms}</i>` : ''}</div><b>${pl.deck.length}</b></div>`;
 }
 
+// The enemy's nameplate (top-left): avatar, name and deck size, then Health and Mana pills.
+function oppPlateHTML(pl) {
+  const art = playerHeroArt(pl.factions);
+  const h = pl.hero;
+  return `<div class="opp-plate">
+    <span class="op-avatar">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</b>`}</span>
+    <div class="op-body">
+      <div class="op-name"><b>${esc(pl.name)}</b><span class="op-deck" title="${pl.deck.length} cards left in the enemy deck">${icon('cards')}${pl.deck.length}</span></div>
+      <div class="op-pills"><span class="op-hp" title="Enemy Health">${icon('heart')}${h.health}${h.armor ? `<small>+${h.armor}</small>` : ''}</span>
+        <span class="op-mana" title="Enemy Mana">${icon('mana')}${pl.mana.current}/${pl.mana.max}</span></div>
+    </div></div>`;
+}
+
 function endTurnHTML(s, me, legal, armed) {
   if (s.gameOver) return '<button class="end-turn enemy" disabled>Game over</button>';
   const mine = s.activePlayer === me;
@@ -731,13 +744,14 @@ export function boardHTML(ctx) {
         ${deckHTML(mp, true)}
       </div>
       ${ctx.recap ? `<div class="turn-recap ${ctx.recap.fresh ? 'fresh' : ''}" data-act="closeRecap" title="Tap to close"><b>Opponent's turn</b>${ctx.recap.lines.map((l) => `<span>${esc(l)}</span>`).join('')}${ctx.recap.more ? `<span class="sub">…and ${ctx.recap.more} more (see the log)</span>` : ''}</div>` : ''}
+      ${oppPlateHTML(op)}
       <div class="corner-buttons">
-        <button class="ghost" data-act="toggleLog" title="Game log">${icon('log')}</button>
-        <button class="ghost" data-act="mute" title="Sound">${icon(isMuted() ? 'muted' : 'sound')}</button>
-        <button class="ghost" data-act="save" title="Save">${icon('save')}</button>
-        <button class="ghost" data-act="settings" title="Settings">${icon('gear')}</button>
-        ${s.gameOver ? '' : `<button class="ghost" data-act="concede" title="Concede">${icon('flag')}</button>`}
-        <button class="ghost" data-act="menu" title="Menu">${icon('menu')}</button>
+        <button class="ghost" data-act="toggleLog" title="Game log">${icon('log')}<span>Log</span></button>
+        <button class="ghost" data-act="mute" title="Sound">${icon(isMuted() ? 'muted' : 'sound')}<span>Sound</span></button>
+        <button class="ghost" data-act="save" title="Save">${icon('save')}<span>Save</span></button>
+        <button class="ghost" data-act="settings" title="Settings">${icon('gear')}<span>Settings</span></button>
+        ${s.gameOver ? '' : `<button class="ghost" data-act="concede" title="Concede">${icon('flag')}<span>Surrender</span></button>`}
+        <button class="ghost" data-act="menu" title="Menu">${icon('menu')}<span>Menu</span></button>
       </div>
       ${ctx.descentOpen && s.descent ? descentPanelHTML(s) : ''}
       ${ctx.concedeAsk ? `<div class="overlay"><div class="panel concede-panel"><h2>Concede this game?</h2>

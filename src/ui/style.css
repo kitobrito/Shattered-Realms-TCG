@@ -5383,3 +5383,90 @@ body:not(.in-game) #app .m2 .m2-deck .deck-line .sub { font-size: 0.85em; }
   .m2 .m2-top .ts-tag { display: none; }
   .m2 .m2-frame { max-height: none; }
 }
+
+/* ==== In-game UI v2: navy glass panels with gold/teal accents over the board painting ==========
+   Enemy nameplate top-left, a labelled button rail on the left, an arrow-shaped End Turn,
+   a glowing Mana pill and round deck counters. The board paintings themselves are untouched. */
+.arena { --ui-navy: rgba(8, 14, 34, 0.78); --ui-line: rgba(120, 220, 230, 0.45); --ui-gold: #e8c46a; }
+.arena .opp-plate { position: absolute; left: 1cqw; top: 1.6cqh; z-index: 32; display: flex; align-items: center; gap: 0.7cqw; pointer-events: none;
+  padding: 0.45cqw 1.1cqw 0.45cqw 0.45cqw; border-radius: 99px; background: linear-gradient(90deg, var(--ui-navy), rgba(8, 14, 34, 0.55));
+  border: 1px solid var(--ui-line); box-shadow: 0 6px 18px #0009, inset 0 1px 0 #ffffff14; }
+.arena .op-avatar { width: clamp(38px, 4.4cqw, 76px); aspect-ratio: 1; border-radius: 50%; overflow: hidden; display: grid; place-items: center; flex: 0 0 auto;
+  background: #120a18; border: 2px solid var(--ui-gold); box-shadow: 0 0 0 2px #0b0d1c, 0 0 12px #ffcf5a66; }
+.arena .op-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.arena .op-body { display: flex; flex-direction: column; gap: 0.35cqh; min-width: 0; }
+.arena .op-name { display: flex; align-items: center; gap: 0.7cqw; font-family: var(--font-title); color: #fff3d6; font-size: clamp(12px, 1.25cqw, 22px); text-shadow: 0 2px 2px #000; white-space: nowrap; }
+.arena .op-name b { max-width: 12cqw; overflow: hidden; text-overflow: ellipsis; }
+.arena .op-deck { display: inline-flex; align-items: center; gap: 3px; font-family: 'Stat Numbers', var(--font-title); font-weight: 900; color: #cfe8ff; font-size: 0.9em; }
+.arena .op-pills { display: flex; gap: 0.5cqw; }
+.arena .op-pills > span { display: inline-flex; align-items: center; gap: 4px; padding: 0.15cqh 0.7cqw; border-radius: 99px; font-family: 'Stat Numbers', var(--font-title); font-weight: 900;
+  font-size: clamp(11px, 1.05cqw, 19px); color: #fff; background: #000a; border: 1px solid #ffffff22; }
+.arena .op-pills small { font-size: 0.75em; color: #cfd8e0; }
+.arena .opp-plate .ui-ico { width: 1.05em; height: 1.05em; flex: 0 0 auto; }
+.arena .op-hp .ui-ico { fill: #e8243c; stroke: #ff9aa8; }
+.arena .op-mana .ui-ico { fill: #3a7bff; stroke: #a8ccff; }
+.arena .mana-bar.opp { display: none !important; }
+
+/* The button rail (left edge): icon over a small label, in one rounded glass pill. */
+.arena .corner-buttons { left: 0.7cqw !important; top: 50% !important; bottom: auto !important; transform: translateY(-50%); flex-direction: column !important; flex-wrap: nowrap !important; width: auto !important;
+  gap: 0.2cqh !important; padding: 0.8cqh 0.3cqw; border-radius: 99px; background: var(--ui-navy); border: 1px solid var(--ui-line); box-shadow: 0 8px 22px #000a, inset 0 1px 0 #ffffff14; }
+.arena .corner-buttons button { width: clamp(40px, 4.2cqw, 74px) !important; height: auto !important; min-height: 0; padding: 0.7cqh 0 !important; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: 0 !important; border-radius: 99px !important; background: none !important; box-shadow: none !important; color: #d8e6ee !important; font-size: inherit !important; }
+.arena .corner-buttons button .ui-ico { width: clamp(16px, 1.55cqw, 28px); height: clamp(16px, 1.55cqw, 28px); stroke: #bfeaf0; }
+.arena .corner-buttons button span { font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.06em; font-size: clamp(8px, 0.68cqw, 13px); line-height: 1; }
+.arena .corner-buttons button:hover { background: #ffffff14 !important; }
+.arena .corner-buttons button:hover .ui-ico { stroke: var(--ui-gold); }
+.arena .corner-buttons button[data-act="concede"] .ui-ico { stroke: #ffb0a0; }
+.arena .log-tab { display: none; }
+.arena.has-board .history { left: 6.2cqw; }
+
+/* End Turn: a glowing arrow pointing at the enemy's side of the turn. */
+.arena .end-turn { clip-path: polygon(0 0, 84% 0, 100% 50%, 84% 100%, 0 100%, 7% 50%); border: 0 !important; border-radius: 0 !important; padding: 0 1.3cqw 0 0.9cqw !important;
+  font-family: var(--font-title); letter-spacing: 0.06em; text-transform: uppercase; text-shadow: 0 1px 0 #ffffff55; }
+.arena .end-turn:not(:disabled) { filter: drop-shadow(0 0 8px #3cff9a88) drop-shadow(0 4px 6px #000a); }
+.arena .end-turn.has-moves { background: linear-gradient(#5fd08a, #1f7a48) !important; color: #04240f !important; }
+.arena .end-turn.done { background: linear-gradient(#9dffc0, #2fbf6a 55%, #148a44) !important; color: #03200c !important; }
+.arena .end-turn.confirm { background: linear-gradient(#ffb48a, #d0541e) !important; color: #2a0a00 !important; filter: drop-shadow(0 0 8px #ff8a4a99); }
+.arena .end-turn.enemy { background: linear-gradient(#3a4458, #1c2232) !important; color: #9aa8bc !important; filter: drop-shadow(0 4px 6px #000a); }
+body.colorblind .arena .end-turn.done { background: linear-gradient(#a8d0ff, #2f6fe0) !important; }
+.arena.has-board .end-turn { left: 88.4cqw; width: 8.6cqw; }
+
+/* Your Mana: a glowing pill. Deck piles: round counters. */
+.arena .mana-bar.me .mana-text { padding: 0.15em 0.6em; border-radius: 99px; background: linear-gradient(#1c3a8a, #0a1638); border: 1.5px solid #8ab8ff;
+  box-shadow: 0 0 12px #3a7bffaa, inset 0 1px 0 #ffffff33; color: #fff; text-shadow: 0 0 6px #6aa8ff; }
+.arena .deck-pile b { min-width: 2.2em; aspect-ratio: 1; display: grid; place-items: center; padding: 0 !important; border-radius: 50% !important;
+  background: radial-gradient(circle at 40% 35%, #26304a, #0a0f1e) !important; border: 1.5px solid var(--ui-gold) !important; box-shadow: 0 3px 8px #000b, 0 0 8px #ffcf5a44 !important;
+  color: #fff3d6 !important; font-family: 'Stat Numbers', var(--font-title); }
+
+/* Upright phones: a compact nameplate, the rail as round icon buttons down the left edge. */
+.arena.portrait .opp-plate { left: 1.5cqw; top: 0.8cqh; gap: 6px; padding: 3px 10px 3px 3px; }
+.arena.portrait .op-avatar { width: 34px; }
+.arena.portrait .op-name { font-size: 12px; gap: 6px; }
+.arena.portrait .op-name b { max-width: 26cqw; }
+.arena.portrait .op-pills > span { font-size: 11px; padding: 0 6px; }
+.arena.portrait .corner-buttons { left: 1cqw !important; top: var(--mid, 50cqh) !important; padding: 4px 2px; gap: 0 !important; }
+.arena.portrait .corner-buttons button { width: 34px !important; padding: 5px 0 !important; }
+.arena.portrait .corner-buttons button .ui-ico { width: 18px; height: 18px; }
+.arena.portrait .corner-buttons button span { display: none; }
+/* Upright phones: spread the minions so one minion's Health heart never sits on its neighbour's
+   dagger; a crowded row (6-7 minions) has no room to spread, so its badges shrink toward their own minion. */
+.arena.portrait .board { gap: 5cqw; }
+.arena.portrait .board:has(> :nth-child(6)) { gap: 2.4cqw; }
+.arena.portrait .board:has(> :nth-child(7)) { gap: 0.6cqw; }
+.arena.portrait .minion .atk { scale: 0.88; transform-origin: 100% 100%; }
+.arena.portrait .minion .hp { scale: 0.88; transform-origin: 0 100%; }
+.arena.portrait .board:has(> :nth-child(6)) .minion .atk, .arena.portrait .board:has(> :nth-child(6)) .minion .hp { scale: 0.74; }
+.arena.portrait .board:has(> :nth-child(7)) .minion .atk { scale: 0.66; translate: 12% 0; }
+.arena.portrait .board:has(> :nth-child(7)) .minion .hp { scale: 0.66; translate: -12% 0; }
+/* Phones held sideways: the rail stays one column, icons only. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .arena .corner-buttons { display: flex !important; padding: 3px 2px; gap: 0 !important; }
+  .arena .corner-buttons button { width: 32px !important; padding: 4px 0 !important; }
+  .arena .corner-buttons button .ui-ico { width: 17px; height: 17px; }
+  .arena .corner-buttons button span { display: none; }
+  .arena .opp-plate { padding: 2px 8px 2px 2px; }
+}
+.arena.portrait .end-turn { padding: 0 3.5cqw 0 2.5cqw !important; }
+/* The Descent gauge moves over to make room for the button rail. */
+.arena .descent-gauge { left: calc(6.2cqw + clamp(40px, 4cqw, 62px) + 12px); }
+.arena.portrait .descent-gauge { left: 46px; }
