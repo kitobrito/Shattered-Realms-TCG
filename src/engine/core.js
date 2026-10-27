@@ -163,30 +163,23 @@ export const currentCircle = (state) => CIRCLES[descentDepth(state) - 1] ?? null
 // Starts the Descent if a Demon player is in the match (createGame, or lazily for old saves).
 export function initDescent(state) {
   if (state.descent) return state.descent;
-  const demons = state.players.filter((p) => p.factions.includes('Demons')).length;
-  if (!demons) return null;
-  state.descent = { depth: 0, points: 0, need: (state.rules.descentPoints ?? 6) * demons };
+  if (!state.players.some((p) => p.factions.includes('Demons'))) return null;
+  state.descent = { depth: 0, lead: null };
   return state.descent;
 }
-// Adds Descent points; every `need` points sink the battle one circle (to the 7th at most).
-export function addDescent(state, n) {
+// Sink the battle n circles deeper (to the Ninth at most). Each round sinks one (startTurn),
+// so round 1 is Limbo and round 9 is Treachery; Baphomet sinks one extra.
+export function sinkCircles(state, n = 1) {
   const d = initDescent(state);
-  if (!d || n <= 0 || d.depth >= CIRCLES.length) return;
-  d.points += n;
-  while (d.points >= d.need && d.depth < CIRCLES.length) {
-    d.points -= d.need;
+  for (let i = 0; d && i < n && d.depth < CIRCLES.length; i++) {
     d.depth += 1;
     const c = CIRCLES[d.depth - 1];
     log(state, `🔥 The battle sinks into the ${c.ordinal} Circle: ${c.name}. ${c.text}`);
     emit(state, { type: 'descended', depth: d.depth });
   }
-  if (d.depth >= CIRCLES.length) d.points = 0;
 }
 // Sink straight to the next circle (Baphomet).
-export function sinkOneCircle(state) {
-  const d = initDescent(state);
-  if (d) addDescent(state, d.need - d.points);
-}
+export const sinkOneCircle = (state) => sinkCircles(state, 1);
 // Hero Spells cost 1 more in Limbo (Fusions are unaffected).
 // costsAllMana (Meteor Strike): it spends all the caster's Mana (never less than its printed cost).
 export const heroSpellCost = (state, card, pl = null) => (card.costsAllMana && pl ? Math.max(card.cost, manaFor(pl, card)) : card.cost)
@@ -603,8 +596,6 @@ export function loseHealth(state, targetId, amount, opts = {}) {
     t.healthLost += amount;
     state.players[t.owner].lostHealthTurn = state.turn;
     emit(state, { type: 'heroLostHealth', target: t.uid, player: t.owner, amount, source: null, paid: opts.paid !== false, forSummon: !!opts.forSummon });
-    // The Descent: Health a Demon player pays drags the battle deeper.
-    if (opts.paid !== false && state.players[t.owner].factions.includes('Demons')) addDescent(state, amount);
   } else {
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: null });
   }

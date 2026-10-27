@@ -55,7 +55,7 @@ export const FACTION_INFO = {
     strengths: ['A free Demon every turn from your Hero Spell', 'Explosive, powerful plays', 'Turning Health into board power'],
     weaknesses: ['Your own Health runs out fast', 'Healing and Lifesteal opponents', 'Losing control of a long game'],
     mechanic: 'Infernal Summoning: pay Health to summon a Demon; each use goes one tier higher.',
-    special: 'The Descent: Health you pay and every minion that dies drag the battle down through the seven Circles of Hell. Each circle changes the rules for both players.',
+    special: 'The Descent: each round the battle sinks one circle deeper through the nine Circles of Hell, from Limbo to Treachery. Each circle changes the rules for both players.',
     style: 'Aggro · Risk',
   },
   Divine: {

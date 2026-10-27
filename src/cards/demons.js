@@ -296,10 +296,10 @@ export const DEMON_CARDS = [
   },
   {
     ...DM, id: 'satan_lord_of_the_pit', name: 'Satan, Lord of the Pit', art: '😈', extra: true, cost: 10, attack: 10, health: 10, costPerDepth: 1, minCost: 6,
-    text: 'Costs 1 less for each circle sunk (never less than 6). Arrival: Destroy all other minions. In the Seventh Circle, the enemy Hero also loses half their Health.',
+    text: 'Costs 1 less for each circle sunk (never less than 6). Arrival: Destroy all other minions. In the Ninth Circle, the enemy Hero also loses half their Health.',
     triggers: [{ on: 'battlecry', effects: [
       { op: 'destroy', target: { minions: { excludeSelf: true } } },
-      { op: 'satansJudgement', depth: 7 },
+      { op: 'satansJudgement', depth: 9 },
     ] }],
   },
   {

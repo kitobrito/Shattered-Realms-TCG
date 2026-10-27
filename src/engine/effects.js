@@ -578,7 +578,7 @@ export const EFFECT_OPS = {
   },
   // { depth } — Satan: in the deepest circle, the enemy Hero loses half their Health (rounded down).
   satansJudgement(state, e, ctx) {
-    if (descentDepth(state) < (e.depth ?? 7)) return;
+    if (descentDepth(state) < (e.depth ?? 9)) return;
     const foe = heroOf(state, opponentOf(ctx.controller));
     const n = Math.floor(foe.health / 2);
     if (n <= 0) return;

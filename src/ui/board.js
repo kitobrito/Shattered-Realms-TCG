@@ -608,44 +608,35 @@ function propsHTML(props, [W, H], src, cuts = null) {
   }).join('')}</div>`;
 }
 
-// The Descent gauge (Demons' Circles of Hell): seven circles down the side of the battlefield,
-// the current one lit, how close the battle is to sinking again, and what waits below.
+// The Descent gauge (Demons' Circles of Hell): Dante's nine circles down the side of the
+// battlefield, the current one lit and what waits below. The battle sinks one circle each round.
 // Tap it for the full explanation (descentPanelHTML).
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 function descentHTML(d) {
-  const c = CIRCLES[d.depth - 1];
   const next = CIRCLES[d.depth];
-  const left = next ? d.need - d.points : 0;
-  const fill = next ? d.points / d.need : 1;
-  const close = next && left <= 2;
-  return `<div class="descent-gauge ${d.depth ? 'sunk' : ''} ${close ? 'close' : ''}" data-act="descentInfo" role="button" title="The Descent: tap to learn how it works">
+  const fill = d.depth / CIRCLES.length;
+  return `<div class="descent-gauge ${d.depth ? 'sunk' : ''}" data-act="descentInfo" role="button" title="The Descent: tap to learn how it works">
     <div class="dg-head">${icon('flame')}<span>Descent</span><i class="dg-q">?</i></div>
     <div class="dg-body">
       <div class="dg-rings">${CIRCLES.map((x) => `<i class="${x.n <= d.depth ? 'past' : ''} ${x.n === d.depth ? 'now' : ''}">${ROMAN[x.n - 1]}</i>`).join('')}</div>
       <div class="dg-fill"><b style="height:${(fill * 100).toFixed(0)}%"></b></div>
     </div>
-    <div class="dg-count">${next ? `${d.points}<small>/${d.need}</small>` : 'Bottom'}</div>
-    ${close ? `<div class="dg-next">Next: <b>${esc(next.name)}</b><small>${esc(next.text)}</small></div>` : ''}
+    <div class="dg-count">${next ? `${d.depth}<small>/${CIRCLES.length}</small>` : 'Bottom'}</div>
   </div>`;
 }
 
 export const descentCalloutHTML = () => `<div class="descent-callout" data-act="descentInfo"><b>${icon('flame')} The Descent</b>
-  <p>A Demon is in this battle. Every Health a Demon pays and every minion that dies drags it deeper into Hell, and each circle changes the rules for <b>both players</b>.</p><u>Tap to learn more</u></div>`;
+  <p>A Demon is in this battle. Each round it sinks one circle deeper into Hell, from Limbo down to Treachery, and each circle changes the rules for <b>both players</b>.</p><u>Tap to learn more</u></div>`;
 
-// The Descent explained: what it is, what drags the battle down, and all seven circles.
+// The Descent explained: what it is, how fast it sinks, and all nine circles.
 function descentPanelHTML(s) {
   const d = s.descent;
   const c = CIRCLES[d.depth - 1];
-  const both = s.players.every((p) => p.factions.includes('Demons'));
   return `<div class="overlay descent-info" data-act="closeDescent"><div class="panel descent-panel" data-act="descentPanel">
     <h2>${icon('flame')} The Descent</h2>
-    <p class="dp-lead">A Demon is in this battle, so it slowly sinks into Hell. Each <b>Circle of Hell</b> changes the rules for <b>both players</b>.</p>
-    <div class="dp-how">
-      <div><b>Health a Demon player pays</b><span>1 point for each Health</span></div>
-      <div><b>Any minion dying</b><span>1 point each, on either side</span></div>
-    </div>
-    <p class="dp-need">Every <b>${d.need} points</b> sinks the battle one circle deeper${both ? ' (doubled: two Demon players are fighting)' : ''}.
-      ${CIRCLES[d.depth] ? `Next circle in <b>${d.need - d.points}</b>.` : 'You are at the bottom of Hell.'}</p>
+    <p class="dp-lead">A Demon is in this battle, so it sinks through Dante's nine <b>Circles of Hell</b>, one circle each round. Each circle changes the rules for <b>both players</b>.</p>
+    <p class="dp-need">Round 1 is Limbo and round 9 is Treachery, the frozen bottom of Hell. Baphomet drags the battle one circle further.
+      ${CIRCLES[d.depth] ? `Next round: <b>${esc(CIRCLES[d.depth].name)}</b>.` : 'You are at the bottom of Hell.'}</p>
     <ol class="dp-circles">${CIRCLES.map((x) => `<li class="${x.n < d.depth ? 'past' : ''} ${x.n === d.depth ? 'now' : ''}"><i>${ROMAN[x.n - 1]}</i><b>${esc(x.name)}</b><span>${esc(x.text)}</span>${x.n === d.depth ? '<em>You are here</em>' : ''}</li>`).join('')}</ol>
     <p class="sub">${c ? `Only the current circle's rule is active: ${esc(c.name)}.` : 'The battle is still at the gates. Only the current circle\'s rule is ever active.'} Baphomet, Lilith and Satan grow stronger the deeper you go.</p>
     <button data-act="closeDescent">Got it</button>
