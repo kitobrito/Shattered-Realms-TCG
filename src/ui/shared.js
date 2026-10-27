@@ -1,7 +1,7 @@
 // Rendering helpers shared by every screen: card markup, the big card,
 // keyword glossary, art lookup and text fitting.
 
-import { ART, FUSION_HERO_ART, HERO_ART } from '../cards/art-manifest.js';
+import { ART, FUSION_HERO_ART, HERO_ART, RAGE_RUNNER_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
 import { getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
@@ -53,6 +53,8 @@ const ART_FOCUS_Y = { bubble_slime: '58%' };
 const artFocus = (card) => (ART_FOCUS_Y[card.id] ? ` style="object-position: 50% ${ART_FOCUS_Y[card.id]}"` : '');
 // Image for a card; Hybrids and other created cards use their source card's art.
 export const artOf = (card) => { const path = ART[card.id] ?? (card.artFrom ? ART[card.artFrom] : undefined); return path && artSrc(path); };
+// A minion on the board: a Rage Runner wears the look of the faction it burst out of.
+export const minionArtOf = (m, card) => (card.id === 'rage_runner' && RAGE_RUNNER_ART[m.lookFaction] ? artSrc(RAGE_RUNNER_ART[m.lookFaction]) : artOf(card));
 
 // Hero portrait for a faction (designer-provided art), if there is one yet.
 export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[faction]);
@@ -154,7 +156,7 @@ function ribbonSVG(name, type) {
 // A live stat that differs from the printed card: green up, red down.
 const statClass = (now, printed) => (now == null || printed == null ? '' : now > printed ? 'up' : now < printed ? 'down' : '');
 
-export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass = '', extra = '', small = false } = {}) {
+export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass = '', extra = '', small = false, art: artOver = null } = {}) {
   // Like Hearthstone: damaged Health is red even on a buffed minion; otherwise compare with the printed stat.
   const hpClass = maxHealth != null && health < maxHealth ? 'down' : statClass(health, card.health);
   const { incomplete } = validateCard(card);
@@ -162,10 +164,10 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
     : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap' : 'Spell';
   const faction = fslug(card.faction);
-  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete });
+  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver });
   return `
     <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.legendary ? 'legend' : ''}">
-      <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
+      <div class="bc-art">${artOver ?? artOf(card) ? `<img src="${artOver ?? artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <img class="bc-frame" src="art/frames/${card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell'}.png" alt="" draggable="false">
       <i class="bc-sock sock-cost"></i>${card.type === 'minion' ? '<i class="bc-sock sock-atk"></i><i class="bc-sock sock-hp"></i>' : ''}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
@@ -196,7 +198,7 @@ function sigilHTML(card) {
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes',
   'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age']);
-function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete }) {
+function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
@@ -209,7 +211,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
     : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
     <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>
-      <div class="bc-art">${artOf(card) ? `<img src="${artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
+      <div class="bc-art">${artOver ?? artOf(card) ? `<img src="${artOver ?? artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       <img class="bc-frame" src="${frameSrc}" alt="" draggable="false">
       ${legend ? '' : `<i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>`}

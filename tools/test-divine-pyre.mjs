@@ -91,6 +91,15 @@ test('A burning character cannot be healed', () => {
   if (m.health !== 5) return `healed to ${m.health}`;
 });
 
+test('The Health Potion (going second) heals 3 but never above full (no Overheal)', () => {
+  const m = blank(0, 0, 10); m.health = 9;
+  play(0, give(0, 'health_potion'), m.uid);
+  if (m.health !== 10 || m.maxHealth !== 10) return `health ${m.health}/${m.maxHealth}`;
+  m.health = 4;
+  play(0, give(0, 'health_potion'), m.uid);
+  if (m.health !== 7) return `healed to ${m.health}`;
+});
+
 test('Holy Flame deals double to Dark / Undead', () => {
   const z = undead(1, 0, 10);
   if (!getCard(z.cardId).tribes.includes('Zombie')) return 'not a zombie';

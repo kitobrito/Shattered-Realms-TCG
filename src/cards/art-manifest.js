@@ -1377,3 +1377,26 @@ export const FUSION_HERO_ART = {
   'ice-age-void': 'art/fusion-heroes/ice-age-void.jpg',
   'ice-age-zombies': 'art/fusion-heroes/ice-age-zombies.jpg',
 };
+
+// Rage Runners wear the look of the faction of the Infected minion they burst out of (art only).
+export const RAGE_RUNNER_ART = {
+  Acidic: 'art/zombies/rage_runner-acidic.jpg',
+  Aliens: 'art/zombies/rage_runner-aliens.jpg',
+  Bees: 'art/zombies/rage_runner-bees.jpg',
+  Demons: 'art/zombies/rage_runner-demons.jpg',
+  Dinosaurs: 'art/zombies/rage_runner-dinosaurs.jpg',
+  Divine: 'art/zombies/rage_runner-divine.jpg',
+  Dragons: 'art/zombies/rage_runner-dragons.jpg',
+  Fungus: 'art/zombies/rage_runner-fungus.jpg',
+  Ghosts: 'art/zombies/rage_runner-ghosts.jpg',
+  'Ice Age': 'art/zombies/rage_runner-ice-age.jpg',
+  Lycanthropes: 'art/zombies/rage_runner-lycanthropes.jpg',
+  Plants: 'art/zombies/rage_runner-plants.jpg',
+  Radioactive: 'art/zombies/rage_runner-radioactive.jpg',
+  Robots: 'art/zombies/rage_runner-robots.jpg',
+  Sharks: 'art/zombies/rage_runner-sharks.jpg',
+  Ultraterrestrials: 'art/zombies/rage_runner-ultraterrestrials.jpg',
+  Vampires: 'art/zombies/rage_runner-vampires.jpg',
+  Void: 'art/zombies/rage_runner-void.jpg',
+  Zombies: 'art/zombies/rage_runner-zombies.jpg',
+};

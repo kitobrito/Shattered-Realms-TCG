@@ -11,7 +11,7 @@ import { BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, P
 import { hasBoardFx } from './circle-fx.js';
 import { getSettings } from './settings.js';
 import { isMuted, play as playSound } from './sound.js';
-import { artOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
+import { artOf, minionArtOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
 // ---- Pieces ------------------------------------------------------------------
 
@@ -172,7 +172,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
   const card = getCard(m.cardId);
   const atk = effectiveAttack(m);
   // A minion remade into another form (Blood Shade) wears that form's art.
-  const art = artOf(m.look ? getCard(m.look) ?? card : card);
+  const art = m.look ? artOf(getCard(m.look) ?? card) : minionArtOf(m, card);
   const kws = allKeywords(m).map(kwSlug);
   const taunt = kws.includes('taunt');
   if (wardGame !== s) { wardGame = s; wardSince.clear(); }

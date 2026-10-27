@@ -23,7 +23,7 @@ import * as drag from './drag.js';
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
-import { artOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
+import { artOf, minionArtOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
 import { cardMatchesQuery, queryWords } from '../cards/card-search.js';
@@ -3091,7 +3091,7 @@ function showPreview(target) {
   if (m?.kind === 'minion') {
     const kws = [...new Set([...m.keywords, ...(m.tempKeywords ?? []), ...(m.lingerKeywords ?? []).map((x) => x.k)])];
     const atk = m.attack + m.tempAttack + (m.lingerAttack ?? []).reduce((t, x) => t + x.amount, 0);
-    live = { attack: Math.max(0, atk), health: m.health, maxHealth: m.maxHealth, extra: kws.length ? `<br><i class="live-kw">Now: ${esc(kws.join(', '))}</i>` : '' };
+    live = { attack: Math.max(0, atk), health: m.health, maxHealth: m.maxHealth, art: minionArtOf(m, card), extra: kws.length ? `<br><i class="live-kw">Now: ${esc(kws.join(', '))}</i>` : '' };
   }
   const note = target.dataset.history ? `<div class="preview-note">${esc(target.dataset.history)}</div>` : '';
   const el = previewEl();
