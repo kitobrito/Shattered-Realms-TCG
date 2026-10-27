@@ -1,7 +1,6 @@
-// Living boards: the Circles of Hell (Demons' Descent) and the realm boards. A canvas over the
-// painting brings each board to life from a list of layers (circle-fx-defs.js for the circles,
-// board-fx-defs.js for the realms), all placed in the painting's own pixels (landscape
-// 1024x572, portrait 459x1024):
+// Living boards: the realm boards and the Circles of Hell (Demons' Descent). A canvas over the
+// painting brings each board to life from a list of layers (board-fx-defs.js), all placed in
+// the painting's own pixels (landscape 1024x572, portrait 459x1024):
 //
 //   plate      (automatic) the painting with the moving sprites painted out, drawn first, so no
 //              still copy shows behind anything that moves (tools/board-fx.py)
@@ -9,13 +8,22 @@
 //              each swaying around its own root with its own phase; gusts of wind roll
 //              across the board and bend them in turn
 //
-//   mask       a light mask cut from the painting (tools/circle-fx-masks.py), drawn glowing:
+//   mask       a light mask cut from the painting (tools/board-fx.py), drawn glowing:
 //              anim pulse | flicker | wave (a band of light travelling along it) | seq (runes
 //              lighting in turn) | drift (the glow wavers about, for spirits)
+//   flow       the painted liquid itself moves: lava, acid, water or honey slides along `dir`
+//              inside its own shape (two copies a half cycle apart cross-fade, so it never
+//              jumps), with an optional brightening so molten things seem to churn
+//   warp       a patch of the painting (foliage, kelp, banners) bends in waves out from its
+//              root edge (`base`), slice by slice, so it ripples without tearing; clipped to a
+//              mask so only the leaves move; gusts bend it further
+//   crawlers   many small painted creatures (bees on the comb), each wandering and twitching
+//              a little on its own; a tap nearby makes them scurry
 //   echo       a feathered copy of part of the painting that moves (sway, bob, rock, breathe):
 //              ghosts drifting, hands clawing, boulders straining, flames licking
 //   particles  embers, ash, motes, wisps, rain, bubbles, petals, sparks, glints (sampled from a
-//              mask, so coins glint only on coins), drips, flies, smoke, snow (drifting flakes at
+//              mask, so coins glint only on coins), drips, flies, smoke, bees (striped, wings
+//              blurring, a shadow below; they wander and turn), snow (drifting flakes at
 //              three depths, nearer ones bigger and faster, pushed along by the gusts)
 //   fog        soft banks of mist drifting along an edge
 //   rays       shafts of light, breathing
@@ -32,12 +40,11 @@
 // flash of the circle's light with sparks flying out (flare); its glyph is flung by main.js.
 // Any layer can wait for a tap: `idle` scales it at rest (0 = hidden until kicked) and
 // `kickDur` sets how long a kick lasts (a campfire flaring up for a few seconds).
+// `autoKick: [min, max]` kicks a layer by itself now and then (an egg wobbling as it hatches).
 // Canvas 2D at 60 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
 import { BOARD_MASKS } from '../cards/board-fx-masks.js';
-import { CIRCLE_MASKS } from '../cards/circle-fx-masks.js';
 import { BOARD_FX } from './board-fx-defs.js';
-import { CIRCLE_FX } from './circle-fx-defs.js';
 import { play } from './sound.js';
 
 const TAU = Math.PI * 2;
@@ -77,7 +84,7 @@ function maskPoints(img, box, min = 140, cap = 600) {
 }
 
 // A feathered copy of part of the painting, for echoes.
-function featherCrop(img, [x0, y0, x1, y1], [IW, IH], feather) {
+function featherCrop(img, [x0, y0, x1, y1], [IW, IH], feather, round = false) {
   const sx = img.naturalWidth / IW, sy = img.naturalHeight / IH;
   const w = Math.round((x1 - x0) * sx), h = Math.round((y1 - y0) * sy);
   const c = document.createElement('canvas');
@@ -86,6 +93,14 @@ function featherCrop(img, [x0, y0, x1, y1], [IW, IH], feather) {
   g.drawImage(img, x0 * sx, y0 * sy, w, h, 0, 0, w, h);
   g.globalCompositeOperation = 'destination-in';
   const f = Math.max(1, feather * sx);
+  if (round) {
+    // A soft disc instead of a rectangle (things that spin).
+    const r = Math.min(w, h) / 2;
+    const gr = g.createRadialGradient(w / 2, h / 2, Math.max(0, r - f), w / 2, h / 2, r);
+    gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    return c;
+  }
   // Soft edges on all four sides: a horizontal and a vertical alpha ramp.
   const gx = g.createLinearGradient(0, 0, w, 0);
   gx.addColorStop(0, 'rgba(0,0,0,0)'); gx.addColorStop(Math.min(0.49, f / w), '#000');
@@ -142,19 +157,19 @@ function boltPath(a, b, jag, depth = 0) {
   return { main: pts, branches };
 }
 
-// Which boards have living effects: a circle number (1-9) or a realm board's file name.
-export const hasBoardFx = (key, orient) => !!(typeof key === 'number' ? CIRCLE_FX : BOARD_FX)[`${key}-${orient}`];
+// A circle of Hell is a number (its board is 'circleN'); a realm board is its file name.
+const fxKey = (key) => (typeof key === 'number' ? `circle${key}` : key);
+export const hasBoardFx = (key, orient) => !!BOARD_FX[`${fxKey(key)}-${orient}`];
 export const startCircleFx = (host, n, orient) => startBoardFx(host, n, orient);
 
 export async function startBoardFx(host, key, orient) {
-  const circle = typeof key === 'number';
-  const def = (circle ? CIRCLE_FX : BOARD_FX)[`${key}-${orient}`];
+  const def = BOARD_FX[`${fxKey(key)}-${orient}`];
   if (!def) return null;
   const [IW, IH] = CIRCLE_SIZE[orient];
-  const maskInfo = (circle ? CIRCLE_MASKS : BOARD_MASKS)[`${key}-${orient}`] ?? {};
-  const file = circle ? `circle${key}` : key;
+  const maskInfo = BOARD_MASKS[`${fxKey(key)}-${orient}`] ?? {};
+  const file = fxKey(key);
   const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
-  const needBoard = def.layers.some((l) => l.type === 'echo');
+  const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers' || l.type === 'warp');
   const usedMasks = new Set(def.layers.flatMap((l) => [l.mask, l.area?.mask, l.flashMask].filter(Boolean)));
   const masks = {};
   await Promise.all([...usedMasks].map(async (name) => {
@@ -192,7 +207,8 @@ export async function startBoardFx(host, key, orient) {
   // ---- Per-layer state ----
   const layers = def.layers.map((l, i) => {
     const st = { ...l, i, seed: Math.random() * 100, parts: [], acc: 0, kick: -99, next: rand(...(l.every ?? [3, 8])) };
-    if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6);
+    if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6, l.round);
+    if (l.type === 'crawlers') st.items = l.boxes.map((b) => ({ box: b, crop: featherCrop(board, b, [IW, IH], l.feather ?? 4), seed: Math.random() * 100, kick: -99 }));
     if (l.type === 'sprites' && masks[l.mask]?.parts) {
       // Each part: its box, its spot in the atlas, its root (bottom centre) and its own rhythm.
       st.parts = masks[l.mask].parts.map(([x0, y0, x1, y1, ax, ay]) => ({
@@ -273,6 +289,9 @@ export async function startBoardFx(host, key, orient) {
     const sp = st.speed ?? 1;
     if (k === 'ember') { p.vx = rand(-4, 4) * sp; p.vy = rand(-26, -12) * sp; }
     else if (k === 'ash') { p.vx = rand(-5, 5) * sp; p.vy = rand(6, 16) * sp; }
+    else if (k === 'spirit') { p.vx = (Math.random() < 0.5 ? -1 : 1) * rand(5, 12) * sp; p.vy = rand(-3, 3) * sp; }
+    else if (k === 'shadow') { const a = rand(0, TAU), v = rand(14, 24) * sp; p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v; p.turn = rand(-0.6, 0.6); }
+    else if (k === 'bee') { const a = rand(0, TAU), v = rand(22, 42) * sp; p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v; p.turn = rand(-2, 2); }
     else if (k === 'snow') { p.z = pick([0.45, 0.7, 1]); p.size *= p.z; p.vx = (st.drift ?? 14) * p.z * rand(0.7, 1.3) * sp; p.vy = rand(-2, 6) * p.z * sp; }
     else if (k === 'mote') { p.vx = rand(-3, 3) * sp; p.vy = rand(-4, 2) * sp; }
     else if (k === 'wisp') { p.vx = rand(-3, 3) * sp; p.vy = rand(-14, -6) * sp; }
@@ -312,6 +331,17 @@ export async function startBoardFx(host, key, orient) {
       if (k === 'wisp' || k === 'mote' || k === 'smoke' || k === 'petal') p.vx += wave(t * 0.8, p.seed) * 6 * dt;
       if (k === 'ember') { p.vx += wave(t * 1.4, p.seed) * 18 * dt; }
       if (k === 'spark') p.vy += 60 * dt;
+      if (k === 'bee' || k === 'shadow') {
+        // Wander: the heading drifts, and they turn back toward the middle of their area.
+        const a = st.area?.length ? st.area : [0, 0, IW, IH];
+        const tm = k === 'shadow' ? 0.25 : 1;
+        p.turn += rand(-6, 6) * dt * tm; p.turn = Math.max(-3 * tm, Math.min(3 * tm, p.turn));
+        let h = Math.atan2(p.vy, p.vx) + p.turn * dt;
+        const cx = (a[0] + a[2]) / 2, cy = (a[1] + a[3]) / 2;
+        if (p.x < a[0] || p.x > a[2] || p.y < a[1] || p.y > a[3]) h = Math.atan2(cy - p.y, cx - p.x);
+        const v = Math.hypot(p.vx, p.vy);
+        p.vx = Math.cos(h) * v; p.vy = Math.sin(h) * v;
+      }
       if (k === 'snow') {
         // Flakes wander, and a passing gust shoves them along (the nearest ones the most).
         const g = W0 ? gustAt(p.x, p.y) : 0;
@@ -328,7 +358,7 @@ export async function startBoardFx(host, key, orient) {
   function drawParticles(st, t) {
     const k = st.kind;
     const c = st.color ?? [255, 200, 120];
-    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' ? 'source-over' : 'lighter');
+    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' || k === 'bee' || k === 'shadow' ? 'source-over' : 'lighter');
     for (const p of st.parts) {
       const life = p.age / p.life;
       const fade = Math.min(1, p.age / 0.3) * (1 - life);
@@ -356,6 +386,49 @@ export async function startBoardFx(host, key, orient) {
         ctx.globalAlpha = fade * (st.alpha ?? 0.25);
         ctx.drawImage(softSprite(c, 64), x - g, y - g, g * 2, g * 2);
         ctx.globalAlpha = 1;
+      } else if (k === 'spirit') {
+        // A pale ghost drifting by: a soft glowing body with a trailing wisp and two dark eyes,
+        // fading in and out of sight.
+        const a = Math.sin(Math.min(1, life) * Math.PI) * (st.alpha ?? 0.35);
+        const bob = Math.sin(t * 1.4 + p.seed) * r * 0.6;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = a * 0.6;
+        ctx.drawImage(softSprite(c, 64), x - r * 2.2 - p.vx * 0.25 * S, y - r * 1.5 + bob, r * 4.4, r * 4.2);
+        ctx.globalAlpha = a;
+        ctx.drawImage(softSprite(c, 64, 0.35), x - r * 1.4, y - r * 2.2 + bob, r * 2.8, r * 3.4);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = a * 1.4;
+        ctx.fillStyle = 'rgba(10,20,40,0.9)';
+        ctx.beginPath(); ctx.ellipse(x - r * 0.45, y - r * 1.2 + bob, r * 0.22, r * 0.32, 0, 0, TAU); ctx.ellipse(x + r * 0.45, y - r * 1.2 + bob, r * 0.22, r * 0.32, 0, 0, TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (k === 'shadow') {
+        // A shark's shadow gliding over the sand: body, tail that sweeps, two fins.
+        const ang = Math.atan2(p.vy, p.vx);
+        const a = Math.min(1, p.age / 1.2, (p.life - p.age) / 1.2) * (st.alpha ?? 0.22);
+        const sw = Math.sin(t * 3 + p.seed) * 0.35;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+        ctx.globalAlpha = a; ctx.fillStyle = rgba(c, 1);
+        ctx.beginPath(); ctx.ellipse(0, 0, r * 3, r * 0.75, 0, 0, TAU); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-r * 2.6, 0); ctx.lineTo(-r * 4.2, -r * (1 + sw)); ctx.lineTo(-r * 3.6, 0); ctx.lineTo(-r * 4.2, r * (1 - sw)); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r * 0.6, 0); ctx.lineTo(-r * 0.4, -r * 1.8); ctx.lineTo(-r * 0.6, r * 1.8); ctx.closePath(); ctx.fill();
+        ctx.restore(); ctx.globalAlpha = 1;
+      } else if (k === 'bee') {
+        // Shadow on the ground, wings a flicker of pale blur, then the striped body.
+        const ang = Math.atan2(p.vy, p.vx);
+        const a = Math.min(1, p.age / 0.4, (p.life - p.age) / 0.4);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+        ctx.globalAlpha = a * 0.25; ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.ellipse(r * 2, r * 3, r * 1.3, r * 0.7, 0, 0, TAU); ctx.fill();
+        ctx.globalAlpha = a * (0.45 + 0.35 * Math.sin(t * 90 + p.seed));
+        ctx.fillStyle = '#eef6ff';
+        ctx.beginPath(); ctx.ellipse(-r * 0.1, -r * 0.9, r * 0.9, r * 0.5, -0.4, 0, TAU); ctx.ellipse(-r * 0.1, r * 0.9, r * 0.9, r * 0.5, 0.4, 0, TAU); ctx.fill();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = rgba(c, 1);
+        ctx.beginPath(); ctx.ellipse(0, 0, r * 1.3, r * 0.65, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = rgba(st.stripe ?? [30, 20, 10], 1);
+        ctx.fillRect(-r * 0.5, -r * 0.62, r * 0.32, r * 1.24); ctx.fillRect(r * 0.1, -r * 0.6, r * 0.3, r * 1.2);
+        ctx.beginPath(); ctx.ellipse(-r * 1.15, 0, r * 0.35, r * 0.3, 0, 0, TAU); ctx.fill();
+        ctx.restore(); ctx.globalAlpha = 1;
       } else if (k === 'snow') {
         // A soft flake with a faint shadow on the ground below it (further below the nearer it is).
         const a = fade * (st.alpha ?? 0.9);
@@ -511,6 +584,99 @@ export async function startBoardFx(host, key, orient) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
+  // ---- Flow: liquid sliding inside its own shape ----
+  const flowOff = document.createElement('canvas');
+  const flowCtx = flowOff.getContext('2d');
+  function drawFlow(st, t) {
+    const m = masks[st.mask];
+    if (!m) return;
+    const [x0, y0, x1, y1] = m.box;
+    const dw = Math.max(1, Math.ceil((x1 - x0) * SX)), dh = Math.max(1, Math.ceil((y1 - y0) * SY));
+    if (flowOff.width !== dw || flowOff.height !== dh) { flowOff.width = dw; flowOff.height = dh; } else flowCtx.clearRect(0, 0, dw, dh);
+    const [ux, uy] = st.dir ?? [1, 0];
+    const len = Math.hypot(ux, uy) || 1;
+    const dist = (st.dist ?? 18);          // how far a copy slides before it fades out (image px)
+    const per = st.period ?? 3;            // seconds per slide
+    const kick = kicked(st, t, 1.5);
+    const tt = t * (1 + kick * 2);
+    flowCtx.globalCompositeOperation = 'source-over';
+    for (const ph of [0, 0.5]) {
+      const f = ((tt / per + ph + st.seed) % 1 + 1) % 1;
+      const w = 1 - Math.abs(2 * f - 1);    // 0 -> 1 -> 0 over the slide
+      const d = (f - 0.5) * dist;
+      flowCtx.globalAlpha = w;
+      flowCtx.drawImage(m.img, (ux / len) * d * SX, (uy / len) * d * SY, dw, dh);
+    }
+    // Keep it inside the liquid's own shape.
+    flowCtx.globalAlpha = 1;
+    flowCtx.globalCompositeOperation = 'destination-in';
+    flowCtx.drawImage(m.img, 0, 0, dw, dh);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = Math.min(1, (st.alpha ?? 0.85) + kick * 0.15);
+    ctx.drawImage(flowOff, x0 * SX, y0 * SY, dw, dh);
+    if (st.glow) {
+      // Molten things churn: a slow brightening wave rides on top.
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = st.glow * (0.5 + 0.5 * Math.sin(t * TAU / (st.glowPeriod ?? 2.5) + st.seed)) + kick * 0.3;
+      ctx.drawImage(flowOff, x0 * SX, y0 * SY, dw, dh);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // ---- Warp: foliage rippling out from its roots ----
+  const warpOff = document.createElement('canvas');
+  const warpCtx = warpOff.getContext('2d');
+  function drawWarp(st, t) {
+    const [x0, y0, x1, y1] = st.box;
+    const bw = x1 - x0, bh = y1 - y0;
+    const dw = Math.max(1, Math.ceil(bw * SX)), dh = Math.max(1, Math.ceil(bh * SY));
+    if (warpOff.width !== dw || warpOff.height !== dh) { warpOff.width = dw; warpOff.height = dh; } else warpCtx.clearRect(0, 0, dw, dh);
+    const base = st.base ?? 'bottom';
+    const vertical = base === 'left' || base === 'right'; // slices are columns, displaced up/down
+    const span = vertical ? bw : bh;
+    const step = st.slice ?? 2;
+    const kick = kicked(st, t, 1.6);
+    const amp = (st.amp ?? 2.5) * (1 + kick * 1.5);
+    const per = st.period ?? 4;
+    const sx = board.naturalWidth / IW, sy = board.naturalHeight / IH;
+    const dir = W0?.dir ?? 1;
+    for (let a = 0; a < span; a += step) {
+      // Distance from the root, 0..1: the further out, the more it bends.
+      const d = base === 'bottom' ? (span - a) / span : base === 'top' ? a / span : base === 'right' ? (span - a) / span : a / span;
+      const g = W0 ? gustAt(vertical ? x0 + a : (x0 + x1) / 2, vertical ? (y0 + y1) / 2 : y0 + a) : 0;
+      const off = (Math.sin(TAU * t / per - d * (st.wave ?? 2.2) + st.seed) * amp + g * (st.gustAmp ?? amp * 1.6) * dir) * d ** 1.4;
+      if (vertical) warpCtx.drawImage(board, (x0 + a) * sx, y0 * sy, step * sx, bh * sy, a * SX, off * SY, step * SX + 0.6, dh);
+      else warpCtx.drawImage(board, x0 * sx, (y0 + a) * sy, bw * sx, step * sy, off * SX, a * SY, dw, step * SY + 0.6);
+    }
+    const m = st.mask && masks[st.mask];
+    if (m) {
+      // Only the leaves move: clip to the mask (positioned relative to this patch).
+      warpCtx.globalCompositeOperation = 'destination-in';
+      warpCtx.drawImage(m.img, (m.box[0] - x0) * SX, (m.box[1] - y0) * SY, (m.box[2] - m.box[0]) * SX, (m.box[3] - m.box[1]) * SY);
+      warpCtx.globalCompositeOperation = 'source-over';
+    }
+    ctx.drawImage(warpOff, x0 * SX, y0 * SY, dw, dh);
+  }
+
+  // ---- Crawlers: small painted creatures wandering on the spot ----
+  function drawCrawlers(st, t) {
+    const amp = st.amp ?? 1.6;
+    for (const it of st.items) {
+      const k = Math.max(kicked(st, t, 1.5), Math.max(0, 1 - (t - it.kick) / 1.5));
+      const a = amp * (1 + k * 2);
+      // Mostly still, then a little scuttle: the wander only runs part of the time.
+      const go = Math.max(0, Math.sin(t * 0.55 + it.seed)) ** 2 + k;
+      const dx = wave(t * 0.9 * (1 + k), it.seed) * a * go, dy = wave(t * 0.8 * (1 + k), it.seed + 5) * a * go;
+      const rot = wave(t * 1.3, it.seed + 9) * 0.12 * go;
+      const [x0, y0, x1, y1] = it.box, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      ctx.save();
+      ctx.translate((cx + dx) * SX, (cy + dy) * SY); ctx.rotate(rot);
+      ctx.drawImage(it.crop, (x0 - cx) * SX, (y0 - cy) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
+      ctx.restore();
+    }
+  }
+
   // ---- Echoes ----
   function drawEcho(st, t) {
     const [x0, y0, x1, y1] = st.box;
@@ -525,6 +691,7 @@ export async function startBoardFx(host, key, orient) {
     else if (m.kind === 'drift') { dx = wave(t * (m.speed ?? 0.4), st.seed) * amp; dy = wave(t * (m.speed ?? 0.4) * 0.7, st.seed + 2) * amp * 0.7; }
     else if (m.kind === 'rock') rot = Math.sin(ph) * amp * Math.PI / 180;
     else if (m.kind === 'breathe') sc = 1 + Math.sin(ph) * amp * 0.01;
+    else if (m.kind === 'spin') rot = t * (m.speed ?? 6) * Math.PI / 180 + kick * 0.6;
     else if (m.kind === 'claw') { dy = -Math.abs(Math.sin(ph)) * amp; rot = Math.sin(ph * 2) * amp * 0.4 * Math.PI / 180; }
     else { rot = Math.sin(ph) * amp * Math.PI / 180; dx = Math.sin(ph) * amp * 0.3; }
     const pv = m.pivot ?? [(x0 + x1) / 2, (y0 + y1) / 2];
@@ -607,9 +774,11 @@ export async function startBoardFx(host, key, orient) {
         const fh = h * grow * (0.55 + 0.45 * (0.5 + 0.5 * wave(t * 3.2, seed)));
         const lean = wave(t * 1.6, seed + 5) * w * 0.15;
         const g = ctx.createLinearGradient(0, y * SY, 0, (y - fh) * SY);
-        g.addColorStop(0, `rgba(255,${200 + j * 8},90,${0.42 * (st.alpha ?? 1)})`);
-        g.addColorStop(0.45, `rgba(255,120,30,${0.3 * (st.alpha ?? 1)})`);
-        g.addColorStop(1, 'rgba(200,40,0,0)');
+        // palette: [core, middle, tip] colours (default: orange fire; dragonfire can be blue).
+        const [c0, c1, c2] = st.palette ?? [[255, 200, 90], [255, 120, 30], [200, 40, 0]];
+        g.addColorStop(0, rgba([c0[0], Math.min(255, c0[1] + j * 8), c0[2]], 0.42 * (st.alpha ?? 1)));
+        g.addColorStop(0.45, rgba(c1, 0.3 * (st.alpha ?? 1)));
+        g.addColorStop(1, rgba(c2, 0));
         ctx.fillStyle = g;
         const bw = w * 0.22;
         ctx.beginPath();
@@ -621,7 +790,7 @@ export async function startBoardFx(host, key, orient) {
       }
       // Heat glow under the flames.
       ctx.globalAlpha = vis * (0.35 + 0.25 * wave(t * 2.5, i) + kick * 0.4);
-      ctx.drawImage(softSprite([255, 120, 30], 64), (x - w) * SX, (y - h * 0.9) * SY, w * 2 * SX, h * 1.4 * SY);
+      ctx.drawImage(softSprite(st.palette?.[1] ?? [255, 120, 30], 64), (x - w) * SX, (y - h * 0.9) * SY, w * 2 * SX, h * 1.4 * SY);
       ctx.globalAlpha = vis;
     });
     ctx.restore();
@@ -870,8 +1039,15 @@ export async function startBoardFx(host, key, orient) {
     if (plate) ctx.drawImage(plate, 0, 0, W, H);
     stepWind(dt);
     for (const st of layers) {
+      if (st.autoKick) {
+        st.autoNext ??= t + rand(...st.autoKick);
+        if (t >= st.autoNext) { st.kick = t; st.autoNext = t + rand(...st.autoKick); }
+      }
       switch (st.type) {
         case 'sprites': drawSprites(st, t); break;
+        case 'crawlers': drawCrawlers(st, t); break;
+        case 'flow': drawFlow(st, t); break;
+        case 'warp': drawWarp(st, t); break;
         case 'mask': drawMask(st, t); break;
         case 'echo': drawEcho(st, t); break;
         case 'particles': stepParticles(st, dt, t); drawParticles(st, t); break;
@@ -901,8 +1077,9 @@ export async function startBoardFx(host, key, orient) {
     const t = (performance.now() - start) / 1000;
     if (p.sound) play(p.sound);
     for (const id of [].concat(p.kick ?? [])) { const l = layers.find((q) => q.id === id); if (l) l.kick = t; }
-    // Grass and twigs right around the tap rustle.
+    // Grass and twigs right around the tap rustle; creatures near it scurry.
     for (const l of layers) if (l.type === 'sprites') for (const q of l.parts) if (Math.hypot(q.px - x, q.py - y) < (p.rustle ?? 40)) q.kick = t;
+    for (const l of layers) if (l.type === 'crawlers') for (const q of l.items) if (Math.hypot((q.box[0] + q.box[2]) / 2 - x, (q.box[1] + q.box[3]) / 2 - y) < (p.rustle ?? 60)) q.kick = t;
     if (p.strike != null) { const l = layers.find((q) => q.id === p.strike); if (l) strike(l, t, l.zones[p.zone ?? 0]); }
     if (p.loose != null) { const l = layers.find((q) => q.id === p.loose); if (l) loose(l, t, l.shooters[p.shooter ?? 0]); }
     if (p.flare) {

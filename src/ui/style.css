@@ -5158,3 +5158,21 @@ body.reduced-motion .descent { display: none; }
 }
 /* Ice Age: weathered bone and ivory, frosted on top. */
 .arena.frame-bone { --fr-line: #3a2c1c; --fr-mid: #cdbd9b; --fr-hi: #f4f8ff; }
+/* Acidic: pale cave stone, lit green from above. */
+.arena.frame-acid { --fr-line: #142208; --fr-mid: #9fa88c; --fr-hi: #c8ff6a; }
+/* Aliens: dark chitin with a bioluminescent teal edge. */
+.arena.frame-chitin { --fr-line: #04161a; --fr-mid: #2c4a4c; --fr-hi: #5affe8; }
+/* Bees: carved beeswax, honey-lit. */
+.arena.frame-wax { --fr-line: #3a2204; --fr-mid: #d8a032; --fr-hi: #ffe39a; }
+/* Demons: black iron, red-hot along the top. */
+.arena.frame-iron { --fr-line: #0c0404; --fr-mid: #3a2a26; --fr-hi: #ff6a2a; }
+/* Dinosaurs (and other natural boards): weathered sandstone, sunlit on top. */
+.arena.frame-stone { --fr-line: #2a1c0c; --fr-mid: #a88a5c; --fr-hi: #ffe2a0; }
+/* Lycanthropes: dark wood bound in moonlit silver. */
+.arena.frame-silverwood { --fr-line: #0c0a08; --fr-mid: #4a3a2a; --fr-hi: #dfe8ff; }
+/* Sharks: sea-worn brass porthole, sunlit aqua edge. */
+.arena.frame-coral { --fr-line: #062428; --fr-mid: #b08a4a; --fr-hi: #9ff8ff; }
+/* Ultraterrestrials: gold and violet, folded light. */
+.arena.frame-astral { --fr-line: #1a0c2c; --fr-mid: #c8a04a; --fr-hi: #e8c8ff; }
+/* Void: black obsidian with a violet rim of starlight. */
+.arena.frame-void { --fr-line: #08040e; --fr-mid: #2a1c3a; --fr-hi: #c89cff; }

@@ -9,6 +9,7 @@ import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
 import { BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { hasBoardFx } from './circle-fx.js';
+import { getSettings } from './settings.js';
 import { isMuted, play as playSound } from './sound.js';
 import { artOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
@@ -559,6 +560,8 @@ function gameOverHTML(s, me, stats, ctx = {}) {
 
 // Painted boards are a 16:9 stage; on tall, narrow screens (phones held upright)
 // it would be a thin strip, so those keep the drawn table instead.
+// The board a player's matches are played on: their first realm's, or the Basic board (Settings).
+export const boardFaction = (faction) => (getSettings().basicBoard ? 'Basic' : faction);
 export const paintedBoards = () => window.matchMedia?.('(min-aspect-ratio: 6/5)').matches ?? true;
 // An upright phone or tablet gets the portrait battle layout (style.css "PORTRAIT").
 export const portraitLayout = () => window.matchMedia?.('(max-aspect-ratio: 5/6)').matches ?? false;
@@ -669,35 +672,37 @@ export function boardHTML(ctx) {
   const charCls = (uid) => (attackers.has(uid) ? 'can-attack' : '');
   const shiftable = new Set(legal.filter((a) => a.type === 'transform').map((a) => a.minion));
   const faction = fslug(mp.factions[0]);
+  // The board shown: your first realm's, or the plain one if you picked it in Settings.
+  const bf = boardFaction(mp.factions[0]);
   // The painting itself is drawn by board-layer.js (behind the arena), so it survives re-renders.
   // Demons' Descent: once the battle has sunk, BOTH players fight on the current circle's board.
   const depth = s.descent?.depth ?? 0;
   const circle = depth > 0 ? depth : null;
-  const board = paintedBoards() && (circle ? CIRCLE_BOARDS.land[circle].src : BOARD_ART[mp.factions[0]]);
+  const board = paintedBoards() && (circle ? CIRCLE_BOARDS.land[circle].src : BOARD_ART[bf]);
   // Portrait: the faction's portrait board (its own painting, lined up by layoutPortraitBoard);
   // without one, the landscape board fills the screen behind the table, darkened.
   const portrait = !board && portraitLayout();
-  const pb = portrait ? (circle ? CIRCLE_BOARDS.portrait[circle] : PORTRAIT_BOARDS[mp.factions[0]]) : null;
+  const pb = portrait ? (circle ? CIRCLE_BOARDS.portrait[circle] : PORTRAIT_BOARDS[bf]) : null;
   // Boards with cut-out props show the clean plate (the props are drawn over it).
-  const art = portrait && (circle ? pb.src : BOARD_CUTS.portrait?.[mp.factions[0]]?.plate ?? pb?.src ?? BOARD_ART[mp.factions[0]]);
+  const art = portrait && (circle ? pb.src : BOARD_CUTS.portrait?.[bf]?.plate ?? pb?.src ?? BOARD_ART[bf]);
   const artUrl = art ? new URL(art, document.baseURI).href : '';
   const artStyle = art ? `style="--art: url('${artUrl}')"` : '';
   const pbCls = pb ? `p-board opp-${pb.opp[4]} me-${pb.me[4]}` : '';
   // Landscape boards with their own layout: frame and battlefield positions as CSS
   // variables (container units of the 16:9 arena), plus the animated corner props.
-  const lb = board ? (circle ? CIRCLE_BOARDS.land[circle] : LANDSCAPE_BOARDS[mp.factions[0]]) : null;
+  const lb = board ? (circle ? CIRCLE_BOARDS.land[circle] : LANDSCAPE_BOARDS[bf]) : null;
   const lbStyle = lb ? landscapeVars(lb) : '';
   // Living realm boards (board-fx-defs.js) and boards whose painting has no hero frames.
-  const fxKey = circle ? null : boardKey(mp.factions[0]);
+  const fxKey = circle ? null : boardKey(bf);
   const pfx = circle || (pb && hasBoardFx(fxKey, 'portrait') ? fxKey : null);
   const frame = (pb ?? lb)?.frame;
 
   return `
-    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''} ${frame ? `drawn-frame frame-${frame}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : mp.factions[0]}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
+    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''} ${frame ? `drawn-frame frame-${frame}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : bf}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
       ${pb ? `<div class="pboard-img" style="background-image: url('${artUrl}')"></div>` : ''}
       ${pb && pfx ? `<div class="pboard-fx" data-fx="${pfx}"></div>` : ''}
-      ${pb?.props ? propsHTML(pb.props, PORTRAIT_SIZE, artUrl, BOARD_CUTS.portrait?.[mp.factions[0]]?.cuts) : ''}
-      ${lb?.props ? propsHTML(lb.props, LANDSCAPE_SIZE, new URL(lb.src, document.baseURI).href, BOARD_CUTS.land?.[mp.factions[0]]?.cuts) : ''}
+      ${pb?.props ? propsHTML(pb.props, PORTRAIT_SIZE, artUrl, BOARD_CUTS.portrait?.[bf]?.cuts) : ''}
+      ${lb?.props ? propsHTML(lb.props, LANDSCAPE_SIZE, new URL(lb.src, document.baseURI).href, BOARD_CUTS.land?.[bf]?.cuts) : ''}
       ${s.descent ? descentHTML(s.descent) : ''}
       ${s.descent && ctx.descentIntro ? descentCalloutHTML() : ''}
       ${lethal ? '<div class="lethal-tag">Lethal!</div>' : ''}

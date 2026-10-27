@@ -12,7 +12,7 @@ painting is art/boards-v2/<board>.jpg or art/boards-portrait/<board>.jpg) this w
   * plate   the painting with the sprites' pixels painted out (inpainted), drawn under the
             moving sprites so no still copy shows behind them.
 
-A spec entry is { name: [rule, [box, ...], options] } like tools/circle-fx-masks.py, plus:
+A spec entry is { name: [rule, [box, ...], options] } plus:
   thin: k          keep only strokes thinner than k px (twigs, not rock outlines)
   split: {join, min, max, pad}   cut into separate sprites: strokes closer than `join` px
                    belong to one sprite; parts smaller than `min` px are dropped
@@ -65,6 +65,8 @@ RULES = {
     'twig': lambda h, s, v: 1 - ramp(v, 0.28, 0.4),
     # green leaves, fronds, grass
     'leaf': lambda h, s, v: hue_near(h, 105, 45) * ramp(s, 0.3, 0.55) * ramp(v, 0.25, 0.55),
+    # meadow grass in dim or warm light: olive to yellow-green
+    'grass': lambda h, s, v: hue_near(h, 80, 40) * ramp(s, 0.18, 0.35) * ramp(v, 0.28, 0.45),
     # snow: bright and nearly grey
     'snow': lambda h, s, v: ramp(v, 0.8, 0.93) * (1 - ramp(s, 0.1, 0.22)),
     # pale ice and frozen water: light blue to white
@@ -79,6 +81,46 @@ RULES = {
     'stone': lambda h, s, v: (1 - ramp(s, 0.12, 0.25)) * ramp(v, 0.35, 0.55) * (1 - ramp(v, 0.85, 0.95)),
     # ash and soot: dark grey
     'ash': lambda h, s, v: (1 - ramp(s, 0.15, 0.3)) * (1 - ramp(v, 0.25, 0.4)),
+    # glowing green acid and slime
+    'acid': lambda h, s, v: hue_near(h, 105, 40) * ramp(s, 0.45, 0.7) * ramp(v, 0.5, 0.75),
+    # the brightest acid (glowing puddles, lit slime)
+    'acidglow': lambda h, s, v: hue_near(h, 100, 40) * ramp(s, 0.4, 0.65) * ramp(v, 0.72, 0.92),
+    # bioluminescent teal and cyan
+    'biolum': lambda h, s, v: hue_near(h, 175, 35) * ramp(s, 0.3, 0.55) * ramp(v, 0.55, 0.8),
+    # lit violet and magenta (alien flesh, nebulae, magic)
+    'violet': lambda h, s, v: hue_near(h, 285, 40) * ramp(s, 0.3, 0.55) * ramp(v, 0.45, 0.75),
+    # glossy honey and amber: deep orange, bright
+    'honey': lambda h, s, v: hue_near(h, 34, 16) * ramp(s, 0.65, 0.85) * ramp(v, 0.7, 0.9),
+    # molten lava and embers: hot orange to yellow, bright
+    'lava': lambda h, s, v: hue_near(h, 28, 26) * ramp(s, 0.45, 0.75) * ramp(v, 0.55, 0.9),
+    # the hottest, brightest lava (yellow-white cores)
+    'lavahot': lambda h, s, v: hue_near(h, 40, 22) * ramp(s, 0.3, 0.6) * ramp(v, 0.82, 0.97),
+    # flames: orange-yellow, very bright
+    'fire': lambda h, s, v: hue_near(h, 32, 24) * ramp(s, 0.3, 0.6) * ramp(v, 0.72, 0.98),
+    # water, rivers, wet sand: pale blue-white
+    'water': lambda h, s, v: hue_near(h, 195, 35) * ramp(s, 0.04, 0.14) * ramp(v, 0.6, 0.8),
+    # a river catching the sky: pale grey-blue water plus its brightest reflections
+    'riverpale': lambda h, s, v: np.maximum((1 - ramp(s, 0.18, 0.32)) * ramp(v, 0.42, 0.6), ramp(v, 0.92, 0.99) * ramp(s, 0.3, 0.5) * 0.8),
+    # gold leaf and gilt: yellow, bright
+    'gold': lambda h, s, v: hue_near(h, 45, 16) * ramp(s, 0.4, 0.65) * ramp(v, 0.6, 0.85),
+    # glowing electric blue (conveyor lights, energy)
+    'blueglow': lambda h, s, v: hue_near(h, 200, 25) * ramp(s, 0.45, 0.7) * ramp(v, 0.6, 0.85),
+    # warm lamp and furnace light
+    'warmlight': lambda h, s, v: hue_near(h, 35, 25) * ramp(s, 0.35, 0.6) * ramp(v, 0.8, 0.95),
+    # blood and red stained glass: deep red, saturated
+    'blood': lambda h, s, v: hue_near(h, 356, 16) * ramp(s, 0.6, 0.85) * ramp(v, 0.45, 0.8),
+    # roses and rose leaves (vines along the walls)
+    'roses': lambda h, s, v: np.maximum(hue_near(h, 352, 18) * ramp(s, 0.55, 0.8) * ramp(v, 0.3, 0.6), hue_near(h, 120, 40) * ramp(s, 0.3, 0.5) * ramp(v, 0.2, 0.45)),
+    # ghostly green mist: soft, light, green-teal
+    'mist': lambda h, s, v: hue_near(h, 150, 35) * ramp(s, 0.25, 0.45) * ramp(v, 0.45, 0.7),
+    # pale fog and spirits: bright, nearly grey
+    'fogpale': lambda h, s, v: ramp(v, 0.7, 0.88) * (1 - ramp(s, 0.08, 0.2)),
+    # lightning: very bright pink/violet/white
+    'bolt': lambda h, s, v: ramp(v, 0.86, 0.98) * np.maximum(hue_near(h, 320, 50), 1 - ramp(s, 0.2, 0.4)),
+    # swamp water: murky green
+    'swamp': lambda h, s, v: hue_near(h, 135, 45) * ramp(s, 0.22, 0.4) * ramp(v, 0.1, 0.22),
+    # rain puddles: pale, greyish, brighter than the mud
+    'puddle': lambda h, s, v: (1 - ramp(s, 0.15, 0.3)) * ramp(v, 0.42, 0.62),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),

@@ -41,4 +41,275 @@ SPEC = {
         'hands': ['ochre', [[384, 592, 459, 640], [368, 940, 440, 990]], {'grow': 1, 'blur': 0.8, 'show': [0, 255, 0]}],
         'rock': ['stone', [[372, 584, 459, 664], [356, 930, 448, 1010]], {'exclude': [[384, 592, 459, 640], [368, 940, 440, 990]], 'show': [120, 120, 255]}],
     },
+    # ---- Acidic: an acid cavern ----
+    'acidic-land': {
+        'pools': ['acid', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'glow': ['acidglow', FULL_L, {'blur': 1, 'show': [255, 255, 0]}],
+        'crystal': ['acidglow', [[880, 400, 1000, 548]], {'blur': 0.6, 'show': [255, 0, 255]}],
+        'flask': ['acid', [[40, 10, 122, 126]], {'blur': 0.6, 'show': [0, 255, 255]}],
+    },
+    'acidic-portrait': {
+        'pools': ['acid', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'glow': ['acidglow', FULL_P, {'blur': 1, 'show': [255, 255, 0]}],
+        'crystal': ['acidglow', [[368, 556, 436, 694], [356, 886, 436, 1014]], {'blur': 0.6, 'show': [255, 0, 255]}],
+        'flask': ['acid', [[28, 22, 88, 108]], {'blur': 0.6, 'show': [0, 255, 255]}],
+    },
+    # ---- Aliens: a crashed hive ship ----
+    'aliens-land': {
+        'veins': ['biolum', FULL_L, {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [0, 255, 255]}],
+        'bulb': ['bright', [[880, 0, 1024, 95]], {'blur': 0.8, 'show': [255, 255, 0]}],
+        'sac': ['any', [[812, 396, 934, 506]], {'hp': [6, 1, 0.02, 0.12], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    'aliens-portrait': {
+        'veins': ['biolum', FULL_P, {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [0, 255, 255]}],
+        'bulb': ['bright', [[360, 15, 450, 115]], {'blur': 0.8, 'show': [255, 255, 0]}],
+        'sac': ['any', [[312, 846, 436, 974]], {'hp': [6, 1, 0.02, 0.12], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    # ---- Bees: inside a giant hive ----
+    'bees-land': {
+        'honey': ['honey', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0]}],
+        'comb': ['bright', FULL_L, {'hp': [3, 1, 0.04, 0.12], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[860, 10, 1000, 150]]}],
+        'jar': ['honey', [[48, 440, 128, 548]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'bees-portrait': {
+        'honey': ['honey', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0]}],
+        'comb': ['bright', FULL_P, {'hp': [3, 1, 0.04, 0.12], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[330, 10, 450, 150]]}],
+        'jar': ['honey', [[30, 890, 104, 990]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Demons: the shore of a lake of fire ----
+    'demons-land': {
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0], 'exclude': [[820, 400, 952, 522], [835, 15, 950, 128]]}],
+        'hot': ['lavahot', FULL_L, {'blur': 1, 'scale': 0.5, 'show': [255, 255, 0], 'exclude': [[820, 400, 952, 522], [835, 15, 950, 128]]}],
+        'cauldron': ['lava', [[828, 410, 944, 470]], {'blur': 0.6, 'show': [255, 0, 255]}],
+        'book': ['any', [[66, 412, 182, 545]], {'hp': [4, 1, 0.04, 0.14], 'show': [0, 255, 255]}],
+    },
+    'demons-portrait': {
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0], 'exclude': [[322, 852, 428, 952], [338, 36, 434, 120]]}],
+        'hot': ['lavahot', FULL_P, {'blur': 1, 'scale': 0.5, 'show': [255, 255, 0], 'exclude': [[322, 852, 428, 952], [338, 36, 434, 120]]}],
+        'cauldron': ['lava', [[330, 860, 420, 905]], {'blur': 0.6, 'show': [255, 0, 255]}],
+        'book': ['any', [[46, 858, 158, 992]], {'hp': [4, 1, 0.04, 0.14], 'show': [0, 255, 255]}],
+    },
+    # ---- Dinosaurs: a prehistoric riverbank ----
+    'dinosaurs-land': {
+        'leaves': ['leaf', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[40, 36, 150, 128]]}],
+        'river': ['riverpale', [[420, 0, 640, 95], [560, 60, 1024, 205]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 160, 255]}],
+        'lava': ['lava', [[700, 0, 790, 40], [900, 460, 980, 530]], {'blur': 0.6, 'show': [255, 120, 0]}],
+    },
+    'dinosaurs-portrait': {
+        'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[36, 46, 144, 152]]}],
+        'river': ['water', [[310, 240, 459, 700]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 160, 255]}],
+        'lava': ['lava', [[340, 880, 410, 950]], {'blur': 0.6, 'show': [255, 120, 0]}],
+    },
+    # ---- Divine: a temple above the clouds ----
+    'divine-land': {
+        'gold': ['gold', FULL_L, {'blur': 0.6, 'scale': 0.5, 'show': [255, 200, 0]}],
+        'star': ['bright', [[880, 430, 1006, 556]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'divine-portrait': {
+        'gold': ['gold', FULL_P, {'blur': 0.6, 'scale': 0.5, 'show': [255, 200, 0]}],
+        'star': ['bright', [[338, 878, 446, 1002]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Dragons: a dragon's volcanic lair ----
+    'dragons-land': {
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0], 'exclude': [[20, 400, 140, 545], [815, 10, 950, 140]]}],
+        'coins': ['gold', FULL_L, {'scale': 0.5, 'show': [255, 220, 0], 'exclude': [[420, 0, 600, 150], [420, 400, 600, 572]]}],
+        'egg': ['any', [[48, 418, 156, 545]], {'hp': [5, 1, 0.03, 0.12], 'show': [255, 0, 255]}],
+        'fire': ['bright', [[830, 10, 940, 120]], {'blur': 0.8, 'show': [0, 160, 255]}],
+    },
+    'dragons-portrait': {
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0], 'exclude': [[30, 860, 130, 990], [330, 20, 440, 150]]}],
+        'coins': ['gold', FULL_P, {'scale': 0.5, 'show': [255, 220, 0], 'exclude': [[150, 0, 310, 150], [150, 780, 310, 920]]}],
+        'egg': ['any', [[36, 870, 124, 990]], {'hp': [5, 1, 0.03, 0.12], 'show': [255, 0, 255]}],
+        'fire': ['bright', [[336, 25, 432, 120]], {'blur': 0.8, 'show': [0, 160, 255]}],
+    },
+    # ---- Fungus: a glowing fungal cavern ----
+    'fungus-land': {
+        'violet': ['violet', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'teal': ['biolum', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 255]}],
+        'orange': ['honey', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 140, 0]}],
+        'threads': ['bright', FULL_L, {'hp': [3, 1, 0.05, 0.16], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[0, 0, 1024, 140]]}],
+    },
+    'fungus-portrait': {
+        'violet': ['violet', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'teal': ['biolum', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 255]}],
+        'orange': ['honey', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 140, 0]}],
+        'threads': ['bright', FULL_P, {'hp': [3, 1, 0.05, 0.16], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[0, 0, 459, 130]]}],
+    },
+    # ---- Lycanthropes: a moonlit forest clearing ----
+    'lycanthropes-land': {
+        'grass': ['grass', [[150, 120, 900, 520]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 45}, 'show': [0, 255, 0]}],
+        'moon': ['bright', [[100, 35, 180, 110]], {'blur': 1, 'show': [255, 255, 0]}],
+        'cloak': ['any', [[778, 392, 968, 508]], {'show': [255, 0, 255]}],
+    },
+    'lycanthropes-portrait': {
+        'grass': ['grass', [[60, 120, 380, 760]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0]}],
+        'moon': ['bright', [[35, 30, 105, 95]], {'blur': 1, 'show': [255, 255, 0]}],
+        'cloak': ['any', [[52, 792, 132, 952]], {'show': [255, 0, 255]}],
+    },
+    # ---- Plants: an overgrown garden ----
+    'plants-land': {
+        'leaves': ['leaf', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[440, 20, 590, 140], [440, 410, 590, 555]]}],
+        'pond': ['water', [[790, 420, 1024, 572]], {'blur': 0.8, 'show': [0, 160, 255]}],
+        'flower': ['any', [[52, 26, 206, 172]], {'show': [255, 0, 255]}],
+    },
+    'plants-portrait': {
+        'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[160, 100, 300, 260], [155, 760, 305, 910]]}],
+        'pond': ['water', [[300, 830, 459, 1000]], {'blur': 0.8, 'show': [0, 160, 255]}],
+        'flower': ['any', [[30, 112, 136, 220]], {'show': [255, 0, 255]}],
+    },
+    # ---- Radioactive: an abandoned nuclear plant ----
+    'radioactive-land': {
+        'sludge': ['acid', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'hot': ['acidglow', FULL_L, {'blur': 1, 'scale': 0.5, 'show': [255, 255, 0]}],
+        'lamp': ['warmlight', [[790, 40, 900, 200]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    'radioactive-portrait': {
+        'sludge': ['acid', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'hot': ['acidglow', FULL_P, {'blur': 1, 'scale': 0.5, 'show': [255, 255, 0]}],
+        'lamp': ['warmlight', [[360, 70, 440, 180]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    # ---- Robots: a steampunk robot foundry ----
+    'robots-land': {
+        'tracks': ['blueglow', [[340, 80, 690, 572]], {'blur': 0.6, 'show': [0, 160, 255]}],
+        'furnace': ['warmlight', [[880, 180, 980, 330], [700, 0, 760, 80], [300, 10, 340, 70]], {'blur': 1, 'show': [255, 120, 0]}],
+    },
+    'robots-portrait': {
+        'tracks': ['blueglow', [[50, 50, 410, 920]], {'blur': 0.6, 'show': [0, 160, 255]}],
+        'furnace': ['warmlight', [[110, 0, 140, 40], [340, 0, 370, 40]], {'blur': 1, 'show': [255, 120, 0]}],
+    },
+    # ---- Sharks: a sunlit shallow sea ----
+    'sharks-land': {
+        'caustics': ['bright', FULL_L, {'hp': [4, 1, 0.04, 0.14], 'scale': 0.5, 'show': [255, 255, 255]}],
+        'water': ['biolum', FULL_L, {'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}],
+        'kelp': ['grass', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'pearl': ['bright', [[140, 440, 172, 476]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'sharks-portrait': {
+        'caustics': ['bright', FULL_P, {'hp': [4, 1, 0.04, 0.14], 'scale': 0.5, 'show': [255, 255, 255]}],
+        'water': ['biolum', FULL_P, {'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}],
+        'kelp': ['grass', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'pearl': ['bright', [[64, 908, 92, 936]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Ultraterrestrials: an impossible pocket dimension ----
+    'ultraterrestrials-land': {
+        'plane': ['bright', FULL_L, {'blur': 1.5, 'scale': 0.5, 'show': [255, 255, 255]}],
+        'stars': ['bright', FULL_L, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'crystal': ['any', [[64, 398, 176, 528]], {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'ultraterrestrials-portrait': {
+        'plane': ['bright', FULL_P, {'blur': 1.5, 'scale': 0.5, 'show': [255, 255, 255]}],
+        'stars': ['bright', FULL_P, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'crystal': ['any', [[40, 820, 140, 940]], {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Vampires: a gothic courtyard under a red moon ----
+    'vampires-land': {
+        'blood': ['blood', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 0], 'exclude': [[380, 0, 640, 30]]}],
+        'roses': ['roses', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'moon': ['any', [[380, 0, 640, 40]], {'hp': [6, 1, 0.02, 0.1], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    'vampires-portrait': {
+        'blood': ['blood', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 0], 'exclude': [[120, 0, 340, 60]]}],
+        'roses': ['roses', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'moon': ['any', [[120, 0, 340, 70]], {'hp': [6, 1, 0.02, 0.1], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    # ---- Void: a floating island in deep space ----
+    'void-land': {
+        'nebula': ['violet', FULL_L, {'blur': 1.5, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'stars': ['bright', FULL_L, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'cracks': ['bright', [[200, 120, 820, 470]], {'hp': [2, 1, 0.1, 0.3], 'show': [0, 255, 255]}],
+    },
+    'void-portrait': {
+        'nebula': ['violet', FULL_P, {'blur': 1.5, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'stars': ['bright', FULL_P, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'cracks': ['bright', [[60, 180, 400, 840]], {'hp': [2, 1, 0.1, 0.3], 'show': [0, 255, 255]}],
+    },
+    # ---- Zombies: a misty graveyard at night ----
+    'zombies-land': {
+        'mist': ['mist', FULL_L, {'blur': 2, 'scale': 0.5, 'show': [0, 255, 120]}],
+        'lantern': ['warmlight', [[900, 60, 976, 176]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    'zombies-portrait': {
+        'mist': ['mist', FULL_P, {'blur': 2, 'scale': 0.5, 'show': [0, 255, 120]}],
+        'lantern': ['bright', [[380, 50, 422, 120]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    # ---- The Circles of Hell (new paintings) ----
+    'circle1-land': {
+        'fog': ['fogpale', FULL_L, {'blur': 2, 'scale': 0.5, 'exclude': [[0, 0, 1024, 60]]}],
+    },
+    'circle1-portrait': {
+        'fog': ['fogpale', FULL_P, {'blur': 2, 'scale': 0.5, 'exclude': [[0, 0, 459, 90]]}],
+    },
+    'circle2-land': {
+        'storm': ['violet', FULL_L, {'blur': 1.5, 'scale': 0.5}],
+        'bolts': ['bolt', FULL_L, {'blur': 0.6}],
+    },
+    'circle2-portrait': {
+        'storm': ['violet', FULL_P, {'blur': 1.5, 'scale': 0.5}],
+        'bolts': ['bolt', FULL_P, {'blur': 0.6}],
+    },
+    'circle3-land': {
+        'puddles': ['puddle', FULL_L, {'blur': 1, 'scale': 0.5, 'exclude': [[0, 0, 1024, 150]]}],
+    },
+    'circle3-portrait': {
+        'puddles': ['puddle', FULL_P, {'blur': 1, 'scale': 0.5, 'exclude': [[0, 0, 459, 200]]}],
+    },
+    'circle4-land': {
+        'gold': ['gold', FULL_L, {'scale': 0.5}],
+        'molten': ['lavahot', FULL_L, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle4-portrait': {
+        'gold': ['gold', FULL_P, {'scale': 0.5}],
+        'molten': ['lavahot', FULL_P, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle5-land': {
+        'swamp': ['swamp', FULL_L, {'blur': 1.5, 'scale': 0.5}],
+    },
+    'circle5-portrait': {
+        'swamp': ['swamp', FULL_P, {'blur': 1.5, 'scale': 0.5}],
+    },
+    'circle6-land': {
+        'fire': ['fire', FULL_L, {'blur': 1}],
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle6-portrait': {
+        'fire': ['fire', FULL_P, {'blur': 1}],
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle7-land': {
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+        'blood': ['blood', FULL_L, {'blur': 0.8}],
+    },
+    'circle7-portrait': {
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+        'blood': ['blood', FULL_P, {'blur': 0.8}],
+    },
+    'circle8-land': {
+        'green': ['acid', FULL_L, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+        'gold': ['gold', FULL_L, {'blur': 0.6}],
+    },
+    'circle8-portrait': {
+        'green': ['acid', FULL_P, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+        'gold': ['gold', FULL_P, {'blur': 0.6}],
+    },
+    'circle9-land': {
+        'ice': ['ice', FULL_L, {'blur': 1, 'scale': 0.5}],
+        'snow': ['snow', FULL_L, {'scale': 0.5}],
+    },
+    'circle9-portrait': {
+        'ice': ['ice', FULL_P, {'blur': 1, 'scale': 0.5}],
+        'snow': ['snow', FULL_P, {'scale': 0.5}],
+    },
+    # ---- Basic: a quiet hilltop that belongs to no realm ----
+    'basic-land': {
+        'grass': ['grass', [[0, 0, 1024, 572]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0], 'exclude': [[0, 400, 210, 572], [480, 430, 740, 572], [820, 380, 1024, 572]]}],
+        'leaves': ['leaf', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 200, 0]}],
+    },
+    'basic-portrait': {
+        'grass': ['grass', [[0, 0, 459, 1024]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0], 'exclude': [[0, 880, 120, 1024], [200, 900, 459, 1024]]}],
+        'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 200, 0]}],
+    },
 }
