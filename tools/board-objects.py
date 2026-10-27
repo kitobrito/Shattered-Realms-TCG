@@ -97,6 +97,9 @@ HINTS = {
     'robots-portrait/tools': {'method': 'poly', 'refine': 3, 'polys': [[[365, 935], [372, 930], [385, 927], [430, 912], [437, 915], [442, 925], [447, 940], [440, 945], [440, 970], [420, 980], [395, 990], [375, 995], [360, 990], [352, 975], [350, 945]]]},
     'robots-portrait/bot': {'expand': 30, 'fg_polys': [[[44, 943], [50, 945], [52, 952], [45, 958], [40, 965], [38, 980], [36, 992], [30, 992], [29, 975], [31, 958], [37, 948]]]},
     'robots-land/tools': {'method': 'poly', 'refine': 3, 'polys': [[[825, 437], [845, 430], [905, 420], [920, 413], [935, 418], [945, 445], [948, 470], [935, 470], [933, 505], [905, 515], [880, 525], [850, 543], [835, 535], [818, 520], [813, 485], [815, 455]]]},
+    # Vampires (upright): the coffin and the gargoyle on its pedestal, dark on dark.
+    'vampires-portrait/coffin': {'method': 'poly', 'refine': 3, 'polys': [[[372, 868], [405, 855], [440, 860], [456, 872], [452, 925], [438, 965], [418, 988], [380, 995], [345, 982], [330, 968], [345, 925], [360, 890]]]},
+    'vampires-portrait/garg': {'method': 'poly', 'refine': 3, 'polys': [[[8, 110], [15, 80], [30, 60], [48, 52], [60, 62], [62, 45], [75, 42], [86, 52], [88, 80], [90, 100], [88, 118], [100, 135], [105, 165], [30, 170], [15, 150]]]},
     'ice-age-portrait/skull': {'method': 'poly', 'polys': [[[40.6, 13], [51, 16.75], [61, 25.5], [59, 38], [70, 49], [73.75, 55], [85, 59], [98.75, 60.5], [104, 55.5], [105, 48], [100, 41.75], [92, 36], [102.5, 39], [107.5, 45.5], [108, 55.5], [102.5, 63], [90, 64], [77, 62], [78, 70], [79, 83], [77.5, 93], [69, 96], [60, 93], [56, 83], [55, 64], [45, 58], [33.75, 54], [32.5, 44], [27.5, 29], [28.75, 21.75], [35, 15.5]]],
                                'holes': [[[61, 67], [72, 68], [74, 83], [71, 90], [65, 92], [61, 85]]]},
     'ice-age-portrait/spear2': {'method': 'poly', 'polys': [[[99, 955], [98, 966], [90, 976], [62, 1008], [57, 1016], [53, 1013], [55, 1006], [83, 975], [87, 966], [94, 958]]]},
@@ -114,15 +117,16 @@ FOLIAGE = {
     'dinosaurs-land': {'*': {'hsv': GREEN}}, 'dinosaurs-portrait': {'*': {'hsv': GREEN}},
     # Plants: the hero frames are wreaths of leaves themselves; they stay still.
     'plants-land': {'*': {'hsv': LEAF, 'exclude': [[415, 0, 615, 150], [410, 395, 620, 572]]},
-                    'warp3': {'hsv': LEAF, 'exclude': [[415, 0, 615, 150]],
+                    'topG': {'hsv': LEAF, 'exclude': [[415, 0, 615, 150]],
                               'fg_polys': [[[655, 10], [700, 0], [760, 0], [790, 20], [760, 45], [740, 55], [715, 60], [700, 75], [680, 90], [668, 85], [660, 60], [655, 35]]]}},
     'plants-portrait': {'*': {'hsv': LEAF, 'exclude': [[155, 105, 305, 270], [145, 755, 315, 920]]}},
-    'basic-land': {'*': {'hsv': GREEN}, 'warp4': {'hsv': GREEN, 'exclude': [[470, 440, 770, 572]]}},
+    'basic-land': {'*': {'hsv': GREEN}, 'bushes': {'hsv': GREEN, 'exclude': [[470, 440, 770, 572]]}},
     'basic-portrait': {'*': {'hsv': GREEN}},
-    'sharks-land': {'*': {'hsv': KELP}, 'warp5': {'hsv': KELP, 'exclude': [[840, 420, 1024, 572]]}},
-    'sharks-portrait': {'*': {'hsv': KELP}},
-    'vampires-land': {'*': {'hsv': ROSES}, 'warp5': {'hsv': ROSES, 'exclude': [[0, 330, 120, 440]]},
-                      'warp7': {'hsv': ROSES, 'exclude': [[395, 470, 610, 572]]}},
+    # Sharks: thin kelp fronds only (no growing into the coral around them).
+    'sharks-land': {'*': {'hsv': KELP, 'refine': 0}, 'kelpB': {'hsv': KELP, 'refine': 0, 'exclude': [[840, 420, 1024, 572]]}},
+    'sharks-portrait': {'*': {'hsv': KELP, 'refine': 0}},
+    'vampires-land': {'*': {'hsv': ROSES}, 'rosesL': {'hsv': ROSES, 'exclude': [[0, 330, 120, 440]]},
+                      'rosesB': {'hsv': ROSES, 'exclude': [[395, 470, 610, 572]]}},
     'vampires-portrait': {'*': {'hsv': ROSES}},
     'lycanthropes-land': {'*': {'hsv': CLOAK}}, 'lycanthropes-portrait': {'*': {'hsv': CLOAK}},
 }
@@ -257,6 +261,8 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
             # Whole leaves the colours only half find (a big leaf with a shaded side).
             cv2.fillPoly(hard, [np.array(poly, np.int32)], 1)
         hard[:b[1]] = 0; hard[b[3]:] = 0; hard[:, :b[0]] = 0; hard[:, b[2]:] = 0
+        if foliage.get('taken') is not None:
+            hard[cv2.dilate(foliage['taken'], np.ones((3, 3), np.uint8), iterations=2) > 0] = 0
         return finish(img, hard, hard.astype(np.float32), 0.5, True) if hard.sum() else None
     x0, y0, x1, y1 = rect(box, H, W)
     bw, bh = x1 - x0, y1 - y0
@@ -416,7 +422,12 @@ def main():
         d = defs[key]
         img = cv2.imread(board_path(key))
         items = {}
-        for iid, box, layer in moving_items(d):
+        # Objects first, foliage after: a ripple never takes pixels that already belong to an object
+        # (or to an earlier ripple), so nothing is drawn twice.
+        taken = np.zeros(img.shape[:2], np.uint8)
+        foliage_last = lambda x: (x[2]['type'] == 'warp' and bool(x[2].get('mask')), (x[1][2] - x[1][0]) * (x[1][3] - x[1][1]))
+        order = sorted(moving_items(d), key=foliage_last)  # and the smaller ripples (kelp on an anchor) before the wide ones
+        for iid, box, layer in order:
             fol = None
             if layer['type'] == 'warp' and layer.get('mask'):
                 f = FOLIAGE.get(key, {})
@@ -424,7 +435,11 @@ def main():
                 if not fol:
                     sys.exit(f'{key}/{iid}: a foliage warp needs a FOLIAGE entry')
             hint = HINTS.get(f'{key}/{iid}') or DEFAULT_HINTS.get(f"{key}/{iid.split('.')[0]}", {})
+            if fol:
+                fol = dict(fol, taken=taken)
             r = cut(img, box, matter, hint, layer, fol, key, iid)
+            if r:
+                taken |= r['mask']
             if r and HINTS.get(f'{key}/{iid}', {}).get('cover'):
                 # Scenery painted in front of the object (a cloud across a sun) stays in front of it.
                 c = HINTS[f'{key}/{iid}']['cover']
