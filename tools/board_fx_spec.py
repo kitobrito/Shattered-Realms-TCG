@@ -157,4 +157,24 @@ SPEC = {
         'pond': ['water', [[300, 830, 459, 1000]], {'blur': 0.8, 'show': [0, 160, 255]}],
         'flower': ['any', [[30, 112, 136, 220]], {'show': [255, 0, 255]}],
     },
+    # ---- Radioactive: an abandoned nuclear plant ----
+    'radioactive-land': {
+        'sludge': ['acid', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'hot': ['acidglow', FULL_L, {'blur': 1, 'scale': 0.5, 'show': [255, 255, 0]}],
+        'lamp': ['warmlight', [[790, 40, 900, 200]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    'radioactive-portrait': {
+        'sludge': ['acid', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'hot': ['acidglow', FULL_P, {'blur': 1, 'scale': 0.5, 'show': [255, 255, 0]}],
+        'lamp': ['warmlight', [[360, 70, 440, 180]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    # ---- Robots: a steampunk robot foundry ----
+    'robots-land': {
+        'tracks': ['blueglow', [[340, 80, 690, 572]], {'blur': 0.6, 'show': [0, 160, 255]}],
+        'furnace': ['warmlight', [[880, 180, 980, 330], [700, 0, 760, 80], [300, 10, 340, 70]], {'blur': 1, 'show': [255, 120, 0]}],
+    },
+    'robots-portrait': {
+        'tracks': ['blueglow', [[50, 50, 410, 920]], {'blur': 0.6, 'show': [0, 160, 255]}],
+        'furnace': ['warmlight', [[110, 0, 140, 40], [340, 0, 370, 40]], {'blur': 1, 'show': [255, 120, 0]}],
+    },
 }

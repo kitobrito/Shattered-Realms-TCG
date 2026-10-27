@@ -871,4 +871,117 @@ export const BOARD_FX = {
       { area: [300, 830, 459, 1000], sound: 'splash', kick: ['pond', 'frog', 'pondFlow'], flare: [200, 240, 255], glyph: '🐸', burst: { layer: 'ripples', n: 4, at: [380, 910], spread: 30 } },
     ],
   },
+
+  // ---- Radioactive: an abandoned nuclear plant ------------------------------------------------
+  'radioactive-land': {
+    wind: null,
+    layers: [
+      // Features: the glowing sludge creeps and churns, bubbles, and gives off a toxic shimmer.
+      { id: 'sludgeFlow', type: 'flow', mask: 'sludge', dir: [0.3, 1], dist: 14, period: 3.6, alpha: 0.95, glow: 0.35, glowPeriod: 2.6 },
+      { id: 'sludge', type: 'mask', mask: 'sludge', anim: { kind: 'wave', along: 'y', band: 120, speed: 24 }, alpha: [0.05, 0.45], gain: 0.8, kickDur: 2 },
+      { id: 'hot', type: 'mask', mask: 'hot', anim: { kind: 'pulse', period: 2.2 }, alpha: [0.15, 0.6], bloom: 0.9, kickDur: 2 },
+      { type: 'particles', kind: 'bubble', area: { mask: 'sludge' }, rate: 6, max: 30, color: [190, 255, 90], size: [1, 2.4], life: [0.5, 1.2] },
+      // The barrel pours, the broken pipe dribbles sludge.
+      { id: 'pour', type: 'particles', kind: 'drip', from: [[176, 128, 4], [186, 136, 4]], rate: 4, max: 10, color: [150, 255, 60], size: [1.4, 2.2], life: [3, 4], fall: 30, splashColor: [180, 255, 90] },
+      { id: 'pipe', type: 'particles', kind: 'drip', from: [[862, 450, 3], [870, 456, 3]], rate: 3, max: 8, color: [150, 255, 60], size: [1.2, 2], life: [3, 4], fall: 60, splashColor: [180, 255, 90] },
+      // Top right, the caged work lamp flickers and buzzes, sometimes cutting out.
+      { id: 'lamp', type: 'mask', mask: 'lamp', anim: { kind: 'flicker', speed: 6 }, alpha: [0.1, 0.7], bloom: 1, kickDur: 1.5 },
+      { id: 'lampGlow', type: 'glow', points: [[848, 98, 70]], color: [255, 200, 110], anim: 'flicker', alpha: [0.08, 0.3], kickDur: 1.5 },
+      { id: 'lampSway', type: 'echo', box: [810, 40, 890, 140], feather: 6, motion: { kind: 'rock', amp: 1.2, period: 3.4, pivot: [870, 40], kickAmp: 4 } },
+      // Bottom left, the Geiger counter's needle twitches; tapped, it clicks wildly.
+      { id: 'needle', type: 'glow', points: [[130, 462, 6]], color: [255, 80, 60], anim: 'blink', period: 1.1, alpha: [0.2, 0.9], kickDur: 2 },
+      { id: 'gauge', type: 'echo', box: [94, 432, 176, 496], feather: 6, autoKick: [3, 7], motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.15, pivot: [135, 492] } },
+      // Air: radioactive motes drift, a sickly haze breathes, a hazard light pulses.
+      { type: 'fog', area: [-60, 0, 260, 572], count: 6, size: [60, 110], speed: 3, color: [90, 220, 60], alpha: 0.1, blend: 'lighter' },
+      { type: 'fog', area: [760, 0, 1084, 572], count: 6, size: [60, 110], speed: 3, color: [90, 220, 60], alpha: 0.1, blend: 'lighter' },
+      { id: 'motes', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 3, max: 30, color: [170, 255, 90], size: [0.6, 1.4], life: [3, 6], alpha: 0.75, speed: 0.7 },
+    ],
+    pokes: [
+      { area: [80, 40, 210, 160], sound: 'splash', kick: ['sludge', 'hot'], flare: [150, 255, 80], glyph: '☢️', burst: { layer: 'pour', n: 6, at: [180, 130], spread: 6 } },
+      { area: [790, 30, 910, 200], sound: 'beep', kick: ['lamp', 'lampGlow', 'lampSway'], flare: [255, 210, 120], glyph: '💡' },
+      { area: [50, 420, 200, 540], sound: 'beep', kick: ['needle', 'gauge'], flare: [255, 100, 60], glyph: '☢️' },
+      { area: [840, 380, 1000, 572], sound: 'drip', kick: ['sludge'], flare: [150, 255, 80], burst: { layer: 'pipe', n: 5, at: [866, 452], spread: 4 } },
+    ],
+  },
+  'radioactive-portrait': {
+    wind: null,
+    layers: [
+      { id: 'sludgeFlow', type: 'flow', mask: 'sludge', dir: [0.2, 1], dist: 12, period: 3.6, alpha: 0.95, glow: 0.35, glowPeriod: 2.6 },
+      { id: 'sludge', type: 'mask', mask: 'sludge', anim: { kind: 'wave', along: 'y', band: 120, speed: 24 }, alpha: [0.05, 0.45], gain: 0.8, kickDur: 2 },
+      { id: 'hot', type: 'mask', mask: 'hot', anim: { kind: 'pulse', period: 2.2 }, alpha: [0.15, 0.6], bloom: 0.9, kickDur: 2 },
+      { type: 'particles', kind: 'bubble', area: { mask: 'sludge' }, rate: 5, max: 26, color: [190, 255, 90], size: [1, 2.2], life: [0.5, 1.2] },
+      { id: 'pour', type: 'particles', kind: 'drip', from: [[78, 140, 4]], rate: 3.5, max: 8, color: [150, 255, 60], size: [1.3, 2], life: [3, 4], fall: 26, splashColor: [180, 255, 90] },
+      { id: 'pipe', type: 'particles', kind: 'drip', from: [[386, 878, 3]], rate: 3, max: 8, color: [150, 255, 60], size: [1.2, 1.9], life: [3, 4], fall: 60, splashColor: [180, 255, 90] },
+      { id: 'lamp', type: 'mask', mask: 'lamp', anim: { kind: 'flicker', speed: 6 }, alpha: [0.1, 0.7], bloom: 1, kickDur: 1.5 },
+      { id: 'lampGlow', type: 'glow', points: [[400, 122, 60]], color: [255, 200, 110], anim: 'flicker', alpha: [0.08, 0.3], kickDur: 1.5 },
+      { id: 'needle', type: 'glow', points: [[72, 912, 5]], color: [255, 80, 60], anim: 'blink', period: 1.1, alpha: [0.2, 0.9], kickDur: 2 },
+      { id: 'gauge', type: 'echo', box: [40, 880, 112, 940], feather: 5, autoKick: [3, 7], motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.15, pivot: [76, 938] } },
+      { type: 'fog', area: [-60, 0, 120, 1024], count: 6, size: [50, 90], speed: 3, color: [90, 220, 60], alpha: 0.1, blend: 'lighter' },
+      { type: 'fog', area: [360, 0, 520, 1024], count: 6, size: [50, 90], speed: 3, color: [90, 220, 60], alpha: 0.1, blend: 'lighter' },
+      { id: 'motes', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 3, max: 28, color: [170, 255, 90], size: [0.6, 1.3], life: [3, 6], alpha: 0.75, speed: 0.7 },
+    ],
+    pokes: [
+      { area: [10, 50, 130, 180], sound: 'splash', kick: ['sludge', 'hot'], flare: [150, 255, 80], glyph: '☢️', burst: { layer: 'pour', n: 6, at: [78, 140], spread: 5 } },
+      { area: [350, 60, 450, 190], sound: 'beep', kick: ['lamp', 'lampGlow'], flare: [255, 210, 120], glyph: '💡' },
+      { area: [20, 870, 140, 980], sound: 'beep', kick: ['needle', 'gauge'], flare: [255, 100, 60], glyph: '☢️' },
+    ],
+  },
+
+  // ---- Robots: a steampunk robot foundry ----------------------------------------------------
+  'robots-land': {
+    wind: null,
+    layers: [
+      // Features: both conveyor tracks run, light pulses down them like moving belts.
+      { id: 'beltFlow', type: 'flow', mask: 'tracks', dir: [0, 1], dist: 18, period: 0.9, alpha: 0.95 },
+      { id: 'tracks', type: 'mask', mask: 'tracks', anim: { kind: 'wave', along: 'y', band: 90, speed: 70 }, alpha: [0.1, 0.65], gain: 0.85, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'tracks' }, rate: 4, max: 14, color: [190, 240, 255], size: [0.8, 1.5], life: [0.3, 0.7] },
+      // The furnaces and lamps flicker with firelight.
+      { id: 'furnace', type: 'mask', mask: 'furnace', anim: { kind: 'flicker', speed: 3 }, alpha: [0.2, 0.75], bloom: 0.9, kickDur: 2 },
+      { id: 'furnaceGlow', type: 'glow', points: [[930, 255, 70], [728, 40, 30], [320, 40, 30]], color: [255, 150, 60], anim: 'flicker', alpha: [0.1, 0.32], kickDur: 2 },
+      // Corners. Top left, the big gear turns; sparks fly from the grinder.
+      { id: 'gear', type: 'echo', box: [146, 24, 302, 158], round: true, feather: 6, motion: { kind: 'spin', speed: 18 } },
+      { id: 'sparks', type: 'particles', kind: 'spark', from: [[140, 150, 6], [210, 210, 6], [910, 120, 6], [860, 410, 6], [70, 380, 6]], rate: 5, max: 40, color: [255, 190, 80], size: [0.7, 1.3], life: [0.4, 0.9] },
+      // Top right, the steam valve hisses.
+      { id: 'steam', type: 'particles', kind: 'smoke', from: [[790, 64, 8], [770, 40, 6]], rate: 2, max: 16, color: [220, 225, 235], size: [6, 10], life: [1.5, 2.5], alpha: 0.24, speed: 0.9 },
+      { id: 'valve', type: 'echo', box: [784, 32, 828, 76], round: true, feather: 4, motion: { kind: 'spin', speed: 0 } },
+      // Bottom left, the little repair bot hops on the spot, its eye blinking.
+      { id: 'bot', type: 'echo', box: [86, 400, 190, 540], feather: 6, motion: { kind: 'bob', amp: 1.6, period: 0.9, kickAmp: 4 } },
+      { id: 'botEye', type: 'glow', points: [[134, 424, 6]], color: [120, 220, 255], anim: 'blink', period: 3, alpha: [0.3, 0.9], kickDur: 1.5 },
+      // Bottom right, the toolbox; tapped, the wrench clanks.
+      { id: 'tools', type: 'echo', box: [810, 410, 960, 540], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.3, period: 0.3, pivot: [885, 538] } },
+      // Air: heat shimmer and drifting embers from the furnaces.
+      { type: 'fog', area: [-60, 0, 1084, 572], count: 8, size: [80, 140], speed: 3, color: [255, 160, 80], alpha: 0.05, blend: 'lighter' },
+      { id: 'embers', type: 'particles', kind: 'ember', from: [[930, 255, 40], [728, 40, 10]], rate: 1.5, max: 14, color: [255, 150, 60], size: [0.6, 1.2], life: [1.5, 3], speed: 0.8 },
+    ],
+    pokes: [
+      { area: [140, 18, 308, 164], sound: 'grind', kick: ['gear'], flare: [255, 210, 140], glyph: '⚙️', burst: { layer: 'sparks', n: 16, at: [224, 92], spread: 30 } },
+      { area: [750, 20, 870, 140], sound: 'hiss', kick: ['valve'], flare: [230, 235, 245], burst: { layer: 'steam', n: 10, at: [790, 60], spread: 8 } },
+      { area: [80, 396, 196, 544], sound: 'beep', kick: ['bot', 'botEye'], flare: [120, 220, 255], glyph: '🤖' },
+      { area: [806, 406, 964, 544], sound: 'clink', kick: ['tools'], flare: [255, 210, 140], glyph: '🔧' },
+      { area: [860, 160, 1000, 340], sound: 'whoosh', kick: ['furnace', 'furnaceGlow'], flare: [255, 150, 60], glyph: '🔥', burst: { layer: 'embers', n: 12, at: [930, 255], spread: 20 } },
+      { area: [340, 90, 690, 572], sound: 'beam', kick: ['tracks', 'beltFlow'], flare: [120, 220, 255] },
+    ],
+  },
+  'robots-portrait': {
+    wind: null,
+    layers: [
+      { id: 'beltFlow', type: 'flow', mask: 'tracks', dir: [0, 1], dist: 18, period: 0.9, alpha: 0.95 },
+      { id: 'tracks', type: 'mask', mask: 'tracks', anim: { kind: 'wave', along: 'y', band: 110, speed: 80 }, alpha: [0.1, 0.65], gain: 0.85, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'tracks' }, rate: 4, max: 14, color: [190, 240, 255], size: [0.8, 1.4], life: [0.3, 0.7] },
+      { id: 'furnace', type: 'mask', mask: 'furnace', anim: { kind: 'flicker', speed: 3 }, alpha: [0.2, 0.75], bloom: 0.9, kickDur: 2 },
+      { id: 'gear', type: 'echo', box: [6, 18, 100, 104], round: true, feather: 5, motion: { kind: 'spin', speed: 18 } },
+      { id: 'sparks', type: 'particles', kind: 'spark', from: [[40, 140, 6], [430, 270, 6], [20, 700, 6], [440, 880, 6]], rate: 4, max: 30, color: [255, 190, 80], size: [0.7, 1.2], life: [0.4, 0.9] },
+      { id: 'steam', type: 'particles', kind: 'smoke', from: [[408, 52, 6]], rate: 1.8, max: 14, color: [220, 225, 235], size: [5, 9], life: [1.5, 2.5], alpha: 0.24, speed: 0.9 },
+      { id: 'bot', type: 'echo', box: [34, 896, 104, 1000], feather: 5, motion: { kind: 'bob', amp: 1.5, period: 0.9, kickAmp: 4 } },
+      { id: 'botEye', type: 'glow', points: [[66, 914, 5]], color: [120, 220, 255], anim: 'blink', period: 3, alpha: [0.3, 0.9], kickDur: 1.5 },
+      { id: 'tools', type: 'echo', box: [356, 906, 456, 990], feather: 5, motion: { kind: 'rock', amp: 0, kickAmp: 1.3, period: 0.3, pivot: [406, 988] } },
+      { type: 'fog', area: [-60, 0, 520, 1024], count: 8, size: [70, 120], speed: 3, color: [255, 160, 80], alpha: 0.05, blend: 'lighter' },
+    ],
+    pokes: [
+      { area: [4, 14, 104, 108], sound: 'grind', kick: ['gear'], flare: [255, 210, 140], glyph: '⚙️', burst: { layer: 'sparks', n: 14, at: [52, 60], spread: 26 } },
+      { area: [370, 14, 450, 100], sound: 'hiss', flare: [230, 235, 245], burst: { layer: 'steam', n: 10, at: [408, 52], spread: 8 } },
+      { area: [30, 892, 108, 1004], sound: 'beep', kick: ['bot', 'botEye'], flare: [120, 220, 255], glyph: '🤖' },
+      { area: [352, 902, 458, 994], sound: 'clink', kick: ['tools'], flare: [255, 210, 140], glyph: '🔧' },
+    ],
+  },
 };

@@ -25,29 +25,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Robots": {
-   "plate": "art/boards-v2/robots-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/robots-land-0.png",
-     "box": [
-      17,
-      7,
-      103,
-      93
-     ]
-    },
-    "2": {
-     "src": "art/board-props/robots-land-2.png",
-     "box": [
-      10,
-      442,
-      96,
-      556
-     ]
-    }
-   }
-  },
   "Zombies": {
    "plate": "art/boards-v2/zombies-plate.jpg",
    "cuts": {
@@ -110,29 +87,6 @@ export const BOARD_CUTS = {
   }
  },
  "portrait": {
-  "Robots": {
-   "plate": "art/boards-portrait/robots-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/robots-portrait-0.png",
-     "box": [
-      7,
-      7,
-      83,
-      83
-     ]
-    },
-    "2": {
-     "src": "art/board-props/robots-portrait-2.png",
-     "box": [
-      7,
-      812,
-      83,
-      898
-     ]
-    }
-   }
-  },
   "Zombies": {
    "plate": "art/boards-portrait/zombies-plate.jpg",
    "cuts": {
