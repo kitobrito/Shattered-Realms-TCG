@@ -2211,7 +2211,7 @@ function renderMenu() {
     const attr = sealed ? `data-sealed="${esc(f)}" title="${esc(f)} · opens as you play"` : `data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}"`;
     return `<button class="slab f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${attr} style="--fc:${fx.factionColor(f)};--i:${k}">
       <span class="slab-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
-      <span class="slab-name">${esc(f)}</span>${on ? '<span class="slab-check">✓</span>' : sealed ? '<i class="slab-lock">🔒</i>' : ''}</button>`;
+      <span class="slab-name ${f.length >= 13 ? 'long' : ''}">${esc(f)}</span>${on ? '<span class="slab-check">✓</span>' : sealed ? '<i class="slab-lock">🔒</i>' : ''}</button>`;
   };
   const groups = deckGroups(playable);
   let k = 0;
