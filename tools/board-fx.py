@@ -89,6 +89,12 @@ RULES = {
     'violet': lambda h, s, v: hue_near(h, 285, 40) * ramp(s, 0.3, 0.55) * ramp(v, 0.45, 0.75),
     # glossy honey and amber: deep orange, bright
     'honey': lambda h, s, v: hue_near(h, 34, 16) * ramp(s, 0.65, 0.85) * ramp(v, 0.7, 0.9),
+    # molten lava and embers: hot orange to yellow, bright
+    'lava': lambda h, s, v: hue_near(h, 28, 26) * ramp(s, 0.45, 0.75) * ramp(v, 0.55, 0.9),
+    # the hottest, brightest lava (yellow-white cores)
+    'lavahot': lambda h, s, v: hue_near(h, 40, 22) * ramp(s, 0.3, 0.6) * ramp(v, 0.82, 0.97),
+    # flames: orange-yellow, very bright
+    'fire': lambda h, s, v: hue_near(h, 32, 24) * ramp(s, 0.3, 0.6) * ramp(v, 0.72, 0.98),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),

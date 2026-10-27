@@ -22,6 +22,7 @@ export const BOARD_FX = {
       { type: 'fog', area: [-420, -160, 1440, 730], count: 3, size: [230, 330], speed: 7, leftward: 0, color: [26, 36, 56], alpha: 0.075, gustPush: 0 },
       { id: 'snow', type: 'mask', mask: 'snow', anim: { kind: 'wave', along: 'x', band: 340, speed: 22 }, alpha: [0, 0.16], gain: 0.55 },
       // 3. The frozen streams: light wavers in the water under the ice, two currents crossing.
+      { id: 'streamFlow', type: 'flow', mask: 'stream', dir: [-1, 0.55], dist: 16, period: 3.2, alpha: 0.9 },
       { id: 'stream', type: 'mask', mask: 'stream', anim: { kind: 'wave', along: 'x', band: 70, speed: 16 }, alpha: [0, 0.42], gain: 0.7 },
       { id: 'stream2', type: 'mask', mask: 'stream', anim: { kind: 'wave', along: 'y', band: 46, speed: 9 }, alpha: [0, 0.3], gain: 0.5 },
       { type: 'particles', kind: 'glint', area: { mask: 'stream' }, rate: 2.2, max: 10, color: [235, 250, 255], size: [0.9, 1.7], life: [0.5, 1.1] },
@@ -81,6 +82,7 @@ export const BOARD_FX = {
     layers: [
       { type: 'fog', area: [-300, -200, 760, 1220], count: 3, size: [180, 260], speed: 6, leftward: 0, color: [26, 36, 56], alpha: 0.075, gustPush: 0 },
       { id: 'snow', type: 'mask', mask: 'snow', anim: { kind: 'wave', along: 'y', band: 420, speed: 26 }, alpha: [0, 0.16], gain: 0.55 },
+      { id: 'streamFlow', type: 'flow', mask: 'stream', dir: [-1, 0.5], dist: 12, period: 3.2, alpha: 0.9 },
       { id: 'stream', type: 'mask', mask: 'stream', anim: { kind: 'wave', along: 'x', band: 60, speed: 14 }, alpha: [0, 0.42], gain: 0.7 },
       { id: 'stream2', type: 'mask', mask: 'stream', anim: { kind: 'wave', along: 'y', band: 40, speed: 8 }, alpha: [0, 0.3], gain: 0.5 },
       { type: 'particles', kind: 'glint', area: { mask: 'stream' }, rate: 2, max: 9, color: [235, 250, 255], size: [0.9, 1.6], life: [0.5, 1.1] },
@@ -138,6 +140,7 @@ export const BOARD_FX = {
     wind: null,
     layers: [
       // Ground: the acid pools breathe and their surfaces creep; the puddles on the crust glow.
+      { id: 'poolFlow', type: 'flow', mask: 'pools', dir: [1, 0.25], dist: 14, period: 4, alpha: 0.9, glow: 0.35, glowPeriod: 3 },
       { id: 'pools', type: 'mask', mask: 'pools', anim: { kind: 'wave', along: 'x', band: 90, speed: 14 }, alpha: [0.05, 0.45], gain: 0.7 },
       { id: 'glow', type: 'mask', mask: 'glow', anim: { kind: 'pulse', period: 3.2 }, alpha: [0.1, 0.55], bloom: 0.8, kickDur: 2 },
       { type: 'particles', kind: 'bubble', area: { mask: 'pools' }, rate: 7, max: 34, color: [190, 255, 90], size: [1, 2.6], life: [0.5, 1.2] },
@@ -175,6 +178,7 @@ export const BOARD_FX = {
   'acidic-portrait': {
     wind: null,
     layers: [
+      { id: 'poolFlow', type: 'flow', mask: 'pools', dir: [0.25, 1], dist: 12, period: 4, alpha: 0.9, glow: 0.35, glowPeriod: 3 },
       { id: 'pools', type: 'mask', mask: 'pools', anim: { kind: 'wave', along: 'y', band: 90, speed: 14 }, alpha: [0.05, 0.45], gain: 0.7 },
       { id: 'glow', type: 'mask', mask: 'glow', anim: { kind: 'pulse', period: 3.2 }, alpha: [0.1, 0.55], bloom: 0.8, kickDur: 2 },
       { type: 'particles', kind: 'bubble', area: { mask: 'pools' }, rate: 6, max: 30, color: [190, 255, 90], size: [1, 2.4], life: [0.5, 1.2] },
@@ -268,6 +272,135 @@ export const BOARD_FX = {
       { area: [36, 820, 156, 960], sound: 'hiss', kick: ['pod'], flare: [90, 255, 200], burst: { layer: 'vapour', n: 6, at: [96, 888], spread: 8 } },
       { area: [304, 838, 442, 982], sound: 'squelch', kick: ['sac', 'sacBody'], flare: [170, 255, 160], glyph: '🦠', burst: { layer: 'spores', n: 16, at: [373, 910], spread: 18 } },
       { area: [360, 12, 452, 118], sound: 'beam', kick: ['bulb', 'bulbHalo', 'veins'], flare: [80, 240, 255] },
+    ],
+  },
+
+  // ---- Bees: inside a giant hive -----------------------------------------------------------
+  'bees-land': {
+    wind: null,
+    layers: [
+      // Ground: warm light drifts over the comb; honey glistens.
+      { type: 'rays', beams: [[300, 0, 18, 560, 120], [720, 0, -14, 560, 120]], color: [255, 210, 120], alpha: [0.03, 0.09], period: 9 },
+      { id: 'honeyFlow', type: 'flow', mask: 'honey', dir: [0, 1], dist: 10, period: 5, alpha: 0.85, glow: 0.18, glowPeriod: 4 },
+      { id: 'honey', type: 'mask', mask: 'honey', anim: { kind: 'wave', along: 'x', band: 220, speed: 18 }, alpha: [0, 0.32], gain: 0.6, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'comb' }, rate: 2.5, max: 12, color: [255, 245, 200], size: [0.8, 1.5], life: [0.4, 0.9] },
+      { id: 'drips', type: 'particles', kind: 'drip', from: [[578, 78, 2], [470, 62, 2], [860, 72, 2], [822, 350, 2], [208, 240, 2], [690, 195, 2], [645, 195, 2], [108, 400, 2], [985, 255, 2], [138, 142, 1]],
+        rate: 1.6, max: 8, color: [255, 170, 30], size: [1, 1.7], life: [3.5, 5], fall: 22, splashColor: [255, 200, 80] },
+      // Every painted bee crawls and twitches on its own spot.
+      { id: 'crawl', type: 'crawlers', boxes: [[699, 38, 720, 72], [725, 56, 757, 80], [668, 58, 691, 85], [719, 94, 749, 119], [280, 177, 307, 203], [864, 220, 909, 264], [88, 227, 114, 260], [141, 241, 168, 270], [910, 250, 953, 276], [85, 275, 126, 298], [910, 275, 936, 308], [49, 320, 72, 356], [498, 322, 529, 343], [95, 356, 117, 376], [161, 364, 196, 390], [234, 417, 254, 444], [267, 422, 299, 452], [365, 459, 395, 492], [783, 470, 816, 507], [746, 471, 784, 506], [317, 479, 349, 508], [249, 490, 288, 521], [303, 531, 329, 566], [325, 541, 356, 573]], amp: 1.5, feather: 4 },
+      // Corners. Top right, the paper wasp nest: wasps come and go from its mouth.
+      { id: 'wasps', type: 'particles', kind: 'bee', area: [820, 0, 1024, 200], rate: 0.25, max: 3, color: [210, 170, 40], stripe: [20, 15, 10], size: [2.4, 3], life: [6, 10], speed: 1.2 },
+      { id: 'nest', type: 'echo', box: [866, 10, 994, 152], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.4, pivot: [930, 20] } },
+      // Top left, the honey dipper drips; bottom left, the jar glows warm; bottom right, the grub breathes in its cell.
+      { id: 'dipper', type: 'particles', kind: 'drip', from: [[138, 142, 1]], rate: 0.35, max: 2, color: [255, 170, 30], size: [1.4, 2], life: [3, 4], fall: 26, splashColor: [255, 200, 80] },
+      { id: 'jar', type: 'mask', mask: 'jar', anim: { kind: 'wave', along: 'y', band: 60, speed: 10 }, alpha: [0.05, 0.5], gain: 0.7, kickDur: 2 },
+      { id: 'jarGlow', type: 'glow', points: [[88, 500, 40]], color: [255, 170, 50], anim: 'pulse', period: 4, alpha: [0.05, 0.16], kickDur: 2 },
+      { id: 'grub', type: 'echo', box: [896, 448, 972, 538], feather: 8, motion: { kind: 'breathe', amp: 1.6, period: 2.8, pivot: [934, 493], kickAmp: 3 } },
+      // Air: bees in flight, pollen motes in the warm light.
+      { id: 'bees', type: 'particles', kind: 'bee', area: [60, 40, 960, 540], rate: 0.6, max: 7, color: [255, 200, 40], size: [2.2, 2.8], life: [7, 13] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2.5, max: 26, color: [255, 220, 120], size: [0.6, 1.3], life: [3, 6], alpha: 0.6, speed: 0.7 },
+    ],
+    pokes: [
+      { area: [16, 10, 168, 152], sound: 'drip', kick: ['honey'], flare: [255, 190, 60], glyph: '🍯', burst: { layer: 'dipper', n: 3, at: [138, 142], spread: 3 } },
+      { area: [864, 8, 996, 154], sound: 'buzz', kick: ['nest'], flare: [255, 200, 60], glyph: '🐝', burst: { layer: 'wasps', n: 6, at: [915, 120], spread: 10 } },
+      { area: [46, 438, 130, 550], sound: 'clink', kick: ['jar', 'jarGlow'], flare: [255, 180, 60], glyph: '🍯' },
+      { area: [882, 432, 984, 550], sound: 'squelch', kick: ['grub'], flare: [255, 230, 180], glyph: '🐛' },
+      { area: [180, 150, 840, 470], sound: 'buzz', rustle: 80, flare: [255, 200, 60], burst: { layer: 'bees', n: 3, spread: 20 } },
+    ],
+  },
+  'bees-portrait': {
+    wind: null,
+    layers: [
+      { type: 'rays', beams: [[150, 0, 10, 1000, 110], [320, 0, -8, 1000, 110]], color: [255, 210, 120], alpha: [0.03, 0.09], period: 9 },
+      { id: 'honeyFlow', type: 'flow', mask: 'honey', dir: [0, 1], dist: 10, period: 5, alpha: 0.85, glow: 0.18, glowPeriod: 4 },
+      { id: 'honey', type: 'mask', mask: 'honey', anim: { kind: 'wave', along: 'y', band: 260, speed: 20 }, alpha: [0, 0.32], gain: 0.6, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'comb' }, rate: 2.5, max: 12, color: [255, 245, 200], size: [0.8, 1.4], life: [0.4, 0.9] },
+      { id: 'drips', type: 'particles', kind: 'drip', from: [[25, 250, 2], [100, 300, 2], [110, 770, 2], [80, 775, 2], [370, 385, 2], [355, 390, 2], [200, 215, 2]],
+        rate: 1.4, max: 7, color: [255, 170, 30], size: [1, 1.6], life: [3.5, 5], fall: 22, splashColor: [255, 200, 80] },
+      { id: 'crawl', type: 'crawlers', boxes: [[385, 217, 406, 243], [376, 293, 393, 311], [353, 323, 372, 351], [391, 357, 427, 401], [92, 652, 116, 679], [19, 662, 57, 689], [350, 661, 375, 688], [376, 685, 404, 710], [413, 709, 446, 753], [31, 724, 57, 744], [322, 757, 355, 781], [400, 763, 432, 800], [16, 779, 38, 811], [384, 787, 407, 811], [100, 812, 134, 837], [190, 914, 223, 940]], amp: 1.4, feather: 4 },
+      { id: 'wasps', type: 'particles', kind: 'bee', area: [290, 0, 459, 200], rate: 0.25, max: 3, color: [210, 170, 40], stripe: [20, 15, 10], size: [2.2, 2.8], life: [6, 10], speed: 1.2 },
+      { id: 'nest', type: 'echo', box: [338, 12, 447, 142], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.4, pivot: [392, 20] } },
+      { id: 'dipper', type: 'particles', kind: 'drip', from: [[80, 122, 1]], rate: 0.35, max: 2, color: [255, 170, 30], size: [1.3, 1.9], life: [3, 4], fall: 24, splashColor: [255, 200, 80] },
+      { id: 'jar', type: 'mask', mask: 'jar', anim: { kind: 'wave', along: 'y', band: 60, speed: 10 }, alpha: [0.05, 0.5], gain: 0.7, kickDur: 2 },
+      { id: 'jarGlow', type: 'glow', points: [[66, 945, 36]], color: [255, 170, 50], anim: 'pulse', period: 4, alpha: [0.05, 0.16], kickDur: 2 },
+      { id: 'grub', type: 'echo', box: [356, 908, 426, 990], feather: 8, motion: { kind: 'breathe', amp: 1.6, period: 2.8, pivot: [391, 949], kickAmp: 3 } },
+      { id: 'bees', type: 'particles', kind: 'bee', area: [30, 60, 430, 960], rate: 0.6, max: 6, color: [255, 200, 40], size: [2.1, 2.7], life: [7, 13] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2.5, max: 24, color: [255, 220, 120], size: [0.6, 1.2], life: [3, 6], alpha: 0.6, speed: 0.7 },
+    ],
+    pokes: [
+      { area: [8, 8, 124, 134], sound: 'drip', kick: ['honey'], flare: [255, 190, 60], glyph: '🍯', burst: { layer: 'dipper', n: 3, at: [80, 122], spread: 3 } },
+      { area: [336, 10, 449, 144], sound: 'buzz', kick: ['nest'], flare: [255, 200, 60], glyph: '🐝', burst: { layer: 'wasps', n: 6, at: [378, 115], spread: 10 } },
+      { area: [28, 888, 106, 992], sound: 'clink', kick: ['jar', 'jarGlow'], flare: [255, 180, 60], glyph: '🍯' },
+      { area: [343, 893, 437, 997], sound: 'squelch', kick: ['grub'], flare: [255, 230, 180], glyph: '🐛' },
+    ],
+  },
+
+  // ---- Demons: the shore of a lake of fire -------------------------------------------------
+  'demons-land': {
+    wind: null,
+    layers: [
+      // Features: the lava river flows, its hot core churns, heat pulses run downstream.
+      { id: 'lavaFlow', type: 'flow', mask: 'lava', dir: [0.35, 1], dist: 20, period: 3.4, alpha: 0.95, glow: 0.3, glowPeriod: 2.2 },
+      { id: 'lava', type: 'mask', mask: 'lava', anim: { kind: 'wave', along: 'y', band: 120, speed: 30 }, alpha: [0.05, 0.55], gain: 0.85, kickDur: 2 },
+      { id: 'hot', type: 'mask', mask: 'hot', anim: { kind: 'flicker', speed: 2.5 }, alpha: [0.2, 0.75], bloom: 0.8, kickDur: 2 },
+      { type: 'particles', kind: 'ember', area: { mask: 'lava' }, rate: 9, max: 60, color: [255, 130, 40], size: [0.7, 1.5], life: [1.2, 2.6], speed: 1 },
+      { type: 'particles', kind: 'bubble', area: { mask: 'hot' }, rate: 3, max: 14, color: [255, 220, 120], size: [1, 2.2], life: [0.4, 0.9] },
+      { type: 'particles', kind: 'smoke', area: { mask: 'lava' }, rate: 1.5, max: 16, color: [60, 30, 25], size: [8, 14], life: [3, 5], alpha: 0.18, speed: 0.5 },
+      // Corners. Top left, the ram skull: embers glow in its sockets; tapped, they blaze.
+      { id: 'skull', type: 'echo', box: [38, 14, 162, 132], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.35, pivot: [100, 120] } },
+      { id: 'eyes', type: 'glow', points: [[104, 82, 7], [126, 80, 7]], color: [255, 60, 30], anim: 'flicker', alpha: [0.15, 0.5], kickDur: 2.5 },
+      // Top right, the ritual candles flicker; tapped, they flare.
+      { id: 'candles', type: 'glow', points: [[853, 60, 9], [867, 48, 9], [890, 40, 9], [908, 26, 9], [925, 32, 9], [902, 84, 9], [934, 78, 9], [870, 90, 8]], color: [255, 180, 70], anim: 'flicker', alpha: [0.35, 0.9], kickDur: 2 },
+      { id: 'wicks', type: 'flames', points: [[853, 64, 5, 9], [867, 52, 5, 9], [890, 44, 5, 9], [908, 30, 5, 9], [925, 36, 5, 9], [902, 88, 5, 9], [934, 82, 5, 9]], tongues: 2, alpha: 0.9 },
+      // Bottom left, the chained grimoire: its chains catch the light; tapped, they rattle and it glows.
+      { id: 'book', type: 'mask', mask: 'book', anim: { kind: 'wave', along: 'x', band: 70, speed: 14 }, alpha: [0, 0.35], gain: 0.6, kickDur: 2, blend: 'lighter' },
+      { id: 'bookGlow', type: 'glow', points: [[124, 478, 46]], color: [255, 50, 30], anim: 'pulse', period: 5, alpha: [0, 0.06], kickDur: 2.5 },
+      // Bottom right, the cauldron of hellfire boils, steams and spits sparks.
+      { id: 'brew', type: 'mask', mask: 'cauldron', anim: { kind: 'flicker', speed: 3 }, alpha: [0.3, 0.85], bloom: 0.9, kickDur: 2 },
+      { id: 'brewBub', type: 'particles', kind: 'bubble', from: [[884, 440, 30]], rate: 6, max: 18, color: [255, 200, 90], size: [1.2, 2.6], life: [0.4, 0.9] },
+      { id: 'brewSteam', type: 'particles', kind: 'smoke', from: [[884, 432, 26]], rate: 1.6, max: 10, color: [140, 60, 40], size: [7, 12], life: [2, 3.5], alpha: 0.2, speed: 0.7 },
+      { id: 'brewSparks', type: 'particles', kind: 'spark', from: [[884, 436, 24]], rate: 1.2, max: 10, color: [255, 160, 50], size: [0.8, 1.4], life: [0.6, 1.2] },
+      // Air: ash falls, embers drift, a red haze breathes over the river.
+      { type: 'fog', area: [100, 150, 820, 572], count: 9, size: [80, 140], speed: 4, color: [200, 60, 20], alpha: 0.07, blend: 'lighter' },
+      { type: 'particles', kind: 'ash', area: [0, -10, 1024, 572], rate: 3, max: 30, color: [90, 80, 80], size: [0.8, 1.6], life: [5, 9], speed: 0.6 },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [0, 0, 1024, 572], rate: 1.5, max: 14, color: [255, 140, 50], size: [0.6, 1.2], life: [2, 4], speed: 0.7 },
+    ],
+    pokes: [
+      { area: [36, 12, 164, 134], sound: 'growl', kick: ['skull', 'eyes'], flare: [255, 80, 30], glyph: '💀', burst: { layer: 'embers', n: 12, at: [114, 82], spread: 20 } },
+      { area: [834, 12, 950, 128], sound: 'whoosh', kick: ['candles'], flare: [255, 180, 70], glyph: '🕯️' },
+      { area: [64, 410, 184, 547], sound: 'rattle', kick: ['book', 'bookGlow'], flare: [255, 60, 30], glyph: '📕' },
+      { area: [818, 400, 954, 524], sound: 'bloop', kick: ['brew'], flare: [255, 140, 40], glyph: '🔥', burst: [{ layer: 'brewSparks', n: 16, at: [884, 436], spread: 20 }, { layer: 'brewBub', n: 10, at: [884, 440], spread: 24 }] },
+      { area: [170, 100, 470, 470], sound: 'hiss', kick: ['lava', 'hot', 'lavaFlow'], flare: [255, 120, 30] },
+    ],
+  },
+  'demons-portrait': {
+    wind: null,
+    layers: [
+      { id: 'lavaFlow', type: 'flow', mask: 'lava', dir: [0.2, 1], dist: 16, period: 3.4, alpha: 0.95, glow: 0.3, glowPeriod: 2.2 },
+      { id: 'lava', type: 'mask', mask: 'lava', anim: { kind: 'wave', along: 'y', band: 120, speed: 30 }, alpha: [0.05, 0.55], gain: 0.85, kickDur: 2 },
+      { id: 'hot', type: 'mask', mask: 'hot', anim: { kind: 'flicker', speed: 2.5 }, alpha: [0.2, 0.75], bloom: 0.8, kickDur: 2 },
+      { type: 'particles', kind: 'ember', area: { mask: 'lava' }, rate: 7, max: 45, color: [255, 130, 40], size: [0.7, 1.4], life: [1.2, 2.6], speed: 1 },
+      { type: 'particles', kind: 'bubble', area: { mask: 'hot' }, rate: 2.5, max: 12, color: [255, 220, 120], size: [1, 2], life: [0.4, 0.9] },
+      { type: 'particles', kind: 'smoke', area: { mask: 'lava' }, rate: 1.2, max: 12, color: [60, 30, 25], size: [7, 12], life: [3, 5], alpha: 0.18, speed: 0.5 },
+      { id: 'skull', type: 'echo', box: [28, 28, 138, 138], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.35, pivot: [84, 126] } },
+      { id: 'eyes', type: 'glow', points: [[84, 96, 6], [104, 94, 6]], color: [255, 60, 30], anim: 'flicker', alpha: [0.15, 0.5], kickDur: 2.5 },
+      { id: 'candles', type: 'glow', points: [[352, 72, 7], [366, 62, 7], [384, 56, 7], [400, 44, 7], [414, 50, 7], [394, 92, 7], [418, 92, 7]], color: [255, 180, 70], anim: 'flicker', alpha: [0.35, 0.9], kickDur: 2 },
+      { id: 'wicks', type: 'flames', points: [[352, 76, 4, 8], [366, 66, 4, 8], [384, 60, 4, 8], [400, 48, 4, 8], [414, 54, 4, 8], [394, 96, 4, 8], [418, 96, 4, 8]], tongues: 2, alpha: 0.9 },
+      { id: 'book', type: 'mask', mask: 'book', anim: { kind: 'wave', along: 'x', band: 70, speed: 14 }, alpha: [0, 0.35], gain: 0.6, kickDur: 2, blend: 'lighter' },
+      { id: 'bookGlow', type: 'glow', points: [[102, 926, 44]], color: [255, 50, 30], anim: 'pulse', period: 5, alpha: [0, 0.06], kickDur: 2.5 },
+      { id: 'brew', type: 'mask', mask: 'cauldron', anim: { kind: 'flicker', speed: 3 }, alpha: [0.3, 0.85], bloom: 0.9, kickDur: 2 },
+      { id: 'brewBub', type: 'particles', kind: 'bubble', from: [[375, 880, 26]], rate: 5, max: 16, color: [255, 200, 90], size: [1.1, 2.4], life: [0.4, 0.9] },
+      { id: 'brewSteam', type: 'particles', kind: 'smoke', from: [[375, 872, 22]], rate: 1.4, max: 9, color: [140, 60, 40], size: [6, 11], life: [2, 3.5], alpha: 0.2, speed: 0.7 },
+      { id: 'brewSparks', type: 'particles', kind: 'spark', from: [[375, 876, 20]], rate: 1, max: 9, color: [255, 160, 50], size: [0.8, 1.3], life: [0.6, 1.2] },
+      { type: 'fog', area: [-40, 150, 500, 900], count: 8, size: [70, 120], speed: 3, color: [200, 60, 20], alpha: 0.07, blend: 'lighter' },
+      { type: 'particles', kind: 'ash', area: [0, -10, 459, 1024], rate: 3, max: 28, color: [90, 80, 80], size: [0.8, 1.5], life: [5, 9], speed: 0.6 },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [0, 0, 459, 1024], rate: 1.5, max: 14, color: [255, 140, 50], size: [0.6, 1.1], life: [2, 4], speed: 0.7 },
+    ],
+    pokes: [
+      { area: [26, 26, 140, 140], sound: 'growl', kick: ['skull', 'eyes'], flare: [255, 80, 30], glyph: '💀', burst: { layer: 'embers', n: 10, at: [94, 96], spread: 18 } },
+      { area: [336, 34, 436, 122], sound: 'whoosh', kick: ['candles'], flare: [255, 180, 70], glyph: '🕯️' },
+      { area: [44, 856, 160, 994], sound: 'rattle', kick: ['book', 'bookGlow'], flare: [255, 60, 30], glyph: '📕' },
+      { area: [320, 850, 430, 954], sound: 'bloop', kick: ['brew'], flare: [255, 140, 40], glyph: '🔥', burst: [{ layer: 'brewSparks', n: 14, at: [375, 876], spread: 18 }, { layer: 'brewBub', n: 8, at: [375, 880], spread: 20 }] },
     ],
   },
 };

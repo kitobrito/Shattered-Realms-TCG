@@ -5162,3 +5162,7 @@ body.reduced-motion .descent { display: none; }
 .arena.frame-acid { --fr-line: #142208; --fr-mid: #9fa88c; --fr-hi: #c8ff6a; }
 /* Aliens: dark chitin with a bioluminescent teal edge. */
 .arena.frame-chitin { --fr-line: #04161a; --fr-mid: #2c4a4c; --fr-hi: #5affe8; }
+/* Bees: carved beeswax, honey-lit. */
+.arena.frame-wax { --fr-line: #3a2204; --fr-mid: #d8a032; --fr-hi: #ffe39a; }
+/* Demons: black iron, red-hot along the top. */
+.arena.frame-iron { --fr-line: #0c0404; --fr-mid: #3a2a26; --fr-hi: #ff6a2a; }

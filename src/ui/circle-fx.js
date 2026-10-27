@@ -12,6 +12,9 @@
 //   mask       a light mask cut from the painting (tools/circle-fx-masks.py), drawn glowing:
 //              anim pulse | flicker | wave (a band of light travelling along it) | seq (runes
 //              lighting in turn) | drift (the glow wavers about, for spirits)
+//   flow       the painted liquid itself moves: lava, acid, water or honey slides along `dir`
+//              inside its own shape (two copies a half cycle apart cross-fade, so it never
+//              jumps), with an optional brightening so molten things seem to churn
 //   crawlers   many small painted creatures (bees on the comb), each wandering and twitching
 //              a little on its own; a tap nearby makes them scurry
 //   echo       a feathered copy of part of the painting that moves (sway, bob, rock, breathe):
@@ -543,6 +546,46 @@ export async function startBoardFx(host, key, orient) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
+  // ---- Flow: liquid sliding inside its own shape ----
+  const flowOff = document.createElement('canvas');
+  const flowCtx = flowOff.getContext('2d');
+  function drawFlow(st, t) {
+    const m = masks[st.mask];
+    if (!m) return;
+    const [x0, y0, x1, y1] = m.box;
+    const dw = Math.max(1, Math.ceil((x1 - x0) * SX)), dh = Math.max(1, Math.ceil((y1 - y0) * SY));
+    if (flowOff.width !== dw || flowOff.height !== dh) { flowOff.width = dw; flowOff.height = dh; } else flowCtx.clearRect(0, 0, dw, dh);
+    const [ux, uy] = st.dir ?? [1, 0];
+    const len = Math.hypot(ux, uy) || 1;
+    const dist = (st.dist ?? 18);          // how far a copy slides before it fades out (image px)
+    const per = st.period ?? 3;            // seconds per slide
+    const kick = kicked(st, t, 1.5);
+    const tt = t * (1 + kick * 2);
+    flowCtx.globalCompositeOperation = 'source-over';
+    for (const ph of [0, 0.5]) {
+      const f = ((tt / per + ph + st.seed) % 1 + 1) % 1;
+      const w = 1 - Math.abs(2 * f - 1);    // 0 -> 1 -> 0 over the slide
+      const d = (f - 0.5) * dist;
+      flowCtx.globalAlpha = w;
+      flowCtx.drawImage(m.img, (ux / len) * d * SX, (uy / len) * d * SY, dw, dh);
+    }
+    // Keep it inside the liquid's own shape.
+    flowCtx.globalAlpha = 1;
+    flowCtx.globalCompositeOperation = 'destination-in';
+    flowCtx.drawImage(m.img, 0, 0, dw, dh);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = Math.min(1, (st.alpha ?? 0.85) + kick * 0.15);
+    ctx.drawImage(flowOff, x0 * SX, y0 * SY, dw, dh);
+    if (st.glow) {
+      // Molten things churn: a slow brightening wave rides on top.
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = st.glow * (0.5 + 0.5 * Math.sin(t * TAU / (st.glowPeriod ?? 2.5) + st.seed)) + kick * 0.3;
+      ctx.drawImage(flowOff, x0 * SX, y0 * SY, dw, dh);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
   // ---- Crawlers: small painted creatures wandering on the spot ----
   function drawCrawlers(st, t) {
     const amp = st.amp ?? 1.6;
@@ -923,6 +966,7 @@ export async function startBoardFx(host, key, orient) {
       switch (st.type) {
         case 'sprites': drawSprites(st, t); break;
         case 'crawlers': drawCrawlers(st, t); break;
+        case 'flow': drawFlow(st, t); break;
         case 'mask': drawMask(st, t); break;
         case 'echo': drawEcho(st, t); break;
         case 'particles': stepParticles(st, dt, t); drawParticles(st, t); break;
