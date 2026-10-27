@@ -12,7 +12,7 @@ painting is art/boards-v2/<board>.jpg or art/boards-portrait/<board>.jpg) this w
   * plate   the painting with the sprites' pixels painted out (inpainted), drawn under the
             moving sprites so no still copy shows behind them.
 
-A spec entry is { name: [rule, [box, ...], options] } like tools/circle-fx-masks.py, plus:
+A spec entry is { name: [rule, [box, ...], options] } plus:
   thin: k          keep only strokes thinner than k px (twigs, not rock outlines)
   split: {join, min, max, pad}   cut into separate sprites: strokes closer than `join` px
                    belong to one sprite; parts smaller than `min` px are dropped

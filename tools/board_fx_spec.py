@@ -303,4 +303,13 @@ SPEC = {
         'ice': ['ice', FULL_P, {'blur': 1, 'scale': 0.5}],
         'snow': ['snow', FULL_P, {'scale': 0.5}],
     },
+    # ---- Basic: a quiet hilltop that belongs to no realm ----
+    'basic-land': {
+        'grass': ['grass', [[0, 0, 1024, 572]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0], 'exclude': [[0, 400, 210, 572], [480, 430, 740, 572], [820, 380, 1024, 572]]}],
+        'leaves': ['leaf', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 200, 0]}],
+    },
+    'basic-portrait': {
+        'grass': ['grass', [[0, 0, 459, 1024]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0], 'exclude': [[0, 880, 120, 1024], [200, 900, 459, 1024]]}],
+        'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 200, 0]}],
+    },
 }

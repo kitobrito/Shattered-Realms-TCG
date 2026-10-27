@@ -1,7 +1,6 @@
-// Living boards: the Circles of Hell (Demons' Descent) and the realm boards. A canvas over the
-// painting brings each board to life from a list of layers (circle-fx-defs.js for the circles,
-// board-fx-defs.js for the realms), all placed in the painting's own pixels (landscape
-// 1024x572, portrait 459x1024):
+// Living boards: the realm boards and the Circles of Hell (Demons' Descent). A canvas over the
+// painting brings each board to life from a list of layers (board-fx-defs.js), all placed in
+// the painting's own pixels (landscape 1024x572, portrait 459x1024):
 //
 //   plate      (automatic) the painting with the moving sprites painted out, drawn first, so no
 //              still copy shows behind anything that moves (tools/board-fx.py)
@@ -9,7 +8,7 @@
 //              each swaying around its own root with its own phase; gusts of wind roll
 //              across the board and bend them in turn
 //
-//   mask       a light mask cut from the painting (tools/circle-fx-masks.py), drawn glowing:
+//   mask       a light mask cut from the painting (tools/board-fx.py), drawn glowing:
 //              anim pulse | flicker | wave (a band of light travelling along it) | seq (runes
 //              lighting in turn) | drift (the glow wavers about, for spirits)
 //   flow       the painted liquid itself moves: lava, acid, water or honey slides along `dir`
@@ -45,9 +44,7 @@
 // Canvas 2D at 60 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
 import { BOARD_MASKS } from '../cards/board-fx-masks.js';
-import { CIRCLE_MASKS } from '../cards/circle-fx-masks.js';
 import { BOARD_FX } from './board-fx-defs.js';
-import { CIRCLE_FX } from './circle-fx-defs.js';
 import { play } from './sound.js';
 
 const TAU = Math.PI * 2;
@@ -160,20 +157,17 @@ function boltPath(a, b, jag, depth = 0) {
   return { main: pts, branches };
 }
 
-// Which boards have living effects: a circle number (1-9) or a realm board's file name.
-// Circles use their rebuilt living layer (board-fx-defs.js 'circleN-...') when there is one.
+// A circle of Hell is a number (its board is 'circleN'); a realm board is its file name.
 const fxKey = (key) => (typeof key === 'number' ? `circle${key}` : key);
-export const hasBoardFx = (key, orient) => !!(BOARD_FX[`${fxKey(key)}-${orient}`] ?? (typeof key === 'number' && CIRCLE_FX[`${key}-${orient}`]));
+export const hasBoardFx = (key, orient) => !!BOARD_FX[`${fxKey(key)}-${orient}`];
 export const startCircleFx = (host, n, orient) => startBoardFx(host, n, orient);
 
 export async function startBoardFx(host, key, orient) {
-  const circle = typeof key === 'number';
-  const rebuilt = BOARD_FX[`${fxKey(key)}-${orient}`];
-  const def = rebuilt ?? (circle ? CIRCLE_FX[`${key}-${orient}`] : null);
+  const def = BOARD_FX[`${fxKey(key)}-${orient}`];
   if (!def) return null;
   const [IW, IH] = CIRCLE_SIZE[orient];
-  const maskInfo = (rebuilt ? BOARD_MASKS[`${fxKey(key)}-${orient}`] : CIRCLE_MASKS[`${key}-${orient}`]) ?? {};
-  const file = circle ? `circle${key}` : key;
+  const maskInfo = BOARD_MASKS[`${fxKey(key)}-${orient}`] ?? {};
+  const file = fxKey(key);
   const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
   const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers' || l.type === 'warp');
   const usedMasks = new Set(def.layers.flatMap((l) => [l.mask, l.area?.mask, l.flashMask].filter(Boolean)));

@@ -1761,4 +1761,53 @@ export const BOARD_FX = {
       { area: [80, 250, 380, 760], sound: 'crack', strike: 'cracks', zone: 0, kick: ['ice'], flare: [200, 235, 255] },
     ],
   },
+
+  // ---- Basic: a quiet hilltop at golden hour that belongs to no realm ------------------------
+  'basic-land': {
+    wind: { dir: 1, every: [5, 9], speed: [150, 220], width: [180, 280], lean: 0.3 },
+    layers: [
+      { type: 'fog', area: [-420, -160, 1440, 730], count: 3, size: [230, 330], speed: 7, leftward: 0, color: [40, 30, 10], alpha: 0.06, gustPush: 0 },
+      { type: 'rays', beams: [[200, 0, 30, 560, 120], [560, 0, 22, 560, 100]], color: [255, 230, 170], alpha: [0.04, 0.12], period: 9 },
+      { id: 'grass', type: 'sprites', mask: 'grass', bend: 0.07, gustBend: 0.24, period: [2.4, 3.8] },
+      { id: 'tree', type: 'warp', box: [740, 0, 1024, 200], base: 'top', mask: 'leaves', amp: 2.2, period: 4.2, wave: 2 },
+      { id: 'bushes', type: 'warp', box: [220, 440, 820, 572], base: 'bottom', mask: 'leaves', amp: 2, period: 3.8, wave: 2.4 },
+      { id: 'flowers', type: 'warp', box: [836, 380, 1024, 572], base: 'bottom', amp: 2, period: 3, wave: 2.6 },
+      // Corners. Top left, the rune stone's carvings glow softly. Top right, the swing sways.
+      { id: 'runes', type: 'glow', points: [[96, 44, 10], [110, 72, 10]], color: [140, 220, 255], anim: 'pulse', period: 4, alpha: [0.05, 0.4], kickDur: 2.5 },
+      { id: 'swing', type: 'echo', box: [826, 40, 870, 116], feather: 5, motion: { kind: 'rock', amp: 3, period: 3, pivot: [848, 40], kickAmp: 8 } },
+      // Bottom left, the lantern on the cairn flickers. Bottom right, the butterfly opens its wings.
+      { id: 'lantern', type: 'glow', points: [[118, 466, 30]], color: [255, 200, 110], anim: 'flicker', alpha: [0.2, 0.5], kickDur: 2 },
+      { id: 'lanternFlame', type: 'flames', points: [[118, 470, 6, 10]], tongues: 2, alpha: 0.8 },
+      { id: 'butterfly', type: 'echo', box: [906, 450, 1000, 520], feather: 6, autoKick: [4, 8], motion: { kind: 'breathe', amp: 0, kickAmp: 6, period: 0.35, pivot: [953, 485] } },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[930, 470, 50], [80, 230, 40], [600, 460, 50]], rate: 0.8, max: 6, color: [255, 160, 60], size: [1.8, 2.4], life: [5, 8] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2.5, max: 26, color: [255, 240, 180], size: [0.6, 1.2], life: [3, 6], alpha: 0.65, speed: 0.6 },
+      { id: 'petals', type: 'particles', kind: 'petal', area: [0, -20, 1024, 300], rate: 0.4, max: 6, color: [255, 220, 120], size: [1.4, 2.2], life: [7, 11], speed: 0.6 },
+    ],
+    pokes: [
+      { area: [60, 6, 140, 120], sound: 'chime', kick: ['runes'], flare: [150, 220, 255], glyph: '✨' },
+      { area: [800, 30, 900, 130], sound: 'whoosh', kick: ['swing'], flare: [255, 230, 170] },
+      { area: [40, 420, 200, 560], sound: 'whoosh', kick: ['lantern'], flare: [255, 200, 110], glyph: '🏮' },
+      { area: [880, 430, 1020, 540], sound: 'flutter', kick: ['butterfly', 'flowers'], flare: [255, 180, 80], glyph: '🦋', burst: { layer: 'flies', n: 3, at: [950, 480], spread: 20 } },
+    ],
+  },
+  'basic-portrait': {
+    wind: { dir: 1, every: [5, 9], speed: [110, 170], width: [160, 240], lean: 0.12 },
+    layers: [
+      { type: 'fog', area: [-300, -200, 760, 1220], count: 3, size: [180, 260], speed: 6, leftward: 0, color: [40, 30, 10], alpha: 0.06, gustPush: 0 },
+      { type: 'rays', beams: [[60, 0, 16, 1000, 100], [260, 0, 12, 1000, 90]], color: [255, 230, 170], alpha: [0.04, 0.12], period: 9 },
+      { id: 'grass', type: 'sprites', mask: 'grass', bend: 0.07, gustBend: 0.24, period: [2.4, 3.8] },
+      { id: 'tree', type: 'warp', box: [340, 0, 459, 110], base: 'top', mask: 'leaves', amp: 2, period: 4.2, wave: 2 },
+      { id: 'flowers', type: 'warp', box: [390, 260, 459, 360], base: 'right', amp: 2, period: 3, wave: 2.6 },
+      { id: 'flowers2', type: 'warp', box: [380, 900, 459, 1024], base: 'bottom', amp: 2, period: 3.2, wave: 2.6 },
+      { id: 'lantern', type: 'glow', points: [[14, 290, 22], [36, 945, 24]], color: [255, 200, 110], anim: 'flicker', alpha: [0.2, 0.5], kickDur: 2 },
+      { id: 'swing', type: 'echo', box: [404, 30, 440, 80], feather: 5, motion: { kind: 'rock', amp: 3, period: 3, pivot: [422, 30], kickAmp: 8 } },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[420, 300, 30], [420, 950, 30], [100, 720, 40]], rate: 0.8, max: 6, color: [255, 160, 60], size: [1.7, 2.3], life: [5, 8] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2.5, max: 26, color: [255, 240, 180], size: [0.6, 1.1], life: [3, 6], alpha: 0.65, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [390, 20, 459, 100], sound: 'whoosh', kick: ['swing'], flare: [255, 230, 170] },
+      { area: [0, 900, 110, 1010], sound: 'whoosh', kick: ['lantern'], flare: [255, 200, 110], glyph: '🏮' },
+      { area: [380, 250, 459, 370], sound: 'flutter', kick: ['flowers'], flare: [255, 180, 80], glyph: '🦋' },
+    ],
+  },
 };

@@ -20,6 +20,8 @@ export const BOARD_ART = {
   Lycanthropes: 'art/boards-v2/lycanthropes.jpg',
   Void: 'art/boards-v2/void.jpg',
   'Ice Age': 'art/boards-v2/ice-age.jpg',
+  // Not a realm: the plain board players can pick in Settings ("Basic board").
+  Basic: 'art/boards-v2/basic.jpg',
 };
 
 // Looping board videos (MP4, 16:9, camera locked so the painted slots never move).
@@ -64,6 +66,7 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  Basic: { src: 'art/boards-portrait/basic.jpg', opp: [201, 30, 259, 98, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [120, 790], frame: 'stone', props: [] },
   // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
   'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [201, 34, 259, 102, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [125, 790], frame: 'bone', props: [] },
   Void: { src: 'art/boards-portrait/void.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'void', props: [] },
@@ -90,6 +93,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  Basic: { src: 'art/boards-v2/basic.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
   'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'bone', props: [] },
   Void: { src: 'art/boards-v2/void.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'void', props: [] },
   Lycanthropes: { src: 'art/boards-v2/lycanthropes.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'silverwood', props: [] },
@@ -116,7 +120,7 @@ export const LANDSCAPE_BOARDS = {
 // When a Demon player is in the match, the battle sinks through nine circles and BOTH players'
 // boards change to the current circle's painting (board.js picks these over the faction board).
 // Hero frame openings and battlefields measured from each painting like the faction boards.
-// The living effects for each circle are in src/ui/circle-fx-defs.js.
+// The living effects for each circle are in src/ui/board-fx-defs.js.
 export const CIRCLE_BOARDS = {
   land: {
     1: { src: 'art/boards-v2/circle1.jpg', opp: [484, 54, 540, 140], me: [464, 460, 559, 522], field: [130, 155, 895, 445] },

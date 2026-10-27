@@ -8,7 +8,7 @@ import { journeyDone, restartJourney, unlockEverything } from './journey.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same' };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false };
 // Extra speed-up just for the AI's turns (on top of Game speed).
 export const AI_SPEEDS = { same: 1, fast: 0.55, turbo: 0.3 };
 
@@ -90,6 +90,7 @@ export function openSettings() {
       <div class="set-row"><span>AI turn speed</span>
         <div class="seg">${Object.keys(AI_SPEEDS).map((k) => `<button data-aispeed="${k}" class="${st.aiSpeed === k ? 'on' : ''}">${k === 'same' ? 'Same' : k === 'fast' ? 'Fast' : 'Very fast'}</button>`).join('')}</div></div>
       <label class="set-row"><span>Turn timer vs AI</span><input type="checkbox" data-set="turnTimerVsAI" ${st.turnTimerVsAI ? 'checked' : ''}><i>Off: take as long as you like against the computer (online and hot-seat games are always timed)</i></label>
+      <label class="set-row"><span>Basic board</span><input type="checkbox" data-set="basicBoard" ${st.basicBoard ? 'checked' : ''}><i>Play on a plain, calm hilltop instead of your realm's board</i></label>
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>
       <label class="set-row"><span>Colour-blind mode</span><input type="checkbox" data-set="colorBlind" ${st.colorBlind ? 'checked' : ''}><i>Blue / orange instead of green / red</i></label>
       <label class="set-row"><span>Classic card frames</span><input type="checkbox" data-set="classicCards" ${st.classicCards ? 'checked' : ''}><i>The older painted frames instead of the Shard frames</i></label>
@@ -117,6 +118,7 @@ export function openSettings() {
     const t = e.target;
     if (t.type === 'checkbox') update({ [t.dataset.set]: t.checked });
     if (t.dataset.set === 'classicCards') document.dispatchEvent(new Event('cardstyle')); // redraw every card
+    if (t.dataset.set === 'basicBoard') document.dispatchEvent(new Event('boardstyle')); // redraw the board
     if (t.dataset.set === 'volume') sound.play('click'); // a sample at the new volume
   });
   el.addEventListener('click', (e) => {
