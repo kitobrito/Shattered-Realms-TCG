@@ -5,6 +5,7 @@
 import { existsSync } from 'node:fs';
 import { BOARD_ART, CIRCLE_BOARDS, LANDSCAPE_BOARDS, PORTRAIT_BOARDS } from '../src/cards/board-art.js';
 import { BOARD_MASKS } from '../src/cards/board-fx-masks.js';
+import { BOARD_OBJECTS } from '../src/cards/board-objects.js';
 import { BOARD_FX } from '../src/ui/board-fx-defs.js';
 
 let failures = 0, passed = 0;
@@ -40,6 +41,17 @@ test('every tap names layers that exist', () => {
   for (const [k, def] of Object.entries(BOARD_FX)) {
     const ids = new Set(def.layers.map((l) => l.id).filter(Boolean));
     for (const p of def.pokes ?? []) for (const id of [...[].concat(p.kick ?? []), p.strike, p.loose, ...[].concat(p.burst ?? []).map((b) => b.layer)].filter((x) => x != null)) if (!ids.has(id)) return `${k}: poke uses '${id}'`;
+  }
+});
+test('every moving object is cut out of its painting (only the object moves)', () => {
+  // echo, crawlers and warp move painted pixels: each needs its cut-out and patch (tools/board-objects.py).
+  for (const [k, def] of Object.entries(BOARD_FX)) {
+    const items = BOARD_OBJECTS[k]?.items ?? {};
+    def.layers.forEach((l, i) => {
+      const ids = l.type === 'echo' ? [l.id] : l.type === 'crawlers' ? l.boxes.map((_, j) => `${l.id ?? `crawl${i}`}.${j}`) : l.type === 'warp' ? [l.id ?? `warp${i}`] : [];
+      for (const id of ids) if (!items[id]) throw new Error(`${k}: ${id} has no cut-out`);
+    });
+    if (BOARD_OBJECTS[k] && !existsSync(BOARD_OBJECTS[k].src)) return `${k}: ${BOARD_OBJECTS[k].src}`;
   }
 });
 
