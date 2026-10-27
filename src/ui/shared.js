@@ -37,6 +37,8 @@ const ICON_PATHS = {
   play: '<path d="M7 4l13 8-13 8z"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
   chevron: '<path d="M9 5l7 7-7 7"/>',
+  heart: '<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.6 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>',
+  mana: '<path d="M12 2l6 9-6 11-6-11z"/><path d="M6 11h12"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
 };
 export const icon = (name) => `<svg class="ui-ico" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name] ?? ''}</svg>`;
