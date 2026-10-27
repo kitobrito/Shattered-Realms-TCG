@@ -25,6 +25,19 @@ const ICON_PATHS = {
   bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
   flame: '<path d="M12 3c1 3.5 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2.4 1.2-3.8 2.3-5 .3 1.6 1 2.6 2.2 3.1C11 9 11 6 12 3z"/>',
+  swords: '<path d="M4 4l9 9M4 4v4M4 4h4M20 4l-9 9M20 4v4M20 4h-4"/><path d="M9 15l-4 4M7 13l4 4M15 15l4 4M17 13l-4 4"/>',
+  shield: '<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/>',
+  crown: '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/><path d="M5 19h14"/>',
+  hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9"/>',
+  bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  swarm: '<circle cx="7" cy="8" r="2.5"/><circle cx="16" cy="7" r="2.5"/><circle cx="11.5" cy="15" r="2.5"/><circle cx="18" cy="16" r="2"/><circle cx="5" cy="16" r="2"/>',
+  robot: '<rect x="5" y="8" width="14" height="11" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01M9 17h6"/><circle cx="12" cy="3.5" r="1"/>',
+  cap: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/>',
+  cards: '<rect x="3" y="6" width="11" height="15" rx="1.5"/><path d="M8 3h11a1.5 1.5 0 0 1 1.5 1.5V18"/>',
+  play: '<path d="M7 4l13 8-13 8z"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  chevron: '<path d="M9 5l7 7-7 7"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
 };
 export const icon = (name) => `<svg class="ui-ico" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name] ?? ''}</svg>`;
 
