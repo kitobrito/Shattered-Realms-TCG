@@ -212,4 +212,24 @@ SPEC = {
         'roses': ['roses', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
         'moon': ['any', [[120, 0, 340, 70]], {'hp': [6, 1, 0.02, 0.1], 'blur': 1, 'show': [255, 255, 0]}],
     },
+    # ---- Void: a floating island in deep space ----
+    'void-land': {
+        'nebula': ['violet', FULL_L, {'blur': 1.5, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'stars': ['bright', FULL_L, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'cracks': ['bright', [[200, 120, 820, 470]], {'hp': [2, 1, 0.1, 0.3], 'show': [0, 255, 255]}],
+    },
+    'void-portrait': {
+        'nebula': ['violet', FULL_P, {'blur': 1.5, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'stars': ['bright', FULL_P, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'cracks': ['bright', [[60, 180, 400, 840]], {'hp': [2, 1, 0.1, 0.3], 'show': [0, 255, 255]}],
+    },
+    # ---- Zombies: a misty graveyard at night ----
+    'zombies-land': {
+        'mist': ['mist', FULL_L, {'blur': 2, 'scale': 0.5, 'show': [0, 255, 120]}],
+        'lantern': ['warmlight', [[900, 60, 976, 176]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
+    'zombies-portrait': {
+        'mist': ['mist', FULL_P, {'blur': 2, 'scale': 0.5, 'show': [0, 255, 120]}],
+        'lantern': ['bright', [[380, 50, 422, 120]], {'blur': 1, 'show': [255, 160, 0]}],
+    },
 }

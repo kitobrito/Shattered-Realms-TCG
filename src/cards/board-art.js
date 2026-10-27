@@ -66,9 +66,7 @@ const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
   // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
   'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [201, 34, 259, 102, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [125, 790], frame: 'bone', props: [] },
-  Void: { src: 'art/boards-portrait/void.jpg', opp: [183, 59, 276, 174, 'arch'], me: [178, 784, 275, 911, 'circle'], field: [195, 765],
-    props: [P([15, 15, 95, 95], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([355, 15, 450, 100], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
-      P([10, 870, 110, 1010], 'wobble', '#d8d0f0', { sound: 'clink' }), P([360, 915, 459, 1005], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },
+  Void: { src: 'art/boards-portrait/void.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'void', props: [] },
   Lycanthropes: { src: 'art/boards-portrait/lycanthropes.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'silverwood', props: [] },
   Acidic: { src: 'art/boards-portrait/acidic.jpg', opp: [201, 22, 259, 90, 'arch'], me: [198, 812, 261, 882, 'circle'], field: [120, 795], frame: 'acid', props: [] },
   Sharks: { src: 'art/boards-portrait/sharks.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'coral', props: [] },
@@ -80,9 +78,7 @@ export const PORTRAIT_BOARDS = {
   Divine: { src: 'art/boards-portrait/divine.jpg', opp: [191, 131, 270, 234, 'arch'], me: [192, 749, 268, 845, 'circle'], field: [255, 735], props: [] },
   Demons: { src: 'art/boards-portrait/demons.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'iron', props: [] },
   Dragons: { src: 'art/boards-portrait/dragons.jpg', opp: [189, 41, 270, 125, 'arch'], me: [190, 811, 268, 891, 'circle'], field: [150, 795], props: [] },
-  Zombies: { src: 'art/boards-portrait/zombies.jpg', opp: [195, 18, 264, 95, 'arch'], me: [195, 693, 264, 772, 'circle'], field: [110, 680],
-    props: [P([5, 5, 80, 90], 'glow', '#9cff4a', { sound: 'rumble' }), P([395, 30, 450, 90], 'flicker', '#d8ff8a', { sound: 'clink' }),
-      P([0, 640, 60, 760], 'glow', '#9cff4a', { sound: 'knock' }), P([380, 670, 459, 790], 'peck', '#9cff4a', { sound: 'screech', glyph: '🪶' })] },
+  Zombies: { src: 'art/boards-portrait/zombies.jpg', opp: [196, 56, 264, 154, 'arch'], me: [194, 858, 264, 956, 'circle'], field: [175, 840], props: [] },
   Fungus: { src: 'art/boards-portrait/fungus.jpg', opp: [188, 29, 272, 119, 'arch'], me: [184, 771, 277, 864, 'circle'], field: [135, 755], props: [] },
   Plants: { src: 'art/boards-portrait/plants.jpg', opp: [186, 137, 274, 239, 'arch'], me: [178, 786, 281, 888, 'circle'], field: [255, 770], props: [] },
   Dinosaurs: { src: 'art/boards-portrait/dinosaurs.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'stone', props: [] },
@@ -95,9 +91,7 @@ export const PORTRAIT_BOARDS = {
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
   'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'bone', props: [] },
-  Void: { src: 'art/boards-v2/void.jpg', opp: [472, 43, 551, 132], me: [474, 437, 549, 537], field: [115, 150, 910, 425],
-    props: [P([30, 15, 125, 105], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([895, 15, 1000, 115], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
-      P([25, 420, 125, 555], 'wobble', '#d8d0f0', { sound: 'clink' }), P([890, 465, 1015, 560], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },
+  Void: { src: 'art/boards-v2/void.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'void', props: [] },
   Lycanthropes: { src: 'art/boards-v2/lycanthropes.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'silverwood', props: [] },
   Acidic: { src: 'art/boards-v2/acidic.jpg', opp: [471, 30, 553, 124], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'acid', props: [] },
   Sharks: { src: 'art/boards-v2/sharks.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'coral', props: [] },
@@ -110,9 +104,7 @@ export const LANDSCAPE_BOARDS = {
   Divine: { src: 'art/boards-v2/divine.jpg', opp: [469, 24, 555, 128], me: [463, 442, 556, 554], field: [140, 150, 885, 420], props: [] },
   Demons: { src: 'art/boards-v2/demons.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'iron', props: [] },
   Dragons: { src: 'art/boards-v2/dragons.jpg', opp: [470, 39, 554, 125], me: [467, 434, 557, 529], field: [120, 150, 900, 420], props: [] },
-  Zombies: { src: 'art/boards-v2/zombies.jpg', opp: [465, 20, 559, 127], me: [470, 440, 552, 542], field: [110, 130, 940, 420],
-    props: [P([30, 10, 130, 120], 'glow', '#9cff4a', { sound: 'rumble' }), P([900, 15, 950, 110], 'flicker', '#d8ff8a', { sound: 'clink' }),
-      P([15, 360, 110, 520], 'glow', '#9cff4a', { sound: 'knock' }), P([890, 410, 980, 490], 'peck', '#9cff4a', { sound: 'screech', glyph: '🪶' })] },
+  Zombies: { src: 'art/boards-v2/zombies.jpg', opp: [480, 36, 544, 123], me: [467, 441, 557, 532], field: [140, 150, 880, 420], props: [] },
   Fungus: { src: 'art/boards-v2/fungus.jpg', opp: [465, 26, 559, 125], me: [456, 434, 569, 547], field: [120, 150, 900, 420], props: [] },
   Plants: { src: 'art/boards-v2/plants.jpg', opp: [469, 27, 557, 116], me: [462, 436, 562, 534], field: [150, 140, 880, 420], props: [] },
   Dinosaurs: { src: 'art/boards-v2/dinosaurs.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },

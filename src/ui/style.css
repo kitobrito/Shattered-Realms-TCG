@@ -5174,3 +5174,5 @@ body.reduced-motion .descent { display: none; }
 .arena.frame-coral { --fr-line: #062428; --fr-mid: #b08a4a; --fr-hi: #9ff8ff; }
 /* Ultraterrestrials: gold and violet, folded light. */
 .arena.frame-astral { --fr-line: #1a0c2c; --fr-mid: #c8a04a; --fr-hi: #e8c8ff; }
+/* Void: black obsidian with a violet rim of starlight. */
+.arena.frame-void { --fr-line: #08040e; --fr-mid: #2a1c3a; --fr-hi: #c89cff; }

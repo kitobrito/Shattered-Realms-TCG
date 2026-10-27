@@ -1179,4 +1179,137 @@ export const BOARD_FX = {
       { area: [330, 848, 458, 994], sound: 'knock', kick: ['coffin'], flare: [255, 60, 60], glyph: '🦇' },
     ],
   },
+
+  // ---- Void: a floating island adrift in deep space -------------------------------------------
+  'void-land': {
+    wind: null,
+    layers: [
+      // Space: the nebula tendrils churn and glow; stars twinkle; the starlight in the rock's
+      // cracks pulses as if the void were breathing through it.
+      { id: 'nebFlow', type: 'flow', mask: 'nebula', dir: [1, -0.3], dist: 16, period: 6, alpha: 0.9, glow: 0.3, glowPeriod: 5 },
+      { id: 'nebula', type: 'mask', mask: 'nebula', anim: { kind: 'wave', along: 'x', band: 240, speed: 16 }, alpha: [0.05, 0.4], gain: 0.7, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'stars' }, rate: 9, max: 40, color: [255, 255, 255], size: [0.8, 1.6], life: [0.4, 1.1] },
+      { id: 'cracks', type: 'mask', mask: 'cracks', anim: { kind: 'pulse', period: 3.6 }, alpha: [0.1, 0.6], bloom: 0.7, kickDur: 2 },
+      // The island bobs gently; loose rocks orbit its edges.
+      { id: 'rock1', type: 'echo', box: [100, 176, 160, 236], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.35 } },
+      { id: 'rock2', type: 'echo', box: [880, 160, 940, 230], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.3 } },
+      { id: 'rock3', type: 'echo', box: [130, 350, 180, 400], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.4 } },
+      { id: 'rock4', type: 'echo', box: [740, 440, 800, 500], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.33 } },
+      { id: 'rock5', type: 'echo', box: [540, 20, 600, 70], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.36 } },
+      // Corners. Top left, the bitten planet turns slowly. Top right, the star cluster flares.
+      { id: 'planet', type: 'echo', box: [52, 22, 160, 130], round: true, feather: 6, motion: { kind: 'spin', speed: 4 } },
+      { id: 'cluster', type: 'glow', points: [[924, 78, 14], [956, 108, 9], [900, 44, 7], [945, 54, 6]], color: [220, 230, 255], anim: 'pulse', period: 2.2, alpha: [0.3, 0.9], kickDur: 2 },
+      // Bottom left, the crescent moon on its floating rock bobs. Bottom right, the galaxy spins.
+      { id: 'moonRock', type: 'echo', box: [48, 404, 186, 546], feather: 8, motion: { kind: 'bob', amp: 3, period: 5, kickAmp: 6 } },
+      { id: 'galaxy', type: 'echo', box: [836, 406, 984, 550], round: true, feather: 10, motion: { kind: 'spin', speed: -10 } },
+      { id: 'galaxy2', type: 'echo', box: [228, 8, 300, 56], round: true, feather: 6, motion: { kind: 'spin', speed: -14 } },
+      { id: 'galaxy3', type: 'echo', box: [234, 488, 302, 540], round: true, feather: 6, motion: { kind: 'spin', speed: -12 } },
+      // Air: comets streak by; a slow vortex of void dust circles the island.
+      { id: 'comets', type: 'meteors', area: [0, 0, 1024, 572], dir: [0.8, 0.35], speed: [160, 240], every: [5, 11], size: [1, 1.8] },
+      { type: 'vortex', center: [512, 290], rx: 480, ry: 260, count: 50, speed: 0.15, color: [200, 160, 255], alpha: 0.12, width: 1.2 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2.5, max: 26, color: [220, 200, 255], size: [0.6, 1.2], life: [3, 6], alpha: 0.6, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [48, 18, 164, 134], sound: 'whoosh', kick: ['planet', 'nebula'], flare: [200, 150, 255], glyph: '🪐' },
+      { area: [880, 30, 990, 130], sound: 'chime', kick: ['cluster'], flare: [230, 235, 255], glyph: '⭐' },
+      { area: [46, 402, 188, 548], sound: 'chime', kick: ['moonRock'], flare: [230, 230, 255], glyph: '🌙' },
+      { area: [832, 402, 988, 554], sound: 'whoosh', kick: ['galaxy'], flare: [200, 150, 255], glyph: '🌀' },
+      { area: [220, 120, 820, 470], sound: 'rumble', kick: ['cracks'], flare: [180, 140, 255] },
+    ],
+  },
+  'void-portrait': {
+    wind: null,
+    layers: [
+      { id: 'nebFlow', type: 'flow', mask: 'nebula', dir: [0.3, 1], dist: 16, period: 6, alpha: 0.9, glow: 0.3, glowPeriod: 5 },
+      { id: 'nebula', type: 'mask', mask: 'nebula', anim: { kind: 'wave', along: 'y', band: 260, speed: 16 }, alpha: [0.05, 0.4], gain: 0.7, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'stars' }, rate: 9, max: 40, color: [255, 255, 255], size: [0.8, 1.5], life: [0.4, 1.1] },
+      { id: 'cracks', type: 'mask', mask: 'cracks', anim: { kind: 'pulse', period: 3.6 }, alpha: [0.1, 0.6], bloom: 0.7, kickDur: 2 },
+      { id: 'rock1', type: 'echo', box: [60, 210, 110, 260], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.35 } },
+      { id: 'rock2', type: 'echo', box: [380, 380, 430, 430], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.3 } },
+      { id: 'rock3', type: 'echo', box: [220, 860, 270, 910], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.4 } },
+      { id: 'planet', type: 'echo', box: [24, 22, 142, 140], round: true, feather: 6, motion: { kind: 'spin', speed: 4 } },
+      { id: 'cluster', type: 'glow', points: [[380, 90, 12], [410, 74, 7], [356, 60, 6], [420, 110, 6]], color: [220, 230, 255], anim: 'pulse', period: 2.2, alpha: [0.3, 0.9], kickDur: 2 },
+      { id: 'moonRock', type: 'echo', box: [36, 850, 126, 970], feather: 6, motion: { kind: 'bob', amp: 3, period: 5, kickAmp: 6 } },
+      { id: 'galaxy', type: 'echo', box: [292, 856, 452, 1010], round: true, feather: 10, motion: { kind: 'spin', speed: -10 } },
+      { id: 'comets', type: 'meteors', area: [0, 0, 459, 1024], dir: [0.5, 0.8], speed: [160, 240], every: [5, 11], size: [1, 1.7] },
+      { type: 'vortex', center: [230, 510], rx: 230, ry: 420, count: 40, speed: 0.15, color: [200, 160, 255], alpha: 0.12, width: 1.2 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2.5, max: 26, color: [220, 200, 255], size: [0.6, 1.1], life: [3, 6], alpha: 0.6, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [20, 18, 146, 144], sound: 'whoosh', kick: ['planet', 'nebula'], flare: [200, 150, 255], glyph: '🪐' },
+      { area: [340, 40, 440, 130], sound: 'chime', kick: ['cluster'], flare: [230, 235, 255], glyph: '⭐' },
+      { area: [34, 848, 128, 972], sound: 'chime', kick: ['moonRock'], flare: [230, 230, 255], glyph: '🌙' },
+      { area: [288, 852, 456, 1014], sound: 'whoosh', kick: ['galaxy'], flare: [200, 150, 255], glyph: '🌀' },
+    ],
+  },
+
+  // ---- Zombies: a misty graveyard at night ----------------------------------------------------
+  'zombies-land': {
+    wind: { dir: 1, every: [8, 14], speed: [100, 160], width: [180, 280], lean: 0.25 },
+    layers: [
+      // Air first, at ground level: the green graveyard mist rolls and churns between the graves.
+      { id: 'mistFlow', type: 'flow', mask: 'mist', dir: [1, 0], dist: 24, period: 5, alpha: 0.9, glow: 0.2, glowPeriod: 4 },
+      { id: 'mist', type: 'mask', mask: 'mist', anim: { kind: 'wave', along: 'x', band: 260, speed: 20 }, alpha: [0, 0.35], gain: 0.6, kickDur: 2 },
+      { type: 'fog', area: [-120, 120, 1144, 572], count: 14, size: [90, 170], speed: 6, color: [90, 200, 140], alpha: 0.12 },
+      // The grasping hands claw at the air from the open graves.
+      { id: 'hand1', type: 'echo', box: [244, 440, 290, 520], feather: 5, motion: { kind: 'claw', amp: 2.2, period: 2.4, pivot: [266, 518] } },
+      { id: 'hand2', type: 'echo', box: [290, 436, 330, 486], feather: 5, motion: { kind: 'claw', amp: 2, period: 2.9, pivot: [310, 484] } },
+      { id: 'hand3', type: 'echo', box: [810, 430, 856, 482], feather: 5, motion: { kind: 'claw', amp: 2.2, period: 2.6, pivot: [833, 480] } },
+      { id: 'hand4', type: 'echo', box: [860, 442, 904, 500], feather: 5, motion: { kind: 'claw', amp: 2, period: 3.1, pivot: [882, 498] } },
+      // The crypt doorways glow faintly green, as if something waits inside.
+      { id: 'crypts', type: 'glow', points: [[240, 76, 22], [794, 88, 24]], color: [120, 255, 150], anim: 'pulse', period: 5, alpha: [0.05, 0.22], kickDur: 2 },
+      // Corners. Top right, the lantern flickers and sways on its hook.
+      { id: 'lantern', type: 'mask', mask: 'lantern', anim: { kind: 'flicker', speed: 4 }, alpha: [0.2, 0.8], bloom: 1, kickDur: 1.5 },
+      { id: 'lanternGlow', type: 'glow', points: [[938, 118, 64]], color: [255, 190, 100], anim: 'flicker', alpha: [0.1, 0.32], kickDur: 1.5 },
+      { id: 'lanternSway', type: 'echo', box: [898, 52, 980, 180], feather: 6, motion: { kind: 'rock', amp: 1.6, period: 3.6, pivot: [958, 30], kickAmp: 5 } },
+      // Bottom right, the crow bobs its head and shuffles; tapped, it caws and flaps.
+      { id: 'crow', type: 'echo', box: [898, 390, 1000, 488], feather: 6, autoKick: [6, 12], motion: { kind: 'bob', amp: 0, kickAmp: 2.4, period: 0.4 } },
+      // Bottom left, dirt trickles from the shovel's mound.
+      { id: 'dirt', type: 'particles', kind: 'drip', from: [[90, 470, 20]], rate: 0.6, max: 4, color: [90, 60, 40], size: [1, 1.5], life: [2, 3], fall: 12, splash: false },
+      { id: 'shovel', type: 'echo', box: [30, 330, 120, 500], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.35, pivot: [90, 495] } },
+      // Top left, the old headstone; tapped, its moss glows and something moans.
+      { id: 'stone', type: 'echo', box: [30, 20, 136, 150], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.4, pivot: [83, 148] } },
+      // Air: crows and bats cross the sky, fireflies of grave-light drift.
+      { type: 'flyers', area: [0, 0, 1024, 80], every: [6, 12], speed: [50, 80], size: [5, 8], color: [10, 14, 12] },
+      { id: 'wisps', type: 'particles', kind: 'wisp', area: [0, 100, 1024, 572], rate: 1, max: 10, color: [140, 255, 170], size: [2.5, 5], life: [3, 5], alpha: 0.2 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2, max: 20, color: [170, 255, 190], size: [0.6, 1.2], life: [3, 6], alpha: 0.6, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [28, 18, 138, 152], sound: 'groan', kick: ['stone', 'crypts'], flare: [140, 255, 170], glyph: '🪦', burst: { layer: 'wisps', n: 4, at: [83, 80], spread: 30 } },
+      { area: [896, 28, 982, 182], sound: 'whoosh', kick: ['lantern', 'lanternGlow', 'lanternSway'], flare: [255, 190, 100], glyph: '🏮' },
+      { area: [28, 328, 122, 540], sound: 'knock', kick: ['shovel'], flare: [200, 170, 120], burst: { layer: 'dirt', n: 4, at: [90, 470], spread: 20 } },
+      { area: [896, 388, 1002, 490], sound: 'screech', kick: ['crow'], flare: [140, 255, 170], glyph: '🪶' },
+      { area: [240, 430, 340, 530], sound: 'groan', kick: ['hand1', 'hand2'], flare: [140, 255, 170], glyph: '🧟' },
+      { area: [806, 426, 908, 504], sound: 'groan', kick: ['hand3', 'hand4'], flare: [140, 255, 170], glyph: '🧟' },
+    ],
+  },
+  'zombies-portrait': {
+    wind: { dir: 1, every: [8, 14], speed: [90, 140], width: [160, 240], lean: 0.12 },
+    layers: [
+      { id: 'mistFlow', type: 'flow', mask: 'mist', dir: [1, 0.2], dist: 22, period: 5, alpha: 0.9, glow: 0.2, glowPeriod: 4 },
+      { id: 'mist', type: 'mask', mask: 'mist', anim: { kind: 'wave', along: 'y', band: 280, speed: 22 }, alpha: [0, 0.35], gain: 0.6, kickDur: 2 },
+      { type: 'fog', area: [-120, 120, 580, 1024], count: 14, size: [80, 150], speed: 6, color: [90, 200, 140], alpha: 0.12 },
+      { id: 'hand1', type: 'echo', box: [114, 198, 152, 240], feather: 5, motion: { kind: 'claw', amp: 2, period: 2.4, pivot: [133, 238] } },
+      { id: 'hand2', type: 'echo', box: [374, 650, 412, 690], feather: 5, motion: { kind: 'claw', amp: 2, period: 2.9, pivot: [393, 688] } },
+      { id: 'hand3', type: 'echo', box: [346, 736, 384, 780], feather: 5, motion: { kind: 'claw', amp: 2, period: 2.6, pivot: [365, 778] } },
+      { id: 'hand4', type: 'echo', box: [94, 762, 124, 810], feather: 5, motion: { kind: 'claw', amp: 2, period: 3.1, pivot: [109, 808] } },
+      { id: 'crypts', type: 'glow', points: [[388, 216, 16], [30, 410, 16], [416, 356, 16]], color: [120, 255, 150], anim: 'pulse', period: 5, alpha: [0.05, 0.22], kickDur: 2 },
+      { id: 'lantern', type: 'mask', mask: 'lantern', anim: { kind: 'flicker', speed: 4 }, alpha: [0.2, 0.8], bloom: 1, kickDur: 1.5 },
+      { id: 'lanternGlow', type: 'glow', points: [[401, 86, 46]], color: [220, 240, 255], anim: 'flicker', alpha: [0.1, 0.3], kickDur: 1.5 },
+      { id: 'lanternSway', type: 'echo', box: [378, 34, 424, 126], feather: 5, motion: { kind: 'rock', amp: 1.6, period: 3.6, pivot: [404, 30], kickAmp: 5 } },
+      { id: 'crow', type: 'echo', box: [366, 852, 446, 928], feather: 6, autoKick: [6, 12], motion: { kind: 'bob', amp: 0, kickAmp: 2.4, period: 0.4 } },
+      { id: 'shovel', type: 'echo', box: [14, 840, 90, 990], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.35, pivot: [60, 985] } },
+      { id: 'stone', type: 'echo', box: [20, 22, 92, 116], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.4, pivot: [56, 114] } },
+      { type: 'flyers', area: [0, 0, 459, 80], every: [6, 12], speed: [45, 70], size: [4, 7], color: [10, 14, 12] },
+      { id: 'wisps', type: 'particles', kind: 'wisp', area: [0, 120, 459, 1024], rate: 1, max: 10, color: [140, 255, 170], size: [2.3, 4.5], life: [3, 5], alpha: 0.2 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2, max: 20, color: [170, 255, 190], size: [0.6, 1.1], life: [3, 6], alpha: 0.6, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [18, 20, 94, 118], sound: 'groan', kick: ['stone', 'crypts'], flare: [140, 255, 170], glyph: '🪦', burst: { layer: 'wisps', n: 4, at: [56, 70], spread: 24 } },
+      { area: [374, 30, 428, 130], sound: 'whoosh', kick: ['lantern', 'lanternGlow', 'lanternSway'], flare: [220, 240, 255], glyph: '🏮' },
+      { area: [12, 838, 92, 994], sound: 'knock', kick: ['shovel'], flare: [200, 170, 120] },
+      { area: [364, 850, 448, 930], sound: 'screech', kick: ['crow'], flare: [140, 255, 170], glyph: '🪶' },
+      { area: [100, 190, 160, 250], sound: 'groan', kick: ['hand1'], flare: [140, 255, 170], glyph: '🧟' },
+    ],
+  },
 };
