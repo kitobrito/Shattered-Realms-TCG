@@ -35,6 +35,7 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 #   keep: [[x0,y0,x1,y1]...]  only these areas can hold the object
 #   fg:   [[x0,y0,x1,y1]...]  surely object (forced in);  fg_polys: the same, outlined
 #   bg:   [[x0,y0,x1,y1]...]  surely background (forced out)
+#   union: [{hint}...]  add what those cuts find too
 #   within: {hint}  keep only what that cut finds too (colour rules inside the model's outline)
 #   cover: {'area': box, 'hsv': ranges} or {'polys': [...]}  scenery painted in front of the object, kept in front
 #   thr:  matte threshold (default 0.5);  grow: px to grow the cut;  max_hole, min_area
@@ -119,6 +120,19 @@ HINTS = {
     'void-portrait/rock1': {'method': 'poly', 'ellipses': [[129, 186, 8, 7]]},
     'void-portrait/rock2': {'method': 'poly', 'ellipses': [[425, 660, 6, 9]]},
     'void-portrait/rock3': {'method': 'poly', 'ellipses': [[245, 885, 13, 8, -40]]},
+    # Circle I: the dead tree (bark colours; the model adds its trunk), the ghosts (pale wisps).
+    'circle1-land/tree': {'method': 'hsv', 'hsv': [[0, 32, 30, 255, 22, 175]], 'close': 1, 'grow': 1, 'expand': 0, 'union': [{'method': 'model', 'expand': 0}]},
+    'circle1-portrait/tree': {'method': 'hsv', 'hsv': [[0, 32, 30, 255, 22, 175]], 'close': 1, 'grow': 1, 'expand': 0},
+    'circle1-land/ghostL': {'method': 'poly', 'refine': 3, 'polys': [[[45, 140], [52, 136], [58, 140], [60, 152], [64, 165], [70, 178], [62, 185], [48, 186], [34, 182], [28, 174], [36, 165], [44, 155]]]},
+    'circle1-land/ghostTR': {'expand': 10, 'union': [{'method': 'hsv', 'hsv': [[70, 105, 30, 255, 150, 255]], 'close': 2, 'expand': 10}]},
+    'circle1-portrait/ghostTR': {'expand': 10, 'union': [{'method': 'hsv', 'hsv': [[70, 105, 30, 255, 150, 255]], 'close': 2, 'expand': 10}]},
+    'circle1-portrait/statue': {'expand': 22},
+    # Circle II: the wilted rose reaches past its box; the torn veil (upright).
+    'circle2-land/rose': {'expand': 22},
+    'circle2-portrait/rose': {'expand': 22},
+    'circle2-portrait/veil': {'method': 'poly', 'refine': 3, 'polys': [[[340, 118], [360, 108], [385, 105], [410, 100], [422, 110], [418, 130], [400, 150], [392, 170], [385, 190], [375, 210], [365, 235], [358, 245], [352, 230], [345, 210], [338, 190], [335, 160], [338, 135]]]},
+    # Circle III: Cerberus in the mist (outlined silhouette).
+    'circle3-land/cerberus': {'method': 'poly', 'refine': 2, 'polys': [[[655, 52], [660, 42], [668, 36], [674, 34], [680, 38], [684, 25], [690, 18], [694, 22], [700, 20], [704, 28], [712, 26], [718, 28], [722, 36], [728, 44], [735, 50], [748, 62], [758, 66], [766, 58], [772, 62], [768, 72], [752, 72], [744, 78], [748, 90], [748, 105], [736, 105], [728, 92], [714, 96], [712, 105], [700, 105], [692, 98], [684, 105], [674, 105], [678, 90], [680, 75], [672, 64], [662, 62], [656, 58]]]},
     'ultraterrestrials-land/portal': {'method': 'disc', 'center': [922, 66], 'radius': 51},
     'ultraterrestrials-portrait/portal': {'method': 'disc', 'center': [379, 85], 'radius': 57},
     # Zombies: the hands clawing out of the graves (outlined, fitted to the bones).
@@ -351,6 +365,11 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
         cv2.circle(full, (int(round(c[0])), int(round(c[1]))), int(round(r)), 1.0, -1)
     else:
         raise ValueError(method)
+    for extra in hint.get('union', []):
+        # Parts another cut finds better (a trunk the colours miss).
+        u = cut(img, box, matter, extra, layer, None, key, iid)
+        if u:
+            full = np.maximum(full, u['mask'].astype(np.float32))
     if hint.get('within'):
         # Only where another cut (a hint of its own, e.g. the model's) also finds the object.
         w = cut(img, box, matter, hint['within'], layer, None, key, iid)
