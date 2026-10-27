@@ -38,6 +38,7 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 #   within: {hint}  keep only what that cut finds too (colour rules inside the model's outline)
 #   cover: {'area': box, 'hsv': ranges} or {'polys': [...]}  scenery painted in front of the object, kept in front
 #   thr:  matte threshold (default 0.5);  grow: px to grow the cut;  max_hole, min_area
+SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 'expand': 0}  # pale lavender stone
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 HINTS = {
     # Ice Age: the spears lying by the fire pits (thin: outlined, snapped to the paint).
@@ -100,6 +101,26 @@ HINTS = {
     # Vampires (upright): the coffin and the gargoyle on its pedestal, dark on dark.
     'vampires-portrait/coffin': {'method': 'poly', 'refine': 3, 'polys': [[[372, 868], [405, 855], [440, 860], [456, 872], [452, 925], [438, 965], [418, 988], [380, 995], [345, 982], [330, 968], [345, 925], [360, 890]]]},
     'vampires-portrait/garg': {'method': 'poly', 'refine': 3, 'polys': [[[8, 110], [15, 80], [30, 60], [48, 52], [60, 62], [62, 45], [75, 42], [86, 52], [88, 80], [90, 100], [88, 118], [100, 135], [105, 165], [30, 170], [15, 150]]]},
+    # Ultraterrestrials: the hourglasses (not their rock), the free-floating triangle, the portals.
+    'ultraterrestrials-land/hourglass': {'method': 'poly', 'refine': 2, 'polys': [[[61, 36], [80, 27], [105, 19], [113, 26], [110, 34], [130, 72], [148, 103], [152, 112], [140, 121], [115, 127], [103, 122], [97, 112], [80, 80], [68, 52], [60, 44]]]},
+    'ultraterrestrials-portrait/hourglass': {'method': 'poly', 'refine': 2, 'polys': [[[29, 58], [50, 45], [90, 36], [106, 36], [110, 45], [103, 55], [115, 85], [127, 115], [134, 138], [132, 150], [115, 158], [90, 160], [80, 155], [77, 140], [65, 120], [55, 95], [45, 70], [30, 65]]]},
+    'ultraterrestrials-land/tri1': {'method': 'poly', 'polys': [[[477, 70], [445, 136], [521, 138]]], 'holes': [[[481, 93], [461, 120], [499, 119]]]},
+    **{f'ultraterrestrials-{k}': SHIMMER for k in ('land/tri3', 'land/tri4', 'land/tri5', 'land/tri7', 'portrait/tri1', 'portrait/tri2', 'portrait/tri3', 'portrait/tri4')},
+    # Void: the galaxies (ellipses, they turn in their own plane), the moon with its rock, small free rocks.
+    'void-land/galaxy': {'method': 'poly', 'ellipses': [[912, 478, 86, 40, -35]]},
+    'void-land/galaxy2': {'method': 'poly', 'ellipses': [[258, 32, 38, 16, -18]]},
+    'void-land/galaxy3': {'method': 'poly', 'ellipses': [[265, 512, 40, 18, -25]]},
+    'void-portrait/galaxy': {'method': 'poly', 'ellipses': [[370, 935, 96, 45, -38]]},
+    'void-land/moonRock': {'method': 'poly', 'refine': 3, 'polys': [[[75, 415], [95, 405], [110, 407], [98, 420], [90, 440], [95, 455], [150, 452], [160, 460], [185, 475], [183, 500], [165, 520], [130, 540], [100, 545], [75, 530], [60, 505], [50, 480], [58, 465], [75, 458], [72, 440]]]},
+    'void-land/rock4': {'method': 'poly', 'polys': [[[758, 486], [765, 475], [800, 467], [803, 474], [790, 490], [770, 496]]]},
+    'void-land/rock5': {'method': 'poly', 'ellipses': [[566, 18, 7, 5]]},
+    'void-land/rock1': {'method': 'poly', 'ellipses': [[169, 163, 6, 7]]},
+    'void-land/rock2': {'method': 'poly', 'ellipses': [[819, 84, 6, 11]]},
+    'void-portrait/rock1': {'method': 'poly', 'ellipses': [[129, 186, 8, 7]]},
+    'void-portrait/rock2': {'method': 'poly', 'ellipses': [[425, 660, 6, 9]]},
+    'void-portrait/rock3': {'method': 'poly', 'ellipses': [[245, 885, 13, 8, -40]]},
+    'ultraterrestrials-land/portal': {'method': 'disc', 'center': [922, 66], 'radius': 51},
+    'ultraterrestrials-portrait/portal': {'method': 'disc', 'center': [379, 85], 'radius': 57},
     'ice-age-portrait/skull': {'method': 'poly', 'polys': [[[40.6, 13], [51, 16.75], [61, 25.5], [59, 38], [70, 49], [73.75, 55], [85, 59], [98.75, 60.5], [104, 55.5], [105, 48], [100, 41.75], [92, 36], [102.5, 39], [107.5, 45.5], [108, 55.5], [102.5, 63], [90, 64], [77, 62], [78, 70], [79, 83], [77.5, 93], [69, 96], [60, 93], [56, 83], [55, 64], [45, 58], [33.75, 54], [32.5, 44], [27.5, 29], [28.75, 21.75], [35, 15.5]]],
                                'holes': [[[61, 67], [72, 68], [74, 83], [71, 90], [65, 92], [61, 85]]]},
     'ice-age-portrait/spear2': {'method': 'poly', 'polys': [[[99, 955], [98, 966], [90, 976], [62, 1008], [57, 1016], [53, 1013], [55, 1006], [83, 975], [87, 966], [94, 958]]]},

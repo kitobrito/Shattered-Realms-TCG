@@ -19,8 +19,10 @@
 //              from the foliage's own cut-out (below), so no background ripples with it
 //   crawlers   many small painted creatures (bees on the comb), each wandering and twitching
 //              a little on its own; a tap nearby makes them scurry
-//   echo       a painted object that moves (sway, bob, rock, breathe, spin): ghosts drifting,
-//              hands clawing, boulders straining
+//   echo       a painted object that moves (sway, bob, rock, breathe, spin; spin with
+//              `tilt: [angle, ratio]` turns a slanted disc in its own plane): ghosts drifting,
+//              hands clawing, boulders straining; or, for an object fused into the painting around
+//              it, shimmer: light pulses through it where it is
 //
 // Things that move (echo, crawlers, warp) are cut out of the painting by
 // tools/board-objects.py (BOARD_OBJECTS): the object alone, and a patch of the board with the
@@ -702,6 +704,7 @@ export async function startBoardFx(host, key, orient, opts = {}) {
   // Where an echo is now: its offset, turn and scale about its pivot (null when at rest).
   function echoPose(st, t) {
     const m = st.motion ?? { kind: 'sway', amp: 1.5, period: 5 };
+    if (m.kind === 'shimmer') return null; // lit in place, never moved (drawEcho)
     const kick = kicked(st, t, 1.6);
     const ph = TAU * t / (m.period ?? 5) + (m.phase ?? st.seed);
     // kickAmp: still at rest (amp 0), it only shakes when tapped (a skull rattling).
@@ -716,7 +719,7 @@ export async function startBoardFx(host, key, orient, opts = {}) {
     else if (m.kind === 'claw') { dy = -Math.abs(Math.sin(ph)) * amp; rot = Math.sin(ph * 2) * amp * 0.4 * Math.PI / 180; }
     else { rot = Math.sin(ph) * amp * Math.PI / 180; dx = Math.sin(ph) * amp * 0.3; }
     const [x0, y0, x1, y1] = st.box;
-    return { dx, dy, rot, sc, pv: m.pivot ?? [(x0 + x1) / 2, (y0 + y1) / 2] };
+    return { dx, dy, rot, sc, tilt: m.tilt, pv: m.pivot ?? [(x0 + x1) / 2, (y0 + y1) / 2] };
   }
   // An object's cut-out (or its patch), drawn at its place in the painting, offset by (ox, oy) image px.
   function drawObj(o, ox, oy, kind = 'obj') {
@@ -735,13 +738,30 @@ export async function startBoardFx(host, key, orient, opts = {}) {
     }
   }
   function drawEcho(st, t) {
+    if (st.motion?.kind === 'shimmer' && st.obj) {
+      // Joined to the painting around it (a triangle fused into a stairway): it can't move without
+      // tearing the picture, so light pulses through it instead, in place.
+      const m = st.motion;
+      const k = kicked(st, t, 1.6);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = Math.min(1, (m.amp ?? 0.3) * (0.5 + 0.5 * Math.sin(TAU * t / (m.period ?? 4) + st.seed)) + k * 0.5);
+      drawObj(st.obj, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      return;
+    }
     const p = echoPose(st, t);
     if (!p) return;
     const [x0, y0, x1, y1] = st.box;
     ctx.save();
     ctx.globalAlpha = st.alpha ?? 1;
     ctx.translate(p.pv[0] * SX + p.dx * SX, p.pv[1] * SY + p.dy * SY);
-    ctx.rotate(p.rot);
+    if (p.tilt) {
+      // A disc seen at a slant (a galaxy): it turns in its own plane, its outline staying put.
+      const [deg, ratio] = p.tilt;
+      const a = deg * Math.PI / 180;
+      ctx.rotate(a); ctx.scale(1, ratio); ctx.rotate(p.rot); ctx.scale(1, 1 / ratio); ctx.rotate(-a);
+    } else ctx.rotate(p.rot);
     ctx.scale(p.sc, p.sc);
     if (st.obj) drawObj(st.obj, -p.pv[0], -p.pv[1]);
     else ctx.drawImage(st.crop, (x0 - p.pv[0]) * SX, (y0 - p.pv[1]) * SY, (x1 - x0) * SX, (y1 - y0) * SY);

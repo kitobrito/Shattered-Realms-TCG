@@ -33,6 +33,8 @@ def reach(layer, box):
     pv = m.get('pivot', [(x0 + x1) / 2, (y0 + y1) / 2])
     r = max(math.hypot(x - pv[0], y - pv[1]) for x in (x0, x1) for y in (y0, y1))
     k = m.get('kind', 'sway')
+    if k == 'shimmer':
+        return 2
     if k in ('bob',):
         return amp + 2
     if k == 'drift':
