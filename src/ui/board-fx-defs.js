@@ -984,4 +984,199 @@ export const BOARD_FX = {
       { area: [352, 902, 458, 994], sound: 'clink', kick: ['tools'], flare: [255, 210, 140], glyph: '🔧' },
     ],
   },
+
+  // ---- Sharks: a sunlit shallow sea ------------------------------------------------------------
+  'sharks-land': {
+    wind: null,
+    layers: [
+      // Light: the caustic net of sunlight dances over the sand and through the water.
+      { id: 'causticFlow', type: 'flow', mask: 'caustics', dir: [1, 0.5], dist: 10, period: 2.2, alpha: 0.9, glow: 0.3, glowPeriod: 1.7 },
+      { id: 'caustics', type: 'mask', mask: 'caustics', anim: { kind: 'wave', along: 'x', band: 70, speed: 30 }, alpha: [0, 0.45], gain: 0.75, kickDur: 2 },
+      { id: 'water', type: 'mask', mask: 'water', anim: { kind: 'wave', along: 'y', band: 90, speed: 14 }, alpha: [0, 0.3], gain: 0.55 },
+      { id: 'rays', type: 'rays', beams: [[520, 0, 12, 600, 90], [690, 0, 6, 600, 70], [140, 0, 18, 560, 80]], color: [210, 250, 255], alpha: [0.04, 0.14], period: 6 },
+      // Sharks circle: their shadows glide over the sand.
+      { id: 'sharks', type: 'particles', kind: 'shadow', area: [0, 0, 1024, 572], rate: 0.12, max: 3, color: [10, 50, 60], size: [9, 13], life: [16, 26], alpha: 0.24, speed: 1 },
+      // Growth: the kelp and coral fronds sway with the current.
+      { id: 'kelpB', type: 'warp', box: [300, 420, 1024, 572], base: 'bottom', mask: 'kelp', amp: 2.6, period: 3.4, wave: 2.6 },
+      { id: 'kelpR', type: 'warp', box: [880, 100, 1024, 420], base: 'right', mask: 'kelp', amp: 2.4, period: 3.8, wave: 2.4 },
+      { id: 'kelpT', type: 'warp', box: [360, 0, 880, 160], base: 'top', mask: 'kelp', amp: 2.2, period: 4, wave: 2.2 },
+      { id: 'kelpL', type: 'warp', box: [0, 200, 240, 420], base: 'left', mask: 'kelp', amp: 2.2, period: 4.2, wave: 2.2 },
+      // Corners. Bottom left, the giant clam breathes and its pearl gleams; bottom middle, the
+      // anemone's tentacles wave; top right, the anchor's weed sways.
+      { id: 'clam', type: 'echo', box: [82, 390, 222, 530], feather: 8, motion: { kind: 'breathe', amp: 1.2, period: 4, pivot: [150, 520], kickAmp: 4 } },
+      { id: 'pearl', type: 'mask', mask: 'pearl', anim: { kind: 'pulse', period: 3 }, alpha: [0.2, 0.7], bloom: 1, kickDur: 2 },
+      { id: 'pearlGlint', type: 'particles', kind: 'glint', from: [[156, 458, 6]], rate: 0.6, max: 2, color: [255, 255, 255], size: [1.2, 2], life: [0.5, 1] },
+      { id: 'anemone', type: 'warp', box: [660, 424, 780, 540], base: 'bottom', amp: 2.6, period: 2.6, wave: 3.2 },
+      { id: 'anchor', type: 'warp', box: [778, 56, 940, 230], base: 'top', mask: 'kelp', amp: 2, period: 3.6, wave: 2 },
+      // Air (water): bubbles stream up, fish dart, motes of sand drift.
+      { id: 'bubbles', type: 'particles', kind: 'bubble', from: [[156, 450, 14], [720, 470, 20], [900, 520, 30], [550, 160, 20]], rate: 3, max: 30, color: [220, 250, 255], size: [1, 2.4], life: [1.5, 3], speed: 2 },
+      { id: 'fish', type: 'particles', kind: 'fly', from: [[600, 120, 40], [200, 300, 40], [950, 300, 30]], rate: 0.8, max: 8, color: [255, 200, 90], size: [1.4, 2], life: [5, 8] },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2, max: 20, color: [230, 250, 255], size: [0.6, 1.1], life: [3, 6], alpha: 0.55, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [80, 388, 224, 532], sound: 'splash', kick: ['clam', 'pearl'], flare: [220, 230, 255], glyph: '🦪', burst: { layer: 'bubbles', n: 10, at: [156, 450], spread: 12 } },
+      { area: [656, 420, 784, 544], sound: 'squelch', kick: ['anemone'], flare: [255, 120, 90], burst: { layer: 'bubbles', n: 8, at: [720, 470], spread: 18 } },
+      { area: [776, 54, 942, 232], sound: 'clink', kick: ['anchor'], flare: [200, 240, 255], glyph: '⚓' },
+      { area: [0, 0, 300, 200], sound: 'splash', flare: [200, 240, 255], glyph: '🦈', burst: { layer: 'sharks', n: 1, at: [150, 100], spread: 10 } },
+      { area: [240, 160, 860, 420], sound: 'splash', kick: ['caustics', 'causticFlow'], flare: [210, 250, 255], burst: { layer: 'bubbles', n: 6, spread: 10 } },
+    ],
+  },
+  'sharks-portrait': {
+    wind: null,
+    layers: [
+      { id: 'causticFlow', type: 'flow', mask: 'caustics', dir: [0.5, 1], dist: 10, period: 2.2, alpha: 0.9, glow: 0.3, glowPeriod: 1.7 },
+      { id: 'caustics', type: 'mask', mask: 'caustics', anim: { kind: 'wave', along: 'y', band: 80, speed: 30 }, alpha: [0, 0.45], gain: 0.75, kickDur: 2 },
+      { id: 'water', type: 'mask', mask: 'water', anim: { kind: 'wave', along: 'y', band: 90, speed: 14 }, alpha: [0, 0.3], gain: 0.55 },
+      { id: 'rays', type: 'rays', beams: [[120, 0, 10, 1000, 80], [330, 0, 6, 1000, 70]], color: [210, 250, 255], alpha: [0.04, 0.14], period: 6 },
+      { id: 'sharks', type: 'particles', kind: 'shadow', area: [0, 0, 459, 1024], rate: 0.12, max: 3, color: [10, 50, 60], size: [8, 12], life: [16, 26], alpha: 0.24, speed: 1 },
+      { id: 'kelpL', type: 'warp', box: [0, 200, 130, 900], base: 'left', mask: 'kelp', amp: 2.2, period: 4.2, wave: 2.2 },
+      { id: 'kelpR', type: 'warp', box: [330, 100, 459, 900], base: 'right', mask: 'kelp', amp: 2.2, period: 3.8, wave: 2.4 },
+      { id: 'kelpB', type: 'warp', box: [100, 880, 459, 1024], base: 'bottom', mask: 'kelp', amp: 2.4, period: 3.4, wave: 2.6 },
+      { id: 'clam', type: 'echo', box: [36, 876, 128, 970], feather: 6, motion: { kind: 'breathe', amp: 1.2, period: 4, pivot: [82, 966], kickAmp: 4 } },
+      { id: 'pearl', type: 'mask', mask: 'pearl', anim: { kind: 'pulse', period: 3 }, alpha: [0.2, 0.7], bloom: 1, kickDur: 2 },
+      { id: 'anemone', type: 'warp', box: [268, 916, 340, 990], base: 'bottom', amp: 2.4, period: 2.6, wave: 3.2 },
+      { id: 'anchor', type: 'warp', box: [350, 30, 430, 120], base: 'top', mask: 'kelp', amp: 1.8, period: 3.6, wave: 2 },
+      { id: 'bubbles', type: 'particles', kind: 'bubble', from: [[80, 920, 12], [300, 950, 16], [40, 500, 20], [420, 400, 20]], rate: 3, max: 28, color: [220, 250, 255], size: [1, 2.2], life: [1.5, 3], speed: 2 },
+      { id: 'fish', type: 'particles', kind: 'fly', from: [[60, 300, 30], [400, 600, 30], [80, 700, 30]], rate: 0.8, max: 8, color: [255, 200, 90], size: [1.3, 1.9], life: [5, 8] },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2, max: 20, color: [230, 250, 255], size: [0.6, 1], life: [3, 6], alpha: 0.55, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [34, 874, 130, 972], sound: 'splash', kick: ['clam', 'pearl'], flare: [220, 230, 255], glyph: '🦪', burst: { layer: 'bubbles', n: 10, at: [80, 920], spread: 10 } },
+      { area: [264, 912, 344, 994], sound: 'squelch', kick: ['anemone'], flare: [255, 120, 90], burst: { layer: 'bubbles', n: 8, at: [300, 950], spread: 14 } },
+      { area: [346, 26, 434, 124], sound: 'clink', kick: ['anchor'], flare: [200, 240, 255], glyph: '⚓' },
+      { area: [0, 0, 160, 160], sound: 'splash', flare: [200, 240, 255], glyph: '🦈', burst: { layer: 'sharks', n: 1, at: [80, 80], spread: 8 } },
+    ],
+  },
+
+  // ---- Ultraterrestrials: an impossible pocket dimension ----------------------------------------
+  'ultraterrestrials-land': {
+    wind: null,
+    layers: [
+      // Ground: an iridescent sheen rolls across the crystal plane; stars twinkle in its reflection.
+      { id: 'plane', type: 'mask', mask: 'plane', anim: { kind: 'wave', along: 'x', band: 260, speed: 34 }, alpha: [0, 0.22], gain: 0.5, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'stars' }, rate: 6, max: 26, color: [255, 250, 255], size: [0.8, 1.6], life: [0.4, 1] },
+      // The impossible shapes drift and turn in the void; the staircases loop slowly.
+      { id: 'tri1', type: 'echo', box: [446, 54, 520, 136], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.3 } },
+      { id: 'tri2', type: 'echo', box: [540, 22, 620, 104], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.26 } },
+      { id: 'tri3', type: 'echo', box: [668, 26, 740, 102], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.33 } },
+      { id: 'tri4', type: 'echo', box: [866, 228, 990, 318], feather: 6, motion: { kind: 'drift', amp: 3.2, speed: 0.28 } },
+      { id: 'tri5', type: 'echo', box: [954, 306, 1024, 400], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.31 } },
+      { id: 'tri6', type: 'echo', box: [272, 480, 360, 560], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.27 } },
+      { id: 'tri7', type: 'echo', box: [656, 456, 740, 536], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.3 } },
+      { id: 'stairs', type: 'echo', box: [70, 258, 184, 386], feather: 8, motion: { kind: 'rock', amp: 1.2, period: 7, pivot: [127, 322] } },
+      // Corners. Top left, the hourglass runs upward: sand streams up through its neck.
+      { id: 'sand', type: 'particles', kind: 'mote', from: [[106, 94, 2]], rate: 6, max: 20, color: [255, 220, 140], size: [0.6, 1], life: [0.6, 1], alpha: 0.9, speed: 2.5 },
+      { id: 'hourglass', type: 'echo', box: [60, 20, 152, 134], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 3, period: 0.4, pivot: [106, 77] } },
+      // Top right, the spiral portal turns and pulses.
+      { id: 'portal', type: 'echo', box: [868, 14, 976, 120], round: true, feather: 10, motion: { kind: 'spin', speed: 30 } },
+      { id: 'portalGlow', type: 'glow', points: [[922, 67, 62]], color: [255, 120, 220], anim: 'pulse', period: 2.4, alpha: [0.1, 0.32], kickDur: 2 },
+      { id: 'pull', type: 'vortex', center: [922, 67], rx: 70, ry: 60, count: 26, speed: 1.2, color: [255, 180, 255], alpha: 0.22 },
+      // Bottom left, the crystal shards shimmer through the spectrum.
+      { id: 'crystal', type: 'mask', mask: 'crystal', anim: { kind: 'wave', along: 'y', band: 50, speed: 22 }, alpha: [0.05, 0.75], gain: 0.85, kickDur: 2 },
+      { id: 'crystalGlow', type: 'glow', points: [[118, 466, 56]], color: [180, 255, 240], anim: 'pulse', period: 3.2, alpha: [0.08, 0.26], kickDur: 2 },
+      // Bottom right, the impossible cube turns slowly on its corner.
+      { id: 'cube', type: 'echo', box: [884, 424, 978, 518], round: true, feather: 6, motion: { kind: 'spin', speed: 9 } },
+      // Air: gold stardust streams through the void.
+      { type: 'stream', path: [[-20, 200], [180, 160], [260, 60], [400, 20], [600, 40], [780, 90], [1044, 60]], count: 40, speed: 22, width: 18, color: [255, 220, 150], alpha: 0.3, size: [0.8, 1.6], tail: 10 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 3, max: 30, color: [230, 210, 255], size: [0.6, 1.3], life: [3, 6], alpha: 0.7, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [56, 16, 156, 138], sound: 'chime', kick: ['hourglass'], flare: [255, 220, 140], glyph: '⏳', burst: { layer: 'sand', n: 14, at: [106, 94], spread: 4 } },
+      { area: [864, 10, 980, 124], sound: 'whoosh', kick: ['portal', 'portalGlow'], flare: [255, 140, 230], glyph: '🌀' },
+      { area: [60, 394, 180, 532], sound: 'chime', kick: ['crystal', 'crystalGlow'], flare: [180, 255, 240], glyph: '💎' },
+      { area: [880, 420, 982, 522], sound: 'beam', kick: ['cube'], flare: [230, 210, 255], glyph: '🧊' },
+    ],
+  },
+  'ultraterrestrials-portrait': {
+    wind: null,
+    layers: [
+      { id: 'plane', type: 'mask', mask: 'plane', anim: { kind: 'wave', along: 'y', band: 300, speed: 40 }, alpha: [0, 0.22], gain: 0.5, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'stars' }, rate: 6, max: 26, color: [255, 250, 255], size: [0.8, 1.5], life: [0.4, 1] },
+      { id: 'tri1', type: 'echo', box: [140, 20, 232, 110], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.3 } },
+      { id: 'tri2', type: 'echo', box: [370, 320, 440, 400], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.27 } },
+      { id: 'tri3', type: 'echo', box: [20, 600, 100, 690], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.31 } },
+      { id: 'tri4', type: 'echo', box: [196, 880, 262, 950], feather: 6, motion: { kind: 'drift', amp: 3, speed: 0.29 } },
+      { id: 'sand', type: 'particles', kind: 'mote', from: [[76, 92, 2]], rate: 6, max: 20, color: [255, 220, 140], size: [0.6, 1], life: [0.6, 1], alpha: 0.9, speed: 2.5 },
+      { id: 'hourglass', type: 'echo', box: [30, 30, 122, 156], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 3, period: 0.4, pivot: [76, 93] } },
+      { id: 'portal', type: 'echo', box: [318, 24, 440, 146], round: true, feather: 10, motion: { kind: 'spin', speed: 30 } },
+      { id: 'portalGlow', type: 'glow', points: [[379, 85, 66]], color: [255, 120, 220], anim: 'pulse', period: 2.4, alpha: [0.1, 0.32], kickDur: 2 },
+      { id: 'pull', type: 'vortex', center: [379, 85], rx: 74, ry: 70, count: 24, speed: 1.2, color: [255, 180, 255], alpha: 0.22 },
+      { id: 'crystal', type: 'mask', mask: 'crystal', anim: { kind: 'wave', along: 'y', band: 50, speed: 22 }, alpha: [0.05, 0.75], gain: 0.85, kickDur: 2 },
+      { id: 'crystalGlow', type: 'glow', points: [[90, 882, 50]], color: [180, 255, 240], anim: 'pulse', period: 3.2, alpha: [0.08, 0.26], kickDur: 2 },
+      { id: 'cube', type: 'echo', box: [334, 826, 440, 932], round: true, feather: 6, motion: { kind: 'spin', speed: 9 } },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 3, max: 30, color: [230, 210, 255], size: [0.6, 1.2], life: [3, 6], alpha: 0.7, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [26, 26, 126, 160], sound: 'chime', kick: ['hourglass'], flare: [255, 220, 140], glyph: '⏳', burst: { layer: 'sand', n: 14, at: [76, 92], spread: 4 } },
+      { area: [314, 20, 444, 150], sound: 'whoosh', kick: ['portal', 'portalGlow'], flare: [255, 140, 230], glyph: '🌀' },
+      { area: [36, 816, 144, 944], sound: 'chime', kick: ['crystal', 'crystalGlow'], flare: [180, 255, 240], glyph: '💎' },
+      { area: [330, 822, 444, 936], sound: 'beam', kick: ['cube'], flare: [230, 210, 255], glyph: '🧊' },
+    ],
+  },
+
+  // ---- Vampires: a gothic castle courtyard under a red moon ------------------------------------
+  'vampires-land': {
+    wind: { dir: -1, every: [7, 12], speed: [120, 180], width: [160, 260], lean: 0.25 },
+    layers: [
+      // Light: the blood moon glows over the wall; red light washes across the wet cobbles.
+      { id: 'moonGlow', type: 'glow', points: [[512, 0, 150]], color: [255, 60, 60], anim: 'pulse', period: 6, alpha: [0.1, 0.25], kickDur: 3 },
+      { id: 'rays', type: 'rays', beams: [[440, 0, 10, 560, 80], [590, 0, -10, 560, 80]], color: [255, 90, 90], alpha: [0.03, 0.1], period: 8 },
+      // The stained glass of both hero frames pulses like a heartbeat; blood shimmers and creeps.
+      { id: 'bloodFlow', type: 'flow', mask: 'blood', dir: [1, 0.2], dist: 8, period: 4, alpha: 0.9, glow: 0.25, glowPeriod: 1.1 },
+      { id: 'blood', type: 'mask', mask: 'blood', anim: { kind: 'pulse', period: 1.1 }, alpha: [0.05, 0.4], bloom: 0.6, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: [100, 160, 920, 480], rate: 2.5, max: 10, color: [255, 200, 200], size: [0.8, 1.4], life: [0.4, 0.8] },
+      // Growth: the rose vines stir; petals fall and drift across the courtyard.
+      { id: 'rosesL', type: 'warp', box: [0, 140, 140, 440], base: 'left', mask: 'roses', amp: 1.8, period: 4.4, wave: 2.4 },
+      { id: 'rosesR', type: 'warp', box: [890, 150, 1024, 400], base: 'right', mask: 'roses', amp: 1.8, period: 4, wave: 2.4 },
+      { id: 'rosesB', type: 'warp', box: [130, 480, 860, 572], base: 'bottom', mask: 'roses', amp: 1.8, period: 3.8, wave: 2.6 },
+      { id: 'petals', type: 'particles', kind: 'petal', area: [0, -20, 1024, 572], rate: 0.9, max: 14, color: [200, 20, 40], size: [1.6, 2.6], life: [7, 11], speed: 0.6 },
+      // Corners. Top left, the gargoyle's eyes burn; tapped, it stirs.
+      { id: 'garg', type: 'echo', box: [22, 4, 140, 150], feather: 8, autoKick: [10, 18], motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.5, pivot: [80, 140] } },
+      { id: 'gargEyes', type: 'glow', points: [[84, 52, 5], [104, 54, 5]], color: [255, 40, 40], anim: 'pulse', period: 3.4, alpha: [0.2, 0.75], kickDur: 2 },
+      // Top right, the goblet of blood glints and ripples.
+      { id: 'goblet', type: 'glow', points: [[946, 48, 22]], color: [255, 40, 60], anim: 'pulse', period: 2.4, alpha: [0.08, 0.3], kickDur: 2 },
+      { id: 'gobletGlint', type: 'particles', kind: 'glint', area: [916, 22, 980, 128], rate: 1, max: 3, color: [255, 240, 240], size: [1, 1.6], life: [0.4, 0.8] },
+      // Bottom left, the candelabra's red candles flicker and drip wax.
+      { id: 'candles', type: 'glow', points: [[38, 410, 11], [66, 364, 11], [91, 384, 11], [108, 398, 11]], color: [255, 180, 90], anim: 'flicker', alpha: [0.35, 0.9], kickDur: 2 },
+      { id: 'cflames', type: 'flames', points: [[38, 414, 5, 10], [66, 368, 5, 10], [91, 388, 5, 10], [108, 402, 5, 10]], tongues: 2, alpha: 0.9 },
+      { id: 'wax', type: 'particles', kind: 'drip', from: [[40, 430, 3], [68, 384, 3], [106, 418, 3]], rate: 0.4, max: 3, color: [200, 20, 30], size: [1, 1.5], life: [3, 4], fall: 14, splash: false },
+      // Bottom right, the coffin lid shifts now and then; a bat escapes when tapped.
+      { id: 'coffin', type: 'echo', box: [884, 392, 1012, 512], feather: 8, autoKick: [9, 16], motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.4, pivot: [948, 510] } },
+      // Air: bats cross the moon, a low red mist hangs over the stones.
+      { id: 'bats', type: 'flyers', area: [100, 0, 1000, 120], every: [4, 9], speed: [60, 100], size: [5, 8], color: [20, 6, 10] },
+      { type: 'fog', area: [-80, 380, 1104, 600], count: 10, size: [90, 160], speed: 4, color: [140, 30, 40], alpha: 0.09 },
+    ],
+    pokes: [
+      { area: [20, 2, 142, 152], sound: 'growl', kick: ['garg', 'gargEyes'], flare: [255, 60, 60], glyph: '🗿' },
+      { area: [910, 16, 986, 136], sound: 'clink', kick: ['goblet'], flare: [255, 60, 80], glyph: '🍷' },
+      { area: [18, 350, 128, 540], sound: 'whoosh', kick: ['candles'], flare: [255, 180, 90], glyph: '🕯️' },
+      { area: [846, 386, 1018, 552], sound: 'knock', kick: ['coffin'], flare: [255, 60, 60], glyph: '🦇' },
+      { area: [400, 0, 620, 50], sound: 'screech', kick: ['moonGlow'], flare: [255, 80, 80], glyph: '🦇' },
+    ],
+  },
+  'vampires-portrait': {
+    wind: { dir: -1, every: [7, 12], speed: [100, 150], width: [140, 220], lean: 0.12 },
+    layers: [
+      { id: 'moonGlow', type: 'glow', points: [[230, 10, 130]], color: [255, 60, 60], anim: 'pulse', period: 6, alpha: [0.1, 0.25], kickDur: 3 },
+      { id: 'bloodFlow', type: 'flow', mask: 'blood', dir: [0.2, 1], dist: 8, period: 4, alpha: 0.9, glow: 0.25, glowPeriod: 1.1 },
+      { id: 'blood', type: 'mask', mask: 'blood', anim: { kind: 'pulse', period: 1.1 }, alpha: [0.05, 0.4], bloom: 0.6, kickDur: 2 },
+      { id: 'rosesL', type: 'warp', box: [0, 180, 110, 800], base: 'left', mask: 'roses', amp: 1.8, period: 4.4, wave: 2.4 },
+      { id: 'rosesR', type: 'warp', box: [350, 180, 459, 800], base: 'right', mask: 'roses', amp: 1.8, period: 4, wave: 2.4 },
+      { id: 'petals', type: 'particles', kind: 'petal', area: [0, -20, 459, 1024], rate: 0.9, max: 14, color: [200, 20, 40], size: [1.5, 2.4], life: [7, 11], speed: 0.6 },
+      { id: 'garg', type: 'echo', box: [6, 40, 106, 160], feather: 6, autoKick: [10, 18], motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.5, pivot: [56, 156] } },
+      { id: 'gargEyes', type: 'glow', points: [[64, 82, 4], [80, 84, 4]], color: [255, 40, 40], anim: 'pulse', period: 3.4, alpha: [0.2, 0.75], kickDur: 2 },
+      { id: 'goblet', type: 'glow', points: [[424, 94, 18]], color: [255, 40, 60], anim: 'pulse', period: 2.4, alpha: [0.08, 0.3], kickDur: 2 },
+      { id: 'candles', type: 'glow', points: [[28, 870, 9], [56, 826, 9], [78, 852, 9], [96, 866, 9]], color: [255, 180, 90], anim: 'flicker', alpha: [0.35, 0.9], kickDur: 2 },
+      { id: 'cflames', type: 'flames', points: [[28, 874, 4, 9], [56, 830, 4, 9], [78, 856, 4, 9], [96, 870, 4, 9]], tongues: 2, alpha: 0.9 },
+      { id: 'coffin', type: 'echo', box: [334, 852, 456, 990], feather: 8, autoKick: [9, 16], motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.4, pivot: [395, 988] } },
+      { id: 'bats', type: 'flyers', area: [0, 0, 459, 120], every: [4, 9], speed: [50, 80], size: [4, 7], color: [20, 6, 10] },
+      { type: 'fog', area: [-80, 500, 540, 1024], count: 10, size: [80, 140], speed: 4, color: [140, 30, 40], alpha: 0.09 },
+    ],
+    pokes: [
+      { area: [4, 38, 108, 162], sound: 'growl', kick: ['garg', 'gargEyes'], flare: [255, 60, 60], glyph: '🗿' },
+      { area: [394, 60, 456, 170], sound: 'clink', kick: ['goblet'], flare: [255, 60, 80], glyph: '🍷' },
+      { area: [10, 810, 120, 990], sound: 'whoosh', kick: ['candles'], flare: [255, 180, 90], glyph: '🕯️' },
+      { area: [330, 848, 458, 994], sound: 'knock', kick: ['coffin'], flare: [255, 60, 60], glyph: '🦇' },
+    ],
+  },
 };

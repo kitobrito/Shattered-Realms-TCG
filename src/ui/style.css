@@ -5170,3 +5170,7 @@ body.reduced-motion .descent { display: none; }
 .arena.frame-stone { --fr-line: #2a1c0c; --fr-mid: #a88a5c; --fr-hi: #ffe2a0; }
 /* Lycanthropes: dark wood bound in moonlit silver. */
 .arena.frame-silverwood { --fr-line: #0c0a08; --fr-mid: #4a3a2a; --fr-hi: #dfe8ff; }
+/* Sharks: sea-worn brass porthole, sunlit aqua edge. */
+.arena.frame-coral { --fr-line: #062428; --fr-mid: #b08a4a; --fr-hi: #9ff8ff; }
+/* Ultraterrestrials: gold and violet, folded light. */
+.arena.frame-astral { --fr-line: #1a0c2c; --fr-mid: #c8a04a; --fr-hi: #e8c8ff; }

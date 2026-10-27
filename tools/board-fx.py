@@ -107,6 +107,10 @@ RULES = {
     'blueglow': lambda h, s, v: hue_near(h, 200, 25) * ramp(s, 0.45, 0.7) * ramp(v, 0.6, 0.85),
     # warm lamp and furnace light
     'warmlight': lambda h, s, v: hue_near(h, 35, 25) * ramp(s, 0.35, 0.6) * ramp(v, 0.8, 0.95),
+    # blood and red stained glass: deep red, saturated
+    'blood': lambda h, s, v: hue_near(h, 356, 16) * ramp(s, 0.6, 0.85) * ramp(v, 0.45, 0.8),
+    # roses and rose leaves (vines along the walls)
+    'roses': lambda h, s, v: np.maximum(hue_near(h, 352, 18) * ramp(s, 0.55, 0.8) * ramp(v, 0.3, 0.6), hue_near(h, 120, 40) * ramp(s, 0.3, 0.5) * ramp(v, 0.2, 0.45)),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),

@@ -177,4 +177,39 @@ SPEC = {
         'tracks': ['blueglow', [[50, 50, 410, 920]], {'blur': 0.6, 'show': [0, 160, 255]}],
         'furnace': ['warmlight', [[110, 0, 140, 40], [340, 0, 370, 40]], {'blur': 1, 'show': [255, 120, 0]}],
     },
+    # ---- Sharks: a sunlit shallow sea ----
+    'sharks-land': {
+        'caustics': ['bright', FULL_L, {'hp': [4, 1, 0.04, 0.14], 'scale': 0.5, 'show': [255, 255, 255]}],
+        'water': ['biolum', FULL_L, {'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}],
+        'kelp': ['grass', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'pearl': ['bright', [[140, 440, 172, 476]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'sharks-portrait': {
+        'caustics': ['bright', FULL_P, {'hp': [4, 1, 0.04, 0.14], 'scale': 0.5, 'show': [255, 255, 255]}],
+        'water': ['biolum', FULL_P, {'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}],
+        'kelp': ['grass', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'pearl': ['bright', [[64, 908, 92, 936]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Ultraterrestrials: an impossible pocket dimension ----
+    'ultraterrestrials-land': {
+        'plane': ['bright', FULL_L, {'blur': 1.5, 'scale': 0.5, 'show': [255, 255, 255]}],
+        'stars': ['bright', FULL_L, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'crystal': ['any', [[64, 398, 176, 528]], {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'ultraterrestrials-portrait': {
+        'plane': ['bright', FULL_P, {'blur': 1.5, 'scale': 0.5, 'show': [255, 255, 255]}],
+        'stars': ['bright', FULL_P, {'hp': [2, 1, 0.15, 0.35], 'show': [255, 255, 0]}],
+        'crystal': ['any', [[40, 820, 140, 940]], {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Vampires: a gothic courtyard under a red moon ----
+    'vampires-land': {
+        'blood': ['blood', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 0], 'exclude': [[380, 0, 640, 30]]}],
+        'roses': ['roses', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'moon': ['any', [[380, 0, 640, 40]], {'hp': [6, 1, 0.02, 0.1], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    'vampires-portrait': {
+        'blood': ['blood', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 0], 'exclude': [[120, 0, 340, 60]]}],
+        'roses': ['roses', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'moon': ['any', [[120, 0, 340, 70]], {'hp': [6, 1, 0.02, 0.1], 'blur': 1, 'show': [255, 255, 0]}],
+    },
 }

@@ -2,29 +2,6 @@
 // clean plates without them. Re-run the tool after changing a board.
 export const BOARD_CUTS = {
  "land": {
-  "Vampires": {
-   "plate": "art/boards-v2/vampires-plate.jpg",
-   "cuts": {
-    "2": {
-     "src": "art/board-props/vampires-land-2.png",
-     "box": [
-      12,
-      467,
-      93,
-      553
-     ]
-    },
-    "3": {
-     "src": "art/board-props/vampires-land-3.png",
-     "box": [
-      872,
-      417,
-      1024,
-      572
-     ]
-    }
-   }
-  },
   "Zombies": {
    "plate": "art/boards-v2/zombies-plate.jpg",
    "cuts": {
@@ -61,29 +38,6 @@ export const BOARD_CUTS = {
      ]
     }
    }
-  },
-  "Sharks": {
-   "plate": "art/boards-v2/sharks-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/sharks-land-0.png",
-     "box": [
-      87,
-      40,
-      139,
-      106
-     ]
-    },
-    "1": {
-     "src": "art/board-props/sharks-land-1.png",
-     "box": [
-      858,
-      10,
-      985,
-      177
-     ]
-    }
-   }
   }
  },
  "portrait": {
@@ -97,29 +51,6 @@ export const BOARD_CUTS = {
       662,
       459,
       798
-     ]
-    }
-   }
-  },
-  "Vampires": {
-   "plate": "art/boards-portrait/vampires-plate.jpg",
-   "cuts": {
-    "2": {
-     "src": "art/board-props/vampires-portrait-2.png",
-     "box": [
-      7,
-      807,
-      83,
-      883
-     ]
-    },
-    "3": {
-     "src": "art/board-props/vampires-portrait-3.png",
-     "box": [
-      347,
-      772,
-      459,
-      938
      ]
     }
    }
@@ -143,29 +74,6 @@ export const BOARD_CUTS = {
       874,
       110,
       1003
-     ]
-    }
-   }
-  },
-  "Sharks": {
-   "plate": "art/boards-portrait/sharks-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/sharks-portrait-0.png",
-     "box": [
-      59,
-      40,
-      103,
-      100
-     ]
-    },
-    "1": {
-     "src": "art/board-props/sharks-portrait-1.png",
-     "box": [
-      338,
-      17,
-      452,
-      165
      ]
     }
    }

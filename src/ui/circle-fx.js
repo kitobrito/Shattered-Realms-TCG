@@ -293,6 +293,7 @@ export async function startBoardFx(host, key, orient) {
     if (k === 'ember') { p.vx = rand(-4, 4) * sp; p.vy = rand(-26, -12) * sp; }
     else if (k === 'ash') { p.vx = rand(-5, 5) * sp; p.vy = rand(6, 16) * sp; }
     else if (k === 'spirit') { p.vx = (Math.random() < 0.5 ? -1 : 1) * rand(5, 12) * sp; p.vy = rand(-3, 3) * sp; }
+    else if (k === 'shadow') { const a = rand(0, TAU), v = rand(14, 24) * sp; p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v; p.turn = rand(-0.6, 0.6); }
     else if (k === 'bee') { const a = rand(0, TAU), v = rand(22, 42) * sp; p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v; p.turn = rand(-2, 2); }
     else if (k === 'snow') { p.z = pick([0.45, 0.7, 1]); p.size *= p.z; p.vx = (st.drift ?? 14) * p.z * rand(0.7, 1.3) * sp; p.vy = rand(-2, 6) * p.z * sp; }
     else if (k === 'mote') { p.vx = rand(-3, 3) * sp; p.vy = rand(-4, 2) * sp; }
@@ -333,10 +334,11 @@ export async function startBoardFx(host, key, orient) {
       if (k === 'wisp' || k === 'mote' || k === 'smoke' || k === 'petal') p.vx += wave(t * 0.8, p.seed) * 6 * dt;
       if (k === 'ember') { p.vx += wave(t * 1.4, p.seed) * 18 * dt; }
       if (k === 'spark') p.vy += 60 * dt;
-      if (k === 'bee') {
+      if (k === 'bee' || k === 'shadow') {
         // Wander: the heading drifts, and they turn back toward the middle of their area.
         const a = st.area?.length ? st.area : [0, 0, IW, IH];
-        p.turn += rand(-6, 6) * dt; p.turn = Math.max(-3, Math.min(3, p.turn));
+        const tm = k === 'shadow' ? 0.25 : 1;
+        p.turn += rand(-6, 6) * dt * tm; p.turn = Math.max(-3 * tm, Math.min(3 * tm, p.turn));
         let h = Math.atan2(p.vy, p.vx) + p.turn * dt;
         const cx = (a[0] + a[2]) / 2, cy = (a[1] + a[3]) / 2;
         if (p.x < a[0] || p.x > a[2] || p.y < a[1] || p.y > a[3]) h = Math.atan2(cy - p.y, cx - p.x);
@@ -359,7 +361,7 @@ export async function startBoardFx(host, key, orient) {
   function drawParticles(st, t) {
     const k = st.kind;
     const c = st.color ?? [255, 200, 120];
-    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' || k === 'bee' ? 'source-over' : 'lighter');
+    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' || k === 'bee' || k === 'shadow' ? 'source-over' : 'lighter');
     for (const p of st.parts) {
       const life = p.age / p.life;
       const fade = Math.min(1, p.age / 0.3) * (1 - life);
@@ -402,6 +404,17 @@ export async function startBoardFx(host, key, orient) {
         ctx.fillStyle = 'rgba(10,20,40,0.9)';
         ctx.beginPath(); ctx.ellipse(x - r * 0.45, y - r * 1.2 + bob, r * 0.22, r * 0.32, 0, 0, TAU); ctx.ellipse(x + r * 0.45, y - r * 1.2 + bob, r * 0.22, r * 0.32, 0, 0, TAU); ctx.fill();
         ctx.globalAlpha = 1;
+      } else if (k === 'shadow') {
+        // A shark's shadow gliding over the sand: body, tail that sweeps, two fins.
+        const ang = Math.atan2(p.vy, p.vx);
+        const a = Math.min(1, p.age / 1.2, (p.life - p.age) / 1.2) * (st.alpha ?? 0.22);
+        const sw = Math.sin(t * 3 + p.seed) * 0.35;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+        ctx.globalAlpha = a; ctx.fillStyle = rgba(c, 1);
+        ctx.beginPath(); ctx.ellipse(0, 0, r * 3, r * 0.75, 0, 0, TAU); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-r * 2.6, 0); ctx.lineTo(-r * 4.2, -r * (1 + sw)); ctx.lineTo(-r * 3.6, 0); ctx.lineTo(-r * 4.2, r * (1 - sw)); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r * 0.6, 0); ctx.lineTo(-r * 0.4, -r * 1.8); ctx.lineTo(-r * 0.6, r * 1.8); ctx.closePath(); ctx.fill();
+        ctx.restore(); ctx.globalAlpha = 1;
       } else if (k === 'bee') {
         // Shadow on the ground, wings a flicker of pale blur, then the striped body.
         const ang = Math.atan2(p.vy, p.vx);
