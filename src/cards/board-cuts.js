@@ -62,20 +62,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Fungus": {
-   "plate": "art/boards-v2/fungus-plate.jpg",
-   "cuts": {
-    "3": {
-     "src": "art/board-props/fungus-land-3.png",
-     "box": [
-      872,
-      462,
-      988,
-      553
-     ]
-    }
-   }
-  },
   "Plants": {
    "plate": "art/boards-v2/plants-plate.jpg",
    "cuts": {
@@ -109,29 +95,6 @@ export const BOARD_CUTS = {
       422,
       120,
       556
-     ]
-    }
-   }
-  },
-  "Lycanthropes": {
-   "plate": "art/boards-v2/lycanthropes-plate.jpg",
-   "cuts": {
-    "1": {
-     "src": "art/board-props/lycanthropes-land-1.png",
-     "box": [
-      818,
-      38,
-      962,
-      158
-     ]
-    },
-    "2": {
-     "src": "art/board-props/lycanthropes-land-2.png",
-     "box": [
-      43,
-      422,
-      161,
-      549
      ]
     }
    }
@@ -198,20 +161,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Fungus": {
-   "plate": "art/boards-portrait/fungus-plate.jpg",
-   "cuts": {
-    "3": {
-     "src": "art/board-props/fungus-portrait-3.png",
-     "box": [
-      377,
-      832,
-      448,
-      888
-     ]
-    }
-   }
-  },
   "Plants": {
    "plate": "art/boards-portrait/plants-plate.jpg",
    "cuts": {
@@ -268,29 +217,6 @@ export const BOARD_CUTS = {
       874,
       110,
       1003
-     ]
-    }
-   }
-  },
-  "Lycanthropes": {
-   "plate": "art/boards-portrait/lycanthropes-plate.jpg",
-   "cuts": {
-    "1": {
-     "src": "art/board-props/lycanthropes-portrait-1.png",
-     "box": [
-      319,
-      29,
-      419,
-      113
-     ]
-    },
-    "2": {
-     "src": "art/board-props/lycanthropes-portrait-2.png",
-     "box": [
-      25,
-      924,
-      101,
-      1005
      ]
     }
    }

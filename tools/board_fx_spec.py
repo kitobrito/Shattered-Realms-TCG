@@ -122,4 +122,28 @@ SPEC = {
         'egg': ['any', [[36, 870, 124, 990]], {'hp': [5, 1, 0.03, 0.12], 'show': [255, 0, 255]}],
         'fire': ['bright', [[336, 25, 432, 120]], {'blur': 0.8, 'show': [0, 160, 255]}],
     },
+    # ---- Fungus: a glowing fungal cavern ----
+    'fungus-land': {
+        'violet': ['violet', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'teal': ['biolum', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 255]}],
+        'orange': ['honey', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 140, 0]}],
+        'threads': ['bright', FULL_L, {'hp': [3, 1, 0.05, 0.16], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[0, 0, 1024, 140]]}],
+    },
+    'fungus-portrait': {
+        'violet': ['violet', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 255]}],
+        'teal': ['biolum', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 255]}],
+        'orange': ['honey', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 140, 0]}],
+        'threads': ['bright', FULL_P, {'hp': [3, 1, 0.05, 0.16], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[0, 0, 459, 130]]}],
+    },
+    # ---- Lycanthropes: a moonlit forest clearing ----
+    'lycanthropes-land': {
+        'grass': ['grass', [[150, 120, 900, 520]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 45}, 'show': [0, 255, 0]}],
+        'moon': ['bright', [[100, 35, 180, 110]], {'blur': 1, 'show': [255, 255, 0]}],
+        'cloak': ['any', [[778, 392, 968, 508]], {'show': [255, 0, 255]}],
+    },
+    'lycanthropes-portrait': {
+        'grass': ['grass', [[60, 120, 380, 760]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0]}],
+        'moon': ['bright', [[35, 30, 105, 95]], {'blur': 1, 'show': [255, 255, 0]}],
+        'cloak': ['any', [[52, 792, 132, 952]], {'show': [255, 0, 255]}],
+    },
 }

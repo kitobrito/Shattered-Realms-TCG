@@ -5168,3 +5168,5 @@ body.reduced-motion .descent { display: none; }
 .arena.frame-iron { --fr-line: #0c0404; --fr-mid: #3a2a26; --fr-hi: #ff6a2a; }
 /* Dinosaurs (and other natural boards): weathered sandstone, sunlit on top. */
 .arena.frame-stone { --fr-line: #2a1c0c; --fr-mid: #a88a5c; --fr-hi: #ffe2a0; }
+/* Lycanthropes: dark wood bound in moonlit silver. */
+.arena.frame-silverwood { --fr-line: #0c0a08; --fr-mid: #4a3a2a; --fr-hi: #dfe8ff; }

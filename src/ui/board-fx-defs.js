@@ -610,4 +610,201 @@ export const BOARD_FX = {
       { area: [296, 856, 454, 1014], sound: 'clink', kick: ['shield'], flare: [255, 200, 140], glyph: '🛡️' },
     ],
   },
+
+  // ---- Fungus: a glowing fungal cavern ------------------------------------------------------
+  'fungus-land': {
+    wind: null,
+    layers: [
+      // Ground: pulses of light run along the mycelium threads.
+      { id: 'threads', type: 'mask', mask: 'threads', anim: { kind: 'wave', along: 'x', band: 140, speed: 40 }, alpha: [0, 0.7], gain: 0.85, kickDur: 2 },
+      // The giant mushrooms breathe, each colour glowing on its own rhythm.
+      { id: 'capP', type: 'echo', box: [0, 140, 178, 302], feather: 10, motion: { kind: 'breathe', amp: 1.2, period: 4.4, pivot: [60, 300] } },
+      { id: 'capP2', type: 'echo', box: [128, 0, 302, 84], feather: 10, motion: { kind: 'breathe', amp: 1, period: 5, pivot: [214, 84] } },
+      { id: 'capT', type: 'echo', box: [798, 74, 918, 202], feather: 10, motion: { kind: 'breathe', amp: 1.3, period: 3.8, pivot: [860, 200] } },
+      { id: 'capT2', type: 'echo', box: [678, 0, 832, 72], feather: 10, motion: { kind: 'breathe', amp: 1, period: 4.6, pivot: [755, 72] } },
+      { id: 'capO', type: 'echo', box: [922, 158, 1024, 342], feather: 10, motion: { kind: 'breathe', amp: 1.2, period: 4.1, pivot: [975, 340] } },
+      { id: 'capO2', type: 'echo', box: [688, 458, 812, 562], feather: 10, motion: { kind: 'breathe', amp: 1.3, period: 3.6, pivot: [750, 560] } },
+      { id: 'violet', type: 'mask', mask: 'violet', anim: { kind: 'pulse', period: 3.4 }, alpha: [0.08, 0.5], bloom: 0.8, kickDur: 2 },
+      { id: 'teal', type: 'mask', mask: 'teal', anim: { kind: 'pulse', period: 4.1, phase: 1.3 }, alpha: [0.08, 0.5], bloom: 0.8, kickDur: 2 },
+      { id: 'orange', type: 'mask', mask: 'orange', anim: { kind: 'pulse', period: 3.7, phase: 2.4 }, alpha: [0.05, 0.4], bloom: 0.7, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'teal' }, rate: 2, max: 8, color: [180, 255, 255], size: [0.8, 1.5], life: [0.5, 1] },
+      // Corners. Top left, the tiny toadstools twinkle with fireflies.
+      { id: 'toads', type: 'glow', points: [[48, 38, 9], [70, 30, 8], [92, 44, 8], [60, 60, 7], [100, 70, 7]], color: [255, 220, 150], anim: 'flicker', alpha: [0.15, 0.55], kickDur: 2 },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[70, 50, 30], [250, 140, 40], [820, 250, 40]], rate: 1, max: 8, color: [255, 240, 140], size: [1.2, 1.8], life: [4, 7] },
+      // Top right, the puffball breathes out clouds of spores.
+      { id: 'puff', type: 'particles', kind: 'smoke', from: [[912, 50, 8]], rate: 0.9, max: 10, color: [210, 200, 190], size: [6, 11], life: [2.5, 4], alpha: 0.3, speed: 0.6 },
+      { id: 'puffball', type: 'echo', box: [924, 14, 1000, 112], feather: 6, motion: { kind: 'breathe', amp: 1.6, period: 2.6, pivot: [962, 108], kickAmp: 4 } },
+      // Bottom left, the snail inches along its log; tapped, it pulls into its shell.
+      { id: 'snail', type: 'echo', box: [60, 440, 148, 500], feather: 6, motion: { kind: 'drift', amp: 2.2, speed: 0.12 } },
+      // Bottom right, the purple pod drips glowing ooze.
+      { id: 'pod', type: 'mask', mask: 'violet', anim: { kind: 'wave', along: 'y', band: 60, speed: 14 }, alpha: [0, 0.4], gain: 0.6, kickDur: 2 },
+      { id: 'ooze', type: 'particles', kind: 'drip', from: [[916, 522, 2], [936, 546, 2], [962, 516, 2]], rate: 0.9, max: 5, color: [220, 110, 255], size: [1.2, 1.8], life: [3, 4], fall: 18, splashColor: [230, 150, 255] },
+      // Air: spores of every colour drift up through the cavern.
+      { type: 'fog', area: [-60, 120, 1084, 572], count: 9, size: [80, 140], speed: 3, color: [120, 90, 200], alpha: 0.07, blend: 'lighter' },
+      { id: 'spores', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 4, max: 40, color: [200, 170, 255], size: [0.6, 1.4], life: [4, 7], alpha: 0.75, speed: 0.6 },
+      { id: 'spores2', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2.5, max: 26, color: [140, 255, 230], size: [0.6, 1.2], life: [4, 7], alpha: 0.7, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [22, 12, 118, 108], sound: 'chime', kick: ['toads'], flare: [255, 220, 150], glyph: '🍄', burst: { layer: 'flies', n: 5, at: [70, 50], spread: 20 } },
+      { area: [900, 12, 1002, 114], sound: 'poof', kick: ['puffball'], flare: [230, 220, 210], glyph: '💨', burst: { layer: 'puff', n: 10, at: [920, 50], spread: 12 } },
+      { area: [58, 438, 150, 502], sound: 'squelch', kick: ['snail'], flare: [255, 230, 180], glyph: '🐌' },
+      { area: [898, 410, 982, 554], sound: 'drip', kick: ['pod', 'violet'], flare: [220, 120, 255], burst: { layer: 'ooze', n: 4, at: [936, 530], spread: 20 } },
+      { area: [0, 140, 178, 302], sound: 'mushroom', kick: ['capP', 'violet'], flare: [230, 100, 255], burst: { layer: 'spores', n: 16, at: [80, 200], spread: 40 } },
+      { area: [798, 74, 918, 202], sound: 'mushroom', kick: ['capT', 'teal'], flare: [100, 255, 240], burst: { layer: 'spores2', n: 16, at: [860, 130], spread: 40 } },
+      { area: [922, 158, 1024, 342], sound: 'mushroom', kick: ['capO', 'orange'], flare: [255, 160, 60], burst: { layer: 'spores', n: 12, at: [975, 220], spread: 30 } },
+    ],
+  },
+  'fungus-portrait': {
+    wind: null,
+    layers: [
+      { id: 'threads', type: 'mask', mask: 'threads', anim: { kind: 'wave', along: 'y', band: 160, speed: 44 }, alpha: [0, 0.7], gain: 0.85, kickDur: 2 },
+      { id: 'capP', type: 'echo', box: [0, 150, 112, 252], feather: 8, motion: { kind: 'breathe', amp: 1.2, period: 4.4, pivot: [40, 252] } },
+      { id: 'capT', type: 'echo', box: [368, 108, 459, 218], feather: 8, motion: { kind: 'breathe', amp: 1.3, period: 3.8, pivot: [420, 218] } },
+      { id: 'capO', type: 'echo', box: [392, 248, 459, 382], feather: 8, motion: { kind: 'breathe', amp: 1.2, period: 4.1, pivot: [430, 380] } },
+      { id: 'capP2', type: 'echo', box: [0, 668, 118, 762], feather: 8, motion: { kind: 'breathe', amp: 1.2, period: 4.6, pivot: [40, 762] } },
+      { id: 'capT2', type: 'echo', box: [338, 722, 432, 842], feather: 8, motion: { kind: 'breathe', amp: 1.2, period: 3.9, pivot: [385, 842] } },
+      { id: 'capO2', type: 'echo', box: [262, 918, 352, 1002], feather: 8, motion: { kind: 'breathe', amp: 1.3, period: 3.6, pivot: [305, 1000] } },
+      { id: 'violet', type: 'mask', mask: 'violet', anim: { kind: 'pulse', period: 3.4 }, alpha: [0.08, 0.5], bloom: 0.8, kickDur: 2 },
+      { id: 'teal', type: 'mask', mask: 'teal', anim: { kind: 'pulse', period: 4.1, phase: 1.3 }, alpha: [0.08, 0.5], bloom: 0.8, kickDur: 2 },
+      { id: 'orange', type: 'mask', mask: 'orange', anim: { kind: 'pulse', period: 3.7, phase: 2.4 }, alpha: [0.05, 0.4], bloom: 0.7, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'teal' }, rate: 2, max: 8, color: [180, 255, 255], size: [0.8, 1.4], life: [0.5, 1] },
+      { id: 'toads', type: 'glow', points: [[30, 38, 8], [52, 30, 7], [74, 44, 7], [44, 62, 6], [84, 70, 6], [44, 820, 9]], color: [255, 220, 150], anim: 'flicker', alpha: [0.15, 0.55], kickDur: 2 },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[55, 50, 26], [100, 300, 30], [360, 600, 30]], rate: 1, max: 8, color: [255, 240, 140], size: [1.1, 1.7], life: [4, 7] },
+      { id: 'puff', type: 'particles', kind: 'smoke', from: [[366, 52, 7]], rate: 0.9, max: 10, color: [210, 200, 190], size: [5, 10], life: [2.5, 4], alpha: 0.3, speed: 0.6 },
+      { id: 'puffball', type: 'echo', box: [380, 14, 452, 108], feather: 6, motion: { kind: 'breathe', amp: 1.6, period: 2.6, pivot: [416, 104], kickAmp: 4 } },
+      { id: 'snail', type: 'echo', box: [38, 910, 102, 958], feather: 6, motion: { kind: 'drift', amp: 2, speed: 0.12 } },
+      { id: 'pod', type: 'mask', mask: 'violet', anim: { kind: 'wave', along: 'y', band: 60, speed: 14 }, alpha: [0, 0.4], gain: 0.6, kickDur: 2 },
+      { id: 'ooze', type: 'particles', kind: 'drip', from: [[380, 980, 2], [402, 996, 2], [418, 970, 2]], rate: 0.9, max: 5, color: [220, 110, 255], size: [1.1, 1.7], life: [3, 4], fall: 16, splashColor: [230, 150, 255] },
+      { type: 'fog', area: [-60, 120, 520, 1024], count: 9, size: [70, 120], speed: 3, color: [120, 90, 200], alpha: 0.07, blend: 'lighter' },
+      { id: 'spores', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 4, max: 40, color: [200, 170, 255], size: [0.6, 1.3], life: [4, 7], alpha: 0.75, speed: 0.6 },
+      { id: 'spores2', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2.5, max: 26, color: [140, 255, 230], size: [0.6, 1.1], life: [4, 7], alpha: 0.7, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [8, 12, 102, 104], sound: 'chime', kick: ['toads'], flare: [255, 220, 150], glyph: '🍄', burst: { layer: 'flies', n: 5, at: [55, 50], spread: 18 } },
+      { area: [356, 12, 454, 110], sound: 'poof', kick: ['puffball'], flare: [230, 220, 210], glyph: '💨', burst: { layer: 'puff', n: 10, at: [372, 52], spread: 10 } },
+      { area: [36, 908, 104, 960], sound: 'squelch', kick: ['snail'], flare: [255, 230, 180], glyph: '🐌' },
+      { area: [362, 888, 438, 1008], sound: 'drip', kick: ['pod', 'violet'], flare: [220, 120, 255], burst: { layer: 'ooze', n: 4, at: [400, 985], spread: 16 } },
+    ],
+  },
+
+  // ---- Ghosts: the flooded hall of a haunted manor -----------------------------------------
+  'ghosts-land': {
+    wind: null,
+    layers: [
+      // Light: cold moonlight slants in through the broken windows.
+      { id: 'rays', type: 'rays', beams: [[260, 0, 18, 460, 70], [760, 0, -16, 460, 70], [640, 0, -8, 380, 50]], color: [170, 220, 255], alpha: [0.04, 0.14], period: 8 },
+      // The black water ripples; the floating candles bob and drift, their flames dance.
+      { id: 'candles', type: 'crawlers', boxes: [[438, 187, 454, 221], [551, 198, 567, 232], [447, 203, 463, 237], [359, 210, 375, 244], [614, 210, 630, 244], [659, 225, 675, 259], [576, 226, 592, 260], [397, 232, 413, 266], [334, 282, 350, 316], [317, 284, 333, 318], [728, 285, 744, 319], [685, 292, 701, 326], [591, 316, 607, 350], [602, 327, 618, 361], [370, 337, 386, 371], [527, 340, 543, 374], [678, 355, 694, 389], [598, 375, 614, 409], [392, 381, 408, 415]], amp: 1.1, feather: 3 },
+      { id: 'flames', type: 'flames', points: [[446, 196, 5, 8], [559, 207, 5, 8], [455, 212, 5, 8], [367, 219, 5, 8], [622, 219, 5, 8], [667, 234, 5, 8], [584, 235, 5, 8], [405, 241, 5, 8], [342, 291, 5, 8], [325, 293, 5, 8], [736, 294, 5, 8], [693, 301, 5, 8], [599, 325, 5, 8], [610, 336, 5, 8], [378, 346, 5, 8], [535, 349, 5, 8], [686, 364, 5, 8], [606, 384, 5, 8], [400, 390, 5, 8]], tongues: 2, alpha: 0.75 },
+      { id: 'candleGlow', type: 'glow', points: [[446, 193, 16], [559, 204, 16], [455, 209, 16], [367, 216, 16], [622, 216, 16], [667, 231, 16], [584, 232, 16], [405, 238, 16], [342, 288, 16], [325, 290, 16], [736, 291, 16], [693, 298, 16], [599, 322, 16], [610, 333, 16], [378, 343, 16], [535, 346, 16], [686, 361, 16], [606, 381, 16], [400, 387, 16]], color: [255, 190, 110], anim: 'flicker', alpha: [0.2, 0.55], kickDur: 2 },
+      { id: 'ripples', type: 'particles', kind: 'drip', from: [[446, 217, 4], [559, 228, 4], [455, 233, 4], [367, 240, 4], [622, 240, 4], [667, 255, 4], [584, 256, 4], [405, 262, 4], [342, 312, 4], [325, 314, 4], [736, 315, 4], [693, 322, 4], [599, 346, 4], [610, 357, 4], [378, 367, 4], [535, 370, 4], [686, 385, 4], [606, 405, 4], [400, 411, 4]], rate: 2.2, max: 8, color: [0, 0, 0], size: [0.1, 0.1], life: [1.4, 1.8], fall: 1, splashColor: [170, 230, 255] },
+      { type: 'particles', kind: 'glint', area: [260, 180, 760, 420], rate: 3, max: 12, color: [200, 240, 255], size: [0.8, 1.5], life: [0.4, 0.9] },
+      // Corners. Top left, the candelabra's flames gutter and smoke.
+      { id: 'candelabra', type: 'glow', points: [[45, 80, 12], [56, 26, 12], [76, 18, 12], [112, 40, 12], [143, 38, 12], [154, 70, 12], [100, 70, 12]], color: [255, 190, 110], anim: 'flicker', alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'cflames', type: 'flames', points: [[45, 84, 6, 10], [56, 30, 6, 10], [76, 22, 6, 10], [112, 44, 6, 10], [143, 42, 6, 10], [154, 74, 6, 10], [100, 74, 6, 10]], tongues: 2, alpha: 0.85 },
+      { id: 'csmoke', type: 'particles', kind: 'wisp', from: [[56, 18, 4], [112, 32, 4], [143, 30, 4]], rate: 1, max: 8, color: [200, 210, 230], size: [2, 4], life: [2, 3.5], alpha: 0.2, speed: 0.6 },
+      // Top right, the haunted portrait: now and then a face glows in the cracked glass.
+      { id: 'face', type: 'glow', points: [[930, 105, 34]], color: [140, 255, 220], anim: 'pulse', period: 7, alpha: [0, 0.12], autoKick: [9, 16], kickDur: 2.5 },
+      { id: 'portrait', type: 'echo', box: [862, 8, 1006, 188], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.35, pivot: [934, 10] } },
+      // Bottom left, the music box: its tiny dancers turn and the gears spin.
+      { id: 'dancers', type: 'echo', box: [94, 448, 158, 498], feather: 6, motion: { kind: 'rock', amp: 3, period: 2.2, pivot: [126, 496], kickAmp: 6 } },
+      { id: 'gear', type: 'echo', box: [66, 466, 110, 510], round: true, feather: 4, motion: { kind: 'spin', speed: 40 } },
+      { id: 'notes', type: 'particles', kind: 'mote', from: [[110, 440, 20]], rate: 0, max: 14, color: [200, 255, 240], size: [1, 1.8], life: [1.5, 2.5], alpha: 0.8, speed: 1.2 },
+      // Bottom right, the empty rocking chair rocks by itself.
+      { id: 'chair', type: 'echo', box: [848, 372, 1012, 532], feather: 8, motion: { kind: 'rock', amp: 2.4, period: 2.6, pivot: [930, 530], kickAmp: 4 } },
+      // Air: ghosts drift through the hall, a cold mist curls over the water.
+      { id: 'ghosts', type: 'particles', kind: 'spirit', area: [120, 120, 900, 470], rate: 0.12, max: 2, color: [170, 240, 255], size: [6, 9], life: [9, 14], alpha: 0.32 },
+      { type: 'fog', area: [-80, 140, 1104, 572], count: 12, size: [80, 150], speed: 5, color: [120, 190, 220], alpha: 0.1 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2, max: 20, color: [180, 240, 255], size: [0.6, 1.2], life: [3, 6], alpha: 0.6, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [28, 10, 168, 178], sound: 'whoosh', kick: ['candelabra'], flare: [255, 190, 110], glyph: '🕯️', burst: { layer: 'csmoke', n: 6, at: [100, 30], spread: 40 } },
+      { area: [860, 6, 1008, 190], sound: 'groan', kick: ['face', 'portrait'], flare: [140, 255, 220], glyph: '👻', burst: { layer: 'ghosts', n: 1, at: [930, 140], spread: 4 } },
+      { area: [8, 362, 188, 558], sound: 'chime', kick: ['dancers', 'gear'], flare: [200, 255, 240], glyph: '🎵', burst: { layer: 'notes', n: 10, at: [120, 440], spread: 20 } },
+      { area: [846, 370, 1014, 534], sound: 'knock', kick: ['chair'], flare: [170, 230, 255], glyph: '🪑' },
+      { area: [260, 180, 760, 420], sound: 'splash', kick: ['candleGlow'], rustle: 90, flare: [170, 230, 255] },
+    ],
+  },
+  'ghosts-portrait': {
+    wind: null,
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[120, 0, 12, 700, 60], [330, 0, -10, 700, 60]], color: [170, 220, 255], alpha: [0.04, 0.14], period: 8 },
+      { id: 'candles', type: 'crawlers', boxes: [[170, 206, 186, 240], [259, 215, 275, 249], [178, 228, 194, 262], [108, 230, 124, 264], [307, 240, 323, 274], [279, 250, 295, 284], [344, 258, 360, 292], [138, 259, 154, 293], [101, 328, 117, 362], [370, 328, 386, 362], [114, 337, 130, 371], [335, 346, 351, 380], [288, 389, 304, 423], [239, 404, 255, 438], [123, 407, 139, 441], [353, 420, 369, 454], [293, 444, 309, 478], [107, 481, 123, 515], [121, 490, 137, 524], [284, 542, 300, 576], [238, 559, 254, 593], [125, 564, 141, 598], [348, 570, 364, 604], [289, 603, 305, 637], [141, 609, 157, 643]], amp: 1.1, feather: 3 },
+      { id: 'flames', type: 'flames', points: [[178, 215, 4, 7], [267, 224, 4, 7], [186, 237, 4, 7], [116, 239, 4, 7], [315, 249, 4, 7], [287, 259, 4, 7], [352, 267, 4, 7], [146, 268, 4, 7], [109, 337, 4, 7], [378, 337, 4, 7], [122, 346, 4, 7], [343, 355, 4, 7], [296, 398, 4, 7], [247, 413, 4, 7], [131, 416, 4, 7], [361, 429, 4, 7], [301, 453, 4, 7], [115, 490, 4, 7], [129, 499, 4, 7], [292, 551, 4, 7], [246, 568, 4, 7], [133, 573, 4, 7], [356, 579, 4, 7], [297, 612, 4, 7], [149, 618, 4, 7]], tongues: 2, alpha: 0.75 },
+      { id: 'candleGlow', type: 'glow', points: [[178, 212, 13], [267, 221, 13], [186, 234, 13], [116, 236, 13], [315, 246, 13], [287, 256, 13], [352, 264, 13], [146, 265, 13], [109, 334, 13], [378, 334, 13], [122, 343, 13], [343, 352, 13], [296, 395, 13], [247, 410, 13], [131, 413, 13], [361, 426, 13], [301, 450, 13], [115, 487, 13], [129, 496, 13], [292, 548, 13], [246, 565, 13], [133, 570, 13], [356, 576, 13], [297, 609, 13], [149, 615, 13]], color: [255, 190, 110], anim: 'flicker', alpha: [0.2, 0.55], kickDur: 2 },
+      { id: 'ripples', type: 'particles', kind: 'drip', from: [[178, 232, 4], [267, 241, 4], [186, 254, 4], [116, 256, 4], [315, 266, 4], [287, 276, 4], [352, 284, 4], [146, 285, 4], [109, 354, 4], [378, 354, 4], [122, 363, 4], [343, 372, 4], [296, 415, 4], [247, 430, 4], [131, 433, 4], [361, 446, 4], [301, 470, 4], [115, 507, 4], [129, 516, 4], [292, 568, 4], [246, 585, 4], [133, 590, 4], [356, 596, 4], [297, 629, 4], [149, 635, 4]], rate: 2.2, max: 8, color: [0, 0, 0], size: [0.1, 0.1], life: [1.4, 1.8], fall: 1, splashColor: [170, 230, 255] },
+      { type: 'particles', kind: 'glint', area: [80, 180, 400, 640], rate: 3, max: 12, color: [200, 240, 255], size: [0.8, 1.4], life: [0.4, 0.9] },
+      { id: 'candelabra', type: 'glow', points: [[22, 70, 10], [40, 26, 10], [62, 38, 10], [74, 64, 10], [94, 46, 10]], color: [255, 190, 110], anim: 'flicker', alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'cflames', type: 'flames', points: [[22, 74, 5, 9], [40, 30, 5, 9], [62, 42, 5, 9], [74, 68, 5, 9], [94, 50, 5, 9]], tongues: 2, alpha: 0.85 },
+      { id: 'face', type: 'glow', points: [[392, 80, 26]], color: [140, 255, 220], anim: 'pulse', period: 7, alpha: [0, 0.12], autoKick: [9, 16], kickDur: 2.5 },
+      { id: 'portrait', type: 'echo', box: [346, 14, 446, 140], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.35, pivot: [396, 16] } },
+      { id: 'dancers', type: 'echo', box: [62, 930, 108, 968], feather: 5, motion: { kind: 'rock', amp: 3, period: 2.2, pivot: [85, 966], kickAmp: 6 } },
+      { id: 'notes', type: 'particles', kind: 'mote', from: [[80, 920, 16]], rate: 0, max: 12, color: [200, 255, 240], size: [1, 1.7], life: [1.5, 2.5], alpha: 0.8, speed: 1.2 },
+      { id: 'chair', type: 'echo', box: [356, 880, 456, 1000], feather: 6, motion: { kind: 'rock', amp: 2.4, period: 2.6, pivot: [406, 998], kickAmp: 4 } },
+      { id: 'ghosts', type: 'particles', kind: 'spirit', area: [40, 150, 420, 700], rate: 0.12, max: 2, color: [170, 240, 255], size: [5, 8], life: [9, 14], alpha: 0.32 },
+      { type: 'fog', area: [-80, 150, 540, 1024], count: 12, size: [70, 130], speed: 5, color: [120, 190, 220], alpha: 0.1 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2, max: 20, color: [180, 240, 255], size: [0.6, 1.1], life: [3, 6], alpha: 0.6, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [6, 6, 110, 140], sound: 'whoosh', kick: ['candelabra'], flare: [255, 190, 110], glyph: '🕯️' },
+      { area: [344, 12, 448, 142], sound: 'groan', kick: ['face', 'portrait'], flare: [140, 255, 220], glyph: '👻', burst: { layer: 'ghosts', n: 1, at: [396, 110], spread: 4 } },
+      { area: [20, 880, 140, 1000], sound: 'chime', kick: ['dancers'], flare: [200, 255, 240], glyph: '🎵', burst: { layer: 'notes', n: 10, at: [80, 920], spread: 16 } },
+      { area: [354, 878, 458, 1002], sound: 'knock', kick: ['chair'], flare: [170, 230, 255], glyph: '🪑' },
+    ],
+  },
+
+  // ---- Lycanthropes: a moonlit forest clearing ------------------------------------------------
+  'lycanthropes-land': {
+    wind: { dir: 1, every: [6, 11], speed: [140, 220], width: [160, 260], lean: 0.3 },
+    layers: [
+      // Light: the full moon glows, clouds slip across it, its beams sweep the clearing.
+      { id: 'moon', type: 'mask', mask: 'moon', anim: { kind: 'pulse', period: 6 }, alpha: [0.2, 0.6], bloom: 1, kickDur: 3 },
+      { id: 'moonHalo', type: 'glow', points: [[140, 72, 70]], color: [200, 220, 255], anim: 'pulse', period: 6, alpha: [0.1, 0.28], kickDur: 3 },
+      { type: 'fog', area: [0, 20, 320, 130], count: 3, size: [40, 70], speed: 6, leftward: 0, color: [10, 14, 30], alpha: 0.35, gustPush: 0 },
+      { id: 'beams', type: 'rays', beams: [[150, 70, -38, 520, 90], [180, 60, -50, 520, 70]], color: [200, 220, 255], alpha: [0.04, 0.15], period: 9 },
+      // Growth: every grass tuft sways; gusts roll through the clearing.
+      { id: 'grass', type: 'sprites', mask: 'grass', bend: 0.07, gustBend: 0.24, period: [2.4, 3.8] },
+      // In the dark between the trees, wolf eyes blink and watch.
+      { id: 'eyes', type: 'glow', points: [[457, 38, 4], [467, 38, 4], [577, 46, 4], [590, 46, 4], [18, 270, 4], [30, 270, 4], [990, 325, 4], [1003, 325, 4]], color: [255, 230, 90], anim: 'blink', pair: true, period: 5, alpha: [0.3, 0.95], kickDur: 2 },
+      // Corners. Top right, the broken chains; bottom left, the wolf skull; bottom right, the torn cloak stirs.
+      { id: 'chains', type: 'echo', box: [752, 72, 918, 202], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.3, pivot: [835, 80] } },
+      { id: 'chainGlint', type: 'particles', kind: 'glint', area: [760, 80, 910, 195], rate: 0.8, max: 3, color: [220, 230, 255], size: [0.8, 1.4], life: [0.4, 0.8] },
+      { id: 'skull', type: 'echo', box: [108, 412, 212, 498], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.35, pivot: [160, 494] } },
+      { id: 'cloak', type: 'warp', box: [778, 392, 968, 508], base: 'right', mask: 'cloak', amp: 1.8, period: 3.4, wave: 1.6 },
+      // Air: leaves drift down, fireflies wander, silver mist hangs low.
+      { id: 'leaves', type: 'particles', kind: 'petal', area: [0, -20, 1024, 200], rate: 0.8, max: 10, color: [190, 120, 50], size: [1.6, 2.6], life: [7, 11], speed: 0.6 },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[300, 200, 60], [700, 300, 60], [500, 450, 60]], rate: 1, max: 8, color: [220, 255, 150], size: [1.1, 1.7], life: [4, 7] },
+      { type: 'fog', area: [-80, 300, 1104, 600], count: 10, size: [90, 160], speed: 4, color: [180, 200, 230], alpha: 0.09 },
+    ],
+    pokes: [
+      { area: [96, 30, 186, 116], sound: 'hoot', kick: ['moon', 'moonHalo'], flare: [210, 225, 255], glyph: '🌕' },
+      { area: [750, 70, 920, 204], sound: 'rattle', kick: ['chains'], flare: [220, 230, 255], glyph: '⛓️' },
+      { area: [106, 410, 214, 500], sound: 'growl', kick: ['skull', 'eyes'], flare: [255, 230, 120], glyph: '🐺' },
+      { area: [776, 390, 970, 510], sound: 'rustle', kick: ['cloak'], flare: [200, 60, 60] },
+      { area: [400, 0, 640, 80], sound: 'growl', kick: ['eyes'], flare: [255, 230, 90], glyph: '🐺' },
+    ],
+  },
+  'lycanthropes-portrait': {
+    wind: { dir: 1, every: [6, 11], speed: [110, 170], width: [140, 220], lean: 0.12 },
+    layers: [
+      { id: 'moon', type: 'mask', mask: 'moon', anim: { kind: 'pulse', period: 6 }, alpha: [0.2, 0.6], bloom: 1, kickDur: 3 },
+      { id: 'moonHalo', type: 'glow', points: [[68, 62, 60]], color: [200, 220, 255], anim: 'pulse', period: 6, alpha: [0.1, 0.28], kickDur: 3 },
+      { type: 'fog', area: [0, 20, 200, 110], count: 3, size: [34, 60], speed: 5, leftward: 0, color: [10, 14, 30], alpha: 0.35, gustPush: 0 },
+      { id: 'beams', type: 'rays', beams: [[70, 60, -22, 900, 80], [90, 60, -32, 900, 60]], color: [200, 220, 255], alpha: [0.04, 0.15], period: 9 },
+      { id: 'grass', type: 'sprites', mask: 'grass', bend: 0.07, gustBend: 0.24, period: [2.4, 3.8] },
+      { id: 'eyes', type: 'glow', points: [[203, 30, 3.5], [213, 30, 3.5], [400, 32, 3.5], [411, 32, 3.5], [436, 600, 3.5], [446, 600, 3.5]], color: [255, 230, 90], anim: 'blink', pair: true, period: 5, alpha: [0.3, 0.95], kickDur: 2 },
+      { id: 'chains', type: 'echo', box: [342, 106, 424, 194], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.3, pivot: [383, 110] } },
+      { id: 'chains2', type: 'echo', box: [326, 768, 414, 934], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.3, pivot: [370, 772] } },
+      { id: 'cloak', type: 'warp', box: [52, 792, 132, 952], base: 'top', mask: 'cloak', amp: 1.8, period: 3.4, wave: 1.6 },
+      { id: 'leaves', type: 'particles', kind: 'petal', area: [0, -20, 459, 300], rate: 0.8, max: 10, color: [190, 120, 50], size: [1.5, 2.4], life: [7, 11], speed: 0.6 },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[150, 300, 50], [300, 520, 50], [200, 700, 50]], rate: 1, max: 8, color: [220, 255, 150], size: [1.1, 1.6], life: [4, 7] },
+      { type: 'fog', area: [-80, 400, 540, 1024], count: 10, size: [80, 140], speed: 4, color: [180, 200, 230], alpha: 0.09 },
+    ],
+    pokes: [
+      { area: [30, 26, 108, 100], sound: 'hoot', kick: ['moon', 'moonHalo'], flare: [210, 225, 255], glyph: '🌕' },
+      { area: [340, 104, 426, 196], sound: 'rattle', kick: ['chains'], flare: [220, 230, 255], glyph: '⛓️' },
+      { area: [324, 766, 416, 936], sound: 'rattle', kick: ['chains2'], flare: [220, 230, 255], glyph: '⛓️' },
+      { area: [50, 790, 134, 954], sound: 'rustle', kick: ['cloak'], flare: [200, 60, 60] },
+    ],
+  },
 };

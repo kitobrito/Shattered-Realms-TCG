@@ -292,6 +292,7 @@ export async function startBoardFx(host, key, orient) {
     const sp = st.speed ?? 1;
     if (k === 'ember') { p.vx = rand(-4, 4) * sp; p.vy = rand(-26, -12) * sp; }
     else if (k === 'ash') { p.vx = rand(-5, 5) * sp; p.vy = rand(6, 16) * sp; }
+    else if (k === 'spirit') { p.vx = (Math.random() < 0.5 ? -1 : 1) * rand(5, 12) * sp; p.vy = rand(-3, 3) * sp; }
     else if (k === 'bee') { const a = rand(0, TAU), v = rand(22, 42) * sp; p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v; p.turn = rand(-2, 2); }
     else if (k === 'snow') { p.z = pick([0.45, 0.7, 1]); p.size *= p.z; p.vx = (st.drift ?? 14) * p.z * rand(0.7, 1.3) * sp; p.vy = rand(-2, 6) * p.z * sp; }
     else if (k === 'mote') { p.vx = rand(-3, 3) * sp; p.vy = rand(-4, 2) * sp; }
@@ -385,6 +386,21 @@ export async function startBoardFx(host, key, orient) {
         const g = r * (1 + life * 2.5);
         ctx.globalAlpha = fade * (st.alpha ?? 0.25);
         ctx.drawImage(softSprite(c, 64), x - g, y - g, g * 2, g * 2);
+        ctx.globalAlpha = 1;
+      } else if (k === 'spirit') {
+        // A pale ghost drifting by: a soft glowing body with a trailing wisp and two dark eyes,
+        // fading in and out of sight.
+        const a = Math.sin(Math.min(1, life) * Math.PI) * (st.alpha ?? 0.35);
+        const bob = Math.sin(t * 1.4 + p.seed) * r * 0.6;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = a * 0.6;
+        ctx.drawImage(softSprite(c, 64), x - r * 2.2 - p.vx * 0.25 * S, y - r * 1.5 + bob, r * 4.4, r * 4.2);
+        ctx.globalAlpha = a;
+        ctx.drawImage(softSprite(c, 64, 0.35), x - r * 1.4, y - r * 2.2 + bob, r * 2.8, r * 3.4);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = a * 1.4;
+        ctx.fillStyle = 'rgba(10,20,40,0.9)';
+        ctx.beginPath(); ctx.ellipse(x - r * 0.45, y - r * 1.2 + bob, r * 0.22, r * 0.32, 0, 0, TAU); ctx.ellipse(x + r * 0.45, y - r * 1.2 + bob, r * 0.22, r * 0.32, 0, 0, TAU); ctx.fill();
         ctx.globalAlpha = 1;
       } else if (k === 'bee') {
         // Shadow on the ground, wings a flicker of pale blur, then the striped body.

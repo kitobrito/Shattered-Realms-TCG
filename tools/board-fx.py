@@ -65,6 +65,8 @@ RULES = {
     'twig': lambda h, s, v: 1 - ramp(v, 0.28, 0.4),
     # green leaves, fronds, grass
     'leaf': lambda h, s, v: hue_near(h, 105, 45) * ramp(s, 0.3, 0.55) * ramp(v, 0.25, 0.55),
+    # meadow grass in dim or warm light: olive to yellow-green
+    'grass': lambda h, s, v: hue_near(h, 80, 40) * ramp(s, 0.18, 0.35) * ramp(v, 0.28, 0.45),
     # snow: bright and nearly grey
     'snow': lambda h, s, v: ramp(v, 0.8, 0.93) * (1 - ramp(s, 0.1, 0.22)),
     # pale ice and frozen water: light blue to white
