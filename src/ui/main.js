@@ -2618,9 +2618,7 @@ function gallerySearchPage(factions) {
   return `<section class="book-page search-page">
     <header class="page-title"><div><h3>Search</h3><span class="sub">${hits.length} card${hits.length === 1 ? '' : 's'} match “${esc(gallerySearch.trim())}” · try a name, a keyword (Taunt, Hollow), a realm, “legendary”, a Mana cost like 3 or 7+, or stats like 3/3</span></div></header>
     <nav class="set-filter search-chips">${SEARCH_CHIPS.map(([w, label]) => `<button class="ghost ${chipOn(w) ? 'on' : ''}" data-search-chip="${esc(w)}">${esc(label)}</button>`).join('')}</nav>
-    ${hits.length ? pagerHTML(`gal:search:${gallerySearch}`, hits.map((c) => (isLocked(c.id)
-      ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
-      : cardHTML(c, { zoom: true }).replace('class="card ', `class="card ${c.extra ? 'expansion ' : ''}`))).join(''), { chain: true })
+    ${hits.length ? pagerHTML(`gal:search:${gallerySearch}`, hits.map(galleryCardHTML).join(''), { chain: true, cls: 'pg-rich' })
     : '<p class="search-empty">No cards match. Check the spelling, or remove a word or filter.</p>'}
   </section>`;
 }
@@ -2628,37 +2626,79 @@ const searchBoxHTML = () => `<div class="coll-search"><span class="cs-icon" aria
   <input data-search type="search" placeholder="Search cards, keywords, legendary…" value="${esc(gallerySearch)}" aria-label="Search cards" autocomplete="off" spellcheck="false">
   ${gallerySearch ? '<button class="cs-clear ghost" data-clear-search aria-label="Clear search">✕</button>' : ''}</div>`;
 
+// Collection sort orders (the page's dropdown). 'book' is the classic order: Hero Spell first, tokens last.
+const SORTS = [['book', 'Standard'], ['rarity', 'Rarity (High → Low)'], ['cost', 'Mana (Low → High)'], ['cost-desc', 'Mana (High → Low)'], ['name', 'Name (A → Z)'], ['type', 'Type']];
+let bookSort = 'book';
+let showFilters = false; // the filter button opens the quick filters under the header
+const TYPE_RANK = (c) => (c.heroSpell || c.fusion ? 0 : c.type === 'minion' ? 1 : c.type === 'spell' ? 2 : 3) + (c.token ? 4 : 0);
+function sortCards(cards) {
+  if (bookSort === 'book') return cards;
+  const by = {
+    rarity: (a, b) => (b.legendary ? 1 : 0) - (a.legendary ? 1 : 0) || (a.token ? 1 : 0) - (b.token ? 1 : 0) || b.cost - a.cost,
+    cost: (a, b) => a.cost - b.cost || a.name.localeCompare(b.name),
+    'cost-desc': (a, b) => b.cost - a.cost || a.name.localeCompare(b.name),
+    name: (a, b) => a.name.localeCompare(b.name),
+    type: (a, b) => TYPE_RANK(a) - TYPE_RANK(b) || a.cost - b.cost,
+  }[bookSort];
+  return [...cards].sort(by);
+}
+// A card in the collection grid: locked ones stay readable in grey, with a lock badge.
+const galleryCardHTML = (c) => (isLocked(c.id)
+  ? cardHTML(c, { zoom: true }).replace('class="card ', 'class="card locked ').replace(/(<div class="card [^>]*>)/, '$1<span class="lock-badge"><i aria-hidden="true">🔒</i><b>Locked</b></span>')
+  : cardHTML(c, { zoom: true }).replace('class="card ', `class="card ${c.extra ? 'expansion ' : ''}`));
+// Collection progress: cards unlocked out of every card in the collection.
+function collectionProgress(factions) {
+  const all = factions.flatMap((f) => galleryCards(f));
+  return [all.filter((c) => !isLocked(c.id)).length, all.length];
+}
+
 function renderGallery() {
   const factions = [...Object.keys(FACTION_LISTS), 'Fusion'];
   bookPage = factions.includes(bookPage) ? bookPage : factions[0];
-  galleryOrder = setCards(bookPage).map((c) => c.id);
+  galleryOrder = sortCards(setCards(bookPage)).map((c) => c.id);
   const searching = !!gallerySearch.trim();
   const f = bookPage;
-  const art = heroArtOf(f);
   const scrollY = app.scrollTop;
+  const [have, total] = collectionProgress(factions);
+  const banner = f === 'Fusion' ? 'art/ui/menu-bg.jpg' : boardArtFor(f);
+  const stats = f === 'Fusion'
+    ? [`${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells`, 'one per faction pair', '3 uses each']
+    : hasExtras(f) ? [`${FACTION_POOLS[f].length} cards`, `${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new`, `Deck uses ${FACTION_DECKS[f].length}`]
+      : [`${FACTION_LISTS[f].length} cards`, `Deck uses ${FACTION_DECKS[f].length}`];
   app.innerHTML = `
-    <div class="book">
-      <div class="book-head"><h2>Card collection</h2>${searchBoxHTML()}<button data-act="menu" class="ghost">Back</button></div>
+    <div class="book coll2">
+      <header class="book-head c2-head">
+        <img class="c2-logo" src="art/ui/logo.png" alt="Shattered Realms" draggable="false">
+        <h2>Card Collection</h2>
+        <div class="c2-find">${searchBoxHTML()}<button class="ghost c2-filter ${showFilters ? 'on' : ''}" data-filters aria-label="Filters" title="Quick filters">${icon('filter')}</button></div>
+        <div class="c2-progress" title="Cards unlocked">${icon('laurel')}<span><b>${have} / ${total}</b><small>Collection progress</small></span></div>
+        <button data-act="menu" class="ghost c2-back">${icon('back')}<span>Back</span></button>
+      </header>
+      ${showFilters && !searching ? `<nav class="set-filter search-chips c2-chips">${SEARCH_CHIPS.map(([w, label]) => `<button class="ghost ${chipOn(w) ? 'on' : ''}" data-search-chip="${esc(w)}">${esc(label)}</button>`).join('')}</nav>` : ''}
       <div class="book-body">
         <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${fslug(x)} ${x === f && !searching ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
-          ${crestHTML(x)}<b>${esc(x).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</b></button>`).join('')}</nav>
+          ${crestHTML(x)}<b>${esc(x).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</b>${icon('chevron')}</button>`).join('')}</nav>
         ${searching ? gallerySearchPage(factions) : `
         <section class="book-page f-${fslug(f)} ${bookTurned ? 'turn' : ''}">
-          <header class="page-title">${art ? `<img src="${art}" alt="">` : ''}<div><h3>${esc(f)}</h3>
-            <span class="sub">${f === 'Fusion'
-    ? `${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells · one per faction pair · charges as you use your Hero Spells (3 uses) · click a card to see it full size`
-    : `${hasExtras(f) ? `${FACTION_POOLS[f].length} cards (${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new) · a deck uses ${FACTION_DECKS[f].length}` : `${FACTION_DECKS[f].length}/${FACTION_LISTS[f].length} cards`} · Hero Spell first, tokens last · click a card to see it full size`}</span></div></header>
-          ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All cards'], ['core', 'Original set'], ['exp', EXPANSION_NAMES[f]]].map(([k, label]) =>
-            `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${k === 'exp' ? '✦ ' : ''}${esc(label)}</button>`).join('')}</nav>` : ''}
-          ${pagerHTML(`gal:${f}:${bookSet}`, setCards(f).map((c) => (isLocked(c.id)
-            ? cardHTML(c, { zoom: true, isCut: true, cutLabel: '🔒 LOCKED' }).replace('class="card ', 'class="card locked ')
-            : cardHTML(c, { zoom: true }).replace('class="card ', `class="card ${c.extra ? 'expansion ' : ''}`))).join(''), { chain: true })}
+          <header class="page-title c2-banner" style="--banner:url('${new URL(banner, document.baseURI).href}')">
+            <span class="c2-medal">${crestHTML(f)}</span>
+            <div><h3>${esc(f)}</h3><span class="sub c2-stats">${stats.map((x) => `<span>${esc(x)}</span>`).join('<i>•</i>')}</span></div>
+          </header>
+          <div class="c2-bar">
+            ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All Cards'], ['core', 'Original Set'], ['exp', EXPANSION_NAMES[f]]].map(([k, label]) =>
+              `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${esc(label)}</button>`).join('')}</nav>` : '<span></span>'}
+            <label class="c2-sort"><span>Sort:</span><select data-sort aria-label="Sort cards">${SORTS.map(([k, label]) => `<option value="${k}" ${bookSort === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
+          </div>
+          ${pagerHTML(`gal:${f}:${bookSet}:${bookSort}`, sortCards(setCards(f)).map(galleryCardHTML).join(''), { chain: true, cls: 'pg-rich' })}
         </section>`}
       </div>
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
   bookTurned = false;
   app.scrollTop = scrollY;
+  // Upright phones: the realm strip scrolls sideways; keep the open realm in view.
+  const on = app.querySelector('.coll2 .book-tab.on'), strip = on?.parentElement;
+  if (on && strip.scrollWidth > strip.clientWidth) strip.scrollLeft = on.offsetLeft - (strip.clientWidth - on.offsetWidth) / 2;
   // Typing re-renders the page: keep the cursor in the search box.
   if (refocusSearch) {
     refocusSearch = false;
@@ -2666,6 +2706,15 @@ function renderGallery() {
     if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
   }
 }
+
+// The collection's sort dropdown.
+app.addEventListener('change', (e) => {
+  if (!e.target.matches?.('[data-sort]') || screen !== 'gallery') return;
+  bookSort = e.target.value;
+  sound.play('draw');
+  afterRender.push(() => mfx.dealIn(app.querySelector('.pager')));
+  render();
+});
 
 // Typing in the collection search: re-render shortly after the last keystroke.
 app.addEventListener('input', (e) => {
@@ -3337,6 +3386,8 @@ app.addEventListener('click', (e) => {
   if (suppressZoomClick && e.target.closest('.zoom-overlay')) return; // the tap that ended a swipe
   const pgBtn = e.target.closest('[data-page]');
   if (pgBtn) return pageTurn(pgBtn.closest('.pager'), Number(pgBtn.dataset.page));
+  const dot = e.target.closest('[data-goto]');
+  if (dot) { const pg = dot.closest('.pager'); const d = Number(dot.dataset.goto) - pageOf(pg.dataset.pager); return d && pageTurn(pg, d); }
   const btn = e.target.closest('[data-act]');
   if (btn && !((btn.classList.contains('zoom-overlay') || btn.classList.contains('replace-pop')) && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   // Swapping a locked card in the deck builder for one you own (one copy at a time).
@@ -3443,6 +3494,7 @@ app.addEventListener('click', (e) => {
     afterRender.push(() => mfx.dealIn(app.querySelector('.pager')));
     return render();
   }
+  if (e.target.closest('[data-filters]') && screen === 'gallery') { showFilters = !showFilters; return render(); }
   const searchChip = e.target.closest('[data-search-chip]');
   if (searchChip && screen === 'gallery') { toggleChip(searchChip.dataset.searchChip); sound.play('click'); return render(); }
   if (e.target.closest('[data-clear-search]') && screen === 'gallery') { gallerySearch = ''; refocusSearch = true; return render(); }
@@ -3761,7 +3813,7 @@ function pageTurn(pg, dir) {
     const i = factions.indexOf(bookPage) + (off === 'next' ? 1 : -1);
     if (i < 0 || i >= factions.length) return;
     bookPage = factions[i];
-    setPage(`gal:${bookPage}:${bookSet}`, off === 'next' ? 0 : 999);
+    setPage(`gal:${bookPage}:${bookSet}:${bookSort}`, off === 'next' ? 0 : 999);
     bookTurned = true; sound.play('draw');
     afterRender.push(() => mfx.dealIn(app.querySelector('.pager'), off === 'next' ? 1 : -1));
     render();
