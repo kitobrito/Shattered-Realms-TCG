@@ -331,5 +331,5 @@ export const EXPANSION_NAMES = {
   Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
   Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
   Divine: 'The Holy Pyre', Acidic: 'The Half-Digested', Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
-  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity',
+  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time',
 };

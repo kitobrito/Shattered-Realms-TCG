@@ -455,6 +455,7 @@ export function addKeyword(c, k, temporary = false, state = null, lingerUntil = 
   // Ice Age: Thick Fur can't be Frozen.
   if (k === 'Frozen' && hasKeyword(c, 'Thick Fur')) return;
   if (k === 'Silenced') {
+    if (c.encased > 0) delete c.encased; // Frozen in Time: silence breaks the ice (no Breaks free)
     for (const old of allKeywords(c)) state ? loseKeyword(state, c, old) : null;
     c.keywords = []; c.tempKeywords = []; c.lingerKeywords = [];
   }
@@ -617,6 +618,24 @@ export const EFFECT_OPS = {
     if (!gf) return;
     gf.turns += e.turns ?? 1;
     log(state, `❄ The Great Freeze draws nearer.`);
+  },
+
+  // Frozen in Time: { target, turns } — Thawing minions come that many turns closer to breaking free.
+  thaw(state, e, ctx) {
+    each(state, e.target, ctx, (m) => { if (m.kind === 'minion') thawBy(state, m, e.turns ?? 1); });
+  },
+  // { target } — break free now (Flash Thaw).
+  breakFree(state, e, ctx) {
+    each(state, e.target, ctx, (m) => { if (m.kind === 'minion') breakFree(state, m); });
+  },
+  // { target, turns } — seal a minion in ice: it gets Thawing (turns) (Deep Freeze, Ice Tomb).
+  encase(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.health <= 0 || m.destroyed) return;
+      m.encased = Math.max(m.encased ?? 0, e.turns ?? 2);
+      log(state, `🧊 ${nameOf(state, m)} is sealed in ice.`);
+      emit(state, { type: 'minionEncased', target: m.uid, player: m.controller });
+    });
   },
 
   // ---- Dinosaurs (Meteorite) ----

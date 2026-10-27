@@ -94,6 +94,8 @@ export const LEGENDARY = new Set([
   'female_ceratosaurus',
   'grog_the_neanderthal_chieftain',
   'old_tusker_the_herd_mother',
+  'una_the_glacier_keeper',
+  'kalak_the_thousand_year_mammoth',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).
