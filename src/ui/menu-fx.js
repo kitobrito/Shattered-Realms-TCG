@@ -11,22 +11,22 @@ const calm = () => document.body.classList.contains('reduced-motion') || matchMe
 // slides into the matchup strip.
 export function realmPicked(root, faction) {
   if (calm()) return;
-  const medal = root.querySelector(`.medallion[data-faction="${CSS.escape(faction)}"] .medal-face`);
+  const medal = root.querySelector(`.slab[data-faction="${CSS.escape(faction)}"] .slab-face, .medallion[data-faction="${CSS.escape(faction)}"] .medal-face`);
   if (medal) {
     const r = medal.getBoundingClientRect();
     fx.particles(r, faction, 4);
     fx.shockwave(r, fx.factionColor(faction));
     medal.animate([{ transform: 'scale(1.25)', filter: 'brightness(2)' }, { transform: 'scale(1.05)', filter: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
   }
-  const hero = root.querySelector(`.ts-matchup .vs-hero.f-${fslug(faction)}`);
+  const hero = root.querySelector(`.stage-mini.f-${fslug(faction)}, .ts-matchup .vs-hero.f-${fslug(faction)}`);
   hero?.animate([
     { transform: 'translateY(-40px) scale(0.6) rotate(-8deg)', opacity: 0, filter: 'brightness(2.5)' },
     { transform: 'translateY(4px) scale(1.06) rotate(1deg)', opacity: 1, offset: 0.7 },
     { transform: 'none', opacity: 1, filter: 'none' },
   ], { duration: 520, easing: 'cubic-bezier(.2,.8,.3,1)' });
   // The pair is complete: the mystery hero cracks with light.
-  const mystery = root.querySelector('.ts-matchup .vs-hero.mystery');
-  if (mystery && root.querySelectorAll('.ts-matchup .vs-hero:not(.fused)').length === 2) {
+  const mystery = root.querySelector('.stage-img.mystery.ready, .ts-matchup .vs-hero.mystery');
+  if (mystery && (mystery.matches('.stage-img') || root.querySelectorAll('.ts-matchup .vs-hero:not(.fused)').length === 2)) {
     mystery.classList.add('cracking');
     setTimeout(() => mystery.classList.remove('cracking'), 1400);
   }
