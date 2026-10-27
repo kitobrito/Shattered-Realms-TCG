@@ -11,8 +11,8 @@ export const NEUTRAL_CARDS = [
   {
     id: 'health_potion', name: 'Health Potion', faction: 'Neutral', type: 'spell', art: '🧪', token: true,
     cost: 0,
-    text: 'Restore 3 Health to a friendly character. Overheal. (Offered to the player who goes second.)',
+    text: 'Restore 3 Health to a friendly character. (Offered to the player who goes second.)',
     target: { type: 'character', side: 'friendly' },
-    effects: [{ op: 'heal', target: 'chosen', amount: 3, overheal: true }],
+    effects: [{ op: 'heal', target: 'chosen', amount: 3 }],
   },
 ];

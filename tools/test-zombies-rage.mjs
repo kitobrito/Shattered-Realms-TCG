@@ -5,7 +5,8 @@ import { buildDeck } from '../src/cards/index.js';
 import { addToHand, costOf, effectiveAttack, hasKeyword, heal, radiationOf, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame, getLegalActions } from '../src/engine/engine.js';
 import { getCard } from '../src/engine/registry.js';
-import { ART } from '../src/cards/art-manifest.js';
+import { ART, RAGE_RUNNER_ART } from '../src/cards/art-manifest.js';
+import { existsSync } from 'node:fs';
 
 let s;
 let failures = 0;
@@ -182,6 +183,26 @@ test('All 15 new cards are unlockable extras with art', () => {
   const ids = ['patient_zero', 'rage_chimpanzee', 'lab_escapee', 'sprinting_infected', 'blood_vomiter', 'infected_rat_swarm', 'rage_hound', 'quarantine_breach',
     'contaminated_blood', 'rage_virus', 'infected_crows', 'hazmat_husk', 'sealed_ward', 'silverback_abomination', 'the_outbreak'];
   const bad = ids.filter((id) => !getCard(id)?.extra || !ART[id]);
+  if (bad.length) return bad.join(',');
+});
+
+test('A Rage Runner wears the look of the faction it burst out of, and nothing else changes', () => {
+  const out = [];
+  for (const id of ['vampire_gargoyle', 'patient_zero']) {
+    const e = put(1, id); e.keywords = []; e.attack = 1; e.health = 1; e.maxHealth = 1;
+    play(0, give(0, 'patient_zero'), e.uid);
+    attack(0, put(0, 'tri_maw_hydra').uid, e.uid);
+    const r = pl(0).board.filter((m) => m.cardId === 'rage_runner').at(-1);
+    if (!r) return `no runner from ${id}`;
+    if (r.lookFaction !== getCard(id).faction) return `${id}: look ${r.lookFaction}`;
+    if (r.attack !== 2 || r.health !== 1 || r.keywords.join() !== 'Rush') return `${id}: runner ${r.attack}/${r.health} ${r.keywords}`;
+    out.push(r.lookFaction);
+  }
+  if (out.join() !== 'Vampires,Zombies') return out.join();
+});
+test('Every faction has its own Rage Runner picture', () => {
+  const facs = ['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Ghosts', 'Ice Age', 'Lycanthropes', 'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies'];
+  const bad = facs.filter((f) => !RAGE_RUNNER_ART[f] || !existsSync(new URL(`../${RAGE_RUNNER_ART[f]}`, import.meta.url)));
   if (bad.length) return bad.join(',');
 });
 

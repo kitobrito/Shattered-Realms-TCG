@@ -1327,6 +1327,8 @@ export const EFFECT_OPS = {
       const m = summonMinion(state, p, cardId, { attack: bonus ? base.attack + bonus.attack : e.attack, health: bonus ? base.health + bonus.health : e.health, keywords: e.keywords });
       if (m) ctx.summoned = m.uid;
       if (m && e.regen) m.regen = e.regen; // Acidic: Regenerate on a summoned copy
+      // lookOfDead: drawn in the faction of the minion whose Exit this is (Rage Runners). Art only.
+      if (m && e.lookOfDead) { const f = getCard(ctx.cardId)?.faction; if (f) m.lookFaction = f; }
       if (m && e.loseKeywords) for (const k of e.loseKeywords) removeKeyword(m, k);
       if (m && e.randomKeywords) {
         for (const k of randomKeywords(state, RANDOM_KEYWORD_POOL, m.keywords, e.randomKeywords)) addKeyword(m, k, false, state);
@@ -1679,7 +1681,7 @@ export const EFFECT_OPS = {
       m.infected = ctx.controller;
       m.grantedTriggers ??= [];
       m.grantedTriggers.push({ on: 'deathrattle', controller: ctx.controller, infection: true,
-        effects: [{ op: 'summon', cardId: 'rage_runner', bonusIfControls: { cardId: 'the_outbreak', attack: 2, health: 2 } }] });
+        effects: [{ op: 'summon', cardId: 'rage_runner', lookOfDead: true, bonusIfControls: { cardId: 'the_outbreak', attack: 2, health: 2 } }] });
       log(state, `🦠 ${nameOf(state, m)} is Infected.`);
       emit(state, { type: 'infected', target: m.uid, player: m.controller, by: ctx.controller });
     });
