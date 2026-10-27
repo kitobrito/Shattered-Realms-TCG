@@ -7,9 +7,9 @@
 //                         > img.board-still   (always; shown until the video plays)
 //                         > video.board-video (when BOARD_VIDEO has one for the faction)
 
-import { BOARD_ANIM, BOARD_ART, BOARD_VIDEO, boardArtFor, CIRCLE_BOARDS } from '../cards/board-art.js';
+import { BOARD_ANIM, BOARD_ART, BOARD_VIDEO, boardArtFor, boardKey, CIRCLE_BOARDS } from '../cards/board-art.js';
 import { startBoardAnim } from './board-anim.js';
-import { startCircleFx } from './circle-fx.js';
+import { hasBoardFx, startBoardFx, startCircleFx } from './circle-fx.js';
 import { playDescent } from './descent-fx.js';
 
 let layer = null;
@@ -50,13 +50,29 @@ function startCircle(n) {
     circleFx = ctl;
   }).catch(() => {});
 }
+// A living realm board (board-fx-defs.js): its canvas covers the still painting.
+let realmFx = null;
+let realmWant = null;
+function startRealm(faction) {
+  realmFx?.stop();
+  realmFx = null;
+  const key = faction && boardKey(faction);
+  realmWant = key;
+  if (!key || !hasBoardFx(key, 'land') || !videoAllowed()) return;
+  startBoardFx(layer.querySelector('.board-stage'), key, 'land').then((ctl) => {
+    if (realmWant !== key || circleShown > 0) { ctl?.stop(); return; }
+    realmFx = ctl;
+  }).catch(() => {});
+}
+function stopRealm() { realmFx?.stop(); realmFx = null; realmWant = null; }
+
 // The board for this faction, or (depth > 0) the circle of Hell the battle has sunk to.
 // A change of circle plays the Descent: the old board sinks away, the new one rises.
 export function showBoard(faction, depth = 0) {
   if (!layer) build();
   if (depth > 0 || circleShown > 0) {
     layer.classList.add('show');
-    if (depth === circleShown && (depth > 0 || current === faction)) { anim?.resume(); circleFx?.resume(); return; }
+    if (depth === circleShown && (depth > 0 || current === faction)) { anim?.resume(); circleFx?.resume(); realmFx?.resume(); return; }
     const from = circleShown;
     circleShown = depth;
     const img = layer.querySelector('.board-still');
@@ -69,6 +85,7 @@ export function showBoard(faction, depth = 0) {
       layer.querySelector('.board-backdrop').style.backgroundImage = `url('${src}')`;
       current = depth > 0 ? `circle${depth}` : faction;
       startCircle(depth);
+      if (depth > 0) stopRealm(); else startRealm(faction);
     };
     if (depth > from && videoAllowed()) playDescent(layer.querySelector('.board-stage'), depth, swap);
     else swap();
@@ -79,8 +96,9 @@ export function showBoard(faction, depth = 0) {
   const img = layer.querySelector('.board-still');
   // (A living board shows its clean plate instead; keep that while it runs.)
   if (!anim && img.getAttribute('src') !== still) img.setAttribute('src', still);
-  if (current === faction) { anim?.resume(); return; }
+  if (current === faction) { anim?.resume(); realmFx?.resume(); return; }
   current = faction;
+  startRealm(faction);
   layer.querySelector('.board-backdrop').style.backgroundImage = `url('${BOARD_ART[faction]}')`;
   layer.querySelector('video')?.remove();
   anim?.stop();
@@ -119,6 +137,7 @@ export function hideBoard() {
   layer.querySelector('video')?.pause();
   anim?.pause();
   circleFx?.pause();
+  realmFx?.pause();
 }
 
 // Leaving a match: the next one starts back at the surface.
@@ -140,12 +159,12 @@ function boardPoint(clientX, clientY) {
   return x >= 0 && y >= 0 && x <= 1 && y <= 1 ? [x, y] : null;
 }
 export function pokeBoard(clientX, clientY) {
-  const live = circleFx ?? anim;
+  const live = circleFx ?? realmFx ?? anim;
   const p = live && boardPoint(clientX, clientY);
   return p ? live.poke(...p) : false;
 }
 export function canPokeBoard(clientX, clientY) {
-  const live = circleFx ?? anim;
+  const live = circleFx ?? realmFx ?? anim;
   const p = live && boardPoint(clientX, clientY);
   return p ? live.canPoke(...p) : false;
 }

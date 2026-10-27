@@ -7,7 +7,8 @@ import { actingPlayer } from '../engine/engine.js';
 import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
-import { BOARD_ART, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
+import { BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
+import { hasBoardFx } from './circle-fx.js';
 import { isMuted, play as playSound } from './sound.js';
 import { artOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
@@ -686,11 +687,15 @@ export function boardHTML(ctx) {
   // variables (container units of the 16:9 arena), plus the animated corner props.
   const lb = board ? (circle ? CIRCLE_BOARDS.land[circle] : LANDSCAPE_BOARDS[mp.factions[0]]) : null;
   const lbStyle = lb ? landscapeVars(lb) : '';
+  // Living realm boards (board-fx-defs.js) and boards whose painting has no hero frames.
+  const fxKey = circle ? null : boardKey(mp.factions[0]);
+  const pfx = circle || (pb && hasBoardFx(fxKey, 'portrait') ? fxKey : null);
+  const frame = (pb ?? lb)?.frame;
 
   return `
-    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : mp.factions[0]}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
+    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''} ${frame ? `drawn-frame frame-${frame}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : mp.factions[0]}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
       ${pb ? `<div class="pboard-img" style="background-image: url('${artUrl}')"></div>` : ''}
-      ${pb && circle ? `<div class="pboard-fx" data-circle-fx="${circle}"></div>` : ''}
+      ${pb && pfx ? `<div class="pboard-fx" data-fx="${pfx}"></div>` : ''}
       ${pb?.props ? propsHTML(pb.props, PORTRAIT_SIZE, artUrl, BOARD_CUTS.portrait?.[mp.factions[0]]?.cuts) : ''}
       ${lb?.props ? propsHTML(lb.props, LANDSCAPE_SIZE, new URL(lb.src, document.baseURI).href, BOARD_CUTS.land?.[mp.factions[0]]?.cuts) : ''}
       ${s.descent ? descentHTML(s.descent) : ''}

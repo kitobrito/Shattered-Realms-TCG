@@ -35,6 +35,9 @@ export const BOARD_ANIM = {};
 import { BUILD } from '../build.js';
 import { BOARD_CUTS } from './board-cuts.js';
 
+// A realm board's file name ('ice-age'), which also names its living effects (board-fx-defs.js).
+export const boardKey = (faction) => BOARD_ART[faction]?.split('/').pop().replace(/\.jpg$/, '') ?? null;
+
 export function boardArtFor(faction) {
   // A board whose moving props are cut out shows its clean plate underneath them.
   const plate = BOARD_CUTS.land?.[faction]?.plate;
@@ -51,6 +54,8 @@ export function boardArtFor(faction) {
 //   opp / me: the dark opening of each hero frame [x0, y0, x1, y1] and its shape
 //             ('arch' = round top, flat bottom; 'circle' = round or oval);
 //   field:    the painted battlefield, top and bottom [y0, y1] (the two minion rows).
+//   frame:    the painting has no hero frames of its own; the game draws them in this style
+//             (style.css .arena.frame-<style>), around the spots given by opp / me.
 // board.js layoutPortraitBoard() scales the art to the screen and lines the
 // heroes, minion rows, End Turn and decks up with these spots.
 export const PORTRAIT_SIZE = [459, 1024];
@@ -59,9 +64,8 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
-  'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [204, 20, 256, 80, 'arch'], me: [201, 929, 258, 1003, 'circle'], field: [110, 910],
-    props: [P([5, 5, 110, 100], 'wobble', '#f0e8d8', { sound: 'rattle', glyph: '🦴' }), P([370, 5, 455, 90], 'sparkle', '#bfefff', { sound: 'chime', glyph: '❄️' }),
-      P([10, 940, 110, 1015], 'smoke', '#d8d0c8', { sound: 'whoosh', glyph: '🔥' }), P([350, 940, 455, 1015], 'glow', '#ff6a4a', { sound: 'knock', glyph: '✋' })] },
+  // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
+  'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [201, 34, 259, 102, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [125, 790], frame: 'bone', props: [] },
   Void: { src: 'art/boards-portrait/void.jpg', opp: [183, 59, 276, 174, 'arch'], me: [178, 784, 275, 911, 'circle'], field: [195, 765],
     props: [P([15, 15, 95, 95], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([355, 15, 450, 100], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
       P([10, 870, 110, 1010], 'wobble', '#d8d0f0', { sound: 'clink' }), P([360, 915, 459, 1005], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },
@@ -122,9 +126,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
-  'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [470, 26, 554, 124], me: [470, 435, 554, 546], field: [110, 150, 915, 425],
-    props: [P([30, 10, 210, 165], 'wobble', '#f0e8d8', { sound: 'rattle', glyph: '🦴' }), P([880, 15, 1005, 140], 'sparkle', '#bfefff', { sound: 'chime', glyph: '❄️' }),
-      P([20, 445, 150, 545], 'smoke', '#d8d0c8', { sound: 'whoosh', glyph: '🔥' }), P([860, 450, 1015, 560], 'glow', '#ff6a4a', { sound: 'knock', glyph: '✋' })] },
+  'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'bone', props: [] },
   Void: { src: 'art/boards-v2/void.jpg', opp: [472, 43, 551, 132], me: [474, 437, 549, 537], field: [115, 150, 910, 425],
     props: [P([30, 15, 125, 105], 'bob', '#c89cff', { sound: 'whoosh', glyph: '🪐' }), P([895, 15, 1000, 115], 'sparkle', '#e8e0ff', { sound: 'chime', glyph: '⭐' }),
       P([25, 420, 125, 555], 'wobble', '#d8d0f0', { sound: 'clink' }), P([890, 465, 1015, 560], 'glow', '#b48cff', { sound: 'whoosh', glyph: '🌀' })] },

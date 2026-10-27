@@ -187,20 +187,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Ice Age": {
-   "plate": "art/boards-v2/ice-age-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/ice-age-land-0.png",
-     "box": [
-      38,
-      16,
-      204,
-      164
-     ]
-    }
-   }
-  },
   "Void": {
    "plate": "art/boards-v2/void-plate.jpg",
    "cuts": {
@@ -453,20 +439,6 @@ export const BOARD_CUTS = {
       914,
       445,
       1011
-     ]
-    }
-   }
-  },
-  "Ice Age": {
-   "plate": "art/boards-portrait/ice-age-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/ice-age-portrait-0.png",
-     "box": [
-      21,
-      12,
-      126,
-      101
      ]
     }
    }
