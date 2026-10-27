@@ -5128,3 +5128,21 @@ body.reduced-motion .descent { display: none; }
 .stage-info .ts-fusion-btn, .stage-info .ts-guide-btn { font-size: clamp(11px, 1.7vh, 15px); padding: 0.6vh 1.4vh; }
 .stage-info .deck-line .sub, .stage-info .deck-line span, .stage-info .deck-line b { font-size: inherit !important; }
 @media (min-width: 1500px) { .stage, .sel-actions { max-width: 1000px; } }
+/* Proportions: slab columns stay a sensible width (no long thin bars), both columns spread
+   evenly top to bottom, and the centre stage gets the height. */
+.menu.tavern.select-screen { grid-template-columns: minmax(170px, min(21vw, 300px)) minmax(0, 1fr) minmax(170px, min(21vw, 300px)); gap: 3vw; padding: 2.5vh 2.5vw; }
+.sel-col { justify-content: space-evenly; gap: 0; }
+.sel-group { gap: 1vh; }
+.slab { --h: clamp(36px, 6.6vh, 68px); }
+.slab-name { font-size: clamp(14px, 2.5vh, 24px); }
+.sel-center { gap: 1.4vh; justify-content: space-between; }
+.sel-title .ts-logo img { height: clamp(40px, 9vh, 120px); }
+.stage { flex: 1 1 0; max-width: 980px; gap: 3.5vh; }
+.stage-portrait { height: min(90%, 50vh); }
+.stage-side { max-width: 460px; }
+.sel-actions { max-width: 980px; }
+.sel-actions .ts-row { flex-wrap: wrap; }
+.sel-actions .ts-row button { font-size: clamp(11px, 1.75vh, 16px); padding: 0.7vh 1.3vh; }
+@media (min-width: 1100px) { .sel-actions .ts-row { flex-wrap: nowrap; } }
+.stage-portrait { height: min(94%, 56vh); }
+.slab-name.long { font-size: clamp(12px, 2vh, 19px); letter-spacing: 0; }
