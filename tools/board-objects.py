@@ -33,7 +33,7 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 #           things that spin; 'center', 'radius')
 #   expand: how far past the box the object may reach (default 30% of the box)
 #   keep: [[x0,y0,x1,y1]...]  only these areas can hold the object
-#   fg:   [[x0,y0,x1,y1]...]  surely object (forced in)
+#   fg:   [[x0,y0,x1,y1]...]  surely object (forced in);  fg_polys: the same, outlined
 #   bg:   [[x0,y0,x1,y1]...]  surely background (forced out)
 #   within: {hint}  keep only what that cut finds too (colour rules inside the model's outline)
 #   cover: {'area': box, 'hsv': ranges} or {'polys': [...]}  scenery painted in front of the object, kept in front
@@ -87,6 +87,16 @@ HINTS = {
     'lycanthropes-land/chains': dict(CHAINS, bg=[[730, 50, 772, 96]]),
     'lycanthropes-portrait/chains': CHAINS,
     'lycanthropes-portrait/chains2': CHAINS,
+    # Radioactive: the gauges hang below their boxes; the work lamp alone (not the floor it lights).
+    'radioactive-land/gauge': {'expand': 40},
+    'radioactive-portrait/gauge': {'expand': 40},
+    'radioactive-land/lampSway': {'method': 'poly', 'refine': 2, 'polys': [[[843, 63], [855, 52], [870, 48], [882, 58], [880, 75], [875, 90], [872, 110], [866, 130], [855, 145], [835, 145], [818, 140], [814, 120], [818, 100], [832, 85], [840, 72]]]},
+    # Robots: the valve wheel reaches past its box; the bot's left leg; the toolbox, not the plate under it.
+    'robots-land/valve': {'expand': 20},
+    'robots-land/bot': {'fg_polys': [[[90, 470], [100, 467], [108, 478], [120, 478], [128, 490], [118, 493], [105, 490], [104, 505], [98, 520], [88, 518], [90, 495]]]},
+    'robots-portrait/tools': {'method': 'poly', 'refine': 3, 'polys': [[[365, 935], [372, 930], [385, 927], [430, 912], [437, 915], [442, 925], [447, 940], [440, 945], [440, 970], [420, 980], [395, 990], [375, 995], [360, 990], [352, 975], [350, 945]]]},
+    'robots-portrait/bot': {'expand': 30, 'fg_polys': [[[44, 943], [50, 945], [52, 952], [45, 958], [40, 965], [38, 980], [36, 992], [30, 992], [29, 975], [31, 958], [37, 948]]]},
+    'robots-land/tools': {'method': 'poly', 'refine': 3, 'polys': [[[825, 437], [845, 430], [905, 420], [920, 413], [935, 418], [945, 445], [948, 470], [935, 470], [933, 505], [905, 515], [880, 525], [850, 543], [835, 535], [818, 520], [813, 485], [815, 455]]]},
     'ice-age-portrait/skull': {'method': 'poly', 'polys': [[[40.6, 13], [51, 16.75], [61, 25.5], [59, 38], [70, 49], [73.75, 55], [85, 59], [98.75, 60.5], [104, 55.5], [105, 48], [100, 41.75], [92, 36], [102.5, 39], [107.5, 45.5], [108, 55.5], [102.5, 63], [90, 64], [77, 62], [78, 70], [79, 83], [77.5, 93], [69, 96], [60, 93], [56, 83], [55, 64], [45, 58], [33.75, 54], [32.5, 44], [27.5, 29], [28.75, 21.75], [35, 15.5]]],
                                'holes': [[[61, 67], [72, 68], [74, 83], [71, 90], [65, 92], [61, 85]]]},
     'ice-age-portrait/spear2': {'method': 'poly', 'polys': [[[99, 955], [98, 966], [90, 976], [62, 1008], [57, 1016], [53, 1013], [55, 1006], [83, 975], [87, 966], [94, 958]]]},
@@ -262,7 +272,7 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
     thr = hint.get('thr', 0.5)
     if method == 'model':
         # The model sees the box with some surroundings (more context makes it pick other things).
-        pad = int(max(10, 0.4 * max(bw, bh)))
+        pad = int(max(10, 0.4 * max(bw, bh), hint.get('expand', 0) + 10))
         cx0, cy0, cx1, cy1 = rect([x0 - pad, y0 - pad, x1 + pad, y1 + pad], H, W)
         full = np.zeros((H, W), np.float32)
         full[cy0:cy1, cx0:cx1] = matter(cv2.cvtColor(img[cy0:cy1, cx0:cx1], cv2.COLOR_BGR2RGB))
@@ -315,9 +325,6 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
         allowed[b:d, a:c] = 1
     full *= allowed
     hard = (full >= thr).astype(np.uint8)
-    for r in hint.get('fg', []):
-        a, b, c, d = rect(r, H, W)
-        hard[b:d, a:c] = 1
     for r in hint.get('bg', []):
         a, b, c, d = rect(r, H, W)
         hard[b:d, a:c] = 0
@@ -328,6 +335,12 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
         if stats[k, cv2.CC_STAT_AREA] >= hint.get('min_area', 6) and (core[lab == k]).any():
             keep[lab == k] = 1
     hard = keep
+    # Parts surely of the object, even where they don't touch the rest (a leg, a cord).
+    for r in hint.get('fg', []):
+        a, b, c, d = rect(r, H, W)
+        hard[b:d, a:c] = 1
+    for poly in hint.get('fg_polys', []):
+        cv2.fillPoly(hard, [np.array(poly, np.int32)], 1)
     if hint.get('grow'):
         hard = cv2.dilate(hard, np.ones((3, 3), np.uint8), iterations=hint['grow'])
     n, lab, stats, _ = cv2.connectedComponentsWithStats((1 - hard).astype(np.uint8), 4)
