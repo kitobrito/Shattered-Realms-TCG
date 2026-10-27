@@ -1554,7 +1554,7 @@ export const BOARD_FX = {
       { area: [60, 40, 130, 120], sound: 'whoosh', kick: ['lantern'], flare: [255, 210, 120], glyph: '🏮' },
       { area: [356, 16, 424, 104], sound: 'splash', kick: ['hand'], flare: [170, 230, 170], glyph: '✋' },
       { area: [0, 225, 140, 815], sound: 'groan', kick: ['soulsL'], flare: [200, 120, 100], glyph: '😡' },
-      { area: [368, 256, 459, 704], sound: 'groan', kick: ['soulsR'], flare: [200, 120, 100], glyph: '😡' },
+      { area: [340, 225, 459, 715], sound: 'groan', kick: ['soulsR'], flare: [200, 120, 100], glyph: '😡' },
       { area: [366, 886, 454, 994], sound: 'clink', kick: ['shield'], flare: [200, 210, 220], glyph: '🛡️' },
     ],
   },
@@ -1613,7 +1613,7 @@ export const BOARD_FX = {
       { id: 'blood', type: 'mask', mask: 'blood', anim: { kind: 'pulse', period: 1.2 }, alpha: [0.1, 0.5], bloom: 0.6, kickDur: 2 },
       { id: 'bloodBub', type: 'particles', kind: 'bubble', from: [[900, 490, 50]], rate: 4, max: 16, color: [255, 120, 120], size: [1.2, 2.6], life: [0.4, 0.9] },
       { id: 'trees', type: 'flames', points: [[150, 40, 50, 46], [60, 120, 30, 30], [200, 50, 20, 20]], tongues: 5, alpha: 0.75 },
-      { id: 'treeWarp', type: 'warp', box: [80, 0, 230, 140], base: 'bottom', amp: 1.6, period: 3, wave: 2 },
+      { id: 'treeWarp', type: 'warp', box: [25, 0, 235, 148], base: 'bottom', amp: 1.6, period: 3, wave: 2 },
       { id: 'meteors', type: 'meteors', area: [600, -20, 1024, 300], dir: [-0.7, 1], speed: [120, 180], every: [2.5, 5], size: [1.8, 3] },
       { id: 'arrows', type: 'arrows', every: [3, 6], shooters: [
         { from: [300, 26], to: [430, 120], arc: 30, dur: 1 }, { from: [646, 30], to: [560, 140], arc: 30, dur: 1 }, { from: [744, 30], to: [820, 160], arc: 30, dur: 1 },
@@ -1691,7 +1691,7 @@ export const BOARD_FX = {
       { id: 'lavaFlow', type: 'flow', mask: 'lava', dir: [0, 1], dist: 14, period: 3, alpha: 0.95, glow: 0.3, glowPeriod: 2 },
       { type: 'particles', kind: 'wisp', area: { mask: 'green' }, rate: 1.5, max: 12, color: [170, 255, 120], size: [2.3, 4.5], life: [3, 5], alpha: 0.2 },
       { type: 'particles', kind: 'ember', area: { mask: 'lava' }, rate: 3, max: 20, color: [255, 150, 50], size: [0.6, 1.2], life: [1.5, 3], speed: 0.8 },
-      { id: 'snakeTR', type: 'echo', box: [370, 10, 459, 100], feather: 6, motion: { kind: 'breathe', amp: 2, period: 2.2, kickAmp: 4 } },
+      { id: 'snakeTR', type: 'echo', box: [305, 10, 459, 105], feather: 6, motion: { kind: 'breathe', amp: 2, period: 2.2, kickAmp: 4 } },
       { id: 'coins', type: 'particles', kind: 'glint', area: { mask: 'gold' }, rate: 3, max: 12, color: [255, 245, 200], size: [0.9, 1.6], life: [0.3, 0.8] },
       { type: 'fog', area: [-60, 0, 520, 1024], count: 8, size: [70, 120], speed: 3, color: [120, 200, 80], alpha: 0.06, blend: 'lighter' },
     ],
@@ -1707,7 +1707,7 @@ export const BOARD_FX = {
     wind: { dir: 1, every: [3, 6], speed: [220, 320], width: [180, 260], lean: 0.2 },
     layers: [
       // The icy wind streaming from the great wings.
-      { id: 'wings', type: 'warp', box: [280, 0, 744, 96], base: 'top', amp: 2.4, period: 5, wave: 1.2 },
+      { id: 'wings', type: 'warp', box: [150, 0, 880, 112], base: 'top', amp: 2.4, period: 5, wave: 1.2 },
       { type: 'stream', path: [[300, 40], [200, 90], [80, 120], [-30, 140]], count: 24, speed: 120, width: 30, color: [230, 245, 255], alpha: 0.35, size: [1, 2], tail: 30 },
       { type: 'stream', path: [[720, 40], [820, 90], [940, 120], [1054, 140]], count: 24, speed: 120, width: 30, color: [230, 245, 255], alpha: 0.35, size: [1, 2], tail: 30 },
       { id: 'ice', type: 'mask', mask: 'ice', anim: { kind: 'wave', along: 'x', band: 300, speed: 30 }, alpha: [0, 0.25], gain: 0.5, kickDur: 2 },
@@ -1740,7 +1740,7 @@ export const BOARD_FX = {
   'circle9-portrait': {
     wind: { dir: 1, every: [3, 6], speed: [180, 260], width: [160, 220], lean: 0.1 },
     layers: [
-      { id: 'wings', type: 'warp', box: [150, 0, 459, 110], base: 'top', amp: 2.2, period: 5, wave: 1.2 },
+      { id: 'wings', type: 'warp', box: [0, 0, 410, 155], base: 'top', amp: 2.2, period: 5, wave: 1.2 },
       { id: 'ice', type: 'mask', mask: 'ice', anim: { kind: 'wave', along: 'y', band: 320, speed: 30 }, alpha: [0, 0.25], gain: 0.5, kickDur: 2 },
       { type: 'particles', kind: 'glint', area: { mask: 'snow' }, rate: 6, max: 26, color: [240, 250, 255], size: [0.9, 1.6], life: [0.4, 1] },
       { id: 'cracks', type: 'lightning', every: [8, 16], color: [200, 235, 255], zones: [

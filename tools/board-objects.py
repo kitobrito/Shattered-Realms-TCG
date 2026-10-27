@@ -142,6 +142,19 @@ HINTS = {
     'circle5-land/oar': {'method': 'poly', 'refine': 2, 'polys': [[[103, 548], [98, 542], [190, 490], [215, 476], [235, 452], [262, 434], [290, 425], [315, 418], [322, 426], [318, 445], [295, 462], [268, 474], [240, 482], [215, 490], [195, 500], [110, 550]]]},
     # Circle VI: the tomb lid, broken in two.
     'circle6-land/lid': {'method': 'poly', 'refine': 3, 'polys': [[[25, 483], [95, 440], [118, 450], [130, 470], [140, 500], [30, 500]], [[110, 435], [160, 402], [175, 402], [235, 438], [230, 450], [160, 488], [135, 470], [120, 450]]]},
+    # Circle IX: the frozen wings beside the arch (never the arch), the faces in the ice, the dead trees of VII.
+    'circle9-land/wings': {'method': 'poly', 'refine': 4, 'polys': [[[160, 92], [200, 60], [240, 30], [270, 8], [300, 0], [460, 0], [462, 20], [455, 40], [440, 70], [432, 100], [400, 100], [330, 105], [260, 103], [200, 105], [165, 100]], [[570, 0], [730, 0], [760, 8], [800, 30], [840, 60], [870, 92], [865, 100], [830, 105], [760, 103], [690, 105], [620, 100], [595, 100], [588, 70], [575, 40], [568, 20]]]},
+    'circle9-portrait/wings': {'method': 'poly', 'refine': 4, 'polys': [[[2, 55], [25, 32], [60, 22], [90, 15], [125, 22], [155, 30], [175, 30], [184, 38], [172, 46], [162, 62], [160, 78], [166, 95], [166, 128], [150, 135], [120, 140], [95, 150], [85, 148], [70, 120], [40, 110], [15, 115], [5, 95]], [[272, 40], [280, 30], [295, 28], [330, 22], [360, 15], [380, 15], [400, 30], [405, 60], [400, 100], [395, 130], [375, 145], [365, 150], [345, 135], [320, 125], [300, 120], [292, 100], [300, 80], [300, 60], [290, 48]]]},
+    'circle9-portrait/faceTR': {'method': 'poly', 'refine': 2, 'ellipses': [[333, 232, 22, 30]]},
+    'circle9-land/faceL': {'method': 'poly', 'refine': 3, 'ellipses': [[38, 225, 22, 28]]},
+    'circle9-land/faceR': {'method': 'poly', 'refine': 3, 'ellipses': [[965, 248, 30, 22, -20]]},
+    'circle9-land/faceB': {'method': 'poly', 'refine': 3, 'ellipses': [[785, 522, 24, 32]]},
+    'circle7-land/treeWarp': {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 75]], 'close': 1, 'grow': 1, 'expand': 0},
+    # Basic: the flower beds (petals, leaves and stems, not the path), the snake of Circle VIII.
+    'basic-land/flowers': {'method': 'grabcut', 'expand': 0},
+    'basic-portrait/swing': {'method': 'poly', 'refine': 2, 'polys': [[[415, 62], [422, 59], [432, 66], [431, 72], [424, 72], [416, 67]], [[410, 31], [413, 31], [421, 61], [418, 61]], [[428, 32], [431, 32], [431, 62], [428, 62]]]},
+    'basic-portrait/flowers': {'method': 'grabcut', 'expand': 0},
+    'basic-portrait/flowers2': {'method': 'hsv', 'hsv': [[100, 125, 60, 255, 80, 255], [18, 35, 170, 255, 170, 255], [38, 85, 90, 255, 40, 200]], 'close': 2, 'anywhere': True, 'min_area': 20, 'expand': 0},
     'ultraterrestrials-land/portal': {'method': 'disc', 'center': [922, 66], 'radius': 51},
     'ultraterrestrials-portrait/portal': {'method': 'disc', 'center': [379, 85], 'radius': 57},
     # Zombies: the hands clawing out of the graves (outlined, fitted to the bones).
@@ -173,8 +186,10 @@ FOLIAGE = {
                     'topG': {'hsv': LEAF, 'exclude': [[415, 0, 615, 150]],
                               'fg_polys': [[[655, 10], [700, 0], [760, 0], [790, 20], [760, 45], [740, 55], [715, 60], [700, 75], [680, 90], [668, 85], [660, 60], [655, 35]]]}},
     'plants-portrait': {'*': {'hsv': LEAF, 'exclude': [[155, 105, 305, 270], [145, 755, 315, 920]]}},
-    'basic-land': {'*': {'hsv': GREEN}, 'bushes': {'hsv': GREEN, 'exclude': [[470, 440, 770, 572]]}},
-    'basic-portrait': {'*': {'hsv': GREEN}},
+    # Basic: the tree and the bushes stand out from the grass by shape, not colour (GrabCut), the mossy rocks stay.
+    'basic-land': {'tree': {'cut': {'method': 'grabcut'}},
+                   'bushes': {'cut': {'method': 'poly', 'refine': 3, 'polys': [[[230, 572], [235, 545], [250, 525], [262, 510], [280, 512], [300, 518], [320, 515], [340, 525], [350, 510], [355, 490], [365, 482], [385, 478], [398, 468], [410, 462], [422, 466], [432, 475], [445, 490], [460, 500], [475, 512], [478, 530], [480, 572]], [[722, 572], [725, 560], [735, 553], [745, 548], [755, 540], [765, 530], [772, 520], [782, 522], [790, 535], [800, 545], [810, 555], [815, 572]]], 'anywhere': True}}},
+    'basic-portrait': {'tree': {'cut': {'method': 'poly', 'refine': 2, 'polys': [[[372, 22], [365, 18], [372, 10], [382, 5], [392, 4], [400, 0], [459, 0], [459, 22], [450, 25], [440, 24], [430, 22], [420, 20], [412, 24], [400, 30], [392, 32], [385, 30], [378, 30]], [[375, 42], [385, 36], [395, 34], [405, 38], [412, 42], [413, 48], [405, 52], [397, 57], [390, 55], [382, 50]]]}}},
     # Sharks: thin kelp fronds only (no growing into the coral around them).
     'sharks-land': {'*': {'hsv': KELP, 'refine': 0}, 'kelpB': {'hsv': KELP, 'refine': 0, 'exclude': [[840, 420, 1024, 572]]}},
     'sharks-portrait': {'*': {'hsv': KELP, 'refine': 0}},
@@ -265,6 +280,8 @@ def grabcut(img, box, region, iters=6):
     X0, Y0, X1, Y1 = region
     crop = img[Y0:Y1, X0:X1]
     x0, y0, x1, y1 = box
+    # GrabCut needs some background around the box: keep a 2px margin inside the region.
+    x0, y0, x1, y1 = max(x0, X0 + 2), max(y0, Y0 + 2), min(x1, X1 - 2), min(y1, Y1 - 2)
     m = np.zeros(crop.shape[:2], np.uint8)
     bg, fg = np.zeros((1, 65)), np.zeros((1, 65))
     cv2.grabCut(crop, m, (x0 - X0, y0 - Y0, max(1, x1 - x0), max(1, y1 - y0)), bg, fg, iters, cv2.GC_INIT_WITH_RECT)
@@ -389,6 +406,8 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
         allowed[b:d, a:c] = 1
     full *= allowed
     hard = (full >= thr).astype(np.uint8)
+    for poly in hint.get('bg_polys', []):
+        cv2.fillPoly(hard, [np.array(poly, np.int32)], 0)
     for r in hint.get('bg', []):
         a, b, c, d = rect(r, H, W)
         hard[b:d, a:c] = 0
@@ -396,7 +415,7 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
     n, lab, stats, _ = cv2.connectedComponentsWithStats(hard, 8)
     keep = np.zeros_like(hard)
     for k in range(1, n):
-        if stats[k, cv2.CC_STAT_AREA] >= hint.get('min_area', 6) and (core[lab == k]).any():
+        if stats[k, cv2.CC_STAT_AREA] >= hint.get('min_area', 6) and (hint.get('anywhere') or (core[lab == k]).any()):
             keep[lab == k] = 1
     hard = keep
     # Parts surely of the object, even where they don't touch the rest (a leg, a cord).
@@ -411,6 +430,9 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
     for k in range(1, n):
         if stats[k, cv2.CC_STAT_AREA] < hint.get('max_hole', 20):
             hard[lab == k] = 1
+    if hint.get('taken') is not None:
+        # A ripple never takes pixels an object already has (they would be drawn twice).
+        hard[cv2.dilate(hint['taken'], np.ones((3, 3), np.uint8), iterations=2) > 0] = 0
     if hard.sum() == 0:
         return None
     return finish(img, hard, full, thr, method != 'model')
@@ -493,8 +515,13 @@ def main():
                 if not fol:
                     sys.exit(f'{key}/{iid}: a foliage warp needs a FOLIAGE entry')
             hint = HINTS.get(f'{key}/{iid}') or DEFAULT_HINTS.get(f"{key}/{iid.split('.')[0]}", {})
-            if fol:
+            if fol and 'cut' in fol:
+                # Foliage the colours can't tell from the grass around it: cut it as an object.
+                hint, fol = dict(fol['cut'], taken=taken), None
+            elif fol:
                 fol = dict(fol, taken=taken)
+            elif layer['type'] == 'warp':
+                hint = dict(hint, taken=taken)
             r = cut(img, box, matter, hint, layer, fol, key, iid)
             if r:
                 taken |= r['mask']
