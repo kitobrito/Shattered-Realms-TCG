@@ -62,20 +62,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Plants": {
-   "plate": "art/boards-v2/plants-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/plants-land-0.png",
-     "box": [
-      12,
-      7,
-      103,
-      93
-     ]
-    }
-   }
-  },
   "Void": {
    "plate": "art/boards-v2/void-plate.jpg",
    "cuts": {
@@ -157,20 +143,6 @@ export const BOARD_CUTS = {
       662,
       459,
       798
-     ]
-    }
-   }
-  },
-  "Plants": {
-   "plate": "art/boards-portrait/plants-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/plants-portrait-0.png",
-     "box": [
-      2,
-      2,
-      93,
-      93
      ]
     }
    }

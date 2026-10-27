@@ -758,8 +758,8 @@ export const BOARD_FX = {
     wind: { dir: 1, every: [6, 11], speed: [140, 220], width: [160, 260], lean: 0.3 },
     layers: [
       // Light: the full moon glows, clouds slip across it, its beams sweep the clearing.
-      { id: 'moon', type: 'mask', mask: 'moon', anim: { kind: 'pulse', period: 6 }, alpha: [0.2, 0.6], bloom: 1, kickDur: 3 },
-      { id: 'moonHalo', type: 'glow', points: [[140, 72, 70]], color: [200, 220, 255], anim: 'pulse', period: 6, alpha: [0.1, 0.28], kickDur: 3 },
+      { id: 'moon', type: 'mask', mask: 'moon', anim: { kind: 'pulse', period: 6 }, alpha: [0.03, 0.22], bloom: 0.4, kickDur: 3 },
+      { id: 'moonHalo', type: 'glow', points: [[140, 72, 70]], color: [200, 220, 255], anim: 'pulse', period: 6, alpha: [0.04, 0.14], kickDur: 3 },
       { type: 'fog', area: [0, 20, 320, 130], count: 3, size: [40, 70], speed: 6, leftward: 0, color: [10, 14, 30], alpha: 0.35, gustPush: 0 },
       { id: 'beams', type: 'rays', beams: [[150, 70, -38, 520, 90], [180, 60, -50, 520, 70]], color: [200, 220, 255], alpha: [0.04, 0.15], period: 9 },
       // Growth: every grass tuft sways; gusts roll through the clearing.
@@ -787,8 +787,8 @@ export const BOARD_FX = {
   'lycanthropes-portrait': {
     wind: { dir: 1, every: [6, 11], speed: [110, 170], width: [140, 220], lean: 0.12 },
     layers: [
-      { id: 'moon', type: 'mask', mask: 'moon', anim: { kind: 'pulse', period: 6 }, alpha: [0.2, 0.6], bloom: 1, kickDur: 3 },
-      { id: 'moonHalo', type: 'glow', points: [[68, 62, 60]], color: [200, 220, 255], anim: 'pulse', period: 6, alpha: [0.1, 0.28], kickDur: 3 },
+      { id: 'moon', type: 'mask', mask: 'moon', anim: { kind: 'pulse', period: 6 }, alpha: [0.03, 0.22], bloom: 0.4, kickDur: 3 },
+      { id: 'moonHalo', type: 'glow', points: [[68, 62, 60]], color: [200, 220, 255], anim: 'pulse', period: 6, alpha: [0.04, 0.14], kickDur: 3 },
       { type: 'fog', area: [0, 20, 200, 110], count: 3, size: [34, 60], speed: 5, leftward: 0, color: [10, 14, 30], alpha: 0.35, gustPush: 0 },
       { id: 'beams', type: 'rays', beams: [[70, 60, -22, 900, 80], [90, 60, -32, 900, 60]], color: [200, 220, 255], alpha: [0.04, 0.15], period: 9 },
       { id: 'grass', type: 'sprites', mask: 'grass', bend: 0.07, gustBend: 0.24, period: [2.4, 3.8] },
@@ -805,6 +805,70 @@ export const BOARD_FX = {
       { area: [340, 104, 426, 196], sound: 'rattle', kick: ['chains'], flare: [220, 230, 255], glyph: '⛓️' },
       { area: [324, 766, 416, 936], sound: 'rattle', kick: ['chains2'], flare: [220, 230, 255], glyph: '⛓️' },
       { area: [50, 790, 134, 954], sound: 'rustle', kick: ['cloak'], flare: [200, 60, 60] },
+    ],
+  },
+
+  // ---- Plants: an overgrown sunlit garden ----------------------------------------------------
+  'plants-land': {
+    wind: { dir: 1, every: [5, 9], speed: [150, 230], width: [170, 280], lean: 0.3 },
+    layers: [
+      // Light: dappled sunlight through the canopy shifts, shafts of light breathe.
+      { id: 'rays', type: 'rays', beams: [[260, 0, 24, 520, 110], [640, 0, 16, 520, 90], [460, 0, 6, 420, 70]], color: [255, 245, 190], alpha: [0.05, 0.16], period: 8 },
+      { type: 'fog', area: [100, 60, 900, 520], count: 8, size: [40, 80], speed: 5, color: [255, 250, 200], alpha: 0.07, blend: 'lighter' },
+      // Growth: every edge of the garden ripples in the breeze, gusts sweep through.
+      { id: 'leftG', type: 'warp', box: [0, 160, 240, 572], base: 'left', mask: 'leaves', amp: 2.2, period: 4.2, wave: 2.4 },
+      { id: 'topG', type: 'warp', box: [200, 0, 830, 120], base: 'top', mask: 'leaves', amp: 2, period: 4.6, wave: 2 },
+      { id: 'rightG', type: 'warp', box: [820, 120, 1024, 420], base: 'right', mask: 'leaves', amp: 2.4, period: 4, wave: 2.4 },
+      { id: 'botG', type: 'warp', box: [200, 470, 790, 572], base: 'bottom', mask: 'leaves', amp: 2, period: 3.8, wave: 2.6 },
+      // Corners. Top left, the giant pink flower opens and closes gently, shedding petals.
+      { id: 'flower', type: 'echo', box: [52, 26, 206, 172], feather: 10, motion: { kind: 'breathe', amp: 1.6, period: 4.5, pivot: [128, 99], kickAmp: 4 } },
+      { id: 'petals', type: 'particles', kind: 'petal', from: [[128, 99, 50]], rate: 0.5, max: 8, color: [255, 140, 200], size: [1.8, 2.8], life: [5, 8], speed: 0.6 },
+      // Top right, a bird hops in the nest on the stump.
+      { id: 'nest', type: 'echo', box: [852, 52, 940, 108], feather: 6, autoKick: [5, 9], motion: { kind: 'bob', amp: 0, kickAmp: 2, period: 0.3 } },
+      // Bottom left, the watering can drips.
+      { id: 'can', type: 'particles', kind: 'drip', from: [[234, 462, 2], [226, 470, 2]], rate: 0.5, max: 3, color: [170, 220, 255], size: [1, 1.5], life: [3, 4], fall: 26, splashColor: [190, 230, 255] },
+      // Bottom right, the pond ripples, the frog croaks and the lily pads bob.
+      { id: 'pondFlow', type: 'flow', mask: 'pond', dir: [1, 0.3], dist: 8, period: 3, alpha: 0.9 },
+      { id: 'pond', type: 'mask', mask: 'pond', anim: { kind: 'wave', along: 'x', band: 60, speed: 18 }, alpha: [0, 0.35], gain: 0.6, kickDur: 2 },
+      { id: 'frog', type: 'echo', box: [852, 456, 932, 512], feather: 6, autoKick: [6, 12], motion: { kind: 'breathe', amp: 1, period: 1.4, kickAmp: 4 } },
+      { id: 'ripples', type: 'particles', kind: 'drip', from: [[840, 500, 40], [960, 470, 40], [930, 540, 40]], rate: 1.2, max: 5, color: [0, 0, 0], size: [0.1, 0.1], life: [1.4, 1.8], fall: 1, splashColor: [200, 240, 255] },
+      // Air: butterflies flutter, pollen and petals drift on the breeze.
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[60, 250, 50], [960, 380, 40], [700, 140, 60]], rate: 0.6, max: 6, color: [180, 120, 255], size: [2, 2.6], life: [5, 8] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 3, max: 30, color: [255, 250, 190], size: [0.6, 1.2], life: [3, 6], alpha: 0.7, speed: 0.7 },
+      { id: 'drift', type: 'particles', kind: 'petal', area: [0, -20, 1024, 300], rate: 0.6, max: 8, color: [255, 170, 210], size: [1.4, 2.2], life: [7, 11], speed: 0.6 },
+    ],
+    pokes: [
+      { area: [50, 24, 208, 174], sound: 'rustle', kick: ['flower'], flare: [255, 140, 200], glyph: '🌸', burst: { layer: 'petals', n: 8, spread: 40 } },
+      { area: [840, 20, 960, 140], sound: 'flutter', kick: ['nest'], flare: [255, 230, 180], glyph: '🐦' },
+      { area: [30, 380, 250, 540], sound: 'drip', kick: ['leftG'], flare: [190, 230, 255], burst: { layer: 'can', n: 4, at: [230, 466], spread: 4 } },
+      { area: [790, 420, 1024, 572], sound: 'splash', kick: ['pond', 'frog', 'pondFlow'], flare: [200, 240, 255], glyph: '🐸', burst: { layer: 'ripples', n: 4, at: [890, 490], spread: 40 } },
+    ],
+  },
+  'plants-portrait': {
+    wind: { dir: 1, every: [5, 9], speed: [110, 170], width: [140, 240], lean: 0.12 },
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[150, 0, 14, 900, 100], [320, 0, 8, 900, 80]], color: [255, 245, 190], alpha: [0.05, 0.16], period: 8 },
+      { type: 'fog', area: [40, 100, 420, 900], count: 8, size: [40, 70], speed: 5, color: [255, 250, 200], alpha: 0.07, blend: 'lighter' },
+      { id: 'leftG', type: 'warp', box: [0, 220, 110, 900], base: 'left', mask: 'leaves', amp: 2, period: 4.2, wave: 2.4 },
+      { id: 'rightG', type: 'warp', box: [380, 220, 459, 840], base: 'right', mask: 'leaves', amp: 2, period: 4, wave: 2.4 },
+      { id: 'topG', type: 'warp', box: [0, 0, 459, 100], base: 'top', mask: 'leaves', amp: 1.8, period: 4.6, wave: 2 },
+      { id: 'flower', type: 'echo', box: [30, 112, 136, 220], feather: 8, motion: { kind: 'breathe', amp: 1.6, period: 4.5, pivot: [83, 166], kickAmp: 4 } },
+      { id: 'petals', type: 'particles', kind: 'petal', from: [[83, 166, 40]], rate: 0.5, max: 8, color: [255, 140, 200], size: [1.6, 2.6], life: [5, 8], speed: 0.6 },
+      { id: 'nest', type: 'echo', box: [356, 128, 424, 172], feather: 6, autoKick: [5, 9], motion: { kind: 'bob', amp: 0, kickAmp: 2, period: 0.3 } },
+      { id: 'can', type: 'particles', kind: 'drip', from: [[176, 946, 2]], rate: 0.5, max: 3, color: [170, 220, 255], size: [1, 1.4], life: [3, 4], fall: 22, splashColor: [190, 230, 255] },
+      { id: 'pondFlow', type: 'flow', mask: 'pond', dir: [1, 0.3], dist: 8, period: 3, alpha: 0.9 },
+      { id: 'pond', type: 'mask', mask: 'pond', anim: { kind: 'wave', along: 'x', band: 60, speed: 18 }, alpha: [0, 0.35], gain: 0.6, kickDur: 2 },
+      { id: 'frog', type: 'echo', box: [384, 862, 430, 900], feather: 5, autoKick: [6, 12], motion: { kind: 'breathe', amp: 1, period: 1.4, kickAmp: 4 } },
+      { id: 'ripples', type: 'particles', kind: 'drip', from: [[340, 900, 30], [420, 950, 30]], rate: 1, max: 4, color: [0, 0, 0], size: [0.1, 0.1], life: [1.4, 1.8], fall: 1, splashColor: [200, 240, 255] },
+      { id: 'flies', type: 'particles', kind: 'fly', from: [[40, 400, 40], [420, 400, 30], [200, 600, 60]], rate: 0.6, max: 6, color: [180, 120, 255], size: [1.8, 2.4], life: [5, 8] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 3, max: 30, color: [255, 250, 190], size: [0.6, 1.1], life: [3, 6], alpha: 0.7, speed: 0.7 },
+      { id: 'drift', type: 'particles', kind: 'petal', area: [0, -20, 459, 500], rate: 0.6, max: 8, color: [255, 170, 210], size: [1.3, 2], life: [7, 11], speed: 0.6 },
+    ],
+    pokes: [
+      { area: [28, 110, 138, 222], sound: 'rustle', kick: ['flower'], flare: [255, 140, 200], glyph: '🌸', burst: { layer: 'petals', n: 8, spread: 34 } },
+      { area: [340, 90, 440, 200], sound: 'flutter', kick: ['nest'], flare: [255, 230, 180], glyph: '🐦' },
+      { area: [10, 830, 190, 990], sound: 'drip', kick: ['leftG'], flare: [190, 230, 255], burst: { layer: 'can', n: 4, at: [176, 946], spread: 4 } },
+      { area: [300, 830, 459, 1000], sound: 'splash', kick: ['pond', 'frog', 'pondFlow'], flare: [200, 240, 255], glyph: '🐸', burst: { layer: 'ripples', n: 4, at: [380, 910], spread: 30 } },
     ],
   },
 };

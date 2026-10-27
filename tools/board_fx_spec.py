@@ -146,4 +146,15 @@ SPEC = {
         'moon': ['bright', [[35, 30, 105, 95]], {'blur': 1, 'show': [255, 255, 0]}],
         'cloak': ['any', [[52, 792, 132, 952]], {'show': [255, 0, 255]}],
     },
+    # ---- Plants: an overgrown garden ----
+    'plants-land': {
+        'leaves': ['leaf', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[440, 20, 590, 140], [440, 410, 590, 555]]}],
+        'pond': ['water', [[790, 420, 1024, 572]], {'blur': 0.8, 'show': [0, 160, 255]}],
+        'flower': ['any', [[52, 26, 206, 172]], {'show': [255, 0, 255]}],
+    },
+    'plants-portrait': {
+        'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[160, 100, 300, 260], [155, 760, 305, 910]]}],
+        'pond': ['water', [[300, 830, 459, 1000]], {'blur': 0.8, 'show': [0, 160, 255]}],
+        'flower': ['any', [[30, 112, 136, 220]], {'show': [255, 0, 255]}],
+    },
 }
