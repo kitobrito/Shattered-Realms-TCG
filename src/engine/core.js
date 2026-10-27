@@ -84,6 +84,8 @@ export function reduceHealthStat(state, c, amount) {
 export function hasKeyword(c, k) {
   // Sand Sharks: a Burrowed minion has Stealth until it Surfaces.
   if (k === 'Stealth' && c.burrowed) return true;
+  // Ice Age (Frozen in Time): a minion still Thawing in its ice has no Taunt yet.
+  if (k === 'Taunt' && c.encased > 0) return false;
   return c.keywords.includes(k) || (c.tempKeywords ?? []).includes(k) || (c.lingerKeywords ?? []).some((x) => x.k === k)
     || (c.auraKeywords ?? []).includes(k);
 }
@@ -508,6 +510,11 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     amount -= blocked;
   }
   if (amount <= 0) return 0;
+  // Ice Age (Frozen in Time): a minion still Thawing is sealed in ice and takes no damage.
+  if (t.encased > 0) {
+    log(state, `${nameOf(state, t)} is sealed in ice.`);
+    return 0;
+  }
   if (hasKeyword(t, 'Immune')) {
     log(state, `${nameOf(state, t)} is Immune.`);
     return 0;
@@ -681,5 +688,7 @@ export function summonMinion(state, p, cardId, opts = {}) {
   if (!opts.silent) log(state, `${pl.name} summons ${getCard(cardId).name}.`);
   // Sand Sharks: a minion with Burrow arrives Burrowed (Stealth until it Surfaces).
   if (m.keywords.includes('Burrow')) m.burrowed = true;
+  // Ice Age (Frozen in Time): a Thawing minion arrives sealed in ice for that many of its turns.
+  if (getCard(cardId).thawing) m.encased = getCard(cardId).thawing;
   return m;
 }

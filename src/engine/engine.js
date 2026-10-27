@@ -13,7 +13,7 @@ import {
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
 } from './core.js';
-import { addKeyword, canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
+import { addKeyword, canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -176,7 +176,7 @@ function mulligan(state, { player: p, replace }) {
 
 function canAttack(c) {
   if (c.kind === 'minion' && getCard(c.cardId).cantAttack) return false; // The Living Hive
-  if (effectiveAttack(c) <= 0 || hasKeyword(c, 'Frozen') || c.cantAttackThisTurn) return false;
+  if (effectiveAttack(c) <= 0 || hasKeyword(c, 'Frozen') || c.cantAttackThisTurn || c.encased > 0) return false;
   if (c.attacksThisTurn >= (hasKeyword(c, 'Twin Strike') ? 2 : 1) + (c.bonusAttacks ?? 0)) return false;
   // Frenzy of the Pack: a Shark that just arrived may still attack Marked Prey.
   if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush') && !c.preyRush) return false;
@@ -185,7 +185,8 @@ function canAttack(c) {
 
 export function attackTargets(state, p) {
   const enemy = state.players[opponentOf(p)];
-  const visible = enemy.board.filter((m) => !hasKeyword(m, 'Stealth'));
+  // A minion sealed in ice (Thawing) can't be attacked.
+  const visible = enemy.board.filter((m) => !hasKeyword(m, 'Stealth') && !(m.encased > 0));
   const taunts = visible.filter((m) => hasKeyword(m, 'Taunt'));
   if (taunts.length) return taunts.map((m) => m.uid);
   // Hive Enforcer: while it's in play, the enemy Hive can't be attacked.
@@ -202,7 +203,7 @@ function defendersFor(state, c) {
     const enemy = state.players[opponentOf(c.controller)];
     const taunts = enemy.board.some((m) => hasKeyword(m, 'Taunt') && !hasKeyword(m, 'Stealth'));
     const seesAll = getCard(c.cardId).seesStealth;
-    const hidden = enemy.board.filter((m) => hasKeyword(m, 'Stealth') && (seesAll || (m.prey && huntsPrey(state, c.controller))));
+    const hidden = enemy.board.filter((m) => hasKeyword(m, 'Stealth') && !(m.encased > 0) && (seesAll || (m.prey && huntsPrey(state, c.controller))));
     if (!taunts) all = [...all, ...hidden.map((m) => m.uid)];
   }
   // Frenzy of the Pack: an arriving Shark may only attack Marked Prey.
@@ -730,7 +731,7 @@ const STEPS = {
     const { attacker, defender, friendlyFire } = step;
     const a = findCharacter(state, attacker);
     const d = findCharacter(state, defender);
-    if (!a || !d || a.health <= 0 || d.health <= 0 || (a.controller === d.controller && !friendlyFire)) {
+    if (!a || !d || a.health <= 0 || d.health <= 0 || (a.controller === d.controller && !friendlyFire) || a.encased > 0 || d.encased > 0) {
       log(state, 'The attack fizzles.');
       return;
     }
@@ -1067,6 +1068,8 @@ const STEPS = {
     for (const m of [...pl.board]) if (m.burrowed) surfaceMinion(state, m);
     // Aliens (Hive Brood): Chestbursters grow, and Evolve when they're ready.
     tickChestbursters(state, p);
+    // Ice Age (Frozen in Time): minions sealed in ice thaw a turn; ready ones break free.
+    tickThawing(state, p);
     // Acidic: Caustic Reservoir keeps eating at its minion each turn it survives.
     if (pl.reservoir != null) {
       const m = state.players[opponentOf(p)].board.find((x) => x.uid === pl.reservoir);

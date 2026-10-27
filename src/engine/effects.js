@@ -272,6 +272,29 @@ export function tickChestbursters(state, p) {
   }
 }
 
+// ---- Ice Age (Frozen in Time): Thawing ------------------------------------------------
+// A Thawing (N) minion arrives sealed in ice (m.encased = N): it can't attack, can't be attacked,
+// takes no damage and has no Taunt. At the start of each of its controller's turns the count
+// drops by 1; at 0 it breaks free ("When it breaks free" triggers on: 'thaw', and the
+// minionThawed event). Silence breaks it free at once (without its trigger).
+export function breakFree(state, m) {
+  if (!m || !(m.encased > 0)) return false;
+  delete m.encased;
+  log(state, `🧊 ${nameOf(state, m)} breaks free of the ice!`);
+  queueSelfTrigger(state, m, 'thaw');
+  emit(state, { type: 'minionThawed', source: m.uid, player: m.controller });
+  return true;
+}
+// Brings the count down by n (Meltwater, Una); 0 breaks it free.
+export function thawBy(state, m, n) {
+  if (!m || !(m.encased > 0) || m.health <= 0 || m.destroyed) return;
+  m.encased = Math.max(0, m.encased - n);
+  if (m.encased === 0) { m.encased = 1; breakFree(state, m); }
+}
+export function tickThawing(state, p) {
+  for (const m of [...state.players[p].board]) if (m.encased > 0) thawBy(state, m, 1);
+}
+
 // Brings a Displaced minion back (now, or as soon as its controller has room).
 export function returnFromBeyond(state, entry) {
   const pl = state.players[entry.controller];
@@ -318,7 +341,8 @@ const cardMatches = (card, f = {}) =>
   (!f.tribe || hasTribe(card.tribes, f.tribe)) &&
   (!f.tribes || f.tribes.some((t) => hasTribe(card.tribes, t))) &&
   (!f.faction || card.faction === f.faction) &&
-  (!f.cardId || card.id === f.cardId);
+  (!f.cardId || card.id === f.cardId) &&
+  (!f.thawing || !!card.thawing);
 
 // ---- Conditions -----------------------------------------------------------
 // { controls: { tribe?, cardId?, excludeSelf? } }  — you control a matching minion
