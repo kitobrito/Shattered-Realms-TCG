@@ -938,6 +938,7 @@ function keywordChanges(oldMinions, { holdFrozen = false } = {}) {
       if (now.has(k)) continue;
       if (k === 'evade') { shield = true; jobs.push(fx.shatter(rect, 'speed')); }
       else if (k === 'frozen') jobs.push(fx.shatter(rect, 'ice', 10));
+      else if (k === 'encased') { jobs.push(fx.shatter(rect, 'ice', 26)); sound.play('freeze'); }
       else if (k === 'taunt') jobs.push(fx.shatter(rect, 'stone', 10));
     }
     for (const k of now) {

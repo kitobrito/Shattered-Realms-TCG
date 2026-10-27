@@ -5568,3 +5568,15 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
   .coll2 .set-filter button { padding: 3px 12px !important; font-size: 12px !important; }
   .coll2 .c2-sort select { padding: 4px 32px 4px 4px; font-size: 12px; }
 }
+
+/* ---- Ice Age (Frozen in Time): a Thawing minion sealed in a block of ice ---- */
+.minion .m-icebox { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit;
+  background:
+    linear-gradient(115deg, transparent 18%, #ffffff55 21%, transparent 25%, transparent 58%, #ffffff33 60%, transparent 63%),
+    linear-gradient(35deg, transparent 40%, #e8faff99 40.8%, transparent 42%),
+    linear-gradient(150deg, transparent 63%, #e8faff77 63.6%, transparent 64.8%),
+    radial-gradient(120% 95% at 30% 15%, #eefcff40, #9adcff38 50%, #3a9fd870 100%);
+  box-shadow: inset 0 0 0 3px #e8fbffd8, inset 0 0 16px #d8f4ffcc, 0 0 14px #6fd0ff99; }
+.minion.kw-encased .m-art { filter: saturate(0.6) brightness(1.05) hue-rotate(-6deg); }
+.minion .thaw-mark { display: inline-grid; place-items: center; padding: 0.05em 0.4em; border-radius: 999px; font-size: 1.2em; font-weight: 800;
+  color: #eafaff; background: #0a2a3ce6; border: 1px solid #8fd8ff; box-shadow: 0 0 8px #6fd0ffaa; }

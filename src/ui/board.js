@@ -17,13 +17,14 @@ import { artOf, minionArtOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, her
 
 // Keywords are drawn on the minion itself (shield, bubble, ice, ...) the way
 // Hearthstone does it; only things with no visual get a small icon.
-const ONE_TIME_TRIGGERS = new Set(['battlecry', 'summon', 'deathrattle', 'surface']);
+const ONE_TIME_TRIGGERS = new Set(['battlecry', 'summon', 'deathrattle', 'surface', 'thaw']);
 
 // 'Twin Strike' -> 'twin-strike' (for CSS classes and data-kw).
 const kwSlug = (k) => k.toLowerCase().replace(/\s+/g, '-');
 
 export function keywordClasses(c) {
-  return allKeywords(c).map((k) => `kw-${kwSlug(k)}`).join(' ');
+  // Frozen in Time: sealed in ice, its Taunt doesn't show until it breaks free.
+  return [...allKeywords(c).filter((k) => !(c.encased > 0 && k === 'Taunt')).map((k) => `kw-${kwSlug(k)}`), ...(c.encased > 0 ? ['kw-encased'] : [])].join(' ');
 }
 
 // Aliens (Hive Brood): turns until a Chestburster Evolves.
@@ -32,6 +33,7 @@ const evolveLeft = (m, s) => Math.max(1, evolveTurnsFor(s, m.controller) - (m.ev
 function cornerIcons(m, s) {
   return [
     m.cardId === 'chestburster' ? `<i class="evolve-mark" title="Chestburster: Evolves into a Xeno ${evolveLeft(m, s) <= 1 ? 'at the start of its next turn' : `in ${evolveLeft(m, s)} of its turns`}">⏳${evolveLeft(m, s)}</i>` : '',
+    m.encased > 0 ? `<i class="thaw-mark" title="Sealed in ice: breaks free ${m.encased <= 1 ? 'at the start of its next turn' : `in ${m.encased} of its turns`}. Until then it can't attack or be attacked and takes no damage.">🧊${m.encased}</i>` : '',
     m.acidCoated ? '<i class="coat-mark" title="Acid-coated: its next Corrosion lowers its Attack by 1 more">💧</i>' : '',
     m.tempControl ? '<i title="Controlled temporarily">⛓</i>' : '',
     m.returnAtEndOfTurn ? '<i title="Returns to hand at end of turn">↩</i>' : '',
@@ -173,7 +175,9 @@ export function minionHTML(m, s, cls = '', shift = false) {
   const atk = effectiveAttack(m);
   // A minion remade into another form (Blood Shade) wears that form's art.
   const art = m.look ? artOf(getCard(m.look) ?? card) : minionArtOf(m, card);
-  const kws = allKeywords(m).map(kwSlug);
+  // Frozen in Time: a minion sealed in ice shows the ice block, and its Taunt waits until it breaks free.
+  const kws = allKeywords(m).filter((k) => !(m.encased > 0 && k === 'Taunt')).map(kwSlug);
+  if (m.encased > 0) kws.push('encased');
   const taunt = kws.includes('taunt');
   if (wardGame !== s) { wardGame = s; wardSince.clear(); }
   if (!taunt) wardSince.delete(m.uid);
@@ -186,7 +190,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>
-      <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}<i class="m-cracks ${crackTier(m)}"></i></div>
+      <div class="m-art" ${art ? `style="background-image: url('${art}')"` : ''}>${art ? '' : `<span class="art">${card.art ?? '✦'}</span>`}<i class="m-cracks ${crackTier(m)}"></i>${m.encased > 0 ? '<i class="m-icebox"></i>' : ''}</div>
       <i class="sm-shine"></i>
       <div class="m-ring"></div>
       ${burnHTML(m)}

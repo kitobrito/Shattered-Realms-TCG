@@ -167,6 +167,72 @@ export const ICE_AGE_CARDS = [
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [{ op: 'gainArmor', amount: 6 }] },
   },
 
+  // ---- Frozen in Time (expansion, unlockable): beasts thawed out of the glacier ----
+  // Thawing (N) (effects.js breakFree): arrives sealed in ice for N of its turns: it can't attack or
+  // be attacked, takes no damage and has no Taunt. "Breaks free:" triggers on: 'thaw'.
+  {
+    ...MAN, extra: true, id: 'glacier_prospector', name: 'Glacier Prospector', art: '⛏️', cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Draw a Thawing minion from your deck.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'draw', count: 1, filter: { thawing: true } }] }],
+  },
+  {
+    ...BEAST, extra: true, id: 'frostbitten_hare', name: 'Frostbitten Hare', art: '🐇', cost: 1, attack: 2, health: 1, thawing: 1,
+    text: 'Thawing (1). Breaks free: Draw a card.',
+    triggers: [{ on: 'thaw', effects: [{ op: 'draw', count: 1 }] }],
+  },
+  {
+    ...MAN, extra: true, id: 'ice_carver', name: 'Ice-Carver', art: '🧊', cost: 2, attack: 2, health: 3,
+    text: 'Whenever a friendly minion breaks free, give it +1/+1.',
+    triggers: [{ on: 'minionThawed', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'eventSource', attack: 1, health: 1 }] }],
+  },
+  { ...BEAST, extra: true, id: 'encased_homotherium', name: 'Encased Homotherium', art: '🐆', cost: 2, attack: 5, health: 3, thawing: 2, text: 'Thawing (2).' },
+  { ...BEAST, extra: true, id: 'thawed_steppe_bison', name: 'Thawed Steppe Bison', art: '🦬', cost: 3, attack: 5, health: 6, thawing: 2, text: 'Thawing (2).' },
+  {
+    ...MAN, extra: true, id: 'neanderthal_ice_digger', name: 'Neanderthal Ice Digger', art: '🪓', cost: 3, attack: 2, health: 3,
+    text: 'Arrival: Summon a Frostbitten Hare.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'summon', cardId: 'frostbitten_hare' }] }],
+  },
+  { ...BEAST, extra: true, id: 'arctodus_short_faced_bear', name: 'Arctodus, Short-Faced Bear', art: '🐻', cost: 4, attack: 7, health: 7, keywords: ['Hardy'], thawing: 2, text: 'Hardy. Thawing (2).' },
+  {
+    ...BEAST, extra: true, id: 'elasmotherium_the_siberian_unicorn', name: 'Elasmotherium, the Siberian Unicorn', art: '🦏', cost: 4, attack: 6, health: 5, thawing: 2,
+    text: 'Thawing (2). Breaks free: Deal 4 damage to a random enemy minion.',
+    triggers: [{ on: 'thaw', effects: [{ op: 'damage', target: { randomOf: { minions: { side: 'enemy', alive: true } } }, amount: 4 }] }],
+  },
+  { ...BEAST, extra: true, id: 'glacier_mastodon', name: 'Glacier Mastodon', art: '🦣', cost: 5, attack: 9, health: 9, keywords: ['Taunt'], thawing: 3, text: 'Taunt. Thawing (3).' },
+  {
+    ...MAN, extra: true, id: 'una_the_glacier_keeper', name: 'Una, the Glacier Keeper', art: '🧙', cost: 5, attack: 4, health: 6,
+    text: 'Arrival and at the start of your turn: your Thawing minions are 1 turn closer to breaking free.',
+    triggers: [
+      { on: 'battlecry', effects: [{ op: 'thaw', target: { minions: { side: 'friendly', encased: true } }, turns: 1 }] },
+      { on: 'startOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'thaw', target: { minions: { side: 'friendly', encased: true } }, turns: 1 }] },
+    ],
+  },
+  {
+    ...BEAST, extra: true, id: 'kalak_the_thousand_year_mammoth', name: 'Kalak, the Thousand-Year Mammoth', art: '🦣', cost: 8, attack: 12, health: 12, keywords: ['Thick Fur'], thawing: 2,
+    text: 'Thick Fur. Thawing (2). Breaks free: Destroy all Frozen enemy minions.',
+    triggers: [{ on: 'thaw', effects: [{ op: 'destroy', target: { minions: { side: 'enemy', frozen: true } } }] }],
+  },
+  {
+    ...S, extra: true, id: 'meltwater', name: 'Meltwater', art: '💧', cost: 1,
+    text: 'Your Thawing minions are 1 turn closer to breaking free. Draw a card.',
+    effects: [{ op: 'thaw', target: { minions: { side: 'friendly', encased: true } }, turns: 1 }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, extra: true, id: 'flash_thaw', name: 'Flash Thaw', art: '♨️', cost: 3,
+    text: 'A friendly Thawing minion breaks free now. It gains Rush.', target: { type: 'minion', side: 'friendly', encased: true },
+    effects: [{ op: 'breakFree', target: 'chosen' }, { op: 'buff', target: 'chosen', keywords: ['Rush'] }],
+  },
+  {
+    ...S, extra: true, id: 'deep_freeze', name: 'Deep Freeze', art: '🥶', cost: 2,
+    text: 'Seal an enemy minion in ice: it gets Thawing (3).', target: ENEMY_MINION,
+    effects: [{ op: 'encase', target: 'chosen', turns: 3 }],
+  },
+  {
+    ...T, extra: true, id: 'ice_tomb', name: 'Ice Tomb', art: '⚰️', cost: 2,
+    text: 'When an enemy minion attacks: seal it in ice (Thawing (3)). The attack is stopped.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [{ op: 'encase', target: 'eventSource', turns: 3 }] },
+  },
+
   // ---- Token ----
   { ...BEAST, id: 'cave_bear_cub', name: 'Cave Bear Cub', art: '🐻', token: true, cost: 3, attack: 2, health: 5, keywords: ['Taunt'], text: 'Taunt.' },
 ];
