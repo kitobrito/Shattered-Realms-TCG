@@ -11,7 +11,7 @@ import {
   hasKeyword, hooks, log, loseHealth, minionsInOrder, nameOf, opponentOf, pushFront, removeKeyword,
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
-  addDescent, descentDepth, heroSpellCost, initDescent, maxHand,
+  sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
 } from './core.js';
 import { addKeyword, canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters } from './effects.js';
 import { factionHook } from './factions.js';
@@ -806,7 +806,6 @@ const STEPS = {
       // Ghosts: deaths counted this turn / this game, and per player (friendly minions that died).
       state.deathsThisTurn = (state.deathsThisTurn ?? 0) + 1;
       state.deathsThisGame = (state.deathsThisGame ?? 0) + 1;
-      addDescent(state, 1); // every death drags the battle deeper (when a Demon player is here)
       state.players[m.controller].minionDeaths = (state.players[m.controller].minionDeaths ?? 0) + 1;
       const card = getCard(m.cardId);
       const event = {
@@ -918,7 +917,15 @@ const STEPS = {
   // Burn (Dragons): at the end of YOUR turn, each Burning enemy character takes its Burn value as
   // damage, then the value rises by 1. So Burn you apply hits as soon as you end your turn.
   // The Sixth Circle (Heresy): at the end of each turn, 1 damage to all minions.
-  circleEnd(state) {
+  // The Ninth Circle (Treachery): at the end of your turn, a random minion of yours is frozen
+  // in the ice of Cocytus (it misses your next turn). Thick Fur shrugs it off.
+  circleEnd(state, { player: p }) {
+    if (descentDepth(state) === 9) {
+      const mine = state.players[p].board.filter((m) => m.health > 0 && !m.destroyed && !hasKeyword(m, 'Frozen') && !hasKeyword(m, 'Thick Fur'));
+      const m = pickRandom(state, mine);
+      if (m) { log(state, `❄ Treachery: ${nameOf(state, m)} is frozen in the ice of Cocytus.`); addKeyword(m, 'Frozen', false, state); }
+      return;
+    }
     if (descentDepth(state) !== 6) return;
     const all = minionsInOrder(state).filter((m) => m.health > 0 && !m.destroyed);
     if (!all.length) return;
@@ -1096,8 +1103,25 @@ const STEPS = {
       if (m.exhausted) { m.cantAttackThisTurn = true; m.exhausted = false; }
     }
     log(state, `— Turn ${state.turn}: ${pl.name} (${pl.mana.current} Mana) —`);
+    // The Descent: each round the battle sinks one circle deeper (round 1 is Limbo).
+    if (state.descent) {
+      state.descent.lead ??= p;
+      if (state.descent.lead === p) sinkCircles(state, 1);
+    }
     // The Third Circle (Gluttony): an extra card at the start of the turn.
     drawCards(state, p, descentDepth(state) === 3 ? 2 : 1);
+    // The Eighth Circle (Fraud): steal a random card from the opponent's hand.
+    if (descentDepth(state) === 8) {
+      const foe = state.players[opponentOf(p)];
+      const inst = pickRandom(state, foe.hand);
+      if (inst) {
+        foe.hand.splice(foe.hand.indexOf(inst), 1);
+        inst.owner = p;
+        if (pl.hand.length >= maxHand(state)) { pl.graveyard.push(inst); log(state, `🎭 Fraud: ${pl.name} steals a card, but their hand is full and it is burned.`); }
+        else { pl.hand.push(inst); log(state, `🎭 Fraud: ${pl.name} steals a card from ${foe.name}'s hand.`); }
+        emit(state, { type: 'cardStolen', player: p, uid: inst.uid });
+      }
+    }
     emit(state, { type: 'startOfTurn', player: p });
     pushFront(state, [{ kind: 'deaths' }]);
   },

@@ -431,6 +431,50 @@ export const CIRCLE_FX = {
       { area: [400, 320, 459, 720], sound: 'whoosh', kick: ['torches'] },
     ],
   },
+  '8-land': {
+    layers: [
+      // Malebolge: sickly fumes rise off the ditches of pitch; false gold glints on the edges.
+      { type: 'fog', area: [-60, 40, 120, 572], count: 8, size: [50, 100], speed: 5, color: [120, 160, 50], alpha: 0.14 },
+      { type: 'fog', area: [904, 40, 1084, 572], count: 8, size: [50, 100], speed: 5, color: [120, 160, 50], alpha: 0.14 },
+      { type: 'particles', kind: 'smoke', area: [0, 492, 1024, 572], rate: 1.2, max: 10, color: [60, 80, 30], size: [6, 12], life: [2.5, 4], alpha: 0.18, speed: 0.6 },
+      { type: 'particles', kind: 'wisp', area: [0, 0, 120, 572], rate: 0.8, max: 8, color: [190, 240, 110], size: [2.5, 5], life: [3, 5], alpha: 0.2 },
+      { type: 'particles', kind: 'wisp', area: [904, 0, 1024, 572], rate: 0.8, max: 8, color: [190, 240, 110], size: [2.5, 5], life: [3, 5], alpha: 0.2 },
+      { type: 'particles', kind: 'glint', area: [0, 0, 1024, 572], rate: 1.5, max: 10, color: [255, 230, 120], size: [0.8, 1.6], life: [0.6, 1.2] },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2, max: 22, color: [210, 255, 140], size: [0.5, 1.2], life: [3, 6], alpha: 0.6 },
+    ],
+  },
+  '8-portrait': {
+    layers: [
+      // Malebolge: sickly fumes rise off the ditches of pitch; false gold glints on the edges.
+      { type: 'fog', area: [-60, 40, 100, 1024], count: 8, size: [50, 100], speed: 5, color: [120, 160, 50], alpha: 0.14 },
+      { type: 'fog', area: [359, 40, 519, 1024], count: 8, size: [50, 100], speed: 5, color: [120, 160, 50], alpha: 0.14 },
+      { type: 'particles', kind: 'smoke', area: [0, 944, 459, 1024], rate: 1.2, max: 10, color: [60, 80, 30], size: [6, 12], life: [2.5, 4], alpha: 0.18, speed: 0.6 },
+      { type: 'particles', kind: 'wisp', area: [0, 0, 100, 1024], rate: 0.8, max: 8, color: [190, 240, 110], size: [2.5, 5], life: [3, 5], alpha: 0.2 },
+      { type: 'particles', kind: 'wisp', area: [359, 0, 459, 1024], rate: 0.8, max: 8, color: [190, 240, 110], size: [2.5, 5], life: [3, 5], alpha: 0.2 },
+      { type: 'particles', kind: 'glint', area: [0, 0, 459, 1024], rate: 1.5, max: 10, color: [255, 230, 120], size: [0.8, 1.6], life: [0.6, 1.2] },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2, max: 22, color: [210, 255, 140], size: [0.5, 1.2], life: [3, 6], alpha: 0.6 },
+    ],  },
+  '9-land': {
+    layers: [
+      // Cocytus: snow drifts down over the frozen lake; a bitter mist creeps along the edges.
+      { type: 'rays', beams: [[410, 0, 12, 257, 70], [614, 0, -12, 257, 70]], color: [200, 230, 255], alpha: [0.03, 0.09], period: 10 },
+      { type: 'fog', area: [-80, 0, 140, 572], count: 9, size: [50, 100], speed: 6, color: [190, 215, 240], alpha: 0.16 },
+      { type: 'fog', area: [884, 0, 1104, 572], count: 9, size: [50, 100], speed: 6, color: [190, 215, 240], alpha: 0.16 },
+      { type: 'fog', area: [-40, 462, 1064, 612], count: 8, size: [60, 120], speed: 8, color: [190, 215, 240], alpha: 0.13 },
+      { type: 'particles', kind: 'ash', area: [0, -10, 1024, 572], rate: 7, max: 70, color: [235, 245, 255], size: [0.6, 1.8], life: [4, 8], alpha: 0.85, speed: 1.4 },
+      { type: 'particles', kind: 'glint', area: [0, 0, 1024, 572], rate: 2, max: 12, color: [220, 245, 255], size: [0.8, 1.6], life: [0.6, 1.2] },
+    ],
+  },
+  '9-portrait': {
+    layers: [
+      // Cocytus: snow drifts down over the frozen lake; a bitter mist creeps along the edges.
+      { type: 'rays', beams: [[184, 0, 12, 461, 70], [275, 0, -12, 461, 70]], color: [200, 230, 255], alpha: [0.03, 0.09], period: 10 },
+      { type: 'fog', area: [-80, 0, 140, 1024], count: 9, size: [50, 100], speed: 6, color: [190, 215, 240], alpha: 0.16 },
+      { type: 'fog', area: [319, 0, 539, 1024], count: 9, size: [50, 100], speed: 6, color: [190, 215, 240], alpha: 0.16 },
+      { type: 'fog', area: [-40, 914, 499, 1064], count: 8, size: [60, 120], speed: 8, color: [190, 215, 240], alpha: 0.13 },
+      { type: 'particles', kind: 'ash', area: [0, -10, 459, 1024], rate: 7, max: 70, color: [235, 245, 255], size: [0.6, 1.8], life: [4, 8], alpha: 0.85, speed: 1.4 },
+      { type: 'particles', kind: 'glint', area: [0, 0, 459, 1024], rate: 2, max: 12, color: [220, 245, 255], size: [0.8, 1.6], life: [0.6, 1.2] },
+    ],  },
 };
 
 // ---- More to tap: extra scenery spots on every circle (checked before the ones above, so a
@@ -445,6 +489,8 @@ const FLAIR = {
   5: { flare: [90, 255, 215], glyph: '💢' },
   6: { flare: [255, 120, 40], glyph: '🔥' },
   7: { flare: [255, 60, 40], glyph: '🩸' },
+  8: { flare: [190, 240, 90], glyph: '🎭' },
+  9: { flare: [170, 220, 255], glyph: '❄️' },
 };
 const MORE_POKES = {
   '1-land': [

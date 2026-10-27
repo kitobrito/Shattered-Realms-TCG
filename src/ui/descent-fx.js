@@ -17,9 +17,9 @@
 import { CIRCLES } from '../engine/rules.js';
 import { play } from './sound.js';
 
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 // Each circle's colour of light, for the shockwave, the cracks and the banner.
-const TINT = ['#bcd4ff', '#ff4fa8', '#9cff8a', '#ffc23a', '#56ffd8', '#ff7a2a', '#ff3030'];
+const TINT = ['#bcd4ff', '#ff4fa8', '#9cff8a', '#ffc23a', '#56ffd8', '#ff7a2a', '#ff3030', '#c6e04a', '#8fe3ff'];
 
 let running = null;
 

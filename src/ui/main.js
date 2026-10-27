@@ -2760,12 +2760,8 @@ function descentNews(s) {
   const d = s.descent;
   const gauge = app.querySelector('.descent-gauge');
   if (!d || !gauge) return;
-  const total = d.depth * d.need + d.points;
-  if (game.descentTotal != null && total > game.descentTotal && !calmMotion()) {
-    const r = gauge.querySelector('.dg-fill').getBoundingClientRect();
-    fx.floater(new DOMRect(r.right + 40, r.bottom - 30, 0, 0), `+${total - game.descentTotal} 🔥`, 'descent-pt');
-    gauge.classList.add('gain');
-  }
+  const total = d.depth;
+  if (game.descentTotal != null && total > game.descentTotal && !calmMotion()) gauge.classList.add('gain');
   game.descentTotal = total;
   if (game.descentIntro === undefined && s.pending?.type !== 'mulligan' && !s.gameOver) {
     let shown = 0;
