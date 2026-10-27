@@ -65,6 +65,7 @@ export function howToPlayHTML(keywordText, page = 0) {
         <button data-act="howtoPrev" class="ghost" ${p === 0 ? 'disabled' : ''}>‹ Back</button>
         <span class="sub">${p + 1} / ${chapters.length}</span>
         ${p < chapters.length - 1 ? '<button data-act="howtoNext">Next ›</button>' : '<button data-act="ai">Play a match vs AI</button>'}
+        <button data-act="tutorial" class="ghost">🎓 Play the tutorial</button>
         <button data-act="menu" class="ghost">Main menu</button>
       </div>
     </div>`;

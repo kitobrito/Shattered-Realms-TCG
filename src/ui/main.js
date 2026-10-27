@@ -10,6 +10,7 @@ import { artSrc, ensureArt } from './art-packs.js';
 import { boardArtFor } from '../cards/board-art.js';
 import { AI_SPEEDS, applySettings, closeSettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, HOWTO_PAGES, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
+import { guideActed, guideAllows, guideEnemyAction, guideOn, markTutorialDone, startGuide, stopGuide, TUTORIAL, tutorialDone, updateGuide } from './guide.js';
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
@@ -232,6 +233,25 @@ function startGame(mode, factions = picked, rivalFactions = randomPick()) {
   if (difficulty) applyAdvantage(state, 1 - human, difficulty);
   game = { state, mode, factions, rivalFactions, human, format, difficulty, stats: freshStats() };
   // Phones in full-screen can lock to landscape; elsewhere this quietly does nothing.
+  enterGame(true);
+}
+
+// The guided tutorial (guide.js): a scripted match, Vampires vs a Robots rival on low Health.
+// Fixed hands and draws, no mulligan or potions; the rival's first turns are scripted.
+function startTutorial() {
+  const T = TUTORIAL;
+  const you = { name: 'You', factions: [T.you], deck: buildSingleDeck(T.you) };
+  const rival = { name: 'Rival', factions: [T.rival], deck: buildSingleDeck(T.rival) };
+  const state = createGame({ seed: 7, players: [you, rival], rules: { mulligan: false, secondPlayerPotions: false, openingHandHelp: false } });
+  const inst = (p, cardId) => ({ uid: state.nextUid++, cardId, owner: p });
+  const [me, op] = state.players;
+  me.hand = T.hand.map((id) => inst(0, id));
+  me.deck = [...T.draws.map((id) => inst(0, id)), ...me.deck.filter((c) => !T.hand.includes(c.cardId) && !T.draws.includes(c.cardId))];
+  op.hand = T.rivalHand.map((id) => inst(1, id));
+  op.deck = op.deck.filter((c) => !T.rivalHand.includes(c.cardId));
+  op.hero.health = T.rivalHealth;
+  game = { state, mode: 'ai', factions: [T.you], rivalFactions: [T.rival], human: 0, format: 'single', difficulty: 'easy', stats: freshStats(), tutorial: true };
+  startGuide(() => { if (screen === 'game') render(); });
   enterGame(true);
 }
 
@@ -709,6 +729,12 @@ function cleanIncoming(value, depth = 0) {
 
 async function act(action, meta = {}) {
   if (animating || !game) return;
+  // The tutorial allows only the move its current step teaches.
+  if (game.tutorial && guideOn() && !meta.remote && !isAI(action.player)) {
+    const ctx = { state: game.state, me: viewer };
+    if (!guideAllows(action, ctx)) { flash('Follow the big arrow!'); return render(); }
+    guideActed(action, ctx);
+  }
   // AI turn speed: the computer's moves (and its reactions) can play out faster than yours.
   fx.setBoost(game.mode === 'ai' && isAI(action.player) ? (AI_SPEEDS[getSettings().aiSpeed] ?? 1) : 1);
   if (!isAI(action.player)) recap = null; // the recap closes once you start playing
@@ -1483,7 +1509,8 @@ function scheduleAI() {
   if (game?.mode === 'online') return drainRemote();
   if (!s || s.gameOver || screen !== 'game' || animating || !isAI(actingPlayer(s))) return;
   const aiBoost = game.mode === 'ai' ? (AI_SPEEDS[getSettings().aiSpeed] ?? 1) : 1;
-  aiTimer = setTimeout(() => act(chooseAction(s, game.difficulty ?? 'medium')), (s.pending?.type === 'reaction' ? 600 : 450) * (fx.speedFactor() / fx.boostFactor()) * aiBoost);
+  const pick = () => (game.tutorial && guideEnemyAction(s, 1 - humanSeat())) || chooseAction(s, game.difficulty ?? 'medium');
+  aiTimer = setTimeout(() => act(pick()), (s.pending?.type === 'reaction' ? 600 : 450) * (fx.speedFactor() / fx.boostFactor()) * aiBoost);
 }
 
 // ---- Online play (room codes, see net.js) ----------------------------------------
@@ -2206,7 +2233,8 @@ function renderMenu() {
             ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
           </div>
           <div class="ts-row small">
-            <button data-act="howto" class="ghost ${howToOpened() ? '' : 'new-player'}">${icon('book')} How to play${howToOpened() ? '' : ' <small>New? Start here</small>'}</button>
+            <button data-act="tutorial" class="ghost ${tutorialDone() ? '' : 'new-player'}">🎓 Tutorial${tutorialDone() ? '' : ' <small>New? Start here</small>'}</button>
+            <button data-act="howto" class="ghost">${icon('book')} How to play</button>
             <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Collection</button>
             <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
           </div>
@@ -2275,6 +2303,7 @@ function firstPickHTML() {
     <h2>Choose your first realms</h2>
     <p class="sub">Pick <b>${FIRST_PICKS}</b> to start with. These are the easiest to learn; the other realms open as you play.</p>
     <div class="fp-grid">${STARTERS.map(card).join('')}</div>
+    ${tutorialDone() ? '' : '<button data-act="tutorial" class="fp-tutorial">🎓 New to card games? Play the tutorial first</button>'}
     <div class="fp-foot"><button data-act="firstBegin" ${n === FIRST_PICKS ? '' : 'disabled'}>${n === FIRST_PICKS ? 'Begin my journey' : `Choose ${FIRST_PICKS - n} more`}</button>
       <button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>
   </div></div>`;
@@ -2822,14 +2851,17 @@ function renderGame() {
   // A win (vs the AI or online) unlocks expansion cards, once per match.
   if (s.gameOver && heroesShattered && !game.unlockChecked) {
     game.unlockChecked = true;
-    if (game.mode !== 'online') milestone = recordMatch() ?? milestone;
-    if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks();
+    if (game.tutorial) { markTutorialDone(); stopGuide(); }
+    else {
+      if (game.mode !== 'online') milestone = recordMatch() ?? milestone;
+      if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks();
+    }
   }
   app.innerHTML = boardHTML({
     s, me: viewer, legal: legalForView(), mode: game.mode, handoff, isAI, history, logOpen, mullMarked, shattered: heroesShattered, rope: ropeState(),
     endArmed: endArmed === s.turn, concedeAsk, descentOpen, descentIntro: game.descentIntro === true, stats: game.stats, online: game.online, result: game.result, waiting: waitingInQueue(),
     unlocked: game.unlocked, fresh: s.gameOver && heroesShattered && !game.summaryShown,
-    canUndo: undoStack.length > 0 && !animating && s.activePlayer === viewer && !s.pending, recap: recap && s.activePlayer === viewer && !s.gameOver ? { ...recap, fresh: Date.now() - recap.at < 600 } : null,
+    canUndo: !game.tutorial && undoStack.length > 0 && !animating && s.activePlayer === viewer && !s.pending, recap: recap && s.activePlayer === viewer && !s.gameOver ? { ...recap, fresh: Date.now() - recap.at < 600 } : null,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
   });
   if (app.querySelector('.arena.has-board')) showBoard(s.players[viewer].factions[0], s.descent?.depth ?? 0); else hideBoard();
@@ -2846,7 +2878,8 @@ function renderGame() {
     fitAllText(app.querySelector('.unlock-overlay'));
   }
   markFreshTraps();
-  coachTips();
+  if (game.tutorial) updateGuide({ state: s, me: viewer, app, busy: animating || !!app.querySelector('.game-loader') });
+  else coachTips();
   const logEl = app.querySelector('.log');
   if (logEl) logEl.scrollTop = logEl.scrollHeight;
   drag.refresh();
@@ -2950,7 +2983,7 @@ function render() {
   document.body.classList.toggle('in-game', screen === 'game');
   if (screen !== 'game') hideBoard();
   if (screen !== 'menu' && screen !== 'online' && screen !== 'howto' && screen !== 'signin') showMenuBackdrop(false);
-  if (screen !== 'game') clearTips();
+  if (screen !== 'game') { clearTips(); if (guideOn()) stopGuide(); }
   if (screen === 'menu') renderMenu();
   else if (screen === 'gallery') renderGallery();
   else if (screen === 'builder') renderBuilder();
@@ -3470,6 +3503,7 @@ function onButton(name) {
     case 'gallery': screen = 'gallery'; zoomId = null; app.scrollTop = 0; return render();
     case 'howtoPrev': howtoPage = Math.max(0, howtoPage - 1); sound.play('draw'); return render();
     case 'howtoNext': howtoPage = Math.min(HOWTO_PAGES - 1, howtoPage + 1); sound.play('draw'); return render();
+    case 'tutorial': sound.play('click'); markHowToOpened(); return startTutorial();
     case 'howto': sound.play('click'); markHowToOpened(); screen = 'howto'; howtoPage = 0; app.scrollTop = 0; return render();
     case 'undo': {
       if (animating || !undoStack.length || !game) return;
@@ -3595,7 +3629,7 @@ function onButton(name) {
       if (!canAct()) return;
       // With plays left, the first click asks "Really end?" (for 3 seconds).
       const moves = getLegalActions(s).some((a) => a.type !== 'endTurn');
-      if (moves && endArmed !== s.turn) {
+      if (moves && endArmed !== s.turn && !game.tutorial) {
         endArmed = s.turn;
         clearTimeout(endArmTimer);
         endArmTimer = setTimeout(() => { endArmed = null; if (screen === 'game') render(); }, 3000);

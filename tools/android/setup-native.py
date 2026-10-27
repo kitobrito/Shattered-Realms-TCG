@@ -3,7 +3,9 @@
 Run from the build folder after `npx cap init` (before `npx cap add android`) with `config`,
 then after `npx cap add android` with `native`, and once with `splash` to draw the splash images.
 
-  config  capacitor.config.json: dark background (no white flash on launch), App plugin.
+  config  capacitor.config.json: dark background (no white flash on launch), App plugin. Leaves
+          captureInput off: it swaps the WebView's keyboard connection for a dummy, so text boxes
+          (sign-in) got Android's white full-screen typing panel and the typing never arrived.
   native  MainActivity: landscape only; full screen (status and navigation bars hidden, swipe to peek),
           screen stays on, text ignores the phone's font-size setting; VIBRATE permission.
   splash  assets/splash*.png for capacitor-assets: the logo on the game's dark background.
@@ -18,7 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 def config():
     cfg = json.load(open('capacitor.config.json'))
     cfg['backgroundColor'] = BG
-    cfg.setdefault('android', {}).update({'backgroundColor': BG, 'allowMixedContent': False, 'captureInput': True})
+    cfg.setdefault('android', {}).update({'backgroundColor': BG, 'allowMixedContent': False})
     json.dump(cfg, open('capacitor.config.json', 'w'), indent=2)
 
 
