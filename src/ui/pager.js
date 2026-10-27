@@ -58,7 +58,11 @@ export function layoutPager(pg) {
   pg.dataset.total = String(total);
   pg.classList.toggle('pg-single', total === 1);
   const count = pg.querySelector('.pg-count');
-  if (count) count.textContent = total > 1 ? `Page ${page + 1} / ${total}` : '';
+  // The collection's footer: small arrows around "Page 1 of 5", then a dot per page.
+  if (count && pg.classList.contains('pg-rich')) {
+    count.innerHTML = total > 1 ? `<button class="pg-mini" data-page="-1" aria-label="Previous page">‹</button><span>Page ${page + 1} of ${total}</span><button class="pg-mini" data-page="1" aria-label="Next page">›</button>`
+      + `<span class="pg-dots">${Array.from({ length: total }, (_, i) => `<button class="pg-dot ${i === page ? 'on' : ''}" data-goto="${i}" aria-label="Page ${i + 1}"></button>`).join('')}</span>` : '';
+  } else if (count) count.textContent = total > 1 ? `Page ${page + 1} / ${total}` : '';
   const chain = pg.dataset.chain === '1';
   for (const a of pg.querySelectorAll('[data-page]')) {
     const d = Number(a.dataset.page);
