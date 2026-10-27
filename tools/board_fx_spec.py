@@ -232,4 +232,75 @@ SPEC = {
         'mist': ['mist', FULL_P, {'blur': 2, 'scale': 0.5, 'show': [0, 255, 120]}],
         'lantern': ['bright', [[380, 50, 422, 120]], {'blur': 1, 'show': [255, 160, 0]}],
     },
+    # ---- The Circles of Hell (new paintings) ----
+    'circle1-land': {
+        'fog': ['fogpale', FULL_L, {'blur': 2, 'scale': 0.5, 'exclude': [[0, 0, 1024, 60]]}],
+    },
+    'circle1-portrait': {
+        'fog': ['fogpale', FULL_P, {'blur': 2, 'scale': 0.5, 'exclude': [[0, 0, 459, 90]]}],
+    },
+    'circle2-land': {
+        'storm': ['violet', FULL_L, {'blur': 1.5, 'scale': 0.5}],
+        'bolts': ['bolt', FULL_L, {'blur': 0.6}],
+    },
+    'circle2-portrait': {
+        'storm': ['violet', FULL_P, {'blur': 1.5, 'scale': 0.5}],
+        'bolts': ['bolt', FULL_P, {'blur': 0.6}],
+    },
+    'circle3-land': {
+        'puddles': ['puddle', FULL_L, {'blur': 1, 'scale': 0.5, 'exclude': [[0, 0, 1024, 150]]}],
+    },
+    'circle3-portrait': {
+        'puddles': ['puddle', FULL_P, {'blur': 1, 'scale': 0.5, 'exclude': [[0, 0, 459, 200]]}],
+    },
+    'circle4-land': {
+        'gold': ['gold', FULL_L, {'scale': 0.5}],
+        'molten': ['lavahot', FULL_L, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle4-portrait': {
+        'gold': ['gold', FULL_P, {'scale': 0.5}],
+        'molten': ['lavahot', FULL_P, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle5-land': {
+        'swamp': ['swamp', FULL_L, {'blur': 1.5, 'scale': 0.5}],
+    },
+    'circle5-portrait': {
+        'swamp': ['swamp', FULL_P, {'blur': 1.5, 'scale': 0.5}],
+    },
+    'circle6-land': {
+        'fire': ['fire', FULL_L, {'blur': 1}],
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle6-portrait': {
+        'fire': ['fire', FULL_P, {'blur': 1}],
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+    },
+    'circle7-land': {
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+        'blood': ['blood', FULL_L, {'blur': 0.8}],
+    },
+    'circle7-portrait': {
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+        'blood': ['blood', FULL_P, {'blur': 0.8}],
+    },
+    'circle8-land': {
+        'green': ['acid', FULL_L, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5}],
+        'gold': ['gold', FULL_L, {'blur': 0.6}],
+    },
+    'circle8-portrait': {
+        'green': ['acid', FULL_P, {'blur': 1, 'scale': 0.5}],
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5}],
+        'gold': ['gold', FULL_P, {'blur': 0.6}],
+    },
+    'circle9-land': {
+        'ice': ['ice', FULL_L, {'blur': 1, 'scale': 0.5}],
+        'snow': ['snow', FULL_L, {'scale': 0.5}],
+    },
+    'circle9-portrait': {
+        'ice': ['ice', FULL_P, {'blur': 1, 'scale': 0.5}],
+        'snow': ['snow', FULL_P, {'scale': 0.5}],
+    },
 }

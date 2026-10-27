@@ -161,15 +161,18 @@ function boltPath(a, b, jag, depth = 0) {
 }
 
 // Which boards have living effects: a circle number (1-9) or a realm board's file name.
-export const hasBoardFx = (key, orient) => !!(typeof key === 'number' ? CIRCLE_FX : BOARD_FX)[`${key}-${orient}`];
+// Circles use their rebuilt living layer (board-fx-defs.js 'circleN-...') when there is one.
+const fxKey = (key) => (typeof key === 'number' ? `circle${key}` : key);
+export const hasBoardFx = (key, orient) => !!(BOARD_FX[`${fxKey(key)}-${orient}`] ?? (typeof key === 'number' && CIRCLE_FX[`${key}-${orient}`]));
 export const startCircleFx = (host, n, orient) => startBoardFx(host, n, orient);
 
 export async function startBoardFx(host, key, orient) {
   const circle = typeof key === 'number';
-  const def = (circle ? CIRCLE_FX : BOARD_FX)[`${key}-${orient}`];
+  const rebuilt = BOARD_FX[`${fxKey(key)}-${orient}`];
+  const def = rebuilt ?? (circle ? CIRCLE_FX[`${key}-${orient}`] : null);
   if (!def) return null;
   const [IW, IH] = CIRCLE_SIZE[orient];
-  const maskInfo = (circle ? CIRCLE_MASKS : BOARD_MASKS)[`${key}-${orient}`] ?? {};
+  const maskInfo = (rebuilt ? BOARD_MASKS[`${fxKey(key)}-${orient}`] : CIRCLE_MASKS[`${key}-${orient}`]) ?? {};
   const file = circle ? `circle${key}` : key;
   const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
   const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers' || l.type === 'warp');

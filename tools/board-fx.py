@@ -113,6 +113,14 @@ RULES = {
     'roses': lambda h, s, v: np.maximum(hue_near(h, 352, 18) * ramp(s, 0.55, 0.8) * ramp(v, 0.3, 0.6), hue_near(h, 120, 40) * ramp(s, 0.3, 0.5) * ramp(v, 0.2, 0.45)),
     # ghostly green mist: soft, light, green-teal
     'mist': lambda h, s, v: hue_near(h, 150, 35) * ramp(s, 0.25, 0.45) * ramp(v, 0.45, 0.7),
+    # pale fog and spirits: bright, nearly grey
+    'fogpale': lambda h, s, v: ramp(v, 0.7, 0.88) * (1 - ramp(s, 0.08, 0.2)),
+    # lightning: very bright pink/violet/white
+    'bolt': lambda h, s, v: ramp(v, 0.86, 0.98) * np.maximum(hue_near(h, 320, 50), 1 - ramp(s, 0.2, 0.4)),
+    # swamp water: murky green
+    'swamp': lambda h, s, v: hue_near(h, 135, 45) * ramp(s, 0.22, 0.4) * ramp(v, 0.1, 0.22),
+    # rain puddles: pale, greyish, brighter than the mud
+    'puddle': lambda h, s, v: (1 - ramp(s, 0.15, 0.3)) * ramp(v, 0.42, 0.62),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),
