@@ -133,6 +133,15 @@ HINTS = {
     'circle2-portrait/veil': {'method': 'poly', 'refine': 3, 'polys': [[[340, 118], [360, 108], [385, 105], [410, 100], [422, 110], [418, 130], [400, 150], [392, 170], [385, 190], [375, 210], [365, 235], [358, 245], [352, 230], [345, 210], [338, 190], [335, 160], [338, 135]]]},
     # Circle III: Cerberus in the mist (outlined silhouette).
     'circle3-land/cerberus': {'method': 'poly', 'refine': 2, 'polys': [[[655, 52], [660, 42], [668, 36], [674, 34], [680, 38], [684, 25], [690, 18], [694, 22], [700, 20], [704, 28], [712, 26], [718, 28], [722, 36], [728, 44], [735, 50], [748, 62], [758, 66], [766, 58], [772, 62], [768, 72], [752, 72], [744, 78], [748, 90], [748, 105], [736, 105], [728, 92], [714, 96], [712, 105], [700, 105], [692, 98], [684, 105], [674, 105], [678, 90], [680, 75], [672, 64], [662, 62], [656, 58]]]},
+    # Circle V: the crowds of souls in the Styx (the crowd as one, against the swamp), the oar.
+    'circle5-portrait/soulsL': {'method': 'grabcut', 'expand': 20},
+    'circle5-portrait/soulsR': {'method': 'grabcut', 'expand': 20},
+    # Neighbouring souls stay out of each other's cut (each moves on its own).
+    'circle5-land/souls1': {'bg': [[0, 292, 120, 320], [0, 255, 30, 300]]},
+    'circle5-land/souls3': {'keep': [[820, 180, 1024, 278]], 'expand': 30},
+    'circle5-land/oar': {'method': 'poly', 'refine': 2, 'polys': [[[103, 548], [98, 542], [190, 490], [215, 476], [235, 452], [262, 434], [290, 425], [315, 418], [322, 426], [318, 445], [295, 462], [268, 474], [240, 482], [215, 490], [195, 500], [110, 550]]]},
+    # Circle VI: the tomb lid, broken in two.
+    'circle6-land/lid': {'method': 'poly', 'refine': 3, 'polys': [[[25, 483], [95, 440], [118, 450], [130, 470], [140, 500], [30, 500]], [[110, 435], [160, 402], [175, 402], [235, 438], [230, 450], [160, 488], [135, 470], [120, 450]]]},
     'ultraterrestrials-land/portal': {'method': 'disc', 'center': [922, 66], 'radius': 51},
     'ultraterrestrials-portrait/portal': {'method': 'disc', 'center': [379, 85], 'radius': 57},
     # Zombies: the hands clawing out of the graves (outlined, fitted to the bones).
