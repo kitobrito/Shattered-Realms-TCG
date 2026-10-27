@@ -118,38 +118,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Dinosaurs": {
-   "plate": "art/boards-v2/dinosaurs-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/dinosaurs-land-0.png",
-     "box": [
-      7,
-      0,
-      153,
-      133
-     ]
-    },
-    "1": {
-     "src": "art/board-props/dinosaurs-land-1.png",
-     "box": [
-      862,
-      2,
-      998,
-      138
-     ]
-    },
-    "2": {
-     "src": "art/board-props/dinosaurs-land-2.png",
-     "box": [
-      12,
-      462,
-      118,
-      553
-     ]
-    }
-   }
-  },
   "Void": {
    "plate": "art/boards-v2/void-plate.jpg",
    "cuts": {
@@ -310,38 +278,6 @@ export const BOARD_CUTS = {
       2,
       93,
       93
-     ]
-    }
-   }
-  },
-  "Dinosaurs": {
-   "plate": "art/boards-portrait/dinosaurs-plate.jpg",
-   "cuts": {
-    "0": {
-     "src": "art/board-props/dinosaurs-portrait-0.png",
-     "box": [
-      2,
-      2,
-      118,
-      108
-     ]
-    },
-    "1": {
-     "src": "art/board-props/dinosaurs-portrait-1.png",
-     "box": [
-      322,
-      2,
-      458,
-      128
-     ]
-    },
-    "2": {
-     "src": "art/board-props/dinosaurs-portrait-2.png",
-     "box": [
-      7,
-      812,
-      108,
-      878
      ]
     }
    }

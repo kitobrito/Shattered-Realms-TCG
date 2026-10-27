@@ -89,4 +89,15 @@ SPEC = {
         'cauldron': ['lava', [[330, 860, 420, 905]], {'blur': 0.6, 'show': [255, 0, 255]}],
         'book': ['any', [[46, 858, 158, 992]], {'hp': [4, 1, 0.04, 0.14], 'show': [0, 255, 255]}],
     },
+    # ---- Dinosaurs: a prehistoric riverbank ----
+    'dinosaurs-land': {
+        'leaves': ['leaf', FULL_L, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[40, 36, 150, 128]]}],
+        'river': ['riverpale', [[420, 0, 640, 95], [560, 60, 1024, 205]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 160, 255]}],
+        'lava': ['lava', [[700, 0, 790, 40], [900, 460, 980, 530]], {'blur': 0.6, 'show': [255, 120, 0]}],
+    },
+    'dinosaurs-portrait': {
+        'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 255, 0], 'exclude': [[36, 46, 144, 152]]}],
+        'river': ['water', [[310, 240, 459, 700]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 160, 255]}],
+        'lava': ['lava', [[340, 880, 410, 950]], {'blur': 0.6, 'show': [255, 120, 0]}],
+    },
 }

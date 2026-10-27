@@ -15,6 +15,9 @@
 //   flow       the painted liquid itself moves: lava, acid, water or honey slides along `dir`
 //              inside its own shape (two copies a half cycle apart cross-fade, so it never
 //              jumps), with an optional brightening so molten things seem to churn
+//   warp       a patch of the painting (foliage, kelp, banners) bends in waves out from its
+//              root edge (`base`), slice by slice, so it ripples without tearing; clipped to a
+//              mask so only the leaves move; gusts bend it further
 //   crawlers   many small painted creatures (bees on the comb), each wandering and twitching
 //              a little on its own; a tap nearby makes them scurry
 //   echo       a feathered copy of part of the painting that moves (sway, bob, rock, breathe):
@@ -38,6 +41,7 @@
 // flash of the circle's light with sparks flying out (flare); its glyph is flung by main.js.
 // Any layer can wait for a tap: `idle` scales it at rest (0 = hidden until kicked) and
 // `kickDur` sets how long a kick lasts (a campfire flaring up for a few seconds).
+// `autoKick: [min, max]` kicks a layer by itself now and then (an egg wobbling as it hatches).
 // Canvas 2D at 60 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
 import { BOARD_MASKS } from '../cards/board-fx-masks.js';
@@ -160,7 +164,7 @@ export async function startBoardFx(host, key, orient) {
   const maskInfo = (circle ? CIRCLE_MASKS : BOARD_MASKS)[`${key}-${orient}`] ?? {};
   const file = circle ? `circle${key}` : key;
   const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
-  const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers');
+  const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers' || l.type === 'warp');
   const usedMasks = new Set(def.layers.flatMap((l) => [l.mask, l.area?.mask, l.flashMask].filter(Boolean)));
   const masks = {};
   await Promise.all([...usedMasks].map(async (name) => {
@@ -586,6 +590,41 @@ export async function startBoardFx(host, key, orient) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  // ---- Warp: foliage rippling out from its roots ----
+  const warpOff = document.createElement('canvas');
+  const warpCtx = warpOff.getContext('2d');
+  function drawWarp(st, t) {
+    const [x0, y0, x1, y1] = st.box;
+    const bw = x1 - x0, bh = y1 - y0;
+    const dw = Math.max(1, Math.ceil(bw * SX)), dh = Math.max(1, Math.ceil(bh * SY));
+    if (warpOff.width !== dw || warpOff.height !== dh) { warpOff.width = dw; warpOff.height = dh; } else warpCtx.clearRect(0, 0, dw, dh);
+    const base = st.base ?? 'bottom';
+    const vertical = base === 'left' || base === 'right'; // slices are columns, displaced up/down
+    const span = vertical ? bw : bh;
+    const step = st.slice ?? 2;
+    const kick = kicked(st, t, 1.6);
+    const amp = (st.amp ?? 2.5) * (1 + kick * 1.5);
+    const per = st.period ?? 4;
+    const sx = board.naturalWidth / IW, sy = board.naturalHeight / IH;
+    const dir = W0?.dir ?? 1;
+    for (let a = 0; a < span; a += step) {
+      // Distance from the root, 0..1: the further out, the more it bends.
+      const d = base === 'bottom' ? (span - a) / span : base === 'top' ? a / span : base === 'right' ? (span - a) / span : a / span;
+      const g = W0 ? gustAt(vertical ? x0 + a : (x0 + x1) / 2, vertical ? (y0 + y1) / 2 : y0 + a) : 0;
+      const off = (Math.sin(TAU * t / per - d * (st.wave ?? 2.2) + st.seed) * amp + g * (st.gustAmp ?? amp * 1.6) * dir) * d ** 1.4;
+      if (vertical) warpCtx.drawImage(board, (x0 + a) * sx, y0 * sy, step * sx, bh * sy, a * SX, off * SY, step * SX + 0.6, dh);
+      else warpCtx.drawImage(board, x0 * sx, (y0 + a) * sy, bw * sx, step * sy, off * SX, a * SY, dw, step * SY + 0.6);
+    }
+    const m = st.mask && masks[st.mask];
+    if (m) {
+      // Only the leaves move: clip to the mask (positioned relative to this patch).
+      warpCtx.globalCompositeOperation = 'destination-in';
+      warpCtx.drawImage(m.img, (m.box[0] - x0) * SX, (m.box[1] - y0) * SY, (m.box[2] - m.box[0]) * SX, (m.box[3] - m.box[1]) * SY);
+      warpCtx.globalCompositeOperation = 'source-over';
+    }
+    ctx.drawImage(warpOff, x0 * SX, y0 * SY, dw, dh);
+  }
+
   // ---- Crawlers: small painted creatures wandering on the spot ----
   function drawCrawlers(st, t) {
     const amp = st.amp ?? 1.6;
@@ -963,10 +1002,15 @@ export async function startBoardFx(host, key, orient) {
     if (plate) ctx.drawImage(plate, 0, 0, W, H);
     stepWind(dt);
     for (const st of layers) {
+      if (st.autoKick) {
+        st.autoNext ??= t + rand(...st.autoKick);
+        if (t >= st.autoNext) { st.kick = t; st.autoNext = t + rand(...st.autoKick); }
+      }
       switch (st.type) {
         case 'sprites': drawSprites(st, t); break;
         case 'crawlers': drawCrawlers(st, t); break;
         case 'flow': drawFlow(st, t); break;
+        case 'warp': drawWarp(st, t); break;
         case 'mask': drawMask(st, t); break;
         case 'echo': drawEcho(st, t); break;
         case 'particles': stepParticles(st, dt, t); drawParticles(st, t); break;

@@ -5166,3 +5166,5 @@ body.reduced-motion .descent { display: none; }
 .arena.frame-wax { --fr-line: #3a2204; --fr-mid: #d8a032; --fr-hi: #ffe39a; }
 /* Demons: black iron, red-hot along the top. */
 .arena.frame-iron { --fr-line: #0c0404; --fr-mid: #3a2a26; --fr-hi: #ff6a2a; }
+/* Dinosaurs (and other natural boards): weathered sandstone, sunlit on top. */
+.arena.frame-stone { --fr-line: #2a1c0c; --fr-mid: #a88a5c; --fr-hi: #ffe2a0; }

@@ -403,4 +403,72 @@ export const BOARD_FX = {
       { area: [320, 850, 430, 954], sound: 'bloop', kick: ['brew'], flare: [255, 140, 40], glyph: '🔥', burst: [{ layer: 'brewSparks', n: 14, at: [375, 876], spread: 18 }, { layer: 'brewBub', n: 8, at: [375, 880], spread: 20 }] },
     ],
   },
+
+  // ---- Dinosaurs: a prehistoric riverbank -------------------------------------------------
+  'dinosaurs-land': {
+    wind: { dir: 1, every: [6, 11], speed: [150, 230], width: [160, 280], lean: 0.3 },
+    layers: [
+      // Ground: cloud shadows cross the sand; the river runs and sparkles in the sunset.
+      { type: 'fog', area: [-420, -160, 1440, 730], count: 3, size: [230, 330], speed: 8, leftward: 0, color: [60, 40, 20], alpha: 0.07, gustPush: 0 },
+      { id: 'riverFlow', type: 'flow', mask: 'river', dir: [1, 0.35], dist: 22, period: 2.8, alpha: 0.95 },
+      { id: 'river', type: 'mask', mask: 'river', anim: { kind: 'wave', along: 'x', band: 70, speed: 40 }, alpha: [0, 0.4], gain: 0.7, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'river' }, rate: 5, max: 20, color: [255, 240, 200], size: [0.9, 1.8], life: [0.3, 0.8] },
+      // Growth: every clump of ferns and palms ripples out from its roots; gusts sweep through.
+      { id: 'jungleL', type: 'warp', box: [0, 110, 175, 440], base: 'left', mask: 'leaves', amp: 2.2, period: 4.2, wave: 2.4 },
+      { id: 'jungleT', type: 'warp', box: [190, 0, 570, 140], base: 'top', mask: 'leaves', amp: 2, period: 4.6, wave: 2 },
+      { id: 'jungleB', type: 'warp', box: [180, 420, 900, 572], base: 'bottom', mask: 'leaves', amp: 2.4, period: 3.8, wave: 2.6 },
+      { id: 'jungleR', type: 'warp', box: [790, 160, 1024, 440], base: 'right', mask: 'leaves', amp: 2.2, period: 4.4, wave: 2.4 },
+      { id: 'fern', type: 'warp', box: [856, 16, 1002, 160], base: 'top', mask: 'leaves', amp: 2.6, period: 3.4, wave: 1.6 },
+      // Corners. Top left, the nest: now and then an egg wobbles as something inside stirs.
+      { id: 'eggs', type: 'echo', box: [56, 44, 146, 112], feather: 6, autoKick: [5, 10], motion: { kind: 'rock', amp: 0, kickAmp: 2.4, period: 0.22, pivot: [100, 100] } },
+      // Top right, the volcano smokes and its crater glows; bottom right, the small vent too.
+      { id: 'crater', type: 'mask', mask: 'lava', anim: { kind: 'flicker', speed: 2 }, alpha: [0.2, 0.8], bloom: 0.9, kickDur: 2 },
+      { id: 'plume', type: 'particles', kind: 'smoke', from: [[742, 16, 8], [944, 466, 6]], rate: 2.4, max: 26, color: [120, 110, 110], size: [7, 13], life: [3, 5.5], alpha: 0.22, speed: 0.8 },
+      { id: 'sparks', type: 'particles', kind: 'spark', from: [[742, 20, 6], [944, 470, 5]], rate: 0.6, max: 10, color: [255, 150, 50], size: [0.8, 1.4], life: [0.6, 1.2] },
+      // Bottom left, the old bone; tapped, dust puffs off it.
+      { id: 'bone', type: 'echo', box: [52, 438, 152, 518], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.3, pivot: [100, 480] } },
+      { id: 'dust', type: 'particles', kind: 'smoke', from: [[100, 482, 30]], rate: 0, max: 12, color: [200, 170, 120], size: [5, 9], life: [1.2, 2], alpha: 0.3, speed: 0.6 },
+      // Air: pterosaurs glide across the sunset; dragonflies dart over the river; pollen drifts.
+      { type: 'flyers', area: [380, 0, 1024, 70], every: [8, 15], speed: [40, 65], size: [6, 9], color: [60, 35, 25], flap: 5 },
+      { type: 'particles', kind: 'fly', from: [[520, 120, 30], [660, 175, 30], [930, 150, 30]], rate: 0.8, max: 6, color: [80, 220, 255], size: [1.2, 1.8], life: [4, 7] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 2, max: 20, color: [255, 230, 150], size: [0.6, 1.2], life: [3, 6], alpha: 0.6, speed: 0.7 },
+    ],
+    pokes: [
+      { area: [40, 36, 152, 128], sound: 'crack', kick: ['eggs'], flare: [255, 230, 180], glyph: '🥚' },
+      { area: [680, 0, 800, 70], sound: 'rumble', kick: ['crater'], flare: [255, 120, 40], glyph: '🌋', burst: [{ layer: 'sparks', n: 18, at: [742, 20], spread: 6 }, { layer: 'plume', n: 6, at: [742, 16], spread: 6 }] },
+      { area: [880, 430, 1000, 545], sound: 'rumble', kick: ['crater'], flare: [255, 120, 40], glyph: '🌋', burst: [{ layer: 'sparks', n: 14, at: [944, 470], spread: 6 }, { layer: 'plume', n: 5, at: [944, 466], spread: 6 }] },
+      { area: [50, 436, 154, 520], sound: 'rattle', kick: ['bone'], flare: [255, 230, 180], glyph: '🦴', burst: { layer: 'dust', n: 8, spread: 20 } },
+      { area: [430, 40, 1024, 205], sound: 'splash', kick: ['river', 'riverFlow'], flare: [200, 240, 255] },
+      { area: [856, 16, 1002, 160], sound: 'rustle', kick: ['fern'], flare: [160, 255, 120], glyph: '🌿' },
+    ],
+  },
+  'dinosaurs-portrait': {
+    wind: { dir: 1, every: [6, 11], speed: [110, 170], width: [140, 240], lean: 0.12 },
+    layers: [
+      { type: 'fog', area: [-300, -200, 760, 1220], count: 3, size: [180, 260], speed: 7, leftward: 0, color: [60, 40, 20], alpha: 0.07, gustPush: 0 },
+      { id: 'riverFlow', type: 'flow', mask: 'river', dir: [0.2, 1], dist: 20, period: 2.8, alpha: 0.95 },
+      { id: 'river', type: 'mask', mask: 'river', anim: { kind: 'wave', along: 'y', band: 70, speed: 40 }, alpha: [0, 0.4], gain: 0.7, kickDur: 2 },
+      { type: 'particles', kind: 'glint', area: { mask: 'river' }, rate: 4, max: 16, color: [230, 250, 255], size: [0.9, 1.7], life: [0.3, 0.8] },
+      { id: 'jungleL', type: 'warp', box: [0, 120, 150, 880], base: 'left', mask: 'leaves', amp: 2, period: 4.2, wave: 2.4 },
+      { id: 'jungleT', type: 'warp', box: [100, 0, 459, 160], base: 'top', mask: 'leaves', amp: 2, period: 4.6, wave: 2 },
+      { id: 'jungleR', type: 'warp', box: [350, 130, 459, 570], base: 'right', mask: 'leaves', amp: 2, period: 4.4, wave: 2.4 },
+      { id: 'jungleR2', type: 'warp', box: [290, 600, 459, 860], base: 'right', mask: 'leaves', amp: 2, period: 4, wave: 2.4 },
+      { id: 'jungleB', type: 'warp', box: [100, 900, 459, 1024], base: 'bottom', mask: 'leaves', amp: 2.2, period: 3.8, wave: 2.6 },
+      { id: 'eggs', type: 'echo', box: [56, 64, 124, 126], feather: 6, autoKick: [5, 10], motion: { kind: 'rock', amp: 0, kickAmp: 2.4, period: 0.22, pivot: [90, 118] } },
+      { id: 'crater', type: 'mask', mask: 'lava', anim: { kind: 'flicker', speed: 2 }, alpha: [0.2, 0.8], bloom: 0.9, kickDur: 2 },
+      { id: 'plume', type: 'particles', kind: 'smoke', from: [[388, 880, 6]], rate: 1.6, max: 18, color: [120, 110, 110], size: [6, 11], life: [3, 5.5], alpha: 0.22, speed: 0.8 },
+      { id: 'sparks', type: 'particles', kind: 'spark', from: [[388, 884, 5]], rate: 0.5, max: 8, color: [255, 150, 50], size: [0.8, 1.3], life: [0.6, 1.2] },
+      { id: 'bone', type: 'echo', box: [40, 872, 150, 966], feather: 6, motion: { kind: 'rock', amp: 0, kickAmp: 1.4, period: 0.3, pivot: [95, 920] } },
+      { id: 'dust', type: 'particles', kind: 'smoke', from: [[95, 920, 26]], rate: 0, max: 10, color: [200, 170, 120], size: [5, 8], life: [1.2, 2], alpha: 0.3, speed: 0.6 },
+      { type: 'flyers', area: [0, 0, 459, 60], every: [9, 16], speed: [35, 55], size: [5, 8], color: [60, 35, 25], flap: 5 },
+      { type: 'particles', kind: 'fly', from: [[360, 330, 24], [380, 520, 24]], rate: 0.6, max: 4, color: [80, 220, 255], size: [1.1, 1.7], life: [4, 7] },
+      { id: 'pollen', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 2, max: 20, color: [255, 230, 150], size: [0.6, 1.1], life: [3, 6], alpha: 0.6, speed: 0.7 },
+    ],
+    pokes: [
+      { area: [36, 46, 144, 152], sound: 'crack', kick: ['eggs'], flare: [255, 230, 180], glyph: '🥚' },
+      { area: [320, 846, 432, 962], sound: 'rumble', kick: ['crater'], flare: [255, 120, 40], glyph: '🌋', burst: [{ layer: 'sparks', n: 14, at: [388, 884], spread: 6 }, { layer: 'plume', n: 5, at: [388, 880], spread: 6 }] },
+      { area: [38, 870, 152, 968], sound: 'rattle', kick: ['bone'], flare: [255, 230, 180], glyph: '🦴', burst: { layer: 'dust', n: 8, spread: 18 } },
+      { area: [310, 240, 459, 700], sound: 'splash', kick: ['river', 'riverFlow'], flare: [200, 240, 255] },
+    ],
+  },
 };

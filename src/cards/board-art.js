@@ -105,9 +105,7 @@ export const PORTRAIT_BOARDS = {
   Plants: { src: 'art/boards-portrait/plants.jpg', opp: [183, 24, 277, 130, 'arch'], me: [181, 744, 277, 855, 'circle'], field: [150, 720],
     props: [P([10, 10, 85, 85], 'sway', '#ff9ad8', { sound: 'rustle', glyph: '🌸' }), P([355, 15, 440, 95], 'fireflies', '#fff6a0', { sound: 'chime' }),
       P([10, 800, 90, 880], 'flicker', '#ffd25a', { sound: 'clink' }), P([335, 790, 450, 880], 'ripple', '#9ad8ff', { sound: 'splash' })] },
-  Dinosaurs: { src: 'art/boards-portrait/dinosaurs.jpg', opp: [188, 29, 270, 119, 'arch'], me: [188, 763, 271, 860, 'circle'], field: [140, 740],
-    props: [P([10, 10, 110, 100], 'wobble', '#ffe8c8', { sound: 'knock' }), P([330, 10, 450, 120], 'sway', '#7dff6a', { sound: 'rustle' }),
-      P([15, 820, 100, 870], 'bob', '#ffe8c8', { sound: 'rattle', glyph: '🦴' }), P([340, 710, 450, 880], 'smoke', '#ff8a3a', { sound: 'rumble' })] },
+  Dinosaurs: { src: 'art/boards-portrait/dinosaurs.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'stone', props: [] },
   Aliens: { src: 'art/boards-portrait/aliens.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 790, 261, 860, 'circle'], field: [120, 775], frame: 'chitin', props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [192, 18, 268, 102, 'arch'], me: [193, 745, 268, 845, 'circle'], field: [120, 720],
     props: [P([25, 10, 60, 75], 'flicker', '#ffcf6a', { sound: 'whoosh' }), P([395, 5, 450, 80], 'glow', '#ff2a44', { sound: 'clink' }),
@@ -161,9 +159,7 @@ export const LANDSCAPE_BOARDS = {
   Plants: { src: 'art/boards-v2/plants.jpg', opp: [470, 25, 552, 135], me: [468, 432, 552, 530], field: [40, 150, 980, 415],
     props: [P([20, 15, 95, 85], 'sway', '#ff9ad8', { sound: 'rustle', glyph: '🌸' }), P([890, 15, 975, 95], 'fireflies', '#fff6a0', { sound: 'chime' }),
       P([20, 455, 95, 550], 'flicker', '#ffd25a', { sound: 'clink' }), P([860, 445, 975, 545], 'ripple', '#9ad8ff', { sound: 'splash' })] },
-  Dinosaurs: { src: 'art/boards-v2/dinosaurs.jpg', opp: [462, 30, 555, 125], me: [470, 440, 552, 540], field: [30, 140, 990, 420],
-    props: [P([15, 5, 145, 125], 'wobble', '#ffe8c8', { sound: 'knock' }), P([870, 10, 990, 130], 'sway', '#7dff6a', { sound: 'rustle' }),
-      P([20, 470, 110, 545], 'bob', '#ffe8c8', { sound: 'rattle', glyph: '🦴' }), P([880, 360, 990, 545], 'smoke', '#ff8a3a', { sound: 'rumble' })] },
+  Dinosaurs: { src: 'art/boards-v2/dinosaurs.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
   Aliens: { src: 'art/boards-v2/aliens.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'chitin', props: [] },
 };
 

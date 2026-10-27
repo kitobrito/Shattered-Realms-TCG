@@ -95,6 +95,10 @@ RULES = {
     'lavahot': lambda h, s, v: hue_near(h, 40, 22) * ramp(s, 0.3, 0.6) * ramp(v, 0.82, 0.97),
     # flames: orange-yellow, very bright
     'fire': lambda h, s, v: hue_near(h, 32, 24) * ramp(s, 0.3, 0.6) * ramp(v, 0.72, 0.98),
+    # water, rivers, wet sand: pale blue-white
+    'water': lambda h, s, v: hue_near(h, 195, 35) * ramp(s, 0.04, 0.14) * ramp(v, 0.6, 0.8),
+    # a river catching the sky: pale grey-blue water plus its brightest reflections
+    'riverpale': lambda h, s, v: np.maximum((1 - ramp(s, 0.18, 0.32)) * ramp(v, 0.42, 0.6), ramp(v, 0.92, 0.99) * ramp(s, 0.3, 0.5) * 0.8),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),
