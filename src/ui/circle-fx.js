@@ -32,7 +32,7 @@
 // flash of the circle's light with sparks flying out (flare); its glyph is flung by main.js.
 // Any layer can wait for a tap: `idle` scales it at rest (0 = hidden until kicked) and
 // `kickDur` sets how long a kick lasts (a campfire flaring up for a few seconds).
-// Canvas 2D at ~30 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
+// Canvas 2D at 60 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
 import { BOARD_MASKS } from '../cards/board-fx-masks.js';
 import { CIRCLE_MASKS } from '../cards/circle-fx-masks.js';
@@ -41,7 +41,7 @@ import { CIRCLE_FX } from './circle-fx-defs.js';
 import { play } from './sound.js';
 
 const TAU = Math.PI * 2;
-const FPS = 30;
+const FPS = 60;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 // A soft, non-repeating wobble from a few sines (deterministic per seed).
@@ -853,10 +853,11 @@ export async function startBoardFx(host, key, orient) {
     const now = performance.now();
     raf = requestAnimationFrame(frame);
     if (!running) return;
-    // (A clock that jumps backwards just restarts the pacing.)
-    if (now < last || now < prev) { last = now - 1000; prev = now; }
-    if (now - last < 1000 / FPS - 2) return;
-    last = now;
+    // Paced to FPS on any screen: each frame is due one interval after the last one was due,
+    // so 120 and 144 Hz screens still get ~60. (A clock that jumps backwards restarts it.)
+    if (now < prev) { last = 0; prev = now; }
+    if (now < last - 2) return;
+    last = Math.max(last + 1000 / FPS, now);
     const box = canvas.parentElement;
     if (box) {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
