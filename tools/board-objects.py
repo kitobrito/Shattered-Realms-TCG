@@ -35,8 +35,10 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 #   keep: [[x0,y0,x1,y1]...]  only these areas can hold the object
 #   fg:   [[x0,y0,x1,y1]...]  surely object (forced in)
 #   bg:   [[x0,y0,x1,y1]...]  surely background (forced out)
-#   cover: {'area': box, 'hsv': ranges}  scenery painted in front of the object, kept in front
+#   within: {hint}  keep only what that cut finds too (colour rules inside the model's outline)
+#   cover: {'area': box, 'hsv': ranges} or {'polys': [...]}  scenery painted in front of the object, kept in front
 #   thr:  matte threshold (default 0.5);  grow: px to grow the cut;  max_hole, min_area
+CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 HINTS = {
     # Ice Age: the spears lying by the fire pits (thin: outlined, snapped to the paint).
     'ice-age-land/spear': {'method': 'poly', 'polys': [[[222, 451], [222, 466], [210, 481], [200, 486], [190, 494], [146, 544], [133, 557], [126, 553], [127, 547], [137, 538], [183, 488], [193, 477], [196, 468], [208, 458]]]},
@@ -70,6 +72,21 @@ HINTS = {
     'divine-land/sunL': {'method': 'disc', 'center': [186, 288], 'radius': 45},
     'divine-land/sunR': {'method': 'disc', 'center': [835, 291], 'radius': 45,
                          'cover': {'area': [785, 240, 890, 340], 'hsv': [[0, 28, 35, 120, 232, 255]]}},
+    # Fungus: the giant mushrooms breathe about their stems (cap and stem down to the pivot).
+    'fungus-land/capP': {'method': 'grabcut', 'rect': [0, 140, 180, 330]},
+    'fungus-land/capP2': {'method': 'grabcut', 'rect': [128, 0, 302, 84]},
+    'fungus-land/capT2': {'method': 'grabcut', 'rect': [678, 0, 832, 90]},
+    'fungus-portrait/capP2': {'method': 'grabcut', 'rect': [0, 668, 118, 775]},
+    'fungus-portrait/capT2': {'method': 'grabcut'},
+    'fungus-land/capO': {'method': 'grabcut', 'rect': [924, 160, 1024, 340]},
+    # Ghosts: the music box's dancing figurines turn together; its big gear spins behind the blue one.
+    'ghosts-land/dancers': {'method': 'poly', 'polys': [[[104, 455], [112, 455], [113, 470], [116, 482], [113, 490], [110, 497], [106, 497], [101, 488], [100, 478], [103, 468]], [[116, 470], [123, 471], [125, 485], [123, 500], [117, 500], [114, 487]], [[141, 455], [149, 456], [151, 470], [150, 487], [141, 487], [139, 470]]]},
+    'ghosts-land/gear': {'method': 'disc', 'center': [86, 482], 'radius': 21, 'cover': {'polys': [[[104, 455], [112, 455], [113, 470], [116, 482], [113, 490], [110, 497], [106, 497], [101, 488], [100, 478], [103, 468]]]}},
+    'ghosts-portrait/dancers': {'method': 'poly', 'polys': [[[71, 940], [77, 940], [79, 950], [78, 959], [70, 959], [69, 949]], [[80, 951], [84, 951], [86, 958], [84, 965], [80, 965], [79, 958]], [[100, 940], [105, 941], [106, 950], [103, 957], [99, 957], [98, 948]]]},
+    # Lycanthropes: the broken chains (dark iron, pale highlights, the rusty shackle) inside the model's outline.
+    'lycanthropes-land/chains': dict(CHAINS, bg=[[730, 50, 772, 96]]),
+    'lycanthropes-portrait/chains': CHAINS,
+    'lycanthropes-portrait/chains2': CHAINS,
     'ice-age-portrait/skull': {'method': 'poly', 'polys': [[[40.6, 13], [51, 16.75], [61, 25.5], [59, 38], [70, 49], [73.75, 55], [85, 59], [98.75, 60.5], [104, 55.5], [105, 48], [100, 41.75], [92, 36], [102.5, 39], [107.5, 45.5], [108, 55.5], [102.5, 63], [90, 64], [77, 62], [78, 70], [79, 83], [77.5, 93], [69, 96], [60, 93], [56, 83], [55, 64], [45, 58], [33.75, 54], [32.5, 44], [27.5, 29], [28.75, 21.75], [35, 15.5]]],
                                'holes': [[[61, 67], [72, 68], [74, 83], [71, 90], [65, 92], [61, 85]]]},
     'ice-age-portrait/spear2': {'method': 'poly', 'polys': [[[99, 955], [98, 966], [90, 976], [62, 1008], [57, 1016], [53, 1013], [55, 1006], [83, 975], [87, 966], [94, 958]]]},
@@ -79,12 +96,17 @@ HINTS = {
 # then cleaned up (closed, specks dropped, pinholes filled). 'hsv': [[h0, h1, s0, s1, v0, v1]...]
 # in OpenCV units (h 0..180, wraps when h0 > h1); 'exclude': boxes that are not foliage.
 GREEN = [[25, 80, 60, 255, 35, 255]]
+LEAF = [[38, 85, 110, 255, 80, 255]]  # brighter leaves, not the dark moss and ground between them
 ROSES = [[170, 8, 110, 255, 70, 255], [35, 95, 60, 255, 40, 255]]
 KELP = [[18, 40, 70, 255, 20, 170]]
 CLOAK = [[95, 135, 25, 255, 25, 210], [170, 10, 90, 255, 30, 200]]
 FOLIAGE = {
     'dinosaurs-land': {'*': {'hsv': GREEN}}, 'dinosaurs-portrait': {'*': {'hsv': GREEN}},
-    'plants-land': {'*': {'hsv': GREEN}}, 'plants-portrait': {'*': {'hsv': GREEN}},
+    # Plants: the hero frames are wreaths of leaves themselves; they stay still.
+    'plants-land': {'*': {'hsv': LEAF, 'exclude': [[415, 0, 615, 150], [410, 395, 620, 572]]},
+                    'warp3': {'hsv': LEAF, 'exclude': [[415, 0, 615, 150]],
+                              'fg_polys': [[[655, 10], [700, 0], [760, 0], [790, 20], [760, 45], [740, 55], [715, 60], [700, 75], [680, 90], [668, 85], [660, 60], [655, 35]]]}},
+    'plants-portrait': {'*': {'hsv': LEAF, 'exclude': [[155, 105, 305, 270], [145, 755, 315, 920]]}},
     'basic-land': {'*': {'hsv': GREEN}, 'warp4': {'hsv': GREEN, 'exclude': [[470, 440, 770, 572]]}},
     'basic-portrait': {'*': {'hsv': GREEN}},
     'sharks-land': {'*': {'hsv': KELP}, 'warp5': {'hsv': KELP, 'exclude': [[840, 420, 1024, 572]]}},
@@ -193,8 +215,10 @@ def bee_cut(img):
     return cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))).astype(np.float32)
 
 
-# Which method cuts a layer's objects when no hint says otherwise.
-DEFAULT_METHOD = {'bees-land/crawl': 'bee', 'bees-portrait/crawl': 'bee', 'ghosts-land/candles': 'grabcut', 'ghosts-portrait/candles': 'grabcut'}
+# How a layer's objects are cut when no hint names them: bees by their stripes, candles by their wax and flame.
+CANDLE = {'method': 'hsv', 'hsv': [[3, 35, 35, 175, 100, 255]], 'close': 2, 'expand': 8}
+DEFAULT_HINTS = {'bees-land/crawl': {'method': 'bee'}, 'bees-portrait/crawl': {'method': 'bee'},
+                 'ghosts-land/candles': CANDLE, 'ghosts-portrait/candles': CANDLE}
 
 
 def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
@@ -202,7 +226,27 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
     H, W = img.shape[:2]
     if foliage:
         b = rect(box, H, W)
-        hard = hsv_cut(img, b, foliage['hsv'], foliage.get('exclude', ()))
+        hard = hsv_cut(img, b, foliage['hsv'], foliage.get('exclude', ()), close=foliage.get('close', 3), hole=foliage.get('hole', 400))
+        if foliage.get('refine', 6):
+            # The colour rule finds the bright of each leaf; GrabCut grows it to the leaf's whole shape
+            # (its shaded side too) so no leaf is cut in two.
+            k = np.ones((3, 3), np.uint8)
+            m = np.full(hard.shape, cv2.GC_BGD, np.uint8)
+            m[cv2.dilate(hard, k, iterations=foliage.get('refine', 6)) > 0] = cv2.GC_PR_BGD
+            m[hard > 0] = cv2.GC_PR_FGD
+            m[cv2.erode(hard, k, iterations=2) > 0] = cv2.GC_FGD
+            x0, y0, x1, y1 = b
+            sub = m[y0:y1, x0:x1].copy()
+            if (sub == cv2.GC_FGD).any() and (sub == cv2.GC_BGD).any():
+                cv2.grabCut(img[y0:y1, x0:x1], sub, None, np.zeros((1, 65)), np.zeros((1, 65)), 4, cv2.GC_INIT_WITH_MASK)
+                hard = np.zeros_like(hard)
+                hard[y0:y1, x0:x1] = (sub == cv2.GC_FGD) | (sub == cv2.GC_PR_FGD)
+                for e in foliage.get('exclude', ()):
+                    hard[e[1]:e[3], e[0]:e[2]] = 0
+        for poly in foliage.get('fg_polys', ()):
+            # Whole leaves the colours only half find (a big leaf with a shaded side).
+            cv2.fillPoly(hard, [np.array(poly, np.int32)], 1)
+        hard[:b[1]] = 0; hard[b[3]:] = 0; hard[:, :b[0]] = 0; hard[:, b[2]:] = 0
         return finish(img, hard, hard.astype(np.float32), 0.5, True) if hard.sum() else None
     x0, y0, x1, y1 = rect(box, H, W)
     bw, bh = x1 - x0, y1 - y0
@@ -214,7 +258,7 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
     sx0, sy0 = x0 + int(bw * 0.2), y0 + int(bh * 0.2)
     core = np.zeros((H, W), np.uint8)
     core[sy0:max(sy0 + 1, y1 - int(bh * 0.2)), sx0:max(sx0 + 1, x1 - int(bw * 0.2))] = 1
-    method = hint.get('method') or DEFAULT_METHOD.get(f"{key}/{iid.split('.')[0]}", 'model')
+    method = hint.get('method', 'model')
     thr = hint.get('thr', 0.5)
     if method == 'model':
         # The model sees the box with some surroundings (more context makes it pick other things).
@@ -261,6 +305,10 @@ def cut(img, box, matter, hint, layer, foliage=None, key='', iid=''):
         cv2.circle(full, (int(round(c[0])), int(round(c[1]))), int(round(r)), 1.0, -1)
     else:
         raise ValueError(method)
+    if hint.get('within'):
+        # Only where another cut (a hint of its own, e.g. the model's) also finds the object.
+        w = cut(img, box, matter, hint['within'], layer, None, key, iid)
+        full = full * (cv2.dilate(w['mask'], np.ones((3, 3), np.uint8), iterations=hint['within'].get('pad', 2)) if w else 0)
     allowed = np.zeros((H, W), np.float32)
     for r in hint.get('keep') or [region]:
         a, b, c, d = rect(r, H, W)
@@ -362,11 +410,17 @@ def main():
                 fol = f.get(iid, f.get('*'))
                 if not fol:
                     sys.exit(f'{key}/{iid}: a foliage warp needs a FOLIAGE entry')
-            r = cut(img, box, matter, HINTS.get(f'{key}/{iid}', {}), layer, fol, key, iid)
+            hint = HINTS.get(f'{key}/{iid}') or DEFAULT_HINTS.get(f"{key}/{iid.split('.')[0]}", {})
+            r = cut(img, box, matter, hint, layer, fol, key, iid)
             if r and HINTS.get(f'{key}/{iid}', {}).get('cover'):
                 # Scenery painted in front of the object (a cloud across a sun) stays in front of it.
                 c = HINTS[f'{key}/{iid}']['cover']
-                cm = hsv_cut(img, rect(c['area'], *img.shape[:2]), c['hsv'], close=1, min_area=20, hole=30)
+                if 'polys' in c:
+                    cm = np.zeros(img.shape[:2], np.uint8)
+                    for poly in c['polys']:
+                        cv2.fillPoly(cm, [np.array(poly, np.int32)], 1)
+                else:
+                    cm = hsv_cut(img, rect(c['area'], *img.shape[:2]), c['hsv'], close=1, min_area=20, hole=30)
                 ys, xs = np.nonzero(cm)
                 bx0, by0, bx1, by1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
                 ca = cv2.GaussianBlur(cm.astype(np.float32), (3, 3), 0.7)[by0:by1, bx0:bx1]
