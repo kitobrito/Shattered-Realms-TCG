@@ -169,9 +169,11 @@ const fxKey = (key) => (typeof key === 'number' ? `circle${key}` : key);
 export const hasBoardFx = (key, orient) => !!BOARD_FX[`${fxKey(key)}-${orient}`];
 export const startCircleFx = (host, n, orient) => startBoardFx(host, n, orient);
 
-export async function startBoardFx(host, key, orient) {
-  const def = BOARD_FX[`${fxKey(key)}-${orient}`];
-  if (!def) return null;
+// opts.only: draw just these layer types (tools/verify-board-objects.mjs checks the moving objects alone).
+export async function startBoardFx(host, key, orient, opts = {}) {
+  const full = BOARD_FX[`${fxKey(key)}-${orient}`];
+  if (!full) return null;
+  const def = opts.only ? { ...full, layers: full.layers.filter((l) => opts.only.includes(l.type)) } : full;
   const [IW, IH] = CIRCLE_SIZE[orient];
   const maskInfo = BOARD_MASKS[`${fxKey(key)}-${orient}`] ?? {};
   const file = fxKey(key);
@@ -744,6 +746,9 @@ export async function startBoardFx(host, key, orient) {
     if (st.obj) drawObj(st.obj, -p.pv[0], -p.pv[1]);
     else ctx.drawImage(st.crop, (x0 - p.pv[0]) * SX, (y0 - p.pv[1]) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
     ctx.restore();
+    // Scenery painted in front of it (a cloud across a sun) stays in front.
+    const c = st.obj?.cover;
+    if (c) ctx.drawImage(objAtlas, c.at[0], c.at[1], c.box[2] - c.box[0], c.box[3] - c.box[1], c.box[0] * SX, c.box[1] * SY, (c.box[2] - c.box[0]) * SX, (c.box[3] - c.box[1]) * SY);
   }
 
   // ---- Fog, rays, glows, flames ----
@@ -1143,6 +1148,8 @@ export async function startBoardFx(host, key, orient) {
     pause() { running = false; },
     resume() { if (!running) { running = true; prev = performance.now(); } },
     poke, canPoke,
+    // Kick every layer at once (as if each were tapped): for tests.
+    kickAll() { const t = (performance.now() - start) / 1000; for (const l of layers) l.kick = t; },
     canvas,
   };
 }

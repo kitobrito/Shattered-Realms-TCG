@@ -35,6 +35,7 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 #   keep: [[x0,y0,x1,y1]...]  only these areas can hold the object
 #   fg:   [[x0,y0,x1,y1]...]  surely object (forced in)
 #   bg:   [[x0,y0,x1,y1]...]  surely background (forced out)
+#   cover: {'area': box, 'hsv': ranges}  scenery painted in front of the object, kept in front
 #   thr:  matte threshold (default 0.5);  grow: px to grow the cut;  max_hole, min_area
 HINTS = {
     # Ice Age: the spears lying by the fire pits (thin: outlined, snapped to the paint).
@@ -51,6 +52,24 @@ HINTS = {
     'bees-portrait/crawl.0': {'method': 'poly', 'ellipses': [[383, 302, 6, 7]]},
     'bees-portrait/crawl.8': {'method': 'poly', 'ellipses': [[42, 736, 9, 6, 10], [33, 742, 5, 6]]},
     'bees-portrait/nest': {'bg': [[330, 138, 450, 150]]},
+    # Dinosaurs: the bones lying in their dirt (the bones, not the dirt).
+    'dinosaurs-land/bone': {'method': 'grabcut'},
+    'dinosaurs-portrait/bone': {'method': 'grabcut'},
+    # Divine: the angel wings beside the arches flap (outlined, then fitted to the feathers).
+    'divine-land/wingsOL': {'method': 'poly', 'refine': 6, 'polys': [[[366, 1], [392, 4], [398, 25], [418, 25], [430, 40], [440, 60], [452, 80], [462, 95], [466, 128], [400, 128], [388, 110], [375, 95], [368, 82], [362, 60], [352, 30], [352, 18]]], 'holes': [[[418, 12], [472, 12], [472, 38], [445, 40], [418, 30]]]},
+    'divine-land/wingsOR': {'method': 'poly', 'refine': 5, 'polys': [[[656, 1], [630, 4], [624, 25], [604, 25], [592, 40], [582, 60], [570, 80], [560, 95], [556, 128], [622, 128], [634, 110], [647, 95], [654, 82], [660, 60], [670, 30], [670, 18]]], 'holes': [[[604, 12], [550, 12], [550, 38], [577, 40], [604, 30]]]},
+    'divine-land/wingsML': {'method': 'poly', 'refine': 5, 'polys': [[[355, 408], [362, 410], [385, 435], [398, 440], [410, 445], [425, 448], [440, 460], [450, 470], [455, 490], [452, 505], [448, 520], [420, 520], [395, 505], [372, 488], [360, 470], [352, 455], [355, 440], [358, 425]]]},
+    'divine-land/wingsMR': {'method': 'poly', 'refine': 5, 'polys': [[[665, 408], [658, 410], [635, 435], [622, 440], [610, 445], [595, 448], [580, 460], [570, 470], [565, 490], [568, 505], [572, 520], [600, 520], [625, 505], [648, 488], [660, 470], [668, 455], [665, 440], [662, 425]]]},
+    'divine-portrait/wingsOL': {'method': 'poly', 'refine': 5, 'polys': [[[143, 107], [150, 110], [160, 125], [172, 140], [180, 155], [184, 170], [183, 200], [180, 232], [165, 232], [150, 225], [140, 210], [132, 190], [130, 160], [133, 130], [138, 115]]]},
+    'divine-portrait/wingsOR': {'method': 'poly', 'refine': 5, 'polys': [[[317, 107], [310, 110], [300, 125], [288, 140], [280, 155], [276, 170], [277, 200], [280, 232], [295, 232], [310, 225], [320, 210], [328, 190], [330, 160], [327, 130], [322, 115]]]},
+    'divine-portrait/wingsML': {'method': 'poly', 'refine': 5, 'polys': [[[148, 718], [155, 725], [165, 745], [175, 765], [183, 785], [187, 800], [188, 830], [185, 860], [172, 865], [158, 855], [145, 840], [135, 820], [130, 800], [132, 770], [136, 745], [142, 728]]]},
+    'divine-portrait/wingsMR': {'method': 'poly', 'refine': 5, 'polys': [[[312, 718], [305, 725], [295, 745], [285, 765], [277, 785], [273, 800], [272, 830], [275, 860], [288, 865], [302, 855], [315, 840], [325, 820], [330, 800], [328, 770], [324, 745], [318, 728]]]},
+    # Divine: the floor mosaics' inner suns turn (discs inside their rings); clouds drift in front of the right one.
+    'divine-land/sun': {'bg': [[428, 218, 458, 243], [562, 216, 596, 247]], 'max_hole': 200},
+    'divine-portrait/sun': {'method': 'disc', 'center': [232, 512], 'radius': 74},
+    'divine-land/sunL': {'method': 'disc', 'center': [186, 288], 'radius': 45},
+    'divine-land/sunR': {'method': 'disc', 'center': [835, 291], 'radius': 45,
+                         'cover': {'area': [785, 240, 890, 340], 'hsv': [[0, 28, 35, 120, 232, 255]]}},
     'ice-age-portrait/skull': {'method': 'poly', 'polys': [[[40.6, 13], [51, 16.75], [61, 25.5], [59, 38], [70, 49], [73.75, 55], [85, 59], [98.75, 60.5], [104, 55.5], [105, 48], [100, 41.75], [92, 36], [102.5, 39], [107.5, 45.5], [108, 55.5], [102.5, 63], [90, 64], [77, 62], [78, 70], [79, 83], [77.5, 93], [69, 96], [60, 93], [56, 83], [55, 64], [45, 58], [33.75, 54], [32.5, 44], [27.5, 29], [28.75, 21.75], [35, 15.5]]],
                                'holes': [[[61, 67], [72, 68], [74, 83], [71, 90], [65, 92], [61, 85]]]},
     'ice-age-portrait/spear2': {'method': 'poly', 'polys': [[[99, 955], [98, 966], [90, 976], [62, 1008], [57, 1016], [53, 1013], [55, 1006], [83, 975], [87, 966], [94, 958]]]},
@@ -59,7 +78,7 @@ HINTS = {
 # Foliage that ripples (warp layers with a mask): cut by colour inside the layer's box, per board,
 # then cleaned up (closed, specks dropped, pinholes filled). 'hsv': [[h0, h1, s0, s1, v0, v1]...]
 # in OpenCV units (h 0..180, wraps when h0 > h1); 'exclude': boxes that are not foliage.
-GREEN = [[25, 95, 60, 255, 35, 255]]
+GREEN = [[25, 80, 60, 255, 35, 255]]
 ROSES = [[170, 8, 110, 255, 70, 255], [35, 95, 60, 255, 40, 255]]
 KELP = [[18, 40, 70, 255, 20, 170]]
 CLOAK = [[95, 135, 25, 255, 25, 210], [170, 10, 90, 255, 30, 200]]
@@ -296,6 +315,8 @@ def pack(items):
     for iid, it in items.items():
         tiles.append((iid, 'obj', it['obj']))
         tiles.append((iid, 'patch', it['patch']))
+        if 'cover' in it:
+            tiles.append((iid, 'cover', it['cover']))
     tiles.sort(key=lambda t: -t[2].shape[0])
     width = 1024
     x = y = shelf = 0
@@ -342,6 +363,15 @@ def main():
                 if not fol:
                     sys.exit(f'{key}/{iid}: a foliage warp needs a FOLIAGE entry')
             r = cut(img, box, matter, HINTS.get(f'{key}/{iid}', {}), layer, fol, key, iid)
+            if r and HINTS.get(f'{key}/{iid}', {}).get('cover'):
+                # Scenery painted in front of the object (a cloud across a sun) stays in front of it.
+                c = HINTS[f'{key}/{iid}']['cover']
+                cm = hsv_cut(img, rect(c['area'], *img.shape[:2]), c['hsv'], close=1, min_area=20, hole=30)
+                ys, xs = np.nonzero(cm)
+                bx0, by0, bx1, by1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+                ca = cv2.GaussianBlur(cm.astype(np.float32), (3, 3), 0.7)[by0:by1, bx0:bx1]
+                r['cover'] = np.dstack([img[by0:by1, bx0:bx1], (np.maximum(ca, cm[by0:by1, bx0:bx1]) * 255).astype(np.uint8)])
+                r['cover_box'] = [int(bx0), int(by0), int(bx1), int(by1)]
             if r:
                 items[iid] = r
             else:
@@ -352,7 +382,12 @@ def main():
         atlas, pos = pack(items)
         rel = f'art/boards-fx/objects/{key}.png'
         cv2.imwrite(os.path.join(ROOT, rel), atlas, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        manifest[key] = {'src': rel, 'items': {iid: {'box': it['box'], 'obj': list(pos[(iid, 'obj')]), 'patch': list(pos[(iid, 'patch')])} for iid, it in items.items()}}
+        manifest[key] = {'src': rel, 'items': {}}
+        for iid, it in items.items():
+            e = {'box': it['box'], 'obj': list(pos[(iid, 'obj')]), 'patch': list(pos[(iid, 'patch')])}
+            if 'cover' in it:
+                e['cover'] = {'box': it['cover_box'], 'at': list(pos[(iid, 'cover')])}
+            manifest[key]['items'][iid] = e
         print(f'{key}: {len(items)} objects')
         if a.preview:
             os.makedirs(os.path.join(a.preview, 'masks'), exist_ok=True)
