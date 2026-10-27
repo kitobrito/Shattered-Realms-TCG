@@ -2206,75 +2206,86 @@ function renderMenu() {
   const ready = picked.length === pickNeeded();
   const fusion = format !== 'single' && ready ? fusionFor(picked) : null;
   galleryOrder = fusion ? [fusion.id] : []; // the full-size view holds just this card
-  // A floating slab per realm, down both sides like a fighting game's character select.
-  const slab = (f, k) => {
+  // The realm list (left): every realm as a pill with its hero medallion, grouped by deck type.
+  const GROUP_ICON = { Aggro: 'swords', Swarm: 'swarm', Midrange: 'shield', Tempo: 'bolt', Control: 'crown', Attrition: 'hourglass' };
+  const medal = (f, cls = '') => {
     const art = heroArtOf(f);
+    return `<span class="m2-medal ${cls}" style="--fc:${fx.factionColor(f)}">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>`;
+  };
+  const realmAttr = (f, extra = '') => (open.includes(f)
+    ? `data-faction="${esc(f)}" ${extra} title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}"`
+    : `data-sealed="${esc(f)}" title="${esc(f)} · opens as you play"`);
+  const row = (f) => {
     const on = picked.includes(f);
     const sealed = !open.includes(f);
-    const attr = sealed ? `data-sealed="${esc(f)}" title="${esc(f)} · opens as you play"` : `data-faction="${esc(f)}" title="${esc(f)}${FACTION_INFO[f] ? ` · ${esc(FACTION_INFO[f].style)}` : ''}"`;
-    return `<button class="slab f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${attr} style="--fc:${fx.factionColor(f)};--i:${k}">
-      <span class="slab-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[f] ?? '✦'}</b>`}</span>
-      <span class="slab-name ${f.length >= 13 ? 'long' : ''}">${esc(f)}</span>${on ? '<span class="slab-check">✓</span>' : sealed ? '<i class="slab-lock">🔒</i>' : ''}</button>`;
+    return `<button class="m2-realm slab f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${realmAttr(f)} style="--fc:${fx.factionColor(f)}">
+      <span class="slab-face">${medal(f)}</span><span class="m2-rname">${esc(f)}</span>${on ? '<i class="m2-check">✓</i>' : sealed ? '<i class="m2-lock">🔒</i>' : ''}</button>`;
   };
   const groups = deckGroups(playable);
-  let k = 0;
-  const column = (gs) => gs.map((g) => `<div class="sel-group" title="${esc(g.blurb)}"><h4>${esc(g.name)}</h4>${g.factions.map((f) => slab(f, k++)).join('')}</div>`).join('');
-  // The centre stage: the pair's fused hero (a mystery until played), or the one realm's hero.
-  const mini = (f, side) => `<div class="stage-mini ${side} f-${fslug(f)}" style="--fc:${fx.factionColor(f)}"><img src="${heroArtOf(f) ?? ''}" alt=""><span>${esc(f)}</span></div>`;
+  const list = groups.map((g) => `<div class="m2-group" title="${esc(g.blurb)}"><h4>${icon(GROUP_ICON[g.name] ?? 'flame')}<span>${esc(g.name)}</span></h4>${g.factions.map(row).join('')}</div>`).join('');
+  // Phone: one row of realm medallions per pick (Faction 1, Faction 2).
+  const strip = (slot) => `<div class="m2-strip"><h4>${pickNeeded() === 1 ? 'Realm' : `Faction ${slot + 1}`}</h4><div class="m2-strip-row">${playable.map((f) => {
+    const on = picked[slot] === f;
+    return `<button class="m2-chip ${on ? 'on' : ''} ${open.includes(f) ? '' : 'sealed'}" ${realmAttr(f, `data-slot="${slot}"`)}>${medal(f)}<small>${esc(f)}</small>${on ? '<i class="m2-check">✓</i>' : ''}</button>`;
+  }).join('')}</div></div>`;
+  // The centre: the pair's fused hero (a mystery until played), or the one realm's hero.
+  const mini = (f, side) => `<div class="stage-mini m2-mini ${side} f-${fslug(f)}" style="--fc:${fx.factionColor(f)}">${medal(f)}<span>${esc(f)}</span></div>`;
   let portrait;
   if (format === 'single' && picked.length === 1) {
-    portrait = `<div class="stage-img">${heroArtOf(picked[0]) ? `<img src="${heroArtOf(picked[0])}" alt="">` : ''}</div>`;
+    portrait = `<div class="stage-img">${heroArtOf(picked[0]) ? `<img src="${heroArtOf(picked[0])}" alt="">` : ''}</div>${mini(picked[0], 'l')}`;
   } else if (ready && fusionHeroPath(picked) && heroRevealed(picked)) {
     portrait = `<div class="stage-img fused">${livingPortraitHTML(artSrc(fusionHeroPath(picked)))}</div>${mini(picked[0], 'l')}${mini(picked[1], 'r')}`;
   } else {
     portrait = `<div class="stage-img mystery ${ready ? 'ready' : ''}"><i>?</i><small>${ready ? 'Play a match to reveal your hero' : `Pick ${pickNeeded() - picked.length} more`}</small></div>${picked[0] ? mini(picked[0], 'l') : ''}${picked[1] ? mini(picked[1], 'r') : ''}`;
   }
-  const stageName = picked.length ? picked.map(esc).join(' <i>+</i> ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`;
+  const title = picked.length ? picked.map(esc).join(' <i>+</i> ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`;
+  const sets = picked.map((f) => EXPANSION_NAMES[f]).filter(Boolean);
+  const info = `
+    <div class="m2-info-head">${picked.map((f, i) => `${i ? '<i class="m2-plus">+</i>' : ''}${medal(f, 'sm')}`).join('')}<h2>${title}</h2></div>
+    ${fusion ? `<button class="m2-ribbon" data-zoom="${fusion.id}" title="See the Fusion card">Fusion: <b>${esc(fusion.name)}</b></button>` : ''}
+    ${ready && format !== 'single' ? synergyHTML(picked) : ready && FACTION_INFO[picked[0]] ? `<p class="m2-about">${esc(FACTION_INFO[picked[0]].summary)}</p>` : ''}
+    <div class="m2-deck">${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}</div>
+    ${ready ? `<button class="m2-guide" data-act="guide"><span>${sets.length ? esc(sets.join(' · ')) : 'What these realms do'}</span><b>Realm guide ${icon('chevron')}</b></button>` : ''}`;
+  const cornerStyle = `--c1:${picked[0] ? fx.factionColor(picked[0]) : '#8a6cff'};--c2:${picked[1] ? fx.factionColor(picked[1]) : picked[0] ? fx.factionColor(picked[0]) : '#ffd25a'}`;
   app.innerHTML = `
-    <div class="menu tavern select-screen">
-      <aside class="sel-col sel-left">${column(groups.filter((_, i) => i % 2 === 0))}</aside>
-      <main class="sel-center">
-        <header class="sel-title">
-          <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-          <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
-        </header>
-        <div class="sel-head">
+    <div class="menu tavern select-screen m2">
+      <header class="m2-top">
+        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
+        <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
+        <div class="m2-toggle-row">
           <span class="pick-count">${picked.length}/${pickNeeded()}</span>
-          ${pairUnlocked() ? `<div class="format-toggle">
+          ${pairUnlocked() ? `<div class="format-toggle m2-toggle">
             <button data-act="formatPair" class="${format === 'pair' ? 'on' : 'ghost'}">Two factions</button>
             <button data-act="formatSingle" class="${format === 'single' ? 'on' : 'ghost'}">One faction</button>
           </div>` : ''}
         </div>
         ${progress ? `<div class="journey-line"><span>${esc(progress)}</span><button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>` : ''}
-        <section class="stage" style="--c1:${picked[0] ? fx.factionColor(picked[0]) : '#8a6cff'};--c2:${picked[1] ? fx.factionColor(picked[1]) : picked[0] ? fx.factionColor(picked[0]) : '#ffd25a'}">
-          <div class="stage-portrait">${portrait}</div>
-          <div class="stage-side">
-          <h2 class="stage-name">${stageName}</h2>
-          <div class="stage-info">
-            ${fusion ? `<button class="ghost ts-fusion-btn" data-zoom="${fusion.id}" title="See the Fusion card">🌀 Fusion: <b>${esc(fusion.name)}</b></button>` : ''}
-            ${ready && format !== 'single' ? synergyHTML(picked) : ''}
-            ${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}
-            ${ready ? `<button data-act="guide" class="ghost ts-guide-btn">${icon('book')} Realm guide</button>` : ''}
-          </div>
-          </div>
-        </section>
-        <nav class="ts-actions sel-actions">
-          <div class="sel-play-row">
-            <button data-act="ai" class="ts-play play-art" aria-label="Play vs AI"><img class="pa-img" src="art/ui/play-button.png" alt="" draggable="false"><i class="pa-glow"></i><i class="pa-shine"></i><span class="pa-sparks">${'<b></b>'.repeat(8)}</span><small>vs AI</small></button>
-            ${difficultySliderHTML()}
-          </div>
-          <div class="ts-row">
-            ${BUILD.online ? '<button data-act="online">⚔️ Play online</button>' : ''}
-            <button data-act="hotseat">${icon('players')} Hot-seat</button>
-            ${saved ? '<button data-act="continue">↻ Continue</button>' : ''}
-            <button data-act="tutorial" class="ghost ${tutorialDone() ? '' : 'new-player'}">🎓 Tutorial${tutorialDone() ? '' : ' <small>New? Start here</small>'}</button>
-            <button data-act="howto" class="ghost">${icon('book')} How to play</button>
-            <button data-act="gallery" class="ghost"><img class="btn-icon" src="art/ui/icon-new-cards.png" alt=""> Collection</button>
-            <button data-act="settings" class="ghost">${icon('gear')} Settings</button>
-          </div>
-        </nav>
-      </main>
-      <aside class="sel-col sel-right">${column(groups.filter((_, i) => i % 2 === 1))}</aside>
+      </header>
+      <aside class="m2-panel m2-list">${list}</aside>
+      <section class="m2-stage stage" style="${cornerStyle}">
+        <div class="m2-frame"><i class="m2-gem t"></i><i class="m2-gem b"></i><div class="stage-portrait">${portrait}</div></div>
+      </section>
+      <aside class="m2-panel m2-info">${info}</aside>
+      <div class="m2-strips">${strip(0)}${pickNeeded() > 1 ? strip(1) : ''}</div>
+      <nav class="m2-bar">
+        ${BUILD.online ? `<button data-act="online" class="m2-play gold">${icon('swords')}<span>Play online</span></button>` : ''}
+        <button data-act="hotseat" class="m2-play">${icon('players')}<span>Hot seat</span></button>
+        <button data-act="ai" class="m2-play ${BUILD.online ? '' : 'gold'}">${icon('robot')}<span>Play vs AI</span></button>
+        ${saved ? `<button data-act="continue" class="m2-play">↻<span>Continue</span></button>` : ''}
+        <div class="m2-diff">${difficultySliderHTML()}</div>
+      </nav>
+      <footer class="m2-foot">
+        <button data-act="tutorial" class="m2-link ${tutorialDone() ? '' : 'new-player'}">${icon('cap')}<span><b>Tutorial</b><small>New? Start here</small></span></button>
+        <button data-act="howto" class="m2-link">${icon('book')}<span><b>How to play</b><small>Learn the basics</small></span></button>
+        <button data-act="gallery" class="m2-link">${icon('cards')}<span><b>Collection</b><small>View your cards</small></span></button>
+        <button data-act="settings" class="m2-link">${icon('gear')}<span><b>Settings</b><small>Game &amp; account</small></span></button>
+      </footer>
+      <nav class="m2-tabbar">
+        <button data-act="gallery">${icon('cards')}<span>Collection</span></button>
+        <button data-act="ai" class="m2-tab-play">${icon('play')}<span>Play</span></button>
+        <button data-act="howto">${icon('book')}<span>Guide</span></button>
+        <button data-act="settings">${icon('gear')}<span>Settings</span></button>
+      </nav>
     </div>
     ${guideOpen && ready ? `<div class="overlay guide-overlay"><div class="guide-backdrop" data-act="closeGuide"></div><div class="guide-panel">
       <button class="ghost guide-close" data-act="closeGuide">✕</button>${factionGuideHTML(picked)}
@@ -2282,6 +2293,11 @@ function renderMenu() {
     ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
     ${needsFirstPick() ? firstPickHTML() : ''}`;
+  // Phones: bring each strip's picked realm into view.
+  app.querySelectorAll('.m2-strip-row').forEach((r) => {
+    const on = r.querySelector('.m2-chip.on');
+    if (on) r.scrollLeft = on.offsetLeft - r.offsetLeft - (r.clientWidth - on.offsetWidth) / 2;
+  });
 }
 
 // A brand-new player's first screen: choose three of the six easiest realms to start with.
@@ -3447,6 +3463,16 @@ app.addEventListener('click', (e) => {
   const chip = e.target.closest('[data-faction]');
   if (chip && (screen === 'menu' || (screen === 'online' && lobbyEditable()))) {
     const f = chip.dataset.faction;
+    // Phone strips: each row fills its own slot (Faction 1, Faction 2).
+    if (chip.dataset.slot != null && pickNeeded() > 1) {
+      const slot = Number(chip.dataset.slot);
+      const next = [...picked];
+      if (next[slot] === f) next.splice(slot, 1);
+      else { const other = next.indexOf(f); if (other >= 0) next[other] = next[slot]; next[slot] = f; }
+      picked = next.filter(Boolean).slice(0, pickNeeded());
+      afterRender.push(() => mfx.realmPicked(app, f));
+      return render();
+    }
     const adding = !picked.includes(f);
     picked = adding ? [...picked, f].slice(-pickNeeded()) : picked.filter((x) => x !== f);
     if (adding) afterRender.push(() => mfx.realmPicked(app, f));
