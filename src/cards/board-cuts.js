@@ -150,20 +150,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Aliens": {
-   "plate": "art/boards-v2/aliens-plate.jpg",
-   "cuts": {
-    "2": {
-     "src": "art/board-props/aliens-land-2.png",
-     "box": [
-      17,
-      477,
-      78,
-      553
-     ]
-    }
-   }
-  },
   "Bees": {
    "plate": "art/boards-v2/bees-plate.jpg",
    "cuts": {
@@ -379,20 +365,6 @@ export const BOARD_CUTS = {
       812,
       108,
       878
-     ]
-    }
-   }
-  },
-  "Aliens": {
-   "plate": "art/boards-portrait/aliens-plate.jpg",
-   "cuts": {
-    "2": {
-     "src": "art/board-props/aliens-portrait-2.png",
-     "box": [
-      7,
-      832,
-      63,
-      888
      ]
     }
    }

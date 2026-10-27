@@ -5158,3 +5158,7 @@ body.reduced-motion .descent { display: none; }
 }
 /* Ice Age: weathered bone and ivory, frosted on top. */
 .arena.frame-bone { --fr-line: #3a2c1c; --fr-mid: #cdbd9b; --fr-hi: #f4f8ff; }
+/* Acidic: pale cave stone, lit green from above. */
+.arena.frame-acid { --fr-line: #142208; --fr-mid: #9fa88c; --fr-hi: #c8ff6a; }
+/* Aliens: dark chitin with a bioluminescent teal edge. */
+.arena.frame-chitin { --fr-line: #04161a; --fr-mid: #2c4a4c; --fr-hi: #5affe8; }

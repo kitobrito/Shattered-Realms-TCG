@@ -12,10 +12,13 @@
 //   mask       a light mask cut from the painting (tools/circle-fx-masks.py), drawn glowing:
 //              anim pulse | flicker | wave (a band of light travelling along it) | seq (runes
 //              lighting in turn) | drift (the glow wavers about, for spirits)
+//   crawlers   many small painted creatures (bees on the comb), each wandering and twitching
+//              a little on its own; a tap nearby makes them scurry
 //   echo       a feathered copy of part of the painting that moves (sway, bob, rock, breathe):
 //              ghosts drifting, hands clawing, boulders straining, flames licking
 //   particles  embers, ash, motes, wisps, rain, bubbles, petals, sparks, glints (sampled from a
-//              mask, so coins glint only on coins), drips, flies, smoke, snow (drifting flakes at
+//              mask, so coins glint only on coins), drips, flies, smoke, bees (striped, wings
+//              blurring, a shadow below; they wander and turn), snow (drifting flakes at
 //              three depths, nearer ones bigger and faster, pushed along by the gusts)
 //   fog        soft banks of mist drifting along an edge
 //   rays       shafts of light, breathing
@@ -154,7 +157,7 @@ export async function startBoardFx(host, key, orient) {
   const maskInfo = (circle ? CIRCLE_MASKS : BOARD_MASKS)[`${key}-${orient}`] ?? {};
   const file = circle ? `circle${key}` : key;
   const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
-  const needBoard = def.layers.some((l) => l.type === 'echo');
+  const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers');
   const usedMasks = new Set(def.layers.flatMap((l) => [l.mask, l.area?.mask, l.flashMask].filter(Boolean)));
   const masks = {};
   await Promise.all([...usedMasks].map(async (name) => {
@@ -193,6 +196,7 @@ export async function startBoardFx(host, key, orient) {
   const layers = def.layers.map((l, i) => {
     const st = { ...l, i, seed: Math.random() * 100, parts: [], acc: 0, kick: -99, next: rand(...(l.every ?? [3, 8])) };
     if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6);
+    if (l.type === 'crawlers') st.items = l.boxes.map((b) => ({ box: b, crop: featherCrop(board, b, [IW, IH], l.feather ?? 4), seed: Math.random() * 100, kick: -99 }));
     if (l.type === 'sprites' && masks[l.mask]?.parts) {
       // Each part: its box, its spot in the atlas, its root (bottom centre) and its own rhythm.
       st.parts = masks[l.mask].parts.map(([x0, y0, x1, y1, ax, ay]) => ({
@@ -273,6 +277,7 @@ export async function startBoardFx(host, key, orient) {
     const sp = st.speed ?? 1;
     if (k === 'ember') { p.vx = rand(-4, 4) * sp; p.vy = rand(-26, -12) * sp; }
     else if (k === 'ash') { p.vx = rand(-5, 5) * sp; p.vy = rand(6, 16) * sp; }
+    else if (k === 'bee') { const a = rand(0, TAU), v = rand(22, 42) * sp; p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v; p.turn = rand(-2, 2); }
     else if (k === 'snow') { p.z = pick([0.45, 0.7, 1]); p.size *= p.z; p.vx = (st.drift ?? 14) * p.z * rand(0.7, 1.3) * sp; p.vy = rand(-2, 6) * p.z * sp; }
     else if (k === 'mote') { p.vx = rand(-3, 3) * sp; p.vy = rand(-4, 2) * sp; }
     else if (k === 'wisp') { p.vx = rand(-3, 3) * sp; p.vy = rand(-14, -6) * sp; }
@@ -312,6 +317,16 @@ export async function startBoardFx(host, key, orient) {
       if (k === 'wisp' || k === 'mote' || k === 'smoke' || k === 'petal') p.vx += wave(t * 0.8, p.seed) * 6 * dt;
       if (k === 'ember') { p.vx += wave(t * 1.4, p.seed) * 18 * dt; }
       if (k === 'spark') p.vy += 60 * dt;
+      if (k === 'bee') {
+        // Wander: the heading drifts, and they turn back toward the middle of their area.
+        const a = st.area?.length ? st.area : [0, 0, IW, IH];
+        p.turn += rand(-6, 6) * dt; p.turn = Math.max(-3, Math.min(3, p.turn));
+        let h = Math.atan2(p.vy, p.vx) + p.turn * dt;
+        const cx = (a[0] + a[2]) / 2, cy = (a[1] + a[3]) / 2;
+        if (p.x < a[0] || p.x > a[2] || p.y < a[1] || p.y > a[3]) h = Math.atan2(cy - p.y, cx - p.x);
+        const v = Math.hypot(p.vx, p.vy);
+        p.vx = Math.cos(h) * v; p.vy = Math.sin(h) * v;
+      }
       if (k === 'snow') {
         // Flakes wander, and a passing gust shoves them along (the nearest ones the most).
         const g = W0 ? gustAt(p.x, p.y) : 0;
@@ -328,7 +343,7 @@ export async function startBoardFx(host, key, orient) {
   function drawParticles(st, t) {
     const k = st.kind;
     const c = st.color ?? [255, 200, 120];
-    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' ? 'source-over' : 'lighter');
+    ctx.globalCompositeOperation = st.blend ?? (k === 'ash' || k === 'smoke' || k === 'fly' || k === 'petal' || k === 'snow' || k === 'bee' ? 'source-over' : 'lighter');
     for (const p of st.parts) {
       const life = p.age / p.life;
       const fade = Math.min(1, p.age / 0.3) * (1 - life);
@@ -356,6 +371,23 @@ export async function startBoardFx(host, key, orient) {
         ctx.globalAlpha = fade * (st.alpha ?? 0.25);
         ctx.drawImage(softSprite(c, 64), x - g, y - g, g * 2, g * 2);
         ctx.globalAlpha = 1;
+      } else if (k === 'bee') {
+        // Shadow on the ground, wings a flicker of pale blur, then the striped body.
+        const ang = Math.atan2(p.vy, p.vx);
+        const a = Math.min(1, p.age / 0.4, (p.life - p.age) / 0.4);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+        ctx.globalAlpha = a * 0.25; ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.ellipse(r * 2, r * 3, r * 1.3, r * 0.7, 0, 0, TAU); ctx.fill();
+        ctx.globalAlpha = a * (0.45 + 0.35 * Math.sin(t * 90 + p.seed));
+        ctx.fillStyle = '#eef6ff';
+        ctx.beginPath(); ctx.ellipse(-r * 0.1, -r * 0.9, r * 0.9, r * 0.5, -0.4, 0, TAU); ctx.ellipse(-r * 0.1, r * 0.9, r * 0.9, r * 0.5, 0.4, 0, TAU); ctx.fill();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = rgba(c, 1);
+        ctx.beginPath(); ctx.ellipse(0, 0, r * 1.3, r * 0.65, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = rgba(st.stripe ?? [30, 20, 10], 1);
+        ctx.fillRect(-r * 0.5, -r * 0.62, r * 0.32, r * 1.24); ctx.fillRect(r * 0.1, -r * 0.6, r * 0.3, r * 1.2);
+        ctx.beginPath(); ctx.ellipse(-r * 1.15, 0, r * 0.35, r * 0.3, 0, 0, TAU); ctx.fill();
+        ctx.restore(); ctx.globalAlpha = 1;
       } else if (k === 'snow') {
         // A soft flake with a faint shadow on the ground below it (further below the nearer it is).
         const a = fade * (st.alpha ?? 0.9);
@@ -509,6 +541,24 @@ export async function startBoardFx(host, key, orient) {
       ctx.drawImage(m.img, p.ax, p.ay, p.w, p.h, (p.x0 - p.px) * SX, (p.y0 - p.py) * SY, p.w * SX, p.h * SY);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  // ---- Crawlers: small painted creatures wandering on the spot ----
+  function drawCrawlers(st, t) {
+    const amp = st.amp ?? 1.6;
+    for (const it of st.items) {
+      const k = Math.max(kicked(st, t, 1.5), Math.max(0, 1 - (t - it.kick) / 1.5));
+      const a = amp * (1 + k * 2);
+      // Mostly still, then a little scuttle: the wander only runs part of the time.
+      const go = Math.max(0, Math.sin(t * 0.55 + it.seed)) ** 2 + k;
+      const dx = wave(t * 0.9 * (1 + k), it.seed) * a * go, dy = wave(t * 0.8 * (1 + k), it.seed + 5) * a * go;
+      const rot = wave(t * 1.3, it.seed + 9) * 0.12 * go;
+      const [x0, y0, x1, y1] = it.box, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      ctx.save();
+      ctx.translate((cx + dx) * SX, (cy + dy) * SY); ctx.rotate(rot);
+      ctx.drawImage(it.crop, (x0 - cx) * SX, (y0 - cy) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
+      ctx.restore();
+    }
   }
 
   // ---- Echoes ----
@@ -872,6 +922,7 @@ export async function startBoardFx(host, key, orient) {
     for (const st of layers) {
       switch (st.type) {
         case 'sprites': drawSprites(st, t); break;
+        case 'crawlers': drawCrawlers(st, t); break;
         case 'mask': drawMask(st, t); break;
         case 'echo': drawEcho(st, t); break;
         case 'particles': stepParticles(st, dt, t); drawParticles(st, t); break;
@@ -901,8 +952,9 @@ export async function startBoardFx(host, key, orient) {
     const t = (performance.now() - start) / 1000;
     if (p.sound) play(p.sound);
     for (const id of [].concat(p.kick ?? [])) { const l = layers.find((q) => q.id === id); if (l) l.kick = t; }
-    // Grass and twigs right around the tap rustle.
+    // Grass and twigs right around the tap rustle; creatures near it scurry.
     for (const l of layers) if (l.type === 'sprites') for (const q of l.parts) if (Math.hypot(q.px - x, q.py - y) < (p.rustle ?? 40)) q.kick = t;
+    for (const l of layers) if (l.type === 'crawlers') for (const q of l.items) if (Math.hypot((q.box[0] + q.box[2]) / 2 - x, (q.box[1] + q.box[3]) / 2 - y) < (p.rustle ?? 60)) q.kick = t;
     if (p.strike != null) { const l = layers.find((q) => q.id === p.strike); if (l) strike(l, t, l.zones[p.zone ?? 0]); }
     if (p.loose != null) { const l = layers.find((q) => q.id === p.loose); if (l) loose(l, t, l.shooters[p.shooter ?? 0]); }
     if (p.flare) {

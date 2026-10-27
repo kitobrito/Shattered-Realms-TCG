@@ -41,4 +41,39 @@ SPEC = {
         'hands': ['ochre', [[384, 592, 459, 640], [368, 940, 440, 990]], {'grow': 1, 'blur': 0.8, 'show': [0, 255, 0]}],
         'rock': ['stone', [[372, 584, 459, 664], [356, 930, 448, 1010]], {'exclude': [[384, 592, 459, 640], [368, 940, 440, 990]], 'show': [120, 120, 255]}],
     },
+    # ---- Acidic: an acid cavern ----
+    'acidic-land': {
+        'pools': ['acid', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'glow': ['acidglow', FULL_L, {'blur': 1, 'show': [255, 255, 0]}],
+        'crystal': ['acidglow', [[880, 400, 1000, 548]], {'blur': 0.6, 'show': [255, 0, 255]}],
+        'flask': ['acid', [[40, 10, 122, 126]], {'blur': 0.6, 'show': [0, 255, 255]}],
+    },
+    'acidic-portrait': {
+        'pools': ['acid', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'glow': ['acidglow', FULL_P, {'blur': 1, 'show': [255, 255, 0]}],
+        'crystal': ['acidglow', [[368, 556, 436, 694], [356, 886, 436, 1014]], {'blur': 0.6, 'show': [255, 0, 255]}],
+        'flask': ['acid', [[28, 22, 88, 108]], {'blur': 0.6, 'show': [0, 255, 255]}],
+    },
+    # ---- Aliens: a crashed hive ship ----
+    'aliens-land': {
+        'veins': ['biolum', FULL_L, {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [0, 255, 255]}],
+        'bulb': ['bright', [[880, 0, 1024, 95]], {'blur': 0.8, 'show': [255, 255, 0]}],
+        'sac': ['any', [[812, 396, 934, 506]], {'hp': [6, 1, 0.02, 0.12], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    'aliens-portrait': {
+        'veins': ['biolum', FULL_P, {'hp': [4, 1, 0.03, 0.12], 'blur': 0.6, 'show': [0, 255, 255]}],
+        'bulb': ['bright', [[360, 15, 450, 115]], {'blur': 0.8, 'show': [255, 255, 0]}],
+        'sac': ['any', [[312, 846, 436, 974]], {'hp': [6, 1, 0.02, 0.12], 'blur': 1, 'show': [255, 255, 0]}],
+    },
+    # ---- Bees: inside a giant hive ----
+    'bees-land': {
+        'honey': ['honey', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0]}],
+        'comb': ['bright', FULL_L, {'hp': [3, 1, 0.04, 0.12], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[860, 10, 1000, 150]]}],
+        'jar': ['honey', [[48, 440, 128, 548]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'bees-portrait': {
+        'honey': ['honey', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0]}],
+        'comb': ['bright', FULL_P, {'hp': [3, 1, 0.04, 0.12], 'scale': 0.5, 'show': [255, 255, 255], 'exclude': [[330, 10, 450, 150]]}],
+        'jar': ['honey', [[30, 890, 104, 990]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
 }

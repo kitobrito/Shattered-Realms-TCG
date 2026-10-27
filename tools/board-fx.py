@@ -79,6 +79,16 @@ RULES = {
     'stone': lambda h, s, v: (1 - ramp(s, 0.12, 0.25)) * ramp(v, 0.35, 0.55) * (1 - ramp(v, 0.85, 0.95)),
     # ash and soot: dark grey
     'ash': lambda h, s, v: (1 - ramp(s, 0.15, 0.3)) * (1 - ramp(v, 0.25, 0.4)),
+    # glowing green acid and slime
+    'acid': lambda h, s, v: hue_near(h, 105, 40) * ramp(s, 0.45, 0.7) * ramp(v, 0.5, 0.75),
+    # the brightest acid (glowing puddles, lit slime)
+    'acidglow': lambda h, s, v: hue_near(h, 100, 40) * ramp(s, 0.4, 0.65) * ramp(v, 0.72, 0.92),
+    # bioluminescent teal and cyan
+    'biolum': lambda h, s, v: hue_near(h, 175, 35) * ramp(s, 0.3, 0.55) * ramp(v, 0.55, 0.8),
+    # lit violet and magenta (alien flesh, nebulae, magic)
+    'violet': lambda h, s, v: hue_near(h, 285, 40) * ramp(s, 0.3, 0.55) * ramp(v, 0.45, 0.75),
+    # glossy honey and amber: deep orange, bright
+    'honey': lambda h, s, v: hue_near(h, 34, 16) * ramp(s, 0.65, 0.85) * ramp(v, 0.7, 0.9),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),
