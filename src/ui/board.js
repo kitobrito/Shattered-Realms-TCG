@@ -217,11 +217,9 @@ function portraitHTML(pl) {
   const art = playerHeroArt(pl.factions);
   const second = pl.factions[1] && art === heroArtOf(pl.factions[0]) ? heroArtOf(pl.factions[1]) : null;
   if (!art) return `<div class="portrait-placeholder f-${fslug(pl.factions[0])}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
-  // Each portrait is drawn twice: the scene behind, and the figure (a soft cut-out of the middle)
-  // in front; they drift a little against each other so the hero seems to stand out and breathe.
-  const layers = (src, cls = '') => `<img class="portrait-img ${cls}" src="${src}" alt="" draggable="false">`
-    + `<img class="portrait-img portrait-front ${cls}" src="${src}" alt="" draggable="false" aria-hidden="true">`;
-  if (pl.factions.length === 2 && !second) return layers(art, 'fused') + '<i class="portrait-glint"></i>';
+  // A still picture: hero portraits don't move.
+  const layers = (src, cls = '') => `<img class="portrait-img ${cls}" src="${src}" alt="" draggable="false">`;
+  if (pl.factions.length === 2 && !second) return layers(art, 'fused');
   if (!second || second === art) return layers(art);
   return layers(art, 'split-a') + layers(second, 'split-b') + '<i class="portrait-seam"></i>';
 }

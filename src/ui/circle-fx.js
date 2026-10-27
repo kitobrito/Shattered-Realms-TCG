@@ -14,13 +14,21 @@
 //   flow       the painted liquid itself moves: lava, acid, water or honey slides along `dir`
 //              inside its own shape (two copies a half cycle apart cross-fade, so it never
 //              jumps), with an optional brightening so molten things seem to churn
-//   warp       a patch of the painting (foliage, kelp, banners) bends in waves out from its
-//              root edge (`base`), slice by slice, so it ripples without tearing; clipped to a
-//              mask so only the leaves move; gusts bend it further
+//   warp       foliage, kelp or a banner bends in waves out from its root edge (`base`), slice
+//              by slice, so it ripples without tearing; gusts bend it further. The slices come
+//              from the foliage's own cut-out (below), so no background ripples with it
 //   crawlers   many small painted creatures (bees on the comb), each wandering and twitching
 //              a little on its own; a tap nearby makes them scurry
-//   echo       a feathered copy of part of the painting that moves (sway, bob, rock, breathe):
-//              ghosts drifting, hands clawing, boulders straining, flames licking
+//   echo       a painted object that moves (sway, bob, rock, breathe, spin; spin with
+//              `tilt: [angle, ratio]` turns a slanted disc in its own plane): ghosts drifting,
+//              hands clawing, boulders straining; or, for an object fused into the painting around
+//              it, shimmer: light pulses through it where it is
+//
+// Things that move (echo, crawlers, warp) are cut out of the painting by
+// tools/board-objects.py (BOARD_OBJECTS): the object alone, and a patch of the board with the
+// object painted out. While an object is moving its patch is drawn where it sits and the object
+// on top, so nothing of the background ever travels with it and no still copy shows behind it.
+// At rest (amp 0 between taps) neither is drawn: the painting itself shows.
 //   particles  embers, ash, motes, wisps, rain, bubbles, petals, sparks, glints (sampled from a
 //              mask, so coins glint only on coins), drips, flies, smoke, bees (striped, wings
 //              blurring, a shadow below; they wander and turn), snow (drifting flakes at
@@ -44,6 +52,7 @@
 // Canvas 2D at 60 fps, device pixel ratio capped at 1.5. Reduced motion: not started.
 
 import { BOARD_MASKS } from '../cards/board-fx-masks.js';
+import { BOARD_OBJECTS } from '../cards/board-objects.js';
 import { BOARD_FX } from './board-fx-defs.js';
 import { play } from './sound.js';
 
@@ -162,9 +171,11 @@ const fxKey = (key) => (typeof key === 'number' ? `circle${key}` : key);
 export const hasBoardFx = (key, orient) => !!BOARD_FX[`${fxKey(key)}-${orient}`];
 export const startCircleFx = (host, n, orient) => startBoardFx(host, n, orient);
 
-export async function startBoardFx(host, key, orient) {
-  const def = BOARD_FX[`${fxKey(key)}-${orient}`];
-  if (!def) return null;
+// opts.only: draw just these layer types (tools/verify-board-objects.mjs checks the moving objects alone).
+export async function startBoardFx(host, key, orient, opts = {}) {
+  const full = BOARD_FX[`${fxKey(key)}-${orient}`];
+  if (!full) return null;
+  const def = opts.only ? { ...full, layers: full.layers.filter((l) => opts.only.includes(l.type)) } : full;
   const [IW, IH] = CIRCLE_SIZE[orient];
   const maskInfo = BOARD_MASKS[`${fxKey(key)}-${orient}`] ?? {};
   const file = fxKey(key);
@@ -178,6 +189,9 @@ export async function startBoardFx(host, key, orient) {
     masks[name] = { ...info, img: await loadImage(info.src) };
   }));
   const board = needBoard ? await loadImage(boardSrc) : null;
+  // The moving objects' cut-outs and patches (one atlas per board).
+  const objInfo = BOARD_OBJECTS[`${fxKey(key)}-${orient}`];
+  const objAtlas = objInfo ? await loadImage(objInfo.src) : null;
   // The clean plate goes under everything once the sprites cut from it are moving.
   const plate = maskInfo._plate && def.layers.some((l) => l.type === 'sprites') ? await loadImage(maskInfo._plate) : null;
 
@@ -207,8 +221,21 @@ export async function startBoardFx(host, key, orient) {
   // ---- Per-layer state ----
   const layers = def.layers.map((l, i) => {
     const st = { ...l, i, seed: Math.random() * 100, parts: [], acc: 0, kick: -99, next: rand(...(l.every ?? [3, 8])) };
-    if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6, l.round);
-    if (l.type === 'crawlers') st.items = l.boxes.map((b) => ({ box: b, crop: featherCrop(board, b, [IW, IH], l.feather ?? 4), seed: Math.random() * 100, kick: -99 }));
+    if (l.type === 'echo') {
+      st.obj = objInfo?.items[l.id];
+      if (!st.obj) st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6, l.round);
+    }
+    if (l.type === 'crawlers') {
+      st.items = l.boxes.map((b, k) => {
+        const obj = objInfo?.items[`${l.id ?? `crawl${i}`}.${k}`];
+        return { box: b, obj, crop: obj ? null : featherCrop(board, b, [IW, IH], l.feather ?? 4), seed: Math.random() * 100, kick: -99 };
+      });
+    }
+    if (l.type === 'warp') {
+      st.obj = objInfo?.items[l.id ?? `warp${i}`];
+      if (st.obj) st.src = { img: objAtlas, x: st.obj.obj[0], y: st.obj.obj[1], box: st.obj.box };
+      else st.src = { img: board, x: l.box[0] * board.naturalWidth / IW, y: l.box[1] * board.naturalHeight / IH, box: l.box, scale: [board.naturalWidth / IW, board.naturalHeight / IH] };
+    }
     if (l.type === 'sprites' && masks[l.mask]?.parts) {
       // Each part: its box, its spot in the atlas, its root (bottom centre) and its own rhythm.
       st.parts = masks[l.mask].parts.map(([x0, y0, x1, y1, ax, ay]) => ({
@@ -628,7 +655,8 @@ export async function startBoardFx(host, key, orient) {
   const warpOff = document.createElement('canvas');
   const warpCtx = warpOff.getContext('2d');
   function drawWarp(st, t) {
-    const [x0, y0, x1, y1] = st.box;
+    const { img, x: ax, y: ay, box, scale } = st.src;
+    const [x0, y0, x1, y1] = box;
     const bw = x1 - x0, bh = y1 - y0;
     const dw = Math.max(1, Math.ceil(bw * SX)), dh = Math.max(1, Math.ceil(bh * SY));
     if (warpOff.width !== dw || warpOff.height !== dh) { warpOff.width = dw; warpOff.height = dh; } else warpCtx.clearRect(0, 0, dw, dh);
@@ -639,22 +667,16 @@ export async function startBoardFx(host, key, orient) {
     const kick = kicked(st, t, 1.6);
     const amp = (st.amp ?? 2.5) * (1 + kick * 1.5);
     const per = st.period ?? 4;
-    const sx = board.naturalWidth / IW, sy = board.naturalHeight / IH;
+    const [sx, sy] = scale ?? [1, 1];
     const dir = W0?.dir ?? 1;
     for (let a = 0; a < span; a += step) {
       // Distance from the root, 0..1: the further out, the more it bends.
       const d = base === 'bottom' ? (span - a) / span : base === 'top' ? a / span : base === 'right' ? (span - a) / span : a / span;
       const g = W0 ? gustAt(vertical ? x0 + a : (x0 + x1) / 2, vertical ? (y0 + y1) / 2 : y0 + a) : 0;
       const off = (Math.sin(TAU * t / per - d * (st.wave ?? 2.2) + st.seed) * amp + g * (st.gustAmp ?? amp * 1.6) * dir) * d ** 1.4;
-      if (vertical) warpCtx.drawImage(board, (x0 + a) * sx, y0 * sy, step * sx, bh * sy, a * SX, off * SY, step * SX + 0.6, dh);
-      else warpCtx.drawImage(board, x0 * sx, (y0 + a) * sy, bw * sx, step * sy, off * SX, a * SY, dw, step * SY + 0.6);
-    }
-    const m = st.mask && masks[st.mask];
-    if (m) {
-      // Only the leaves move: clip to the mask (positioned relative to this patch).
-      warpCtx.globalCompositeOperation = 'destination-in';
-      warpCtx.drawImage(m.img, (m.box[0] - x0) * SX, (m.box[1] - y0) * SY, (m.box[2] - m.box[0]) * SX, (m.box[3] - m.box[1]) * SY);
-      warpCtx.globalCompositeOperation = 'source-over';
+      const n = Math.min(step, span - a);
+      if (vertical) warpCtx.drawImage(img, ax + a * sx, ay, n * sx, bh * sy, a * SX, off * SY, n * SX + 0.6, dh);
+      else warpCtx.drawImage(img, ax, ay + a * sy, bw * sx, n * sy, off * SX, a * SY, dw, n * SY + 0.6);
     }
     ctx.drawImage(warpOff, x0 * SX, y0 * SY, dw, dh);
   }
@@ -672,20 +694,22 @@ export async function startBoardFx(host, key, orient) {
       const [x0, y0, x1, y1] = it.box, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
       ctx.save();
       ctx.translate((cx + dx) * SX, (cy + dy) * SY); ctx.rotate(rot);
-      ctx.drawImage(it.crop, (x0 - cx) * SX, (y0 - cy) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
+      if (it.obj) drawObj(it.obj, -cx, -cy);
+      else ctx.drawImage(it.crop, (x0 - cx) * SX, (y0 - cy) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
       ctx.restore();
     }
   }
 
   // ---- Echoes ----
-  function drawEcho(st, t) {
-    const [x0, y0, x1, y1] = st.box;
+  // Where an echo is now: its offset, turn and scale about its pivot (null when at rest).
+  function echoPose(st, t) {
     const m = st.motion ?? { kind: 'sway', amp: 1.5, period: 5 };
+    if (m.kind === 'shimmer') return null; // lit in place, never moved (drawEcho)
     const kick = kicked(st, t, 1.6);
     const ph = TAU * t / (m.period ?? 5) + (m.phase ?? st.seed);
     // kickAmp: still at rest (amp 0), it only shakes when tapped (a skull rattling).
     const amp = (m.amp ?? 1.5) * (1 + kick * 2.5) + kick * (m.kickAmp ?? 0);
-    if (!amp) return; // nothing moving: the plate already shows it
+    if (!amp) return null; // nothing moving: the painting already shows it
     let dx = 0, dy = 0, rot = 0, sc = 1;
     if (m.kind === 'bob') dy = Math.sin(ph) * amp;
     else if (m.kind === 'drift') { dx = wave(t * (m.speed ?? 0.4), st.seed) * amp; dy = wave(t * (m.speed ?? 0.4) * 0.7, st.seed + 2) * amp * 0.7; }
@@ -694,14 +718,57 @@ export async function startBoardFx(host, key, orient) {
     else if (m.kind === 'spin') rot = t * (m.speed ?? 6) * Math.PI / 180 + kick * 0.6;
     else if (m.kind === 'claw') { dy = -Math.abs(Math.sin(ph)) * amp; rot = Math.sin(ph * 2) * amp * 0.4 * Math.PI / 180; }
     else { rot = Math.sin(ph) * amp * Math.PI / 180; dx = Math.sin(ph) * amp * 0.3; }
-    const pv = m.pivot ?? [(x0 + x1) / 2, (y0 + y1) / 2];
+    const [x0, y0, x1, y1] = st.box;
+    return { dx, dy, rot, sc, tilt: m.tilt, pv: m.pivot ?? [(x0 + x1) / 2, (y0 + y1) / 2] };
+  }
+  // An object's cut-out (or its patch), drawn at its place in the painting, offset by (ox, oy) image px.
+  function drawObj(o, ox, oy, kind = 'obj') {
+    const [x0, y0, x1, y1] = o.box;
+    const [ax, ay] = o[kind];
+    ctx.drawImage(objAtlas, ax, ay, x1 - x0, y1 - y0, (x0 + ox) * SX, (y0 + oy) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
+  }
+  // Before any layer: where an object is moving, the board with it painted out.
+  function drawPatches(t) {
+    if (!objAtlas) return;
+    ctx.globalCompositeOperation = 'source-over';
+    for (const st of layers) {
+      if (st.type === 'echo' && st.obj && echoPose(st, t)) drawObj(st.obj, 0, 0, 'patch');
+      else if (st.type === 'crawlers') for (const it of st.items) { if (it.obj) drawObj(it.obj, 0, 0, 'patch'); }
+      else if (st.type === 'warp' && st.obj) drawObj(st.obj, 0, 0, 'patch');
+    }
+  }
+  function drawEcho(st, t) {
+    if (st.motion?.kind === 'shimmer' && st.obj) {
+      // Joined to the painting around it (a triangle fused into a stairway): it can't move without
+      // tearing the picture, so light pulses through it instead, in place.
+      const m = st.motion;
+      const k = kicked(st, t, 1.6);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = Math.min(1, (m.amp ?? 0.3) * (0.5 + 0.5 * Math.sin(TAU * t / (m.period ?? 4) + st.seed)) + k * 0.5);
+      drawObj(st.obj, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      return;
+    }
+    const p = echoPose(st, t);
+    if (!p) return;
+    const [x0, y0, x1, y1] = st.box;
     ctx.save();
     ctx.globalAlpha = st.alpha ?? 1;
-    ctx.translate(pv[0] * SX + dx * SX, pv[1] * SY + dy * SY);
-    ctx.rotate(rot);
-    ctx.scale(sc, sc);
-    ctx.drawImage(st.crop, (x0 - pv[0]) * SX, (y0 - pv[1]) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
+    ctx.translate(p.pv[0] * SX + p.dx * SX, p.pv[1] * SY + p.dy * SY);
+    if (p.tilt) {
+      // A disc seen at a slant (a galaxy): it turns in its own plane, its outline staying put.
+      const [deg, ratio] = p.tilt;
+      const a = deg * Math.PI / 180;
+      ctx.rotate(a); ctx.scale(1, ratio); ctx.rotate(p.rot); ctx.scale(1, 1 / ratio); ctx.rotate(-a);
+    } else ctx.rotate(p.rot);
+    ctx.scale(p.sc, p.sc);
+    if (st.obj) drawObj(st.obj, -p.pv[0], -p.pv[1]);
+    else ctx.drawImage(st.crop, (x0 - p.pv[0]) * SX, (y0 - p.pv[1]) * SY, (x1 - x0) * SX, (y1 - y0) * SY);
     ctx.restore();
+    // Scenery painted in front of it (a cloud across a sun) stays in front.
+    const c = st.obj?.cover;
+    if (c) ctx.drawImage(objAtlas, c.at[0], c.at[1], c.box[2] - c.box[0], c.box[3] - c.box[1], c.box[0] * SX, c.box[1] * SY, (c.box[2] - c.box[0]) * SX, (c.box[3] - c.box[1]) * SY);
   }
 
   // ---- Fog, rays, glows, flames ----
@@ -1037,6 +1104,7 @@ export async function startBoardFx(host, key, orient) {
     const t = (now - start) / 1000;
     ctx.clearRect(0, 0, W, H);
     if (plate) ctx.drawImage(plate, 0, 0, W, H);
+    drawPatches(t);
     stepWind(dt);
     for (const st of layers) {
       if (st.autoKick) {
@@ -1100,6 +1168,8 @@ export async function startBoardFx(host, key, orient) {
     pause() { running = false; },
     resume() { if (!running) { running = true; prev = performance.now(); } },
     poke, canPoke,
+    // Kick every layer at once (as if each were tapped): for tests.
+    kickAll() { const t = (performance.now() - start) / 1000; for (const l of layers) l.kick = t; },
     canvas,
   };
 }
