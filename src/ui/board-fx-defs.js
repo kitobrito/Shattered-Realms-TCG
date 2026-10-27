@@ -471,4 +471,143 @@ export const BOARD_FX = {
       { area: [310, 240, 459, 700], sound: 'splash', kick: ['river', 'riverFlow'], flare: [200, 240, 255] },
     ],
   },
+
+  // ---- Divine: a temple floating above the clouds -----------------------------------------
+  'divine-land': {
+    wind: { dir: 1, every: [7, 12], speed: [120, 180], width: [180, 300], lean: 0.2 },
+    layers: [
+      // Light: shafts of dawn sunlight sweep slowly across the temple, motes glitter in them.
+      { id: 'rays', type: 'rays', beams: [[330, 0, 22, 620, 120], [700, 0, -20, 620, 110], [130, 0, 30, 520, 80], [880, 0, -26, 520, 80]], color: [255, 236, 190], alpha: [0.05, 0.2], period: 7, kickDur: 2 },
+      { type: 'particles', kind: 'mote', area: [150, 0, 900, 572], rate: 4, max: 40, color: [255, 245, 210], size: [0.5, 1.2], life: [3, 6], alpha: 0.75, speed: 0.6 },
+      // The gold inlay gleams as light runs across it; the three suns turn slowly.
+      { id: 'gold', type: 'mask', mask: 'gold', anim: { kind: 'wave', along: 'x', band: 200, speed: 46 }, alpha: [0, 0.55], gain: 0.75, kickDur: 2 },
+      { id: 'sun', type: 'echo', box: [440, 200, 584, 344], round: true, feather: 10, motion: { kind: 'spin', speed: 5 } },
+      { id: 'sunL', type: 'echo', box: [140, 230, 250, 340], round: true, feather: 8, motion: { kind: 'spin', speed: -4 } },
+      { id: 'sunR', type: 'echo', box: [776, 222, 886, 332], round: true, feather: 8, motion: { kind: 'spin', speed: -4 } },
+      { id: 'sunGlow', type: 'glow', points: [[512, 272, 60], [195, 285, 40], [831, 277, 40]], color: [255, 220, 120], anim: 'pulse', period: 4, alpha: [0.08, 0.25], kickDur: 2 },
+      // The angel wings around both hero frames beat slowly; the halos shine.
+      { id: 'wingsOL', type: 'warp', box: [352, 4, 466, 128], base: 'right', amp: 2.4, period: 3.2, wave: 1.4 },
+      { id: 'wingsOR', type: 'warp', box: [556, 4, 670, 128], base: 'left', amp: 2.4, period: 3.2, wave: 1.4 },
+      { id: 'wingsML', type: 'warp', box: [348, 400, 462, 520], base: 'right', amp: 2.4, period: 3.4, wave: 1.4 },
+      { id: 'wingsMR', type: 'warp', box: [558, 400, 672, 520], base: 'left', amp: 2.4, period: 3.4, wave: 1.4 },
+      { id: 'halos', type: 'glow', points: [[452, 20, 22], [508, 14, 26], [565, 24, 22], [510, 420, 26]], color: [255, 235, 160], anim: 'pulse', period: 2.6, alpha: [0.1, 0.4], kickDur: 2 },
+      // Corners. Top left, the golden bell sways on its chain; tapped, it rings and swings.
+      { id: 'bell', type: 'echo', box: [22, 0, 150, 142], feather: 8, motion: { kind: 'rock', amp: 1.6, period: 3.6, pivot: [72, 0], kickAmp: 6 } },
+      // Top right, the white feather stirs in the breeze.
+      { id: 'feather', type: 'echo', box: [866, 8, 1004, 138], feather: 8, motion: { kind: 'rock', amp: 2.2, period: 4.2, pivot: [990, 30], kickAmp: 5 } },
+      // Bottom left, incense curls up from the censer.
+      { id: 'incense', type: 'particles', kind: 'wisp', from: [[78, 458, 6]], rate: 2.2, max: 18, color: [255, 240, 230], size: [3, 6], life: [2.5, 4.5], alpha: 0.3, speed: 0.8 },
+      { id: 'censer', type: 'glow', points: [[78, 505, 16]], color: [255, 170, 80], anim: 'flicker', alpha: [0.1, 0.35], kickDur: 2 },
+      // Bottom right, the star crystal pulses and throws sparkles.
+      { id: 'star', type: 'mask', mask: 'star', anim: { kind: 'pulse', period: 2.8 }, alpha: [0.15, 0.6], bloom: 0.9, kickDur: 2 },
+      { id: 'starGlow', type: 'glow', points: [[944, 492, 50]], color: [200, 220, 255], anim: 'pulse', period: 2.8, alpha: [0.08, 0.25], kickDur: 2 },
+      { id: 'sparkles', type: 'particles', kind: 'glint', area: { mask: 'star' }, rate: 2, max: 8, color: [255, 255, 255], size: [1, 2], life: [0.5, 1] },
+      // Air: clouds drift by at the edges, feathers float down.
+      { type: 'fog', area: [-120, 120, 230, 600], count: 7, size: [70, 130], speed: 6, color: [255, 210, 200], alpha: 0.16 },
+      { type: 'fog', area: [800, 100, 1150, 600], count: 7, size: [70, 130], speed: 6, color: [255, 210, 200], alpha: 0.16 },
+      { id: 'feathers', type: 'particles', kind: 'petal', area: [0, -20, 1024, 300], rate: 0.5, max: 6, color: [255, 252, 245], size: [2, 3.2], life: [7, 11], speed: 0.6 },
+    ],
+    pokes: [
+      { area: [20, 0, 152, 144], sound: 'chime', kick: ['bell', 'rays'], flare: [255, 220, 120], glyph: '🔔' },
+      { area: [864, 6, 1006, 140], sound: 'flutter', kick: ['feather'], flare: [255, 255, 255], glyph: '🪶', burst: { layer: 'feathers', n: 3, at: [930, 70], spread: 30 } },
+      { area: [34, 452, 124, 552], sound: 'whoosh', kick: ['censer'], flare: [255, 200, 120], burst: { layer: 'incense', n: 10, at: [78, 458], spread: 6 } },
+      { area: [878, 428, 1008, 558], sound: 'chime', kick: ['star', 'starGlow'], flare: [210, 225, 255], glyph: '✨', burst: { layer: 'sparkles', n: 14, spread: 40 } },
+      { area: [440, 200, 584, 344], sound: 'beam', kick: ['sun', 'sunGlow', 'gold'], flare: [255, 220, 120], glyph: '☀️' },
+    ],
+  },
+  'divine-portrait': {
+    wind: { dir: 1, every: [7, 12], speed: [100, 150], width: [160, 260], lean: 0.1 },
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[120, 0, 16, 1000, 100], [340, 0, -14, 1000, 100], [20, 100, 24, 700, 70]], color: [255, 236, 190], alpha: [0.05, 0.2], period: 7, kickDur: 2 },
+      { type: 'particles', kind: 'mote', area: [40, 0, 420, 1024], rate: 4, max: 40, color: [255, 245, 210], size: [0.5, 1.1], life: [3, 6], alpha: 0.75, speed: 0.6 },
+      { id: 'gold', type: 'mask', mask: 'gold', anim: { kind: 'wave', along: 'y', band: 260, speed: 52 }, alpha: [0, 0.55], gain: 0.75, kickDur: 2 },
+      { id: 'sun', type: 'echo', box: [158, 438, 302, 582], round: true, feather: 10, motion: { kind: 'spin', speed: 5 } },
+      { id: 'sunGlow', type: 'glow', points: [[230, 510, 56], [230, 300, 40], [230, 700, 40]], color: [255, 220, 120], anim: 'pulse', period: 4, alpha: [0.08, 0.25], kickDur: 2 },
+      { id: 'wingsOL', type: 'warp', box: [128, 102, 192, 232], base: 'right', amp: 2, period: 3.2, wave: 1.4 },
+      { id: 'wingsOR', type: 'warp', box: [268, 102, 332, 232], base: 'left', amp: 2, period: 3.2, wave: 1.4 },
+      { id: 'wingsML', type: 'warp', box: [128, 704, 192, 862], base: 'right', amp: 2, period: 3.4, wave: 1.4 },
+      { id: 'wingsMR', type: 'warp', box: [268, 704, 332, 862], base: 'left', amp: 2, period: 3.4, wave: 1.4 },
+      { id: 'halos', type: 'glow', points: [[232, 118, 28], [232, 880, 26], [232, 730, 26]], color: [255, 235, 160], anim: 'pulse', period: 2.6, alpha: [0.1, 0.4], kickDur: 2 },
+      { id: 'bell', type: 'echo', box: [22, 8, 128, 150], feather: 8, motion: { kind: 'rock', amp: 1.6, period: 3.6, pivot: [42, 8], kickAmp: 6 } },
+      { id: 'feather', type: 'echo', box: [332, 22, 442, 172], feather: 8, motion: { kind: 'rock', amp: 2.2, period: 4.2, pivot: [430, 40], kickAmp: 5 } },
+      { id: 'incense', type: 'particles', kind: 'wisp', from: [[50, 888, 5]], rate: 2, max: 16, color: [255, 240, 230], size: [2.5, 5], life: [2.5, 4.5], alpha: 0.3, speed: 0.8 },
+      { id: 'censer', type: 'glow', points: [[50, 930, 14]], color: [255, 170, 80], anim: 'flicker', alpha: [0.1, 0.35], kickDur: 2 },
+      { id: 'star', type: 'mask', mask: 'star', anim: { kind: 'pulse', period: 2.8 }, alpha: [0.15, 0.6], bloom: 0.9, kickDur: 2 },
+      { id: 'starGlow', type: 'glow', points: [[392, 940, 44]], color: [200, 220, 255], anim: 'pulse', period: 2.8, alpha: [0.08, 0.25], kickDur: 2 },
+      { id: 'sparkles', type: 'particles', kind: 'glint', area: { mask: 'star' }, rate: 2, max: 8, color: [255, 255, 255], size: [1, 1.9], life: [0.5, 1] },
+      { type: 'fog', area: [-100, 150, 80, 1000], count: 7, size: [60, 110], speed: 5, color: [255, 210, 200], alpha: 0.16 },
+      { type: 'fog', area: [380, 150, 560, 1000], count: 7, size: [60, 110], speed: 5, color: [255, 210, 200], alpha: 0.16 },
+      { id: 'feathers', type: 'particles', kind: 'petal', area: [0, -20, 459, 500], rate: 0.5, max: 6, color: [255, 252, 245], size: [1.8, 3], life: [7, 11], speed: 0.6 },
+    ],
+    pokes: [
+      { area: [20, 6, 130, 152], sound: 'chime', kick: ['bell', 'rays'], flare: [255, 220, 120], glyph: '🔔' },
+      { area: [330, 20, 444, 174], sound: 'flutter', kick: ['feather'], flare: [255, 255, 255], glyph: '🪶', burst: { layer: 'feathers', n: 3, at: [390, 90], spread: 30 } },
+      { area: [14, 882, 94, 1002], sound: 'whoosh', kick: ['censer'], flare: [255, 200, 120], burst: { layer: 'incense', n: 10, at: [50, 888], spread: 5 } },
+      { area: [336, 876, 448, 1004], sound: 'chime', kick: ['star', 'starGlow'], flare: [210, 225, 255], glyph: '✨', burst: { layer: 'sparkles', n: 12, spread: 34 } },
+      { area: [158, 438, 302, 582], sound: 'beam', kick: ['sun', 'sunGlow', 'gold'], flare: [255, 220, 120], glyph: '☀️' },
+    ],
+  },
+
+  // ---- Dragons: a dragon's volcanic lair ---------------------------------------------------
+  'dragons-land': {
+    wind: null,
+    layers: [
+      // Features: lava moves in every crack and pool, its heat pulsing; embers lift off it.
+      { id: 'lavaFlow', type: 'flow', mask: 'lava', dir: [1, 0.4], dist: 14, period: 3, alpha: 0.95, glow: 0.35, glowPeriod: 1.9 },
+      { id: 'lava', type: 'mask', mask: 'lava', anim: { kind: 'wave', along: 'x', band: 110, speed: 26 }, alpha: [0.05, 0.55], gain: 0.85, kickDur: 2 },
+      { type: 'particles', kind: 'ember', area: { mask: 'lava' }, rate: 8, max: 50, color: [255, 130, 40], size: [0.7, 1.5], life: [1.2, 2.6], speed: 1 },
+      { type: 'particles', kind: 'smoke', from: [[76, 350, 10], [26, 160, 10], [266, 22, 10], [980, 200, 10], [306, 46, 14]], rate: 2, max: 20, color: [90, 80, 80], size: [8, 13], life: [3, 5], alpha: 0.2, speed: 0.6 },
+      // The hoard: firelight ripples over the gold, coins and gems glint.
+      { id: 'coins', type: 'mask', mask: 'coins', anim: { kind: 'wave', along: 'x', band: 180, speed: 36 }, alpha: [0, 0.5], gain: 0.7, kickDur: 2 },
+      { id: 'glints', type: 'particles', kind: 'glint', area: { mask: 'coins' }, rate: 6, max: 24, color: [255, 245, 200], size: [0.9, 1.8], life: [0.3, 0.8] },
+      // Corners. Top left, the crown sparkles. Top right, the brazier of blue dragonfire roars.
+      { id: 'crown', type: 'particles', kind: 'glint', area: [86, 32, 176, 104], rate: 1.6, max: 6, color: [255, 220, 255], size: [1, 1.8], life: [0.4, 0.9] },
+      { id: 'blue', type: 'flames', points: [[880, 100, 38, 44]], tongues: 5, palette: [[200, 240, 255], [60, 140, 255], [40, 20, 160]], alpha: 0.6, kickDur: 2 },
+      { id: 'blueGlow', type: 'glow', points: [[880, 80, 60]], color: [90, 150, 255], anim: 'flicker', alpha: [0.15, 0.4], kickDur: 2 },
+      { id: 'blueSparks', type: 'particles', kind: 'spark', from: [[880, 70, 20]], rate: 1.5, max: 12, color: [140, 190, 255], size: [0.8, 1.4], life: [0.6, 1.2] },
+      // Bottom left, the dragon egg: it glows from within and rocks now and then, about to hatch.
+      { id: 'egg', type: 'echo', box: [46, 416, 158, 548], feather: 8, autoKick: [6, 11], motion: { kind: 'rock', amp: 0, kickAmp: 2.2, period: 0.25, pivot: [102, 540] } },
+      { id: 'eggGlow', type: 'mask', mask: 'egg', anim: { kind: 'pulse', period: 2.4 }, alpha: [0.05, 0.4], bloom: 0.8, kickDur: 2, blend: 'lighter' },
+      { id: 'eggHeat', type: 'glow', points: [[102, 482, 50]], color: [255, 80, 30], anim: 'pulse', period: 2.4, alpha: [0.08, 0.25], kickDur: 2 },
+      // Bottom right, the dragonscale shield; tapped, it rings.
+      { id: 'shield', type: 'echo', box: [824, 392, 1002, 562], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.3, pivot: [913, 550] } },
+      // Air: heat haze and drifting embers.
+      { type: 'fog', area: [-60, 0, 1084, 572], count: 9, size: [80, 140], speed: 3, color: [220, 80, 20], alpha: 0.06, blend: 'lighter' },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [0, 0, 1024, 572], rate: 1.5, max: 14, color: [255, 140, 50], size: [0.6, 1.2], life: [2, 4], speed: 0.7 },
+    ],
+    pokes: [
+      { area: [84, 28, 178, 106], sound: 'coin', kick: ['coins'], flare: [255, 220, 120], glyph: '👑', burst: { layer: 'glints', n: 10, at: [130, 70], spread: 40 } },
+      { area: [816, 8, 950, 140], sound: 'whoosh', kick: ['blue', 'blueGlow'], flare: [120, 170, 255], glyph: '🔥', burst: { layer: 'blueSparks', n: 18, at: [880, 70], spread: 16 } },
+      { area: [44, 414, 160, 550], sound: 'crack', kick: ['egg', 'eggGlow', 'eggHeat'], flare: [255, 100, 40], glyph: '🥚' },
+      { area: [822, 390, 1004, 564], sound: 'clink', kick: ['shield'], flare: [255, 200, 140], glyph: '🛡️' },
+      { area: [140, 120, 420, 460], sound: 'coin', kick: ['coins'], flare: [255, 220, 120], burst: { layer: 'glints', n: 12, spread: 60 } },
+    ],
+  },
+  'dragons-portrait': {
+    wind: null,
+    layers: [
+      { id: 'lavaFlow', type: 'flow', mask: 'lava', dir: [0.4, 1], dist: 12, period: 3, alpha: 0.95, glow: 0.35, glowPeriod: 1.9 },
+      { id: 'lava', type: 'mask', mask: 'lava', anim: { kind: 'wave', along: 'y', band: 120, speed: 28 }, alpha: [0.05, 0.55], gain: 0.85, kickDur: 2 },
+      { type: 'particles', kind: 'ember', area: { mask: 'lava' }, rate: 6, max: 40, color: [255, 130, 40], size: [0.7, 1.4], life: [1.2, 2.6], speed: 1 },
+      { type: 'particles', kind: 'smoke', from: [[24, 180, 10], [20, 780, 10], [440, 300, 10]], rate: 1.4, max: 14, color: [90, 80, 80], size: [7, 12], life: [3, 5], alpha: 0.2, speed: 0.6 },
+      { id: 'coins', type: 'mask', mask: 'coins', anim: { kind: 'wave', along: 'y', band: 200, speed: 40 }, alpha: [0, 0.5], gain: 0.7, kickDur: 2 },
+      { id: 'glints', type: 'particles', kind: 'glint', area: { mask: 'coins' }, rate: 5, max: 20, color: [255, 245, 200], size: [0.9, 1.7], life: [0.3, 0.8] },
+      { id: 'crown', type: 'particles', kind: 'glint', area: [22, 36, 100, 104], rate: 1.4, max: 5, color: [255, 220, 255], size: [1, 1.7], life: [0.4, 0.9] },
+      { id: 'blue', type: 'flames', points: [[388, 98, 34, 40]], tongues: 5, palette: [[200, 240, 255], [60, 140, 255], [40, 20, 160]], alpha: 0.6, kickDur: 2 },
+      { id: 'blueGlow', type: 'glow', points: [[388, 80, 52]], color: [90, 150, 255], anim: 'flicker', alpha: [0.15, 0.4], kickDur: 2 },
+      { id: 'blueSparks', type: 'particles', kind: 'spark', from: [[388, 70, 18]], rate: 1.4, max: 10, color: [140, 190, 255], size: [0.8, 1.3], life: [0.6, 1.2] },
+      { id: 'egg', type: 'echo', box: [34, 868, 126, 992], feather: 8, autoKick: [6, 11], motion: { kind: 'rock', amp: 0, kickAmp: 2.2, period: 0.25, pivot: [80, 984] } },
+      { id: 'eggGlow', type: 'mask', mask: 'egg', anim: { kind: 'pulse', period: 2.4 }, alpha: [0.05, 0.4], bloom: 0.8, kickDur: 2, blend: 'lighter' },
+      { id: 'eggHeat', type: 'glow', points: [[80, 930, 46]], color: [255, 80, 30], anim: 'pulse', period: 2.4, alpha: [0.08, 0.25], kickDur: 2 },
+      { id: 'shield', type: 'echo', box: [298, 858, 452, 1012], feather: 8, motion: { kind: 'rock', amp: 0, kickAmp: 1.2, period: 0.3, pivot: [375, 1000] } },
+      { type: 'fog', area: [-60, 0, 520, 1024], count: 9, size: [70, 120], speed: 3, color: [220, 80, 20], alpha: 0.06, blend: 'lighter' },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [0, 0, 459, 1024], rate: 1.5, max: 14, color: [255, 140, 50], size: [0.6, 1.1], life: [2, 4], speed: 0.7 },
+    ],
+    pokes: [
+      { area: [18, 32, 102, 108], sound: 'coin', kick: ['coins'], flare: [255, 220, 120], glyph: '👑', burst: { layer: 'glints', n: 10, at: [60, 70], spread: 34 } },
+      { area: [330, 18, 446, 152], sound: 'whoosh', kick: ['blue', 'blueGlow'], flare: [120, 170, 255], glyph: '🔥', burst: { layer: 'blueSparks', n: 16, at: [388, 70], spread: 14 } },
+      { area: [32, 866, 128, 994], sound: 'crack', kick: ['egg', 'eggGlow', 'eggHeat'], flare: [255, 100, 40], glyph: '🥚' },
+      { area: [296, 856, 454, 1014], sound: 'clink', kick: ['shield'], flare: [255, 200, 140], glyph: '🛡️' },
+    ],
+  },
 };

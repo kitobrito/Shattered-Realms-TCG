@@ -87,7 +87,7 @@ function maskPoints(img, box, min = 140, cap = 600) {
 }
 
 // A feathered copy of part of the painting, for echoes.
-function featherCrop(img, [x0, y0, x1, y1], [IW, IH], feather) {
+function featherCrop(img, [x0, y0, x1, y1], [IW, IH], feather, round = false) {
   const sx = img.naturalWidth / IW, sy = img.naturalHeight / IH;
   const w = Math.round((x1 - x0) * sx), h = Math.round((y1 - y0) * sy);
   const c = document.createElement('canvas');
@@ -96,6 +96,14 @@ function featherCrop(img, [x0, y0, x1, y1], [IW, IH], feather) {
   g.drawImage(img, x0 * sx, y0 * sy, w, h, 0, 0, w, h);
   g.globalCompositeOperation = 'destination-in';
   const f = Math.max(1, feather * sx);
+  if (round) {
+    // A soft disc instead of a rectangle (things that spin).
+    const r = Math.min(w, h) / 2;
+    const gr = g.createRadialGradient(w / 2, h / 2, Math.max(0, r - f), w / 2, h / 2, r);
+    gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    return c;
+  }
   // Soft edges on all four sides: a horizontal and a vertical alpha ramp.
   const gx = g.createLinearGradient(0, 0, w, 0);
   gx.addColorStop(0, 'rgba(0,0,0,0)'); gx.addColorStop(Math.min(0.49, f / w), '#000');
@@ -202,7 +210,7 @@ export async function startBoardFx(host, key, orient) {
   // ---- Per-layer state ----
   const layers = def.layers.map((l, i) => {
     const st = { ...l, i, seed: Math.random() * 100, parts: [], acc: 0, kick: -99, next: rand(...(l.every ?? [3, 8])) };
-    if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6);
+    if (l.type === 'echo') st.crop = featherCrop(board, l.box, [IW, IH], l.feather ?? 6, l.round);
     if (l.type === 'crawlers') st.items = l.boxes.map((b) => ({ box: b, crop: featherCrop(board, b, [IW, IH], l.feather ?? 4), seed: Math.random() * 100, kick: -99 }));
     if (l.type === 'sprites' && masks[l.mask]?.parts) {
       // Each part: its box, its spot in the atlas, its root (bottom centre) and its own rhythm.
@@ -657,6 +665,7 @@ export async function startBoardFx(host, key, orient) {
     else if (m.kind === 'drift') { dx = wave(t * (m.speed ?? 0.4), st.seed) * amp; dy = wave(t * (m.speed ?? 0.4) * 0.7, st.seed + 2) * amp * 0.7; }
     else if (m.kind === 'rock') rot = Math.sin(ph) * amp * Math.PI / 180;
     else if (m.kind === 'breathe') sc = 1 + Math.sin(ph) * amp * 0.01;
+    else if (m.kind === 'spin') rot = t * (m.speed ?? 6) * Math.PI / 180 + kick * 0.6;
     else if (m.kind === 'claw') { dy = -Math.abs(Math.sin(ph)) * amp; rot = Math.sin(ph * 2) * amp * 0.4 * Math.PI / 180; }
     else { rot = Math.sin(ph) * amp * Math.PI / 180; dx = Math.sin(ph) * amp * 0.3; }
     const pv = m.pivot ?? [(x0 + x1) / 2, (y0 + y1) / 2];
@@ -739,9 +748,11 @@ export async function startBoardFx(host, key, orient) {
         const fh = h * grow * (0.55 + 0.45 * (0.5 + 0.5 * wave(t * 3.2, seed)));
         const lean = wave(t * 1.6, seed + 5) * w * 0.15;
         const g = ctx.createLinearGradient(0, y * SY, 0, (y - fh) * SY);
-        g.addColorStop(0, `rgba(255,${200 + j * 8},90,${0.42 * (st.alpha ?? 1)})`);
-        g.addColorStop(0.45, `rgba(255,120,30,${0.3 * (st.alpha ?? 1)})`);
-        g.addColorStop(1, 'rgba(200,40,0,0)');
+        // palette: [core, middle, tip] colours (default: orange fire; dragonfire can be blue).
+        const [c0, c1, c2] = st.palette ?? [[255, 200, 90], [255, 120, 30], [200, 40, 0]];
+        g.addColorStop(0, rgba([c0[0], Math.min(255, c0[1] + j * 8), c0[2]], 0.42 * (st.alpha ?? 1)));
+        g.addColorStop(0.45, rgba(c1, 0.3 * (st.alpha ?? 1)));
+        g.addColorStop(1, rgba(c2, 0));
         ctx.fillStyle = g;
         const bw = w * 0.22;
         ctx.beginPath();
@@ -753,7 +764,7 @@ export async function startBoardFx(host, key, orient) {
       }
       // Heat glow under the flames.
       ctx.globalAlpha = vis * (0.35 + 0.25 * wave(t * 2.5, i) + kick * 0.4);
-      ctx.drawImage(softSprite([255, 120, 30], 64), (x - w) * SX, (y - h * 0.9) * SY, w * 2 * SX, h * 1.4 * SY);
+      ctx.drawImage(softSprite(st.palette?.[1] ?? [255, 120, 30], 64), (x - w) * SX, (y - h * 0.9) * SY, w * 2 * SX, h * 1.4 * SY);
       ctx.globalAlpha = vis;
     });
     ctx.restore();

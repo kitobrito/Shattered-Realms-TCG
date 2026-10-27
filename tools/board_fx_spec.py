@@ -100,4 +100,26 @@ SPEC = {
         'river': ['water', [[310, 240, 459, 700]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 160, 255]}],
         'lava': ['lava', [[340, 880, 410, 950]], {'blur': 0.6, 'show': [255, 120, 0]}],
     },
+    # ---- Divine: a temple above the clouds ----
+    'divine-land': {
+        'gold': ['gold', FULL_L, {'blur': 0.6, 'scale': 0.5, 'show': [255, 200, 0]}],
+        'star': ['bright', [[880, 430, 1006, 556]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'divine-portrait': {
+        'gold': ['gold', FULL_P, {'blur': 0.6, 'scale': 0.5, 'show': [255, 200, 0]}],
+        'star': ['bright', [[338, 878, 446, 1002]], {'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    # ---- Dragons: a dragon's volcanic lair ----
+    'dragons-land': {
+        'lava': ['lava', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0], 'exclude': [[20, 400, 140, 545], [815, 10, 950, 140]]}],
+        'coins': ['gold', FULL_L, {'scale': 0.5, 'show': [255, 220, 0], 'exclude': [[420, 0, 600, 150], [420, 400, 600, 572]]}],
+        'egg': ['any', [[48, 418, 156, 545]], {'hp': [5, 1, 0.03, 0.12], 'show': [255, 0, 255]}],
+        'fire': ['bright', [[830, 10, 940, 120]], {'blur': 0.8, 'show': [0, 160, 255]}],
+    },
+    'dragons-portrait': {
+        'lava': ['lava', FULL_P, {'blur': 0.8, 'scale': 0.5, 'show': [255, 120, 0], 'exclude': [[30, 860, 130, 990], [330, 20, 440, 150]]}],
+        'coins': ['gold', FULL_P, {'scale': 0.5, 'show': [255, 220, 0], 'exclude': [[150, 0, 310, 150], [150, 780, 310, 920]]}],
+        'egg': ['any', [[36, 870, 124, 990]], {'hp': [5, 1, 0.03, 0.12], 'show': [255, 0, 255]}],
+        'fire': ['bright', [[336, 25, 432, 120]], {'blur': 0.8, 'show': [0, 160, 255]}],
+    },
 }

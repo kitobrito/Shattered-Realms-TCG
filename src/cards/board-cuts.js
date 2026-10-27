@@ -48,34 +48,6 @@ export const BOARD_CUTS = {
     }
    }
   },
-  "Divine": {
-   "plate": "art/boards-v2/divine-plate.jpg",
-   "cuts": {
-    "1": {
-     "src": "art/board-props/divine-land-1.png",
-     "box": [
-      887,
-      7,
-      983,
-      103
-     ]
-    }
-   }
-  },
-  "Dragons": {
-   "plate": "art/boards-v2/dragons-plate.jpg",
-   "cuts": {
-    "2": {
-     "src": "art/board-props/dragons-land-2.png",
-     "box": [
-      17,
-      462,
-      88,
-      558
-     ]
-    }
-   }
-  },
   "Zombies": {
    "plate": "art/boards-v2/zombies-plate.jpg",
    "cuts": {
@@ -208,34 +180,6 @@ export const BOARD_CUTS = {
       812,
       83,
       898
-     ]
-    }
-   }
-  },
-  "Divine": {
-   "plate": "art/boards-portrait/divine-plate.jpg",
-   "cuts": {
-    "1": {
-     "src": "art/board-props/divine-portrait-1.png",
-     "box": [
-      372,
-      7,
-      458,
-      93
-     ]
-    }
-   }
-  },
-  "Dragons": {
-   "plate": "art/boards-portrait/dragons-plate.jpg",
-   "cuts": {
-    "2": {
-     "src": "art/board-props/dragons-portrait-2.png",
-     "box": [
-      2,
-      772,
-      98,
-      858
      ]
     }
    }
