@@ -124,13 +124,13 @@ test("Quicksand Lurker: the chosen enemy minion can't attack on its next turn, t
   if (!canAttack(e.uid)) return 'still stuck a turn later';
 });
 
-test('Sandstorm Stalker Burrows after it attacks; it Surfaces next turn and keeps its own Stealth', () => {
+test('Sandstorm Stalker Burrows after it attacks (hidden again); it Surfaces next turn without Stealth (attacking used it up)', () => {
   const st = put(0, 'sandstorm_stalker');
   const e = blank(1, 1, 5);
   attack(0, st.uid, e.uid);
-  if (!st.burrowed) return 'did not burrow';
+  if (!st.burrowed || !hasKeyword(st, 'Stealth')) return 'did not burrow';
   toNextTurnOf(0);
-  if (st.burrowed || !hasKeyword(st, 'Stealth')) return `burrowed ${st.burrowed}, stealth ${hasKeyword(st, 'Stealth')}`;
+  if (st.burrowed || hasKeyword(st, 'Stealth')) return `burrowed ${st.burrowed}, stealth ${hasKeyword(st, 'Stealth')}`;
 });
 
 test('Dig In Burrows a friendly minion and draws a card', () => {

@@ -527,8 +527,9 @@ function transformAction(state, { player: p, minion }) {
 function declareAttack(state, { player: p, attacker, defender }) {
   const a = findCharacter(state, attacker);
   a.attacksThisTurn += 1;
-  // Nightveil Werepanther: its Stealth lasts until it attacks.
-  if (a.kind === 'minion' && getCard(a.cardId).stealthUntilAttack && a.keywords.includes('Stealth')) removeKeyword(a, 'Stealth');
+  // Stealth lasts until the minion attacks. A Burrowed minion that attacks Surfaces first.
+  if (a.kind === 'minion' && a.burrowed) surfaceMinion(state, a);
+  if (a.kind === 'minion' && hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); }
   // Blind: the attack hits a random character, friend or foe.
   let blind = false;
   if (hasKeyword(a, 'Blind')) {
