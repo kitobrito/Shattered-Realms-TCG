@@ -253,5 +253,19 @@ test('Every Fruit Pirates card has art and the base deck is 30', () => {
   if (missing.length) return `no art: ${missing}`;
 });
 
+// ---- Stealth (all realms) ----
+test('Stealth is lost when the minion attacks', () => {
+  const m = mine(2, 3); m.keywords = ['Stealth']; foeMinion(1, 9);
+  attack(0, m.uid, pl(1).hero.uid);
+  if (hasKeyword(m, 'Stealth')) return 'still in Stealth after attacking';
+  endTurn();
+  if (!attackTargets(s, 1).includes(m.uid)) return 'enemy still cannot attack it';
+});
+test('A Burrowed minion that attacks Surfaces and leaves Stealth', () => {
+  const m = mine(2, 3); m.burrowed = true;
+  attack(0, m.uid, pl(1).hero.uid);
+  if (m.burrowed || hasKeyword(m, 'Stealth')) return `burrowed ${m.burrowed} stealth ${hasKeyword(m, 'Stealth')}`;
+});
+
 console.log(`\n${passed} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

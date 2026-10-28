@@ -22,7 +22,7 @@ export const CARD_TYPES = ['minion', 'spell', 'trap'];
 //   Poisonous  when it dies, the enemy that killed it dies too
 //   Venomous   kills the enemy minion it attacks
 //   Twin Strike can attack twice each turn (was Windfury)
-//   Stealth    can't be attacked or targeted by enemies; removed only by a card that says so
+//   Stealth    can't be attacked or targeted by enemies; lost when it attacks
 export const POSITIVE_KEYWORDS = [
   'Taunt', 'Poisonous', 'Venomous', 'Lifesteal', 'Evade', 'Elusive', 'Charge', 'Rush',
   'Stealth', 'Twin Strike',
@@ -56,7 +56,7 @@ export const KEYWORD_TEXT = {
   Burn: "At the end of its enemy's turn (the player who set it on fire), takes damage equal to its Burn value, then the value rises by 1. Lasts 2 turns. Applying Burn X sets the value to X, or adds X if it is already X or more (adding doesn't extend the 2 turns).",
   Burning: 'Has a Burn value (see Burn).',
   Cleanse: 'Removes Burn, Radiation and harmful effects (Frozen, Burned, Blind) from a character.',
-  Stealth: "Can't be attacked or targeted by enemies. Only removed by a card that says so.",
+  Stealth: "Can't be attacked or targeted by enemies. Lost when it attacks.",
   Lifesteal: 'Damage this deals also restores that much Health to your Hero.',
   Evade: 'The first damage this would take does nothing.',
   Elusive: "Can't be targeted by enemy spells.",
