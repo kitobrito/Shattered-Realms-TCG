@@ -5641,3 +5641,22 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 .pg-watch h4 { color: #ffb3a6; }
 @media (max-width: 640px) { .pg-split { grid-template-columns: 1fr; } .pg-guide { padding: 12px; } }
 @media (max-width: 640px) { .guide-panel .ts-guides { flex-direction: column; } }
+
+/* Keyword animations (keyword-fx.js). */
+.fx-kw-ward { position: fixed; z-index: 912; pointer-events: none; clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: radial-gradient(circle, #9ad8ff22 40%, #6ab8ff88 70%, #e8f6ff 92%); box-shadow: 0 0 24px #6ab8ff; }
+.fx-kw-smoke { position: fixed; z-index: 911; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, #d8d4e8cc 0%, #8a86a088 45%, transparent 70%); filter: blur(2px); }
+.fx-kw-miss { color: #e8f4ff; font-family: var(--font-title); font-weight: 900; text-shadow: 0 0 10px #6ab8ff, 0 2px 3px #000; }
+.fx-kw-hole { position: fixed; z-index: 912; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, #000 35%, #2a0a4a 55%, #8a5aff88 68%, transparent 72%); box-shadow: 0 0 30px #8a5aff; }
+.fx-kw-scan { position: fixed; z-index: 912; pointer-events: none; height: 4px; background: linear-gradient(90deg, transparent, #c88aff, #fff, #c88aff, transparent);
+  box-shadow: 0 0 16px #c88aff; }
+.fx-kw-egg { position: fixed; z-index: 912; pointer-events: none; border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
+  background: radial-gradient(ellipse at 38% 30%, #ffffff 0%, #eaffd0 25%, #a8e078 62%, #4a8a4a 100%);
+  box-shadow: inset 0 -5px 9px #2a5a2a99, 0 0 18px #5affd8, 0 0 36px #5affd888, 0 3px 5px #000c; }
+.fx-kw-egg::after { content: ''; position: absolute; left: 22%; right: 22%; top: 6%; height: 18%; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, #1a2a1a 0 12deg, transparent 12deg 30deg); opacity: 0.8; }
+.fx-kw-recoil { color: #ffb45a; font-weight: 900; text-shadow: 0 0 10px #ff7a1a, 0 2px 3px #000; }
+.fx-kw-hugger { position: fixed; z-index: 913; pointer-events: none; filter: drop-shadow(0 4px 4px #000a) drop-shadow(0 0 6px #5affd855); }
+.fx-kw-hugger .hug-legs, .fx-kw-hugger .hug-tail { transform-box: view-box; transform-origin: 50% 40%; }
