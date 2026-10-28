@@ -504,6 +504,7 @@ const PARTICLES = {
   Lycanthropes: { cls: 'wisp', gravity: -0.3 },
   Void: { cls: 'voidmote', gravity: -0.15 },
   'Ice Age': { cls: 'snowflake', gravity: 0.25, spin: true },
+  'Fruit Pirates': { cls: 'coin', gravity: 0.9, spin: true },
 };
 export function particles(rect, faction, power = 1) {
   const kind = PARTICLES[faction] ?? { cls: 'spark', gravity: 0.3 };
@@ -707,7 +708,7 @@ export function flashScreen(color = '#ff7a3a') {
 
 // ---- Spells ------------------------------------------------------------------
 
-const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff' };
+const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff', 'Fruit Pirates': '#ffb43a' };
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
@@ -1024,6 +1025,8 @@ export function deathFx(rect, faction) {
     // Void: swallowed by the dark — the shadow motes fall inward as a ring collapses on the spot.
     case 'Void': { particles(rect, 'Void', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.1, '#b48cff', { width: 4, from: 1.2, to: 0.1, duration: 620 }); break; }
     // Ice Age: buried in a flurry of snow under a cold ring of frost.
+    // Fruit Pirates: a splash of sea spray and a scatter of gold coins.
+    case 'Fruit Pirates': { particles(rect, 'Sharks', 8); fling(rect, '🪙', 6, { rise: 1.1, spread: 1 }); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.05, '#7ad8ff', { width: 4, to: 1.5, duration: 620 }); break; }
     case 'Ice Age': { particles(rect, 'Ice Age', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.05, '#c8f0ff', { width: 4, to: 1.4, duration: 600 }); break; }
     case 'Lycanthropes': particles(rect, 'Lycanthropes', 12); fling(rect, '🐾', 3, { rise: 0.8, spread: 0.9 }); break;
     case 'Ghosts': particles(rect, 'Ghosts', 12); fling(rect, '👻', 1, { rise: 1.4, spread: 0.2, size: 26, duration: 1300 }); break;
@@ -1054,6 +1057,7 @@ const KILL_COLOR = {
   Divine: ['#ffe8a0', '#fff6d8'], Aliens: ['#5affd8', '#2affa0'], Robots: ['#7fd0ff', '#2a8aff'], Bees: ['#ffc21a', '#3a2a06'], Ghosts: ['#8ff0ff', '#e8fbff'], Ultraterrestrials: ['#b48cff', '#ffd76a'], Sharks: ['#ff2a2a', '#4ab8ff'], Acidic: ['#c8ff2a', '#ffe23a'], Lycanthropes: ['#c8d8ff', '#6a7a9a'],
   Void: ['#9a6aff', '#1a0a2e'],
   'Ice Age': ['#c8f0ff', '#5a8aaa'],
+  'Fruit Pirates': ['#ffd56a', '#1a6a8a'],
 };
 
 function addFx(cls, style) {
@@ -1704,6 +1708,7 @@ const HITS = {
   Acidic: ({ c, rect, size }) => { particles(rect, 'Acidic', 8); return ring(c, size * 0.8, '#c8ff2a', { width: 3, to: 1.3, duration: 460 }); },
   Ultraterrestrials: ({ c, size }) => ring(c, size * 0.9, '#b48cff', { width: 2, to: 0.4, duration: 480 }),
   Void: ({ c, rect, size }) => { particles(rect, 'Void', 6); return ring(c, size * 1.1, '#9a6aff', { width: 3, from: 1.2, to: 0.3, duration: 440 }); },
+  'Fruit Pirates': ({ c, rect, size }) => { particles(rect, 'Fruit Pirates', 4); return ring(c, size * 0.95, '#ffd56a', { width: 3, to: 1.35, duration: 440 }); },
   'Ice Age': ({ c, rect, size }) => { particles(rect, 'Ice Age', 5); return ring(c, size * 0.95, '#9fe0ff', { width: 3, to: 1.3, duration: 460 }); },
   Lycanthropes: ({ c, rect, size }) => { fling(rect, '🐾', 2, { rise: 0.5, spread: 0.8, size: 14 }); return ring(c, size * 0.85, '#c8d8ff', { width: 3, to: 1.3, duration: 460 }); },
   Ghosts: ({ c, size }) => ring(c, size * 0.85, '#8ff0ff', { width: 3, to: 1.35, duration: 520 }),
@@ -2268,6 +2273,74 @@ export async function tarPit(rect) {
       { transform: 'translate(-50%, 0) scale(0.3)', opacity: 0 }, { transform: 'translate(-50%, -10px) scale(1)', opacity: 1, offset: 0.6 },
       { transform: 'translate(-50%, -16px) scale(1.5)', opacity: 0 },
     ], { duration: 520, easing: 'ease-out' }))));
+  }
+  await Promise.all(jobs);
+}
+
+// ---- Fruit Pirates -----------------------------------------------------------------------
+// Each Fruit has its own colour and glyph. Eating one: the glowing fruit appears above the minion
+// (wind-up), drops into it (action), bursts in a ring of its colour with its glyph flung out
+// (impact), and the minion glows that colour as it fades (recovery). Everything cleans itself up.
+export const FRUIT_LOOK = {
+  flame_fruit: ['#ff6a2a', '🔥'], smoke_fruit: ['#d8dce4', '💨'], frost_fruit: ['#9fe0ff', '❄️'], thunder_fruit: ['#ffe14a', '⚡'],
+  magma_fruit: ['#ff3a1a', '🌋'], light_fruit: ['#fff6b0', '✨'], shadow_pull_fruit: ['#8a5aff', '🌑'],
+};
+export async function fruitEaten(rect, fruitId) {
+  const [color, glyph] = FRUIT_LOOK[fruitId] ?? ['#ffb43a', '🍎'];
+  const c = center(rect);
+  const size = Math.max(rect.width, rect.height);
+  const orb = addFx('fx-fruit', box({ x: c.x, y: c.y - size * 0.55 }, size * 0.42));
+  orb.style.setProperty('--fc', color);
+  await animate(orb, [
+    { transform: 'scale(0) rotate(-40deg)', opacity: 0 },
+    { transform: 'scale(1.15) rotate(10deg)', opacity: 1, offset: 0.6 },
+    { transform: 'scale(1) rotate(0deg)', opacity: 1 },
+  ], { duration: 260, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+  await animate(orb, [
+    { transform: 'translateY(0) scale(1)', opacity: 1 },
+    { transform: `translateY(${size * 0.55}px) scale(0.35)`, opacity: 0.9 },
+  ], { duration: 220, easing: 'cubic-bezier(.6,0,.9,.6)' });
+  orb.remove();
+  const aura = addFx('fx-fruit-aura', box(c, size * 1.05));
+  aura.style.setProperty('--fc', color);
+  await Promise.all([
+    ring(c, size * 1.1, color, { width: 5, to: 1.6, duration: 520 }),
+    glowBall(c, size * 0.9, color, color + '66', { duration: 520 }),
+    fling(rect, glyph, 5, { rise: 0.9, spread: 0.9, size: 18, duration: 760 }),
+    done(aura, animate(aura, [{ opacity: 0.85 }, { opacity: 0 }], { duration: 760, easing: 'ease-out' })),
+  ]);
+}
+
+// Rubber Captain Ruddy shifting Gears, each with its own look:
+//   Steam  — a hiss of white steam and a pink flush (speed);
+//   Titan  — a huge fist-ring that slams outward, a short shake (size);
+//   Bounce — he squashes and springs up inside a dark ring (bounce);
+//   Dawn   — a white flash, golden rays and a drumbeat banner (the final form).
+export async function gearShift(el, gearId, name) {
+  const rect = el.getBoundingClientRect();
+  const c = center(rect);
+  const size = Math.max(rect.width, rect.height);
+  const jobs = [banner(`${name}!`, `gear ${gearId}`)];
+  if (gearId === 'ruddy_steam_gear') {
+    jobs.push(fling(rect, '💨', 7, { rise: 1.3, spread: 1.2, size: 20, duration: 950 }));
+    jobs.push(ring(c, size * 1.1, '#ff8ab0', { width: 4, to: 1.5, duration: 560 }));
+    jobs.push(animate(el, [{ filter: 'none' }, { filter: 'saturate(1.6) hue-rotate(-20deg) brightness(1.2)', offset: 0.3 }, { filter: 'none' }], { duration: 700 }));
+  } else if (gearId === 'ruddy_titan_gear') {
+    jobs.push(ring(c, size * 1.4, '#ffd56a', { width: 9, from: 0.4, to: 2.2, duration: 640 }));
+    jobs.push(screenShake(document.querySelector('.arena') ?? document.body, 7));
+    jobs.push(animate(el, [{ transform: 'scale(1)' }, { transform: 'scale(1.25)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 560, easing: 'cubic-bezier(.2,.9,.3,1.2)' }));
+  } else if (gearId === 'ruddy_bounce_gear') {
+    jobs.push(animate(el, [
+      { transform: 'translateY(0) scale(1, 1)' }, { transform: 'translateY(6%) scale(1.15, 0.8)', offset: 0.25 },
+      { transform: 'translateY(-22%) scale(0.92, 1.12)', offset: 0.55 }, { transform: 'translateY(0) scale(1.06, 0.95)', offset: 0.8 }, { transform: 'translateY(0) scale(1, 1)' },
+    ], { duration: 720, easing: 'ease-out' }));
+    jobs.push(ring(c, size * 1.15, '#2a1a2a', { width: 7, to: 1.6, duration: 600 }));
+    jobs.push(ring(c, size * 0.9, '#ff6a3a', { width: 3, to: 1.4, duration: 520, delay: 120 }));
+  } else if (gearId === 'ruddy_dawn_gear') {
+    flashScreen('#fffbe8');
+    jobs.push(glowBall(c, size * 2.2, '#fff6c8', '#ffd56a88', { duration: 900 }));
+    for (let i = 0; i < 3; i++) jobs.push(ring(c, size * (1 + i * 0.35), '#fff2b0', { width: 4, to: 1.8, duration: 700, delay: i * 140 }));
+    jobs.push(fling(rect, '✨', 8, { rise: 1.2, spread: 1.4, size: 18, duration: 1000 }));
   }
   await Promise.all(jobs);
 }

@@ -48,6 +48,7 @@ export function minionPasses(m, f) {
   if (f.evolved && !getCard(m.cardId).evolvedXeno) return false;
   if (f.frozen != null && hasKeyword(m, 'Frozen') !== f.frozen) return false; // Frost Dragons
   if (f.encased != null && (m.encased > 0) !== f.encased) return false; // Ice Age: still Thawing
+  if (f.fruitless && (m.fruit != null || getCard(m.cardId).fruitEater)) return false; // Fruit Pirates: hasn't eaten a Fruit
   if (f.returnedThisTurn && !m.justReturned) return false; // Ultraterrestrials: came back this turn
   // Acidic: Attack at least N; buffed or holding a defensive keyword (Rust-Eater Brute); corroded.
   if (f.minAttack != null && effectiveAttack(m) < f.minAttack) return false;
@@ -316,6 +317,7 @@ function matchRef(state, id, want, ctx, ev) {
     if (want.implanted != null && (c.implanted != null) !== want.implanted) return false;
     if (want.frozen != null && hasKeyword(c, 'Frozen') !== want.frozen) return false;
     if (want.encased != null && (c.encased > 0) !== want.encased) return false; // Ice Age: still Thawing
+    if (want.fruitless && (c.fruit != null || getCard(c.cardId).fruitEater)) return false; // Fruit Pirates: one Fruit per minion
     if (want.faction && getCard(c.cardId).faction !== want.faction) return false;
     if (want.form && getCard(c.cardId).form !== want.form) return false; // Lycanthropes
     if (want.alive && (c.health <= 0 || c.destroyed)) return false;

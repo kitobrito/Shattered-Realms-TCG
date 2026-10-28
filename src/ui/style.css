@@ -5127,6 +5127,8 @@ body.reduced-motion .descent { display: none; }
     0 calc(var(--fw) * -0.35) 0 calc(var(--fw) + 1px) var(--fr-hi), 0 0 0 calc(var(--fw) + 3px) var(--fr-line),
     0 calc(var(--hero) * 0.08) calc(var(--hero) * 0.2) calc(var(--fw)) #000a, inset 0 0 calc(var(--hero) * 0.16) #000c;
 }
+/* Fruit Pirates: ship's brass and tarred wood. */
+.arena.frame-brass { --fr-line: #2a1606; --fr-mid: #b8862e; --fr-hi: #ffe08a; }
 /* Ice Age: weathered bone and ivory, frosted on top. */
 .arena.frame-bone { --fr-line: #3a2c1c; --fr-mid: #cdbd9b; --fr-hi: #f4f8ff; }
 /* Acidic: pale cave stone, lit green from above. */
@@ -5580,3 +5582,24 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 .minion.kw-encased .m-art { filter: saturate(0.6) brightness(1.05) hue-rotate(-6deg); }
 .minion .thaw-mark { display: inline-grid; place-items: center; padding: 0.05em 0.4em; border-radius: 999px; font-size: 1.2em; font-weight: 800;
   color: #eafaff; background: #0a2a3ce6; border: 1px solid #8fd8ff; box-shadow: 0 0 8px #6fd0ffaa; }
+
+/* ---- Fruit Pirates ---- */
+.big-card.f-fruit-pirates { --frame: #5a3a14; --frame-hi: #ffd56a; --body: #1a0f06; }
+.big-card.t-spell.f-fruit-pirates { --frame: #14506a; --frame-hi: #6ae0ff; --body: #04141c; }
+.big-card.t-trap.f-fruit-pirates { --frame: #5a1a14; --frame-hi: #ff8a5a; --body: #160604; }
+.big-card.shard.f-fruit-pirates, .minion.shardm.f-fruit-pirates { --accent: #ffb43a; }
+.arena.f-fruit-pirates { --felt: #2a3a40; --felt-2: #0a161c; --rim: #ffb43a; }
+.medallion.f-fruit-pirates { --fc: #ffb43a; } .ts-guide.f-fruit-pirates { --fc: #ffb43a; }
+.coll2 .f-fruit-pirates { --fc: #ffb43a; }
+.fx-p.coin { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c8, #ffd56a 40%, #b8801a 100%); box-shadow: 0 0 5px #ffd56a99; }
+/* A Fruit being eaten: a glowing swirl-patterned fruit, and the soft glow it leaves on the minion. */
+.fx-fruit { position: fixed; z-index: 900; pointer-events: none; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, #ffffff55 0 12deg, transparent 12deg 40deg), radial-gradient(circle at 35% 30%, #fff, var(--fc) 35%, color-mix(in srgb, var(--fc) 55%, #000) 100%);
+  box-shadow: 0 0 18px var(--fc), 0 0 6px #fff, inset -4px -6px 10px #0006; }
+.fx-fruit::after { content: ''; position: absolute; left: 44%; top: -14%; width: 14%; height: 26%; border-radius: 40% 40% 10% 10%; background: #3a7a2a; transform: rotate(18deg); }
+.fx-fruit-aura { position: fixed; z-index: 880; pointer-events: none; border-radius: 22%; box-shadow: 0 0 26px 8px var(--fc), inset 0 0 22px var(--fc); }
+.fx-banner.gear span { background: linear-gradient(#fff6d8, #ffb43a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 6px #000); }
+.fx-banner.gear.ruddy_dawn_gear span { background: linear-gradient(#ffffff, #fff2b0); -webkit-background-clip: text; background-clip: text; }
+/* Badge on a minion that has eaten a Fruit (its colour). */
+.minion .b-fruit { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%; font-style: normal;
+  background: radial-gradient(circle at 35% 30%, #fff8, var(--fc, #ffb43a) 50%); box-shadow: 0 0 6px var(--fc, #ffb43a); }

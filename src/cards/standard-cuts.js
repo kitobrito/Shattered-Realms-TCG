@@ -118,6 +118,12 @@ export const STANDARD_CUTS = {
     'thick_fur_cloak', 'huddle_for_warmth', 'survival_of_the_fittest',
     'pitfall_snare', 'hidden_den', 'hunker_down',
   ],
+  // Keeps: the Fruits, the fruit-hungry crew, Ruddy and Old Quakebeard.
+  'Fruit Pirates': [
+    'parrot_lookout', 'deckhand_brawler', 'little_feline_medic', 'storm_navigator',
+    'iron_hull_shipwright', 'the_moon_tiger', 'sea_kitchen_cook',
+    'set_sail', 'seastone_net', 'cannon_ambush',
+  ],
   // Keeps: the Hollow core, the discard payoffs and the finishers.
   Void: [
     'dark_matter_drifter', 'hungering_shade', 'hollow_herald', 'vacuum_stalker',

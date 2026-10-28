@@ -20,6 +20,7 @@ export const BOARD_ART = {
   Lycanthropes: 'art/boards-v2/lycanthropes.jpg',
   Void: 'art/boards-v2/void.jpg',
   'Ice Age': 'art/boards-v2/ice-age.jpg',
+  'Fruit Pirates': 'art/boards-v2/fruit-pirates.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
 };
@@ -68,6 +69,8 @@ const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
   Basic: { src: 'art/boards-portrait/basic.jpg', opp: [201, 30, 259, 98, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [120, 790], frame: 'stone', props: [] },
   // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
+  // Fruit Pirates: the arched cabin door up top, the porthole at the bottom.
+  'Fruit Pirates': { src: 'art/boards-portrait/fruit-pirates.jpg', opp: [201, 106, 259, 174, 'arch'], me: [199, 881, 262, 951, 'circle'], field: [215, 860], frame: 'brass', props: [] },
   'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [201, 34, 259, 102, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [125, 790], frame: 'bone', props: [] },
   Void: { src: 'art/boards-portrait/void.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'void', props: [] },
   Lycanthropes: { src: 'art/boards-portrait/lycanthropes.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'silverwood', props: [] },
@@ -94,6 +97,8 @@ export const PORTRAIT_BOARDS = {
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
   Basic: { src: 'art/boards-v2/basic.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
+  // Fruit Pirates: the captain's cabin door up top, the ship's wheel at the bottom.
+  'Fruit Pirates': { src: 'art/boards-v2/fruit-pirates.jpg', opp: [471, 52, 553, 148], me: [471, 428, 555, 534], field: [110, 160, 915, 420], frame: 'brass', props: [] },
   'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'bone', props: [] },
   Void: { src: 'art/boards-v2/void.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'void', props: [] },
   Lycanthropes: { src: 'art/boards-v2/lycanthropes.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'silverwood', props: [] },
