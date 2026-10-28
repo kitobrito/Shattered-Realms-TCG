@@ -4,7 +4,8 @@
 
 import { applyAdvantage, chooseAction } from '../ai/smart.js';
 import { buildDeck, buildSingleDeck, copyLimit, FACTION_DECKS, FACTION_LISTS, FACTION_POOLS, hasExtras, lineupOf, PLAYABLE_FACTIONS, standardCuts } from '../cards/index.js';
-import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor } from '../engine/core.js';
+import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor, startFxTrace, takeFxTrace } from '../engine/core.js';
+import * as kfx from './keyword-fx.js';
 import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { artSrc, ensureArt } from './art-packs.js';
 import { boardArtFor } from '../cards/board-art.js';
@@ -845,9 +846,11 @@ async function act(action, meta = {}) {
     && action.type !== 'endTurn' ? { state: structuredClone(s), history: history.length, stats: structuredClone(game.stats ?? null) } : null;
   const deckBefore = s.players[action.player]?.deck.length;
   const turnBefore = s.activePlayer;
+  startFxTrace(s);
   try {
     applyAction(s, action);
   } catch (err) {
+    takeFxTrace(s);
     animating = false;
     render();
     flash('That move is no longer possible.');
@@ -855,6 +858,7 @@ async function act(action, meta = {}) {
     console.error(err);
     return;
   }
+  before.trace = takeFxTrace(s); // what the move did, in order, for the keyword animations
   if (game.mode === 'online') {
     // Send each local move; check the opponent's moves land on an identical game.
     if (!meta.remote) link.send({ t: 'act', action, h: net.stateHash(s) });
@@ -912,6 +916,59 @@ function recordStats(s, before, action, entry) {
   if (entry && dealt > (st.bestPlay?.score ?? 0)) st.bestPlay = { score: dealt, text: youText(entry.text) };
 }
 
+// Keyword and status animations from the move's trace (core.js traceFx): Lifesteal, Venomous,
+// Poisonous, Rage, Devour, Spell Ward, Evade, Stealth lost, Silence, Cleanse, Reborn, Overheal,
+// Recoil, Blind, Armor, and the realm statuses (Implant, Chestburster, Evolve, Infect, Haunt,
+// Radiation, Holy Flame, Ash, Burrow/Surface, Discard, Remake, Weapons, Regenerate). Each event
+// plays once (the trace is taken once per move), from where its minions are or last stood.
+function keywordTraceFx(trace, rects, oldMinions, action) {
+  const jobs = [];
+  const el = (uid) => (uid == null ? null : charEl(uid));
+  const rectOf = (uid) => (uid == null ? null : el(uid)?.getBoundingClientRect() ?? oldMinions.get(uid)?.rect ?? rects.get(`c${uid}`) ?? null);
+  const oldRect = (uid) => (uid == null ? null : oldMinions.get(uid)?.rect ?? rects.get(`c${uid}`) ?? rectOf(uid));
+  const seen = new Set();
+  const once = (key) => (seen.has(key) ? false : (seen.add(key), true));
+  for (const e of trace) {
+    const t = e.target ?? e.source;
+    switch (e.type) {
+      case 'lifesteal': if (once(`ls${e.from}`)) jobs.push(kfx.lifesteal(oldRect(e.from), rectOf(e.target), e.amount)); break;
+      case 'venom': jobs.push(kfx.venom(oldRect(e.source), oldRect(e.target), el(e.target))); break;
+      case 'poison': jobs.push(kfx.poison(oldRect(e.source), oldRect(e.target), el(e.target))); break;
+      case 'rage': if (once(`rage${t}`)) jobs.push(kfx.rage(el(t), rectOf(t))); break;
+      case 'devoured': jobs.push(kfx.devour(el(e.source), rectOf(e.source))); break;
+      case 'recoil': if (once(`rc${t}`)) jobs.push(kfx.recoil(el(t), rectOf(t))); break;
+      case 'stealthLost': jobs.push(kfx.stealthLost(el(t), rectOf(t))); break;
+      case 'cleansed': jobs.push(kfx.cleansed(rectOf(t))); break;
+      case 'overhealed': if (once(`oh${t}`)) jobs.push(kfx.overheal(rectOf(t))); break;
+      case 'armorGained': jobs.push(kfx.armorGained(rectOf(t), e.amount)); break;
+      case 'keywordLost':
+        if (e.keyword === 'Spell Ward') jobs.push(kfx.spellWard(rectOf(t)));
+        else if (e.keyword === 'Evade') jobs.push(kfx.evade(el(t), rectOf(t)));
+        break;
+      case 'keywordGained': if (e.keyword === 'Silenced') jobs.push(kfx.silenced(el(t), rectOf(t))); break;
+      case 'blind': jobs.push(kfx.blindSwerve(oldRect(e.source), oldRect(e.aimed), oldRect(e.target))); break;
+      case 'minionReborn': jobs.push(kfx.reborn(el(e.source), rectOf(e.source))); break;
+      case 'minionHaunted': jobs.push(kfx.haunted(el(e.source))); break;
+      case 'implanted': jobs.push(kfx.implanted(el(t), rectOf(t), e.source != null ? rectOf(e.source) ?? oldRect(e.source) : null)); break;
+      case 'chestburst': jobs.push(kfx.chestburst(oldRect(e.host), el(e.source))); break;
+      case 'minionEvolved': jobs.push(kfx.evolved(el(e.source), rectOf(e.source))); break;
+      case 'infected': jobs.push(kfx.infected(el(t), rectOf(t))); break;
+      case 'radiationApplied': if (once(`rad${t}`)) jobs.push(kfx.irradiated(rectOf(t))); break;
+      case 'holyFlameApplied': if (once(`hf${t}`)) jobs.push(kfx.holyFlame(rectOf(t))); break;
+      case 'ashed': jobs.push(kfx.ashed(oldRect(t), true)); break;
+      case 'obliterated': jobs.push(kfx.ashed(oldRect(t), false)); break;
+      case 'minionBurrowed': jobs.push(kfx.burrowed(el(e.source), rectOf(e.source))); break;
+      case 'minionSurfaced': jobs.push(kfx.surfaced(el(e.source), rectOf(e.source))); break;
+      case 'cardDiscarded': jobs.push(kfx.discarded(app.querySelector(e.player === viewer ? '.my-hand' : '.opp-hand')?.getBoundingClientRect() ?? null)); break;
+      case 'remade': jobs.push(kfx.remade(el(t), rectOf(t))); break;
+      case 'weaponEquipped': jobs.push(kfx.weaponEquipped(rectOf(e.source))); break;
+      case 'regenerated': jobs.push(kfx.regenerated(rectOf(e.source))); break;
+      default: break;
+    }
+  }
+  return jobs.map((j) => Promise.resolve(j).catch(() => {}));
+}
+
 // Keywords that appeared or disappeared on minions that are still alive.
 // Taunt: the shield swings up from behind the minion, flashes, and slams into place.
 function tauntIn(el) {
@@ -946,6 +1003,8 @@ function keywordChanges(oldMinions, { holdFrozen = false } = {}) {
     for (const k of now) {
       if (was.has(k)) continue;
       const layer = { taunt: '.m-shield', evade: '.m-speed', 'twin-strike': '.m-wind', frozen: '.m-ice', stealth: '.m-smoke', elusive: '.m-camo' }[k];
+      // Keywords without a layer of their own get their own look (keyword-fx.js); Silence plays from the trace.
+      if (!layer) { if (k === 'silenced') continue; const own = kfx.keywordGained(el, k); if (own) { jobs.push(own); continue; } }
       const target = layer ? el.querySelector(layer) : el.querySelector('.m-art');
       // The Great Freeze plays its own freezing wave (afterEffects).
       if (k === 'frozen' && holdFrozen) continue;
@@ -1073,6 +1132,10 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   if (killed) sound.play('bigHit');
   if (died) setTimeout(() => sound.play('death'), killed ? 180 : 120);
 
+  // Minions that come back their own way (Reborn, Haunt, a Chestburster) skip the normal drop-in.
+  const trace = before.trace ?? [];
+  const ownEntrance = new Set(trace.filter((e) => ['minionReborn', 'minionHaunted', 'chestburst'].includes(e.type)).map((e) => e.source));
+
   // New minions drop in; moved ones glide (FLIP). Expensive ones make an entrance.
   let summoned = false;
   let bigEntrance = false;
@@ -1084,6 +1147,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       const m = findCharacter(s, Number(el.dataset.char));
       const card = m && getCard(m.cardId);
       if (before.beyond.has(m?.uid)) { jobs.push(fx.portalIn(el, card?.faction)); continue; }
+      if (ownEntrance.has(m?.uid)) continue;
       if (card && card.cost >= 7) { bigEntrance = true; jobs.push(fx.entrance(el, esc(card.name), card.faction)); }
       else jobs.push(fx.arrival(el, card?.faction, app.querySelector('.arena')));
     }
@@ -1193,6 +1257,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   if (biggest >= 5) jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, Math.min(4 + biggest * 1.5, 20)));
   if (healed) setTimeout(() => sound.play('heal'), 150);
   jobs.push(keywordChanges(oldMinions, { holdFrozen: !!greatFreeze }));
+  jobs.push(...keywordTraceFx(trace, rects, oldMinions, action));
 
   // Dropping to 10 Health or less: a heartbeat (the screen edges pulse red while low).
   if (before.myHealth > 10 && s.players[viewer].hero.health <= 10 && !s.gameOver) sound.play('heartbeat');

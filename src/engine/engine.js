@@ -12,6 +12,7 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
+  traceFx,
 } from './core.js';
 import { addKeyword, canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
@@ -529,13 +530,15 @@ function declareAttack(state, { player: p, attacker, defender }) {
   a.attacksThisTurn += 1;
   // Stealth lasts until the minion attacks. A Burrowed minion that attacks Surfaces first.
   if (a.kind === 'minion' && a.burrowed) surfaceMinion(state, a);
-  if (a.kind === 'minion' && hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); }
+  if (a.kind === 'minion' && hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); traceFx(state, { type: 'stealthLost', target: a.uid }); }
   // Blind: the attack hits a random character, friend or foe.
   let blind = false;
   if (hasKeyword(a, 'Blind')) {
     const all = state.players.flatMap((pl) => [pl.hero, ...pl.board]).filter((c) => c.uid !== attacker);
+    const aimed = defender;
     defender = pickRandom(state, all).uid;
     blind = true;
+    traceFx(state, { type: 'blind', source: attacker, aimed, target: defender });
   }
   const d = findCharacter(state, defender);
   log(state, `${nameOf(state, a)} attacks ${nameOf(state, d)}${blind ? ' (Blind!)' : ''}.`);
@@ -770,6 +773,7 @@ const STEPS = {
       d.lastDamagedBy = a.uid;
       d.lastDamagedByController = a.controller;
       log(state, `${nameOf(state, d)} succumbs to venom.`);
+      traceFx(state, { type: 'venom', source: a.uid, target: d.uid });
     }
     // Varkhul, the Crimson Maw: killing a minion lets it attack again this turn (once).
     if (d.kind === 'minion' && (d.health <= 0 || d.destroyed) && a.kind === 'minion' && a.health > 0 && getCard(a.cardId).extraAttackOnKill && a.extraAttackTurn !== state.turn) {
@@ -802,7 +806,7 @@ const STEPS = {
         continue;
       }
       // Obliterate: removed from the game — no graveyard, no Exit, no Reborn, no death events.
-      if (m.obliterate) { log(state, `☢ ${nameOf(state, m)} is obliterated.`); continue; }
+      if (m.obliterate) { log(state, `☢ ${nameOf(state, m)} is obliterated.`); traceFx(state, { type: m.holyFlame > 0 ? 'ashed' : 'obliterated', target: m.uid }); continue; }
       state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner, died: true });
       log(state, `${nameOf(state, m)} dies.`);
       // Ghosts: deaths counted this turn / this game, and per player (friendly minions that died).
@@ -820,6 +824,7 @@ const STEPS = {
       if (hasKeyword(m, 'Poisonous') && killer?.kind === 'minion' && killer.controller !== m.controller) {
         killer.destroyed = true;
         log(state, `${nameOf(state, killer)} is poisoned.`);
+        traceFx(state, { type: 'poison', source: m.uid, target: killer.uid });
       }
       // Plants (Carnivorous Garden): Devour — the enemy minion that destroyed it gains +1/+1.
       if (killer?.kind === 'minion' && killer.controller !== m.controller && hasKeyword(killer, 'Devour') && killer.health > 0 && !killer.destroyed) {
@@ -897,7 +902,7 @@ const STEPS = {
     m.rebornUsed = true; // Divine Intervention can't give it Reborn again
     log(state, `${nameOf(state, m)} is Reborn.`);
     enterBattlefield(state, m);
-    emit(state, { type: 'minionReborn', source: m.uid, player: controller });
+    emit(state, { type: 'minionReborn', source: m.uid, player: controller, from: uid ?? null });
   },
 
   endTurn(state, { player: p }) {

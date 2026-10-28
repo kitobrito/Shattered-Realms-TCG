@@ -24,6 +24,7 @@ import {
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
   corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
   descentDepth, maxHand, sinkOneCircle,
+  traceFx,
 } from './core.js';
 import { allCards, collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -1193,7 +1194,7 @@ export const EFFECT_OPS = {
         if (Array.isArray(c[k]) && c[k].some((x) => BAD.includes(x))) { c[k] = c[k].filter((x) => !BAD.includes(x)); any = true; }
       }
       if (Array.isArray(c.lingerKeywords) && c.lingerKeywords.some((x) => BAD.includes(x.k))) { c.lingerKeywords = c.lingerKeywords.filter((x) => !BAD.includes(x.k)); any = true; }
-      if (any) log(state, `✨ ${nameOf(state, c)} is cleansed.`);
+      if (any) { log(state, `✨ ${nameOf(state, c)} is cleansed.`); traceFx(state, { type: 'cleansed', target: c.uid }); }
       if (any && c.kind === 'minion') ctx.cleansedMinion = true;
     });
   },
@@ -1930,7 +1931,7 @@ export const EFFECT_OPS = {
       m.implanted = ctx.controller;
       (m.grantedTriggers ??= []).push({ on: 'deathrattle', controller: ctx.controller, implant: true, effects: [{ op: 'chestburst' }] });
       log(state, `🥚 ${nameOf(state, m)} is Implanted.`);
-      emit(state, { type: 'implanted', target: m.uid, player: m.controller, by: ctx.controller });
+      emit(state, { type: 'implanted', target: m.uid, player: m.controller, by: ctx.controller, source: ctx.self ?? null });
     });
   },
   // An Implanted minion died (ctx.cardId: the host): a Chestburster bursts out for ctx.controller.
@@ -1941,7 +1942,7 @@ export const EFFECT_OPS = {
     m.evolveProgress = 0;
     log(state, `👽 A Chestburster bursts out of ${getCard(ctx.cardId)?.name ?? 'its host'}!`);
     enterBattlefield(state, m);
-    emit(state, { type: 'chestburst', source: m.uid, player: ctx.controller });
+    emit(state, { type: 'chestburst', source: m.uid, player: ctx.controller, host: ctx.self ?? null });
     if (controls(state, ctx.controller, 'instantEvolve')) evolveChestburster(state, m);
   },
 
@@ -2299,6 +2300,7 @@ export const EFFECT_OPS = {
     // amountFromAttackOf: the Armor equals that character's Attack (Sacred Immolation).
     const n = e.amountFromAttackOf ? effectiveAttack(findCharacter(state, resolveSelector(state, e.amountFromAttackOf, ctx)[0]) ?? { attack: 0, tempAttack: 0 }) : e.amount;
     heroOf(state, ctx.controller).armor += n;
+    traceFx(state, { type: 'armorGained', target: heroOf(state, ctx.controller).uid, amount: n });
   },
 
   // ---- Robots (Arsenal Protocol): Hero Weapons ----

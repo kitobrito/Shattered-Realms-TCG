@@ -986,6 +986,9 @@ export async function burnCard(html, pileRect) {
   holder.remove();
 }
 
+// Building blocks shared with keyword-fx.js.
+export { addFx, box, center, done, drain, fling, glowBall, ring, bigGlyph, column, slashes };
+
 // ---- Deaths, by faction --------------------------------------------------------------
 
 // Little emoji / shapes flung out of a spot (bats, petals, bones, tombstones).

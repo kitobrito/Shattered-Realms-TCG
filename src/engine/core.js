@@ -488,7 +488,16 @@ export function dissolve(state, m, by = null) {
 
 export function emit(state, event) {
   state.buffer.push({ kind: 'event', event });
+  FX_TRACE.get(state)?.push(event);
 }
+
+// The screen's record of what a move did, in order (events plus a few visual-only marks), so each
+// keyword can be animated from what really happened. Only kept while the UI asks for it (around a
+// move it is about to show); the rules never read it, and the AI's copies of the game never have one.
+const FX_TRACE = new WeakMap();
+export function startFxTrace(state) { FX_TRACE.set(state, []); }
+export function takeFxTrace(state) { const t = FX_TRACE.get(state) ?? []; FX_TRACE.delete(state); return t; }
+export function traceFx(state, mark) { FX_TRACE.get(state)?.push({ fx: true, ...mark }); }
 
 // ---- Health changes -------------------------------------------------------
 
@@ -544,17 +553,22 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     emit(state, { type: 'minionLostStats', target: t.uid, player: t.controller, source: sourceId });
     checkPrey(state, t);
     // Rage: damage it survives makes it angrier.
-    if (amount > 0 && t.health > 0 && !t.destroyed && hasKeyword(t, 'Rage')) { t.attack += 1; log(state, `😡 ${nameOf(state, t)} rages (+1 Attack).`); }
+    if (amount > 0 && t.health > 0 && !t.destroyed && hasKeyword(t, 'Rage')) { t.attack += 1; log(state, `😡 ${nameOf(state, t)} rages (+1 Attack).`); traceFx(state, { type: 'rage', target: t.uid }); }
   }
   log(state, `${src ? nameOf(state, src) : opts.burn ? '🔥 Burn' : 'Effect'} deals ${amount} to ${nameOf(state, t)}.`);
   emit(state, { type: 'damageDealt', source: sourceId, target: t.uid, player: t.controller, amount });
 
   if ((src && hasKeyword(src, 'Lifesteal')) || opts.lifesteal) {
-    if (srcController != null) heal(state, heroOf(state, srcController).uid, amount, { source: sourceId });
+    if (srcController != null) {
+      const hero = heroOf(state, srcController);
+      traceFx(state, { type: 'lifesteal', source: src?.uid ?? hero.uid, from: t.uid, target: hero.uid, amount });
+      heal(state, hero.uid, amount, { source: sourceId });
+    }
   }
   // Recoil: the source takes half (rounded down) of the damage it deals.
   if (src && src.uid !== t.uid && hasKeyword(src, 'Recoil') && Math.floor(amount / 2) > 0) {
     log(state, `${nameOf(state, src)} suffers Recoil.`);
+    traceFx(state, { type: 'recoil', source: t.uid, target: src.uid, amount: Math.floor(amount / 2) });
     dealDamage(state, null, src.uid, Math.floor(amount / 2));
   }
   return amount;
