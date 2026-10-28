@@ -26,6 +26,7 @@ import * as mfx from './menu-fx.js';
 import { artOf, minionArtOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
+import { PAIR_GUIDES } from '../cards/pair-guides.js';
 import { cardMatchesQuery, queryWords } from '../cards/card-search.js';
 import * as sound from './sound.js';
 import { music, refreshMusic } from './music.js';
@@ -2179,6 +2180,45 @@ function synergyHTML(factions) {
   </div>`;
 }
 
+// The two-realm deck guide: game plan, combos across the realms, the Fusion Hero Spell, what to
+// keep in the opening hand and the Mana curve (both from the deck you'll actually play).
+function pairGuideHTML(factions) {
+  if (factions.length !== 2) return '';
+  const g = PAIR_GUIDES[[...factions].sort().join('+')];
+  if (!g) return '';
+  const deck = pairDeckFor(factions);
+  const inDeck = new Set(deck);
+  const name = (id) => `<b class="pg-card f-${fslug(getCard(id).faction)}">${esc(getCard(id).name)}</b>`;
+  const fusion = fusionFor(factions);
+  // Opening hand: up to 3 cheap cards (2 Mana or less) from each realm, minions first.
+  const uniq = [...new Set(deck)].map(getCard).filter(Boolean).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+  const keep = factions.flatMap((f) => {
+    const cheap = uniq.filter((c) => c.faction === f && c.cost <= 2);
+    return [...cheap.filter((c) => c.type === 'minion'), ...cheap.filter((c) => c.type !== 'minion')].slice(0, 3);
+  }).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+  // Mana curve: 0-1, 2 ... 6, 7+.
+  const buckets = [[0, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 99]];
+  const counts = buckets.map(([lo, hi]) => {
+    const cs = deck.map(getCard).filter((c) => c && c.cost >= lo && c.cost <= hi);
+    return { label: hi === 99 ? `${lo}+` : lo === hi ? `${lo}` : `${lo}-${hi}`, minions: cs.filter((c) => c.type === 'minion').length, other: cs.filter((c) => c.type !== 'minion').length };
+  });
+  const top = Math.max(1, ...counts.map((c) => c.minions + c.other));
+  const curve = counts.map((c) => `<div class="pg-col" title="${c.minions} minions, ${c.other} spells and traps"><span class="pg-n">${c.minions + c.other || ''}</span>
+    <div class="pg-bar"><i class="pg-sp" style="height:${(c.other / top) * 100}%"></i><i class="pg-mn" style="height:${(c.minions / top) * 100}%"></i></div><small>${c.label}</small></div>`).join('');
+  return `<article class="pg-guide">
+    <header><span class="pg-kicker">Deck guide</span><h3>${factions.map(esc).join(' <i>+</i> ')}</h3></header>
+    ${synergyHTML(factions)}
+    <section><h4>Game plan</h4><p>${esc(g.plan)}</p></section>
+    <section><h4>Combos</h4><ul class="pg-combos">${g.combos.map(([a, b, why]) => `<li><div>${name(a)} <i>+</i> ${name(b)}${[a, b].some((id) => !inDeck.has(id)) ? ' <span class="pg-missing">not in your deck</span>' : ''}</div><p>${esc(why)}</p></li>`).join('')}</ul></section>
+    ${fusion ? `<section><h4>Fusion Hero Spell: ${esc(fusion.name)} <span class="pg-cost">${fusion.cost} Mana</span></h4><p class="pg-quote">${esc(fusion.text)}</p><p>${esc(g.fusion)}</p></section>` : ''}
+    <div class="pg-split">
+      <section><h4>Keep in your opening hand</h4><ul class="pg-keep">${keep.map((c) => `<li><span class="pg-gem">${c.cost}</span>${name(c.id)}</li>`).join('')}</ul></section>
+      <section><h4>Mana curve</h4><div class="pg-curve">${curve}</div><p class="pg-legend"><i class="pg-mn"></i> minions <i class="pg-sp"></i> spells and traps</p></section>
+    </div>
+    <section class="pg-watch"><h4>Watch out</h4><p>${esc(g.watch)}</p></section>
+  </article>`;
+}
+
 // A short guide per picked faction: what it does and what it's good at.
 function factionGuideHTML(factions) {
   return `<div class="ts-guides">${factions.map((f) => {
@@ -2303,7 +2343,7 @@ function renderMenu() {
       </nav>
     </div>
     ${guideOpen && ready ? `<div class="overlay guide-overlay"><div class="guide-backdrop" data-act="closeGuide"></div><div class="guide-panel">
-      <button class="ghost guide-close" data-act="closeGuide">✕</button>${factionGuideHTML(picked)}
+      <button class="ghost guide-close" data-act="closeGuide">✕</button>${format !== 'single' ? pairGuideHTML(picked) : ''}${factionGuideHTML(picked)}
       <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p></div></div>` : ''}
     ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
