@@ -974,6 +974,17 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     greatFreeze = { caught, furry };
   }
 
+  // Fruit Pirates: a minion that just ate a Fruit, and Rubber Captain Ruddy shifting Gears
+  // (the same minion, now showing a Gear card). Driven by the new board vs the old one.
+  for (const el of app.querySelectorAll('.minion[data-char]')) {
+    const old = oldMinions.get(Number(el.dataset.char));
+    if (!old) continue;
+    const was = old.clone.dataset;
+    if (el.dataset.fruit && el.dataset.fruit !== (was.fruit ?? '')) { sound.play('cardPlay'); jobs.push(fx.fruitEaten(el.getBoundingClientRect(), el.dataset.fruit)); }
+    const id = el.dataset.preview;
+    if (id !== was.preview && getCard(id)?.fruitEater && getCard(was.preview)?.nextGear === id) { sound.play('whoosh'); jobs.push(fx.gearShift(el, id, getCard(id).name)); }
+  }
+
   // Extinction: the doomed minions stay on screen while a meteor comes down on them;
   // only after the impact do they crack and fade (the deaths below).
   const extLine = newLog.find((l) => /^☄ EXTINCTION!/.test(l));
@@ -2252,7 +2263,7 @@ function renderMenu() {
     <div class="menu tavern select-screen m2">
       <header class="m2-top">
         <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-        <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
+        <p class="ts-tag">Twenty realms broke apart. Two of them are yours.</p>
         <div class="m2-toggle-row">
           <span class="pick-count">${picked.length}/${pickNeeded()}</span>
           ${pairUnlocked() ? `<div class="format-toggle m2-toggle">

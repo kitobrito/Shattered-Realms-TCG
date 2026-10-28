@@ -41,11 +41,14 @@ function cornerIcons(m, s) {
 }
 
 // Bottom-centre badges, like Hearthstone's Exit / trigger / Lifesteal / Poisonous icons.
+const FRUIT_COLOR = { flame_fruit: '#ff6a2a', smoke_fruit: '#d8dce4', frost_fruit: '#9fe0ff', thunder_fruit: '#ffe14a', magma_fruit: '#ff3a1a', light_fruit: '#fff6b0', shadow_pull_fruit: '#8a5aff' };
 function badges(m) {
   if (hasKeyword(m, 'Silenced')) return '';
   // (An Infection's Rage Runner shows as the 🦠 mark, not as an Exit.)
   const triggers = [...(getCard(m.cardId).triggers ?? []), ...(m.grantedTriggers ?? []).filter((t) => !t.infection && !t.implant)];
   return [
+    // Fruit Pirates: the Fruit it ate (its glyph, in the Fruit's colour).
+    m.fruit ? `<i class="b-fruit" style="--fc:${FRUIT_COLOR[m.fruit] ?? '#ffb43a'}" title="Ate the ${esc(getCard(m.fruit)?.name ?? 'Fruit')}: ${esc(getCard(m.fruit)?.text?.replace(/^Fruit\. A friendly minion that hasn't eaten a Fruit /, '') ?? '')}">${getCard(m.fruit)?.art ?? '🍎'}</i>` : '',
     // Robots: installed Upgrades and the Weapon.
     m.upgrades ? `<i class="b-upgrade" title="${m.upgrades} Upgrade${m.upgrades === 1 ? '' : 's'} installed">⚙${m.upgrades}</i>` : '',
     m.weapon ? `<i class="b-weapon" title="Weapon: ${m.weapon.name}">🔫</i>` : '',
@@ -186,7 +189,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
   const hollow = [].concat(card.aura ?? []).some((a) => a.if?.handEmpty) && !m.textLost
     ? (s.players[m.controller].hand.length === 0 ? 'hollow on' : 'hollow') : '';
   return `
-    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${hollow} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${hollow} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-fruit="${m.fruit ?? ''}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>

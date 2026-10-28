@@ -25,13 +25,14 @@ import { RADIOACTIVE_CARDS } from './radioactive.js';
 import { LYCANTHROPE_CARDS } from './lycanthropes.js';
 import { VOID_CARDS } from './void.js';
 import { ICE_AGE_CARDS } from './ice-age.js';
+import { FRUIT_PIRATE_CARDS } from './fruit-pirates.js';
 import { NEUTRAL_CARDS } from './neutral.js';
 import { PLANT_CARDS } from './plants.js';
 import { STANDARD_CUTS, STANDARD_DUPLICATES } from './standard-cuts.js';
 import { isComplete } from './validate.js';
 import { VAMPIRE_CARDS } from './vampires.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...FRUIT_PIRATE_CARDS, ...FUSION_CARDS]);
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
 // gold legendary frame (shared.js). A Lycanthrope's Beast Form is legendary with it.
@@ -96,6 +97,12 @@ export const LEGENDARY = new Set([
   'old_tusker_the_herd_mother',
   'una_the_glacier_keeper',
   'kalak_the_thousand_year_mammoth',
+  'rubber_captain_ruddy',
+  'ruddy_steam_gear',
+  'ruddy_titan_gear',
+  'ruddy_bounce_gear',
+  'ruddy_dawn_gear',
+  'old_quakebeard',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).
