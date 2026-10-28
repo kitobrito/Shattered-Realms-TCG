@@ -185,6 +185,7 @@ let builderMode = 'cut';   // which deck builder is open: 'cut' (build your deck
 
 const pickNeeded = () => (format === 'single' ? 1 : Math.min(DEFAULT_RULES.factionsPerDeck, PLAYABLE_FACTIONS.length));
 let picked = PLAYABLE_FACTIONS.slice(0, pickNeeded());
+let pickCleared = false; // the player un-picked every realm on purpose: don't pick one for them
 // Each format remembers its own pick when you switch between them.
 const otherPick = { pair: null, single: null };
 function setFormat(next) {
@@ -202,7 +203,7 @@ function applyJourney() {
   if (!pairUnlocked() && format !== 'single') { otherPick[format] = picked; format = 'single'; picked = picked.slice(0, 1); }
   const open = availableFactions();
   picked = picked.filter((f) => open.includes(f));
-  if (!picked.length) picked = open.slice(0, pickNeeded());
+  if (!picked.length && !pickCleared) picked = open.slice(0, pickNeeded());
 }
 let milestone = null; // what the last match opened up, shown on the menu
 let firstPicks = [];   // a brand-new player's choice of first realms (before they're saved)
@@ -219,7 +220,7 @@ function startGame(mode, factions = picked, rivalFactions = randomPick()) {
   if (needsFirstPick()) return render(); // choose your first realms first
   applyJourney();
   if (factions !== picked && factions.some((f) => !availableFactions().includes(f))) factions = picked;
-  if (factions.length !== pickNeeded()) return flash(`Pick ${pickNeeded()} factions.`);
+  if (factions.length !== pickNeeded()) return flash(pickNeeded() === 1 ? 'Pick a faction.' : `Pick ${pickNeeded()} factions.`);
   // The coin flip: the human takes seat 0 (goes first) or seat 1 (goes second, gets the Mana Potion).
   const human = Math.random() < 0.5 ? 0 : 1;
   const you = { name: mode === 'ai' ? 'You' : 'Player 1', factions, deck: deckFor(factions, true) };
@@ -2209,6 +2210,8 @@ let howtoPage = 0; // the How to Play chapter that's open
 let guideOpen = false; // the main menu's realm guide (what the picked factions do)
 function renderMenu() {
   applyJourney();
+  // Picking a realm redraws the menu: keep the realm list where it was scrolled.
+  const listScroll = app.querySelector('.m2-list')?.scrollTop ?? 0;
   const saved = loadSaved();
   showMenuBackdrop(true);
   const roster = [...FACTIONS].sort((a, b) => PLAYABLE_FACTIONS.includes(b) - PLAYABLE_FACTIONS.includes(a));
@@ -2305,6 +2308,8 @@ function renderMenu() {
     ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
     ${needsFirstPick() ? firstPickHTML() : ''}`;
+  const listEl = app.querySelector('.m2-list');
+  if (listEl) listEl.scrollTop = listScroll;
   // Phones: bring each strip's picked realm into view.
   app.querySelectorAll('.m2-strip-row').forEach((r) => {
     const on = r.querySelector('.m2-chip.on');
@@ -3534,11 +3539,13 @@ app.addEventListener('click', (e) => {
       if (next[slot] === f) next.splice(slot, 1);
       else { const other = next.indexOf(f); if (other >= 0) next[other] = next[slot]; next[slot] = f; }
       picked = next.filter(Boolean).slice(0, pickNeeded());
+      pickCleared = !picked.length;
       afterRender.push(() => mfx.realmPicked(app, f));
       return render();
     }
     const adding = !picked.includes(f);
     picked = adding ? [...picked, f].slice(-pickNeeded()) : picked.filter((x) => x !== f);
+    pickCleared = !picked.length;
     if (adding) afterRender.push(() => mfx.realmPicked(app, f));
     return render();
   }

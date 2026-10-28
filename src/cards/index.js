@@ -148,7 +148,11 @@ export function standardCuts(factions, lineups = {}) {
     const lineup = lineupOf(f, lineups);
     const cut = (STANDARD_CUTS[f] ?? []).filter((id) => lineup.includes(id));
     const spare = lineup.filter((id) => !cut.includes(id) && FACTION_LISTS[f].includes(id)).sort((a, b) => costOf(b) - costOf(a));
-    return [...cut, ...spare.slice(0, Math.max(0, per - cut.length))];
+    // A lineup that is mostly expansion cards (Hive Brood) runs out of standard cards to cut:
+    // its most expensive expansion cards go next (Legendaries last), so the half still comes to the right size.
+    const more = lineup.filter((id) => !cut.includes(id) && !FACTION_LISTS[f].includes(id))
+      .sort((a, b) => LEGENDARY.has(a) - LEGENDARY.has(b) || costOf(b) - costOf(a));
+    return [...cut, ...[...spare, ...more].slice(0, Math.max(0, per - cut.length))];
   });
 }
 
