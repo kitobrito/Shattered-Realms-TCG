@@ -5603,3 +5603,41 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 /* Badge on a minion that has eaten a Fruit (its colour). */
 .minion .b-fruit { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%; font-style: normal;
   background: radial-gradient(circle at 35% 30%, #fff8, var(--fc, #ffb43a) 50%); box-shadow: 0 0 6px var(--fc, #ffb43a); }
+
+/* Two-realm deck guide (Realm guide overlay). */
+.pg-guide { text-align: left; margin: 0 0 14px; padding: 14px 18px; border-radius: 14px; background: #0009; border: 1px solid #c9a35a55; box-shadow: inset 0 1px 0 #ffffff10; }
+.pg-guide header { text-align: center; margin-bottom: 4px; }
+.pg-kicker { font-family: var(--font-title); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #c9a35a; }
+.pg-guide h3 { margin: 2px 0 0; font-family: var(--font-title); font-size: clamp(20px, 3vw, 28px); color: #f3e2b8; }
+.pg-guide h3 i { color: #c9a35a; font-style: normal; }
+.pg-guide .ts-synergy { margin: 8px auto 4px; }
+.pg-guide section { margin-top: 12px; }
+.pg-guide h4 { margin: 0 0 4px; font-family: var(--font-title); font-size: 15px; letter-spacing: 0.04em; color: #e7c27a; }
+.pg-guide p { margin: 0; color: #e8d6b0; line-height: 1.45; }
+.pg-card { color: #fff3d6; }
+.pg-combos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pg-combos li { padding: 8px 10px; border-radius: 10px; background: #ffffff0a; border-left: 3px solid #c9a35a; }
+.pg-combos li > div { margin-bottom: 3px; }
+.pg-combos li > div i { color: #c9a35a; font-style: normal; margin: 0 2px; }
+.pg-missing { margin-left: 6px; font-size: 11px; padding: 1px 6px; border-radius: 8px; background: #d9705f33; color: #ffb3a6; }
+.pg-cost { font-family: var(--font-body); font-size: 12px; color: #9ec9ff; margin-left: 4px; }
+.pg-quote { font-style: italic; color: #cbbfa6 !important; margin-bottom: 4px !important; padding-left: 10px; border-left: 2px solid #ffffff22; }
+.pg-split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pg-keep { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.pg-keep li { display: flex; align-items: center; gap: 8px; color: #e8d6b0; }
+.pg-gem { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(180deg, #4a8cff, #1d4fb8); color: #fff; font-weight: 700; font-size: 13px; box-shadow: inset 0 1px 0 #ffffff55; flex: none; }
+.pg-curve { display: flex; align-items: flex-end; gap: 6px; height: 110px; padding: 0 2px; }
+.pg-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.pg-n { font-size: 12px; color: #e8d6b0; min-height: 15px; }
+.pg-bar { flex: 1; width: 100%; max-width: 30px; display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; background: #ffffff08; }
+.pg-bar i { display: block; width: 100%; }
+.pg-mn { background: linear-gradient(180deg, #f0c060, #b9852e); }
+.pg-sp { background: linear-gradient(180deg, #8fb8ff, #4a6fc0); }
+.pg-col small { margin-top: 3px; font-size: 11px; color: #b8a488; }
+.pg-legend { margin-top: 6px !important; font-size: 12px; color: #b8a488 !important; display: flex; align-items: center; gap: 6px; }
+.pg-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.pg-legend i.pg-sp { margin-left: 10px; }
+.pg-watch { padding: 8px 10px; border-radius: 10px; background: #d9705f14; border-left: 3px solid #d9705f; }
+.pg-watch h4 { color: #ffb3a6; }
+@media (max-width: 640px) { .pg-split { grid-template-columns: 1fr; } .pg-guide { padding: 12px; } }
+@media (max-width: 640px) { .guide-panel .ts-guides { flex-direction: column; } }
