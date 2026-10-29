@@ -583,6 +583,10 @@ function gameOverHTML(s, me, stats, ctx = {}) {
 // it would be a thin strip, so those keep the drawn table instead.
 // The board a player's matches are played on: their first realm's, or the Basic board (Settings).
 export const boardFaction = (faction) => (getSettings().basicBoard ? 'Basic' : faction);
+// Whose realm's battlefield the match is fought on. Two people (online or Hot Seat) share one board,
+// picked at random from both players' realms when the game is made (engine boardRealm). Against the AI
+// you fight on your own first realm's board.
+export const boardRealmOf = (s, me, mode) => ((mode === 'online' || mode === 'hotseat') && s.boardRealm ? s.boardRealm : s.players[me].factions[0]);
 export const paintedBoards = () => window.matchMedia?.('(min-aspect-ratio: 6/5)').matches ?? true;
 // An upright phone or tablet gets the portrait battle layout (style.css "PORTRAIT").
 export const portraitLayout = () => window.matchMedia?.('(max-aspect-ratio: 5/6)').matches ?? false;
@@ -694,7 +698,7 @@ export function boardHTML(ctx) {
   const shiftable = new Set(legal.filter((a) => a.type === 'transform').map((a) => a.minion));
   const faction = fslug(mp.factions[0]);
   // The board shown: your first realm's, or the plain one if you picked it in Settings.
-  const bf = boardFaction(mp.factions[0]);
+  const bf = boardFaction(boardRealmOf(s, me, ctx.mode));
   // The painting itself is drawn by board-layer.js (behind the arena), so it survives re-renders.
   // Demons' Descent: once the battle has sunk, BOTH players fight on the current circle's board.
   const depth = s.descent?.depth ?? 0;
