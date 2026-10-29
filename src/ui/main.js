@@ -4068,7 +4068,8 @@ document.addEventListener('journey', () => { if (screen === 'menu') render(); })
 // iPhone: inside a match, a finger drag must never scroll or bounce the page
 // (or the itch.io page around it), and must never start the system's
 // drag-an-image-out-of-the-app gesture. Outside a match, pages scroll normally.
-document.addEventListener('touchmove', (e) => { if (screen === 'game') e.preventDefault(); }, { passive: false });
+// (Settings is a scrolling panel opened over the match: its own swipes still scroll it.)
+document.addEventListener('touchmove', (e) => { if (screen === 'game' && !e.target.closest?.('#settings')) e.preventDefault(); }, { passive: false });
 document.addEventListener('dragstart', (e) => e.preventDefault());
 // A game, not a web page: no long-press / right-click menus (except where you type).
 document.addEventListener('contextmenu', (e) => { if (!e.target.closest?.('input, textarea')) e.preventDefault(); });
