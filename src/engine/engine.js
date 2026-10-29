@@ -115,6 +115,10 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
   drawCards(state, 1, state.rules.startingHandSecond);
   if (state.rules.openingHandHelp) [0, 1].forEach((p) => ensureEarlyPlay(state, p));
   state.buffer = [];
+  // The battlefield both players see: one realm picked at random from either player's realms. It
+  // comes from the seed (not the game's random stream), so the same match always shows the same board.
+  const realms = [...new Set(state.players.flatMap((pl) => pl.factions ?? []))];
+  if (realms.length) state.boardRealm = realms[Math.abs(Math.imul(seed | 0, 2654435761) >>> 7) % realms.length];
   // Mulligan: Player 1, then Player 2, may swap opening cards before turn 1.
   if (state.rules.mulligan) state.pending = { type: 'mulligan', player: 0 };
   else beginGame(state);

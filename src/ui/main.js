@@ -17,7 +17,7 @@ import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, hasCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
-import { boardFaction, boardHTML, descentCalloutHTML, handIsOpen, layoutHands, setHandDocks, setHandOpen, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
+import { boardFaction, boardHTML, boardRealmOf, descentCalloutHTML, handIsOpen, layoutHands, setHandDocks, setHandOpen, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { boardReact, canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startBoardFx } from './circle-fx.js';
 import * as drag from './drag.js';
@@ -3056,7 +3056,7 @@ function renderGame() {
     canUndo: !game.tutorial && undoStack.length > 0 && !animating && s.activePlayer === viewer && !s.pending, recap: recap && s.activePlayer === viewer && !s.gameOver ? { ...recap, fresh: Date.now() - recap.at < 600 } : null,
     thinking: !s.gameOver && isAI(actingPlayer(s)) && s.pending?.type !== 'mulligan' ? s.players[actingPlayer(s)].name : null,
   });
-  if (app.querySelector('.arena.has-board')) showBoard(boardFaction(s.players[viewer].factions[0]), s.descent?.depth ?? 0); else hideBoard();
+  if (app.querySelector('.arena.has-board')) showBoard(boardFaction(boardRealmOf(s, viewer, game.mode)), s.descent?.depth ?? 0); else hideBoard();
   layoutPortraitBoard(app);
   portraitCircleFx(app);
   descentNews(s);
