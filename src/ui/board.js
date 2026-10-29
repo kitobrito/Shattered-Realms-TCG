@@ -195,7 +195,10 @@ export function minionHTML(m, s, cls = '', shift = false) {
       <div class="m-ring"></div>
       ${burnHTML(m)}
       ${radHTML(m)}${radHitHTML(m)}
-      ${m.volts > 0 ? `<span class="volt-badge${m.volts >= 5 ? ' full' : ''}" title="${m.volts} Volt${m.volts === 1 ? '' : 's'}: it Discharges them as a Chain when it dies (or when a card makes it)">⚡${m.volts}</span>` : ''}
+      ${m.cardId === 'ohmra_the_living_battery'
+        // Ohmra counts up to her unleash at 10 (the badge shows how close she is, even at 0).
+        ? `<span class="volt-badge ohmra${m.volts >= 7 ? ' full' : ''}" title="${m.volts ?? 0} of 10 Volts: at 10 or more she unleashes them all as a Chain that never gets weaker">⚡${m.volts ?? 0}/10</span>`
+        : m.volts > 0 ? `<span class="volt-badge${m.volts >= 5 ? ' full' : ''}" title="${m.volts} Volt${m.volts === 1 ? '' : 's'}: it Discharges them as a Chain when it dies (or when a card makes it)">⚡${m.volts}</span>` : ''}
       ${m.conductive ? '<i class="ov-wet" title="Conductive: a Chain jumps off it at full power this turn"></i>' : ''}
       ${m.infected != null ? '<i class="ov-infect"><b></b><b></b><b></b><b></b></i>' : ''}
       ${m.implanted != null ? '<i class="ov-implant"><b></b></i>' : ''}
@@ -357,6 +360,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
       <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
+        ${pl.storm > 0 ? `<span class="hero-storm" title="Endless Storm: at the end of each of your turns, Chain ${pl.storm} at a random enemy">⛈${pl.storm}</span>` : ''}
         ${h.holyFlame > 0 ? `<span class="hero-holy" title="Holy Flame ${h.holyFlame}: takes ${h.holyFlame} damage at the end of the enemy's turn and can't be healed">✨${h.holyFlame}</span>` : ''}
         ${radHTML(h)}${radHitHTML(h)}
         ${cracksSVG(crackStage(h))}

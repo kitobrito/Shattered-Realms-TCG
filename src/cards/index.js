@@ -99,6 +99,8 @@ export const LEGENDARY = new Set([
   'kalak_the_thousand_year_mammoth',
   'the_thunderhead',
   'leviathan_of_the_deep_storm',
+  'ohmra_the_living_battery',
+  'thalassa_the_endless_storm',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).

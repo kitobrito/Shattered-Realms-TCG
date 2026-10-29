@@ -5703,3 +5703,10 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 @media (max-height: 520px) {
   .arena:not(.portrait) .my-hand.raised .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(-2% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 }
+
+/* Storm Season (Eels): Ohmra's charge toward her unleash at 10, and Thalassa's Endless Storm on the hero. */
+.volt-badge.ohmra { background: linear-gradient(#ffe6a0, #d99a10); }
+.hero-storm { position: absolute; left: -10%; top: 4%; z-index: 6; padding: 1px 8px; border-radius: 10px; font-family: var(--font-title); font-weight: 900;
+  font-size: calc(var(--hero, 120px) * 0.12); color: #eaffff; background: radial-gradient(circle at 40% 35%, #6a7ab8, #2a2f5a 60%, #10132a);
+  border: 2px solid #9fe8ff; box-shadow: 0 0 12px #5ae8ff, 0 0 2px #000; pointer-events: auto; animation: storm-pulse 2.4s ease-in-out infinite; }
+@keyframes storm-pulse { 0%, 100% { box-shadow: 0 0 10px #5ae8ff, 0 0 2px #000; } 50% { box-shadow: 0 0 20px #bff8ff, 0 0 2px #000; } }
