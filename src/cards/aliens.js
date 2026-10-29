@@ -332,7 +332,6 @@ export const ALIEN_CARDS = [
   { ...XENO, id: 'umbral_xeno', name: 'Umbral Xeno', attack: 3, health: 4, aura: { target: 'self', if: { handEmpty: true }, attack: 2 },
     text: 'Hollow: Has +2 Attack. (Evolved from a Void minion.)' },
   { ...XENO, id: 'woolly_xeno', name: 'Woolly Xeno', attack: 3, health: 5, keywords: ['Thick Fur'], text: 'Thick Fur. (Evolved from an Ice Age minion.)' },
-  { ...XENO, id: 'xeno_corsair', name: 'Xeno Corsair', attack: 4, health: 4, keywords: ['Rush'], text: 'Rush. (Evolved from a Fruit Pirates minion.)' },
   { ...XENO, id: 'xeno_drone', name: 'Xeno Drone', attack: 2, health: 3, text: '(Evolved from a minion with no realm.)' },
 
   // ---- Tokens ----

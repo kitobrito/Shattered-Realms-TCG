@@ -79,7 +79,7 @@ export const playerPortraitHTML = (factions) => {
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Fruit Pirates'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${fslug(faction)}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
@@ -199,7 +199,7 @@ function sigilHTML(card) {
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes',
-  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Fruit Pirates']);
+  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;

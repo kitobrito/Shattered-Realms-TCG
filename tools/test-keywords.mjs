@@ -379,9 +379,9 @@ test('Stealth and Elusive minions still take board-wide damage', () => {
 });
 test('Elusive: enemy minion Arrivals can still target it (only spells are blocked)', () => {
   const e = blank(1, 1, 5, ['Elusive']);
-  const sniper = give(0, 'slingshot_sniper');
-  if (!canTarget(sniper, e)) return 'Arrival could not target an Elusive minion';
-}, 'Fruit Pirates');
+  const spear = give(0, 'neanderthal_spearman');
+  if (!canTarget(spear, e)) return 'Arrival could not target an Elusive minion';
+}, 'Ice Age');
 test('Spell Ward blocks a board-wide enemy spell too, once', () => {
   const w = blank(1, 1, 9, ['Spell Ward']); const o = blank(1, 1, 9);
   play(0, give(0, 'scorching_breath'));
@@ -469,6 +469,12 @@ test('Burrow: Stealth until the start of my next turn, then it Surfaces', () => 
   if (canAttackTarget(foe, m)) return 'enemy could attack it while Burrowed';
   endTurn();
   if (m.burrowed || hasKeyword(m, 'Stealth')) return 'did not Surface';
+});
+test('Burrow: a Burrowed minion that attacks Surfaces and leaves Stealth', () => {
+  const m = blank(0, 2, 5);
+  resolve({ op: 'burrow', target: { uid: m.uid } });
+  attack(0, m.uid, pl(1).hero.uid);
+  if (m.burrowed || hasKeyword(m, 'Stealth')) return `burrowed ${m.burrowed} stealth ${hasKeyword(m, 'Stealth')}`;
 });
 test('Implant: when the host dies a Chestburster bursts out on the Implanter\'s side, and Evolves after 2 of my turns', () => {
   const host = blank(1, 1, 2);

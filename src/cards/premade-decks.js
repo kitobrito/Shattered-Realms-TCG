@@ -20,7 +20,6 @@ export const CLASSIC_DECK_NAMES = {
   Divine: 'Holy Vanguard', Robots: 'Assembly Line', Radioactive: 'Fallout', Bees: 'The Hive',
   Ghosts: 'Haunted Halls', Ultraterrestrials: 'Beyond the Stars', Sharks: 'The Red Wake', Acidic: 'Corrosion Court',
   Lycanthropes: 'Full Moon', Void: 'Endless Night', 'Ice Age': 'The Long Winter',
-  'Fruit Pirates': 'The Fruit Crew',
 };
 
 const cost = (id) => getCard(id).cost;

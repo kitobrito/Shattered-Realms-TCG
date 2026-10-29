@@ -53,14 +53,6 @@ export const EMOTES = {
     oops: "Oops. Slipped on the ice.",
     threaten: "Winter is long. We are patient.",
   },
-  'Fruit Pirates': {
-    greetings: "Ahoy! Want a bite of my fruit?",
-    wellPlayed: "Well played! You'd make a fine first mate.",
-    thanks: "Thanks, matey!",
-    wow: "Shiver me timbers, what a play!",
-    oops: "Oops. Ate the wrong fruit.",
-    threaten: "Your treasure's mine, landlubber!",
-  },
   Void: {
     greetings: "The stars went quiet. Hello.",
     wellPlayed: "Well played. Even the dark noticed.",
