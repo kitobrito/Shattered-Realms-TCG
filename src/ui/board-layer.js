@@ -158,6 +158,9 @@ function boardPoint(clientX, clientY) {
   const x = (clientX - r.left) / r.width, y = (clientY - r.top) / r.height;
   return x >= 0 && y >= 0 && x <= 1 && y <= 1 ? [x, y] : null;
 }
+// A match event the living board answers, if it has a reaction for it (cosmetic only).
+export function boardReact(name) { realmFx?.react?.(name); }
+
 export function pokeBoard(clientX, clientY) {
   const live = circleFx ?? realmFx ?? anim;
   const p = live && boardPoint(clientX, clientY);

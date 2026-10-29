@@ -24,7 +24,7 @@ import {
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
   corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
   descentDepth, maxHand, sinkOneCircle,
-  traceFx,
+  traceFx, gainVolts, isConductive,
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
@@ -245,7 +245,7 @@ export const XENO_FORMS = {
   Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
   Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
   Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
-  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno', Eels: 'xeno_voltwyrm',
 };
 const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
 export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
@@ -372,7 +372,8 @@ export function checkCondition(state, cond, ctx) {
     const n = state.players[ctx.controller].board.filter((m) =>
       (!f.tribe || hasTribe(m.tribes, f.tribe)) && (!f.cardId || m.cardId === f.cardId) &&
       (!f.excludeSelf || m.uid !== ctx.self) && (f.minHealth == null || m.health >= f.minHealth) &&
-      (f.minUpgrades == null || (m.upgrades ?? 0) >= f.minUpgrades) && (!f.hasWeapon || !!m.weapon)).length;
+      (f.minUpgrades == null || (m.upgrades ?? 0) >= f.minUpgrades) && (!f.hasWeapon || !!m.weapon) &&
+      (f.minVolts == null || (m.volts ?? 0) >= f.minVolts)).length;
     return n >= (f.min ?? 1);
   }
   // { eventDeadUpgrades: N } — the minion that just died had at least N Upgrades (Final Assembly).
@@ -457,6 +458,7 @@ export function addKeyword(c, k, temporary = false, state = null, lingerUntil = 
   if (k === 'Frozen' && hasKeyword(c, 'Thick Fur')) return;
   if (k === 'Silenced') {
     if (c.encased > 0) delete c.encased; // Frozen in Time: silence breaks the ice (no Breaks free)
+    if (c.volts) c.volts = 0; // Eels: Silence drains its Volts
     for (const old of allKeywords(c)) state ? loseKeyword(state, c, old) : null;
     c.keywords = []; c.tempKeywords = []; c.lingerKeywords = [];
   }
@@ -542,7 +544,152 @@ function applyBuff(state, c, e) {
   if (parts.length) log(state, `${nameOf(state, c)} gets ${parts.join(' / ')}${temp ? ' this turn' : e.lingerUntil != null ? ' until its caster\'s next turn' : ''}.`);
 }
 
+// ---- Eels: Chain and Discharge ------------------------------------------------------
+// Chain X: X damage to the first enemy, then it jumps to the nearest enemy minion it hasn't hit
+// (by board position; the right-hand one on a tie), 1 weaker per jump. A jump off a Conductive
+// minion loses nothing; Storm Coil Eel makes the first jump free and The Thunderhead every jump.
+// Power left after every enemy minion was hit goes into the enemy Hero, and the Chain ends.
+// It skips Stealth, Burrowed, Thawing and dying minions when it jumps.
+// opts: { start: uid (the first target), jumpFrom: uid (start beside it at full power, without hitting it),
+//   lifesteal, burn, corrode, radiate, preyLast, healPerHit, freeze }
+// Returns the number of targets hit.
+function chainCanHit(m) {
+  return m.health > 0 && !m.destroyed && !hasKeyword(m, 'Stealth') && !m.burrowed && !(m.encased > 0);
+}
+function nearestUnhit(board, fromIdx, hit) {
+  let best = null;
+  board.forEach((m, i) => {
+    if (hit.has(m.uid) || !chainCanHit(m)) return;
+    const d = Math.abs(i - fromIdx);
+    if (!best || d < best.d || (d === best.d && i > best.i)) best = { m, i, d };
+  });
+  return best?.m ?? null;
+}
+export function chainLightning(state, ctx, power, opts = {}) {
+  const foe = opponentOf(ctx.controller);
+  const board = state.players[foe].board;
+  const mine = state.players[ctx.controller].board.filter((m) => m.health > 0 && !m.destroyed && !m.textLost);
+  const lossless = mine.some((m) => getCard(m.cardId).chainLossless);
+  let freeJumps = mine.some((m) => getCard(m.cardId).chainFirstJumpFree) ? 1 : 0;
+  const hit = new Set();
+  const hits = [];
+  let cur = opts.start != null ? findCharacter(state, opts.start) : null;
+  let fromIdx = null;
+  if (opts.jumpFrom != null) {
+    const from = findCharacter(state, opts.jumpFrom);
+    fromIdx = from ? board.indexOf(from) : -1;
+    if (from) hit.add(from.uid);
+    cur = fromIdx >= 0 ? nearestUnhit(board, fromIdx, hit) : pickRandom(state, board.filter(chainCanHit));
+  }
+  if (!cur) cur = pickRandom(state, board.filter(chainCanHit)) ?? heroOf(state, foe);
+  if (power <= 0) return 0;
+  log(state, `⚡ Chain ${power}!`);
+  while (cur && power > 0) {
+    hit.add(cur.uid);
+    const blocked = spellWarded(state, cur, ctx);
+    const dealt = blocked ? 0 : dealDamage(state, ctx.self, cur.uid, power, { sourceController: ctx.controller, lifesteal: opts.lifesteal });
+    hits.push({ uid: cur.uid, amount: power, dealt });
+    if (!blocked && cur.kind === 'minion') {
+      if (opts.burn) applyBurn(state, cur, opts.burn);
+      if (opts.corrode) corrode(state, cur, opts.corrode, ctx.controller);
+      if (opts.radiate) applyRadiation(state, cur, opts.radiate, { turns: 2, by: ctx.controller });
+      if (opts.freeze && cur.health > 0) addKeyword(cur, 'Frozen', false, state);
+    }
+    // Ampere Moray: a Chain hitting a Conductive minion charges it up.
+    if (cur.kind === 'minion' && isConductive(cur)) {
+      for (const m of mine) if (getCard(m.cardId).voltsOnConductiveHit) gainVolts(state, m, getCard(m.cardId).voltsOnConductiveHit);
+    }
+    if (cur.kind === 'hero') break;
+    const idx = board.indexOf(cur);
+    const keep = isConductive(cur) || lossless || (freeJumps > 0 && (freeJumps--, true));
+    if (!keep) power -= 1;
+    if (power <= 0) break;
+    cur = nearestUnhit(board, idx, hit) ?? (hit.has(heroOf(state, foe).uid) ? null : heroOf(state, foe));
+  }
+  if (opts.preyLast) { const last = [...hits].reverse().find((h) => findCharacter(state, h.uid)?.kind === 'minion'); if (last) markPrey(state, findCharacter(state, last.uid), true); }
+  if (opts.healPerHit && hits.length) heal(state, heroOf(state, ctx.controller).uid, opts.healPerHit * hits.length, { source: ctx.self });
+  const srcMinion = opts.from ?? (findCharacter(state, ctx.self)?.kind === 'minion' ? ctx.self : null);
+  traceFx(state, { type: 'chain', source: srcMinion, caster: heroOf(state, ctx.controller).uid, player: ctx.controller, hits: hits.map(({ uid, amount }) => ({ uid, amount })) });
+  emit(state, { type: 'chainResolved', player: ctx.controller, hits: hits.length });
+  return hits.length;
+}
+// A minion spends all its Volts on a Chain. start: the first target (else a random enemy).
+export function dischargeMinion(state, m, opts = {}) {
+  const n = m?.volts ?? 0;
+  if (!m || n <= 0) return 0;
+  m.volts = 0;
+  log(state, `⚡ ${nameOf(state, m)} Discharges (${n})!`);
+  emit(state, { type: 'discharged', source: m.uid, player: m.controller, amount: n });
+  return chainLightning(state, { self: m.uid, controller: m.controller, cardId: m.cardId }, n, { start: opts.start, from: m.uid });
+}
+const CHAIN_OPTS = ['lifesteal', 'burn', 'corrode', 'radiate', 'preyLast', 'healPerHit', 'freeze'];
+
 export const EFFECT_OPS = {
+  // ---- Eels ----
+  // { target, amount, overcap? } — the minions gain Volts.
+  gainVolts(state, e, ctx) {
+    each(state, e.target, ctx, (m) => gainVolts(state, m, e.amount ?? 1, { overcap: e.overcap }));
+  },
+  // { target } — Overcharge: double its Volts (past the limit).
+  doubleVolts(state, e, ctx) {
+    each(state, e.target, ctx, (m) => gainVolts(state, m, m.volts ?? 0, { overcap: true }));
+  },
+  // { target } — Conductive until the end of the turn.
+  conductive(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (m.kind !== 'minion' || m.health <= 0 || m.destroyed || m.conductive) return;
+      m.conductive = true;
+      log(state, `💧 ${nameOf(state, m)} is Conductive.`);
+      emit(state, { type: 'conductive', target: m.uid, player: m.controller });
+    });
+  },
+  // { amount, start?: selector (the first target, else random), jumpFrom?: selector, ...CHAIN_OPTS }
+  chain(state, e, ctx) {
+    const opts = Object.fromEntries(CHAIN_OPTS.filter((k) => e[k] != null).map((k) => [k, e[k]]));
+    const start = e.start ? resolveSelector(state, e.start, ctx)[0] : undefined;
+    const jumpFrom = e.jumpFrom ? resolveSelector(state, e.jumpFrom, ctx)[0] : undefined;
+    // The first target has to be an enemy (a friendly or missing pick means a random enemy).
+    const s = findCharacter(state, start);
+    const ok = s && (s.controller ?? s.owner) !== ctx.controller && s.health > 0;
+    let amount = e.amount;
+    // amountIf: { if, amount } — a stronger Chain when the condition holds (Null Current).
+    if (e.amountIf && checkCondition(state, e.amountIf.if, ctx)) amount = e.amountIf.amount;
+    chainLightning(state, ctx, amount, { ...opts, start: ok ? s.uid : undefined, jumpFrom });
+  },
+  // { target, start?, drawIfHits? } — the chosen minions Discharge (start: the first target);
+  // drawIfHits: N — draw a card if a Chain hit N or more targets (Arc Flash).
+  discharge(state, e, ctx) {
+    const start = e.start ? resolveSelector(state, e.start, ctx)[0] : undefined;
+    each(state, e.target, ctx, (m) => {
+      const hits = dischargeMinion(state, m, { start });
+      if (e.drawIfHits && hits >= e.drawIfHits) drawCards(state, ctx.controller, 1);
+    });
+  },
+  // Leviathan of the Deep Storm: every other friendly minion Discharges, one after another.
+  dischargeAll(state, e, ctx) {
+    for (const m of [...state.players[ctx.controller].board]) {
+      if (m.uid === ctx.self || !(m.volts > 0) || m.health <= 0 || m.destroyed) continue;
+      dischargeMinion(state, m);
+    }
+  },
+  // Short Circuit: your minion with the most Volts Discharges, starting at `at`.
+  dischargeMost(state, e, ctx) {
+    const pool = state.players[ctx.controller].board.filter((m) => m.volts > 0 && m.health > 0 && !m.destroyed);
+    if (!pool.length) return;
+    const top = Math.max(...pool.map((m) => m.volts));
+    const m = pool.find((x) => x.volts === top);
+    dischargeMinion(state, m, { start: e.at ? resolveSelector(state, e.at, ctx)[0] : undefined });
+  },
+  // A minion died holding Volts (engine deaths step): half of them (rounded down) go off as a
+  // Chain at a random enemy. (Balance: a full-strength Discharge on every death made Eels win ~80%.)
+  deathDischarge(state, e, ctx) {
+    const n = Math.floor(e.volts / 2);
+    if (n <= 0) return;
+    log(state, `⚡ ${getCard(e.cardId).name} Discharges as it dies (${n})!`);
+    emit(state, { type: 'discharged', source: e.uid, player: ctx.controller, amount: n, onDeath: true });
+    chainLightning(state, { controller: ctx.controller, self: null, cardId: e.cardId }, n, { from: e.uid });
+  },
+
   // Run several effects as one (useful with `if` / `else`).
   sequence(state, e, ctx) {
     for (const sub of e.effects) resolveEffect(state, sub, ctx);

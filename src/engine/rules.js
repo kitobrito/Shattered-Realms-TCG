@@ -5,7 +5,7 @@ export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Lycanthropes', 'Aquatic', 'Radioactive', 'Old Gods',
-  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age',
+  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age', 'Eels',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -119,6 +119,10 @@ export const KEYWORD_TEXT = {
   Hardy: 'Ice Age: takes 1 less damage from each hit (never less than 1).',
   Thawing: "Ice Age: arrives sealed in a block of ice for that many of its turns. Until it breaks free it can't attack or be attacked, takes no damage and its Taunt doesn't count. At the start of each of your turns the number drops by 1. Silence breaks the ice at once.",
   'Breaks free': 'Happens when a Thawing minion comes out of its ice.',
+  Volts: 'Eels: stored electricity, shown on the minion (up to 5). A minion that dies with Volts Discharges half of them (rounded down) at a random enemy. Silence drains them.',
+  Discharge: 'Eels: a minion spends all its Volts at once to fire a Chain of that strength.',
+  Chain: "Eels: Chain X deals X damage to an enemy, then jumps to the nearest enemy minion it hasn't hit, 1 weaker each jump. If it still has power after every enemy minion was hit, the rest hits the enemy Hero. It skips Stealth, Burrowed and Thawing minions.",
+  Conductive: "Eels: until the end of the turn, a Chain that jumps off this minion doesn't get weaker.",
   'Great Freeze': 'Ice Age: at the end of every 4th turn of the Ice Age player, every character without Thick Fur (both sides, Heroes too) is Frozen.',
   Hollow: "Void: a bonus that's on only while your hand is empty. Play out (or discard) every card to wake it.",
   Pull: "Void: Discover a card from your opponent's deck (pick 1 of 3) and take it into your hand. It's gone from their deck.",
@@ -155,6 +159,8 @@ export const BOARD_EVENTS = [
   'remade',           // Aliens (The Qu): an enemy minion was Remade ({ target, player: its controller, by })
   'chestburst',       // Aliens (Hive Brood): a Chestburster burst out ({ source, player })
   'minionEvolved',    // Aliens (Hive Brood): a Chestburster Evolved ({ source, player })
+  'voltsGained',      // Eels: a minion gained Volts ({ target, player: its controller, amount, total })
+  'discharged',       // Eels: a minion Discharged its Volts ({ source, player: its controller, amount })
   'minionThawed',     // Ice Age (Frozen in Time): a Thawing minion broke free ({ source, player })
   'minionEncased',    // Ice Age (Frozen in Time): a minion was sealed in ice ({ target, player: its controller })
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)

@@ -434,4 +434,98 @@ export function regenerated(rect) {
   ]);
 }
 
+// ---- Eels ----------------------------------------------------------------------------
+// Volts: a spark drops into the minion (wind-up), it flashes yellow (impact), and its Volt badge
+// pops (recovery). Conductive: water splashes over it and it takes a cold blue sheen.
+export function voltsGained(el, rect, amount = 1) {
+  if (!rect) return Promise.resolve();
+  const c = center(rect);
+  const from = { left: rect.left + rect.width / 2, top: rect.top - rect.height * 0.6, width: 1, height: 1 };
+  const badge = el?.querySelector('.volt-badge');
+  return Promise.all([
+    arcShot(from, rect, '#fff36a', { size: 12, duration: 260, lift: 10, cls: 'fx-drain' }),
+    wait(240).then(() => Promise.all([
+      ring(c, sizeOf(rect) * 0.7, '#ffe84a', { width: 3, to: 1.3, duration: 360 }),
+      tint(el, 'brightness(1.5) saturate(1.4) hue-rotate(-20deg)', 380),
+      amount > 1 ? bigGlyph({ x: c.x, y: c.y - rect.height * 0.35 }, `+${amount}⚡`, gsz(rect, 0.3), { duration: 700 }) : null,
+      badge ? animate(badge, [{ transform: 'scale(1)' }, { transform: 'scale(1.6)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 420, fill: 'none' }) : null,
+    ])),
+  ]);
+}
+export function conductive(el, rect) {
+  if (!rect) return Promise.resolve();
+  const c = center(rect);
+  return Promise.all([
+    fling(rect, '💧', 4, { rise: 0.5, spread: 0.9, size: 14, duration: 650 }),
+    ring(c, sizeOf(rect) * 0.85, '#6adcff', { width: 3, to: 1.25, duration: 460 }),
+    tint(el, 'saturate(1.6) hue-rotate(-25deg) brightness(1.15)', 620),
+  ]);
+}
+// Discharge: the minion flares white-blue and a shock ring bursts off it, just before its Chain.
+export function discharged(el, rect) {
+  if (!rect) return Promise.resolve();
+  const c = center(rect);
+  return Promise.all([
+    glowBall(c, sizeOf(rect) * 1.2, '#eaffff', '#5ae8ff88', { duration: 420 }),
+    ring(c, sizeOf(rect) * 0.9, '#fff36a', { width: 5, to: 1.7, duration: 420 }),
+    tint(el, 'brightness(2.2) saturate(0.6)', 360),
+  ]);
+}
+// A jagged lightning bolt between two points (an SVG over the board): it snaps in, flickers and
+// fades. Two strokes: a wide cyan glow and a thin white core.
+function boltPath(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len, n = Math.max(4, Math.round(len / 28));
+  const pts = [[a.x, a.y]];
+  for (let i = 1; i < n; i++) {
+    const t = i / n, off = (Math.random() - 0.5) * Math.min(40, len * 0.18);
+    pts.push([a.x + dx * t + nx * off, a.y + dy * t + ny * off]);
+  }
+  pts.push([b.x, b.y]);
+  return pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+}
+function bolt(a, b, { width = 1 } = {}) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'fx-kw-bolt');
+  const d = boltPath(a, b);
+  for (const [stroke, w, op] of [['#5ae8ff', 7 * width, 0.55], ['#eaffff', 2.4 * width, 1]]) {
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', stroke); path.setAttribute('stroke-width', w); path.setAttribute('opacity', op);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+  }
+  // A small fork off the middle for a crackle.
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const fork = document.createElementNS(ns, 'path');
+  fork.setAttribute('d', boltPath(mid, { x: mid.x + (Math.random() - 0.5) * 60, y: mid.y + (Math.random() - 0.5) * 60 }));
+  fork.setAttribute('stroke', '#bff8ff'); fork.setAttribute('stroke-width', 1.5 * width); fork.setAttribute('fill', 'none'); fork.setAttribute('opacity', 0.8);
+  svg.appendChild(fork);
+  layer().appendChild(svg);
+  return done(svg, animate(svg, [
+    { opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 0.45, offset: 0.3 }, { opacity: 1, offset: 0.45 }, { opacity: 0 },
+  ], { duration: 340, easing: 'linear' }));
+}
+// Chain: the bolt leaves the source (a minion, or the caster's Hero for a spell) and hops from
+// target to target in order, each hop a little thinner as the Chain weakens; every target flashes.
+export async function chainBolt(fromRect, hits, { delay = 0 } = {}) {
+  if (!hits.length) return;
+  if (delay) await wait(delay);
+  let prev = fromRect ? center(fromRect) : null;
+  const first = hits[0].amount || 1;
+  const jobs = [];
+  for (const h of hits) {
+    if (!h.rect) continue;
+    const c = center(h.rect);
+    const w = Math.max(0.45, (h.amount || 1) / first);
+    if (prev) jobs.push(bolt(prev, c, { width: w }));
+    jobs.push(glowBall(c, sizeOf(h.rect) * 0.75, '#eaffff', '#5ae8ff77', { duration: 300 }));
+    jobs.push(ring(c, sizeOf(h.rect) * 0.6, '#fff36a', { width: 3, to: 1.4, duration: 320 }));
+    prev = c;
+    await wait(120);
+  }
+  await Promise.all(jobs);
+}
+
 export { layer };

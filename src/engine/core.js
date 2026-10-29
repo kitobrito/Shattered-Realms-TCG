@@ -211,6 +211,8 @@ export function createMinion(state, cardId, controller) {
     faction: card.faction,
     // Built-in permanent Radiation (The Elephant's Foot).
     ...(card.radiation ? { radPerm: card.radiation } : {}),
+    // Eels: a minion that arrives already charged (Megavolt Eel, Elver).
+    ...(card.startVolts ? { volts: card.startVolts } : {}),
     sick: true, attacksThisTurn: 0,
     lastDamagedBy: null, lastDamagedByController: null,
     destroyed: false, tempControl: null, returnAtEndOfTurn: false,
@@ -338,6 +340,26 @@ export function checkPrey(state, m, healed = false) {
   if (m.prey && healed && m.health > PREY_HEALTH) { m.prey = false; log(state, `${nameOf(state, m)} is no longer Prey.`); return; }
   if (!m.prey && m.health > 0 && m.health <= PREY_HEALTH && huntsPrey(state, opponentOf(m.controller))) markPrey(state, m);
 }
+
+// ---- Eels: Volts ------------------------------------------------------------------
+// m.volts: stored electricity. A minion holds up to VOLT_CAP (its card's voltCap if it has one);
+// Overcharge can push it past the limit (overcap). It is spent by Discharge (a Chain of that
+// strength); a minion that dies with Volts Discharges half of them (rounded down). Silence drains it.
+export const VOLT_CAP = 5;
+export const voltCapOf = (m) => getCard(m.cardId).voltCap ?? VOLT_CAP;
+export function gainVolts(state, m, amount, opts = {}) {
+  if (!m || m.kind !== 'minion' || amount <= 0 || m.health <= 0 || m.destroyed) return 0;
+  const before = m.volts ?? 0;
+  const cap = opts.overcap ? Infinity : Math.max(voltCapOf(m), before);
+  m.volts = Math.min(cap, before + amount);
+  const got = m.volts - before;
+  if (got <= 0) return 0;
+  log(state, `⚡ ${nameOf(state, m)} gains ${got} Volt${got === 1 ? '' : 's'} (${m.volts}).`);
+  emit(state, { type: 'voltsGained', target: m.uid, player: m.controller, amount: got, total: m.volts });
+  return got;
+}
+// Conductive lasts until the end of the turn (cleared in the engine's cleanup step).
+export const isConductive = (m) => !!m?.conductive;
 
 // ---- Acidic: Corrosion, Dissolve, Acid-coated ---------------------------------------
 // Corrosion X permanently lowers a minion's Attack by X (its Health is untouched). It eats

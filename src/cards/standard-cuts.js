@@ -130,6 +130,11 @@ export const STANDARD_CUTS = {
     'controlled_shift', 'primal_recovery', 'moonblood_evolution',
     'false_calm', 'instinctive_defense', 'reflexive_shift', 'back_to_reason',
   ],
+  // Keeps: a low curve of chargers and Chain spells, topped by The Thunderhead and the Leviathan.
+  Eels: [
+    'elver_swarm', 'volt_leech', 'tidal_generator', 'voltage_matriarch', 'megavolt_eel',
+    'storm_drain', 'overcharge', 'reef_blackout', 'short_circuit', 'lightning_rod',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their

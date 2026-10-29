@@ -14,6 +14,269 @@ const SNOW = [244, 248, 255];
 const FROST = [190, 228, 255];
 
 export const BOARD_FX = {
+  // ---- Eels: a flooded river cave, lit by its own electricity ------------------------------
+  // ---- Eels: a flooded river cave lit by its own electricity ---------------------------------
+  // The painting is one flat image, so nothing is cut out: the eels, lily pads and hanging vines
+  // move by bending the painting's own pixels in place (type 'bend'), with fields that fade to
+  // nothing at their edges. Each eel bends along its own spine (head -> tail): a wave runs down
+  // the body, the head nearly still, the tail swaying most; the coiled eel in the rock pool rests
+  // and only stirs now and then, the swimmers in the open water never quite stop.
+  // Layers, back to front: ambient water (flow, caustics, gliding light on the painted streaks),
+  // living creatures (eels, pads, vines), details (ripples, bubbles, drips, spores), lighting
+  // (fungus and glass glows), air (specks, haze). The middle of the board stays calm and clear.
+  'eels-land': {
+    layers: [
+      // 1. Ambient water. The shallows move: two copies of the water slide past each other, a
+      // slow sheen rolls across, and a web of caustic light drifts over the submerged stones.
+      { id: 'waterFlow', type: 'flow', mask: 'water', dir: [-1, 0.3], dist: 9, period: 4.2, alpha: 0.55 },
+      { id: 'water', type: 'mask', mask: 'water', anim: { kind: 'wave', along: 'x', band: 150, speed: 9 }, alpha: [0, 0.2], gain: 0.55 },
+      { id: 'water2', type: 'mask', mask: 'water', anim: { kind: 'wave', along: 'y', band: 90, speed: 5 }, alpha: [0, 0.14], gain: 0.45 },
+      { id: 'caustics', type: 'caustics', mask: 'water', cell: 20, scale: 1.1, speed: 4.5, alpha: 0.16, color: [200, 250, 255] },
+      // The painted streaks of light in the water: a soft glint travels along them, slowly, in two
+      // directions at once, like light catching moving water (they never flash on and off).
+      { id: 'cracks', type: 'mask', mask: 'cracks', anim: { kind: 'wave', along: 'x', band: 120, speed: 7 }, alpha: [0, 0.32], gain: 0.5, kickDur: 1.6 },
+      { id: 'cracks2', type: 'mask', mask: 'cracks', anim: { kind: 'wave', along: 'y', band: 80, speed: 4 }, alpha: [0, 0.22], gain: 0.4, kickDur: 1.6 },
+      // 2. Living creatures. The five eels (spines measured on the painting, head first).
+      { id: 'eels', type: 'bend', fps: 30, items: [
+        // The big eel coiled in the rock pool: rests, breathes, and now and then shifts its coils.
+        { kind: 'eel', spine: [[196, 482], [188, 487], [172, 492], [155, 500], [140, 508], [125, 516], [110, 522], [92, 524], [75, 520], [62, 508], [55, 490], [57, 470], [65, 455], [80, 444], [100, 438], [120, 440], [138, 448], [155, 456], [170, 460], [184, 456]],
+          r: [7, 2], amp: 1.5, waves: 0.9, period: 5.5, rest: 0.25, still: 0.3, head: 0.04, falloff: 6, burstEvery: [12, 24], burstLen: 4 },
+        // Two small swimmers at the left edge of the shallows.
+        { kind: 'eel', spine: [[195, 324], [185, 320], [173, 313], [163, 306], [152, 304], [140, 305], [128, 302], [121, 295], [118, 285]],
+          r: [3.5, 1.5], amp: 2.3, waves: 1.3, period: 2.6, rest: 0.6, still: 0.2, head: 0.15, falloff: 5, drift: 0.5, driftPeriod: 6, burstEvery: [6, 12], burstLen: 2.5 },
+        { kind: 'eel', spine: [[162, 344], [150, 343], [138, 344], [125, 346], [115, 350], [110, 355]],
+          r: [3, 1.2], amp: 2.0, waves: 1.1, period: 2.2, rest: 0.65, still: 0.2, head: 0.15, falloff: 5, drift: 0.4, driftPeriod: 5, burstEvery: [5, 11], burstLen: 2 },
+        // The eel gliding down out of the dark at the top.
+        { kind: 'eel', spine: [[533, 143], [542, 135], [552, 126], [562, 118], [572, 114], [578, 108], [580, 98], [581, 90], [586, 83], [590, 80]],
+          r: [4, 1.5], amp: 2.4, waves: 1.2, period: 2.9, rest: 0.55, still: 0.2, head: 0.12, falloff: 6, drift: 0.6, driftPeriod: 7, burstEvery: [7, 14], burstLen: 3 },
+        // The eel by the lily pads on the right.
+        { kind: 'eel', spine: [[880, 292], [893, 294], [905, 293], [913, 287], [918, 280], [925, 276], [933, 275], [940, 277], [944, 279]],
+          r: [4, 1.5], amp: 2.2, waves: 1.1, period: 3.2, rest: 0.5, still: 0.25, head: 0.1, falloff: 6, drift: 0.4, driftPeriod: 8, burstEvery: [8, 16], burstLen: 3 },
+      ] },
+      // Every lily pad rides the water on its own: a slow bob, a slight tilt, a drift (sub-pixel to ~1 px).
+      { id: 'pads', type: 'bend', fps: 24, items: [
+        { kind: 'pad', at: [394, 174, 17], period: 5.0, bob: 0.65, tilt: 0.015, sway: 0.44 },
+        { kind: 'pad', at: [431, 184, 13], period: 5.1, bob: 0.66, tilt: 0.009, sway: 0.45 },
+        { kind: 'pad', at: [366, 202, 11], period: 5.4, bob: 0.73, tilt: 0.009, sway: 0.39 },
+        { kind: 'pad', at: [332, 172, 11], period: 4.0, bob: 0.73, tilt: 0.014, sway: 0.31 },
+        { kind: 'pad', at: [310, 202, 9], period: 6.4, bob: 0.79, tilt: 0.013, sway: 0.48 },
+        { kind: 'pad', at: [335, 204, 9], period: 4.2, bob: 0.46, tilt: 0.012, sway: 0.32 },
+        { kind: 'pad', at: [320, 251, 12], period: 4.3, bob: 0.53, tilt: 0.008, sway: 0.44 },
+        { kind: 'pad', at: [406, 236, 17], period: 4.9, bob: 0.74, tilt: 0.012, sway: 0.49 },
+        { kind: 'pad', at: [362, 312, 7], period: 5.1, bob: 0.68, tilt: 0.012, sway: 0.38 },
+        { kind: 'pad', at: [626, 155, 13], period: 6.4, bob: 0.8, tilt: 0.015, sway: 0.51 },
+        { kind: 'pad', at: [672, 181, 13], period: 4.6, bob: 0.53, tilt: 0.01, sway: 0.32 },
+        { kind: 'pad', at: [702, 172, 9], period: 5.8, bob: 0.59, tilt: 0.015, sway: 0.42 },
+        { kind: 'pad', at: [712, 209, 12], period: 6.3, bob: 0.75, tilt: 0.008, sway: 0.36 },
+        { kind: 'pad', at: [686, 224, 11], period: 6.2, bob: 0.61, tilt: 0.016, sway: 0.42 },
+        { kind: 'pad', at: [710, 232, 9], period: 4.0, bob: 0.67, tilt: 0.014, sway: 0.38 },
+        { kind: 'pad', at: [760, 274, 13], period: 4.0, bob: 0.57, tilt: 0.016, sway: 0.53 },
+        { kind: 'pad', at: [802, 292, 17], period: 4.1, bob: 0.54, tilt: 0.009, sway: 0.32 },
+        { kind: 'pad', at: [834, 292, 9], period: 5.9, bob: 0.51, tilt: 0.012, sway: 0.43 },
+        { kind: 'pad', at: [854, 326, 15], period: 4.3, bob: 0.71, tilt: 0.009, sway: 0.49 },
+        { kind: 'pad', at: [888, 330, 9], period: 4.1, bob: 0.6, tilt: 0.01, sway: 0.38 },
+        { kind: 'pad', at: [820, 344, 16], period: 6.3, bob: 0.73, tilt: 0.01, sway: 0.57 },
+        { kind: 'pad', at: [362, 456, 17], period: 4.3, bob: 0.59, tilt: 0.015, sway: 0.49 },
+        { kind: 'pad', at: [404, 458, 17], period: 4.1, bob: 0.8, tilt: 0.01, sway: 0.38 },
+        { kind: 'pad', at: [345, 485, 10], period: 5.8, bob: 0.57, tilt: 0.01, sway: 0.32 },
+        { kind: 'pad', at: [379, 502, 15], period: 4.0, bob: 0.65, tilt: 0.01, sway: 0.48 },
+        { kind: 'pad', at: [602, 444, 13], period: 4.8, bob: 0.61, tilt: 0.016, sway: 0.45 },
+        { kind: 'pad', at: [680, 456, 13], period: 5.3, bob: 0.75, tilt: 0.009, sway: 0.35 },
+        { kind: 'pad', at: [556, 476, 11], period: 6.2, bob: 0.74, tilt: 0.01, sway: 0.36 },
+        { kind: 'pad', at: [575, 465, 11], period: 5.7, bob: 0.78, tilt: 0.01, sway: 0.59 },
+        { kind: 'pad', at: [727, 494, 16], period: 6.1, bob: 0.66, tilt: 0.011, sway: 0.33 },
+        { kind: 'pad', at: [330, 225, 8], period: 3.9, bob: 0.79, tilt: 0.01, sway: 0.51 },
+        { kind: 'pad', at: [300, 172, 7], period: 4.5, bob: 0.74, tilt: 0.013, sway: 0.39 },
+        { kind: 'pad', at: [425, 142, 6], period: 4.3, bob: 0.7, tilt: 0.009, sway: 0.37 },
+        { kind: 'pad', at: [862, 237, 10], period: 5.3, bob: 0.75, tilt: 0.013, sway: 0.38 },
+      ] },
+      // The thin strands hanging from the vine across the top sway a little (the thick roots stay still).
+      { id: 'vines', type: 'bend', fps: 24, items: [
+        { kind: 'hang', box: [446, 26, 476, 82], amp: 1.1, period: 5.2, waves: 0.5 },
+        { kind: 'hang', box: [500, 38, 530, 116], amp: 1.5, period: 6.1, waves: 0.6 },
+        { kind: 'hang', box: [581, 38, 611, 106], amp: 1.3, period: 5.6, waves: 0.55 },
+        { kind: 'hang', box: [610, 34, 640, 86], amp: 1.0, period: 4.8, waves: 0.5 },
+      ] },
+      // 3. Details. Rings spread now and then across the open water, around the pads, from the
+      // painted ripple centre and the water-wheel; tiny rings trail off the swimming eels' tails and ahead of their snouts.
+      { id: 'ripples', type: 'particles', kind: 'ripple', area: { mask: 'water' }, rate: 0.35, max: 3, color: [190, 245, 255], size: [12, 22], life: [2.4, 3.6], alpha: 0.28 },
+      { id: 'padRipples', type: 'particles', kind: 'ripple', from: [[394, 174, 0, 18], [431, 184, 0, 14], [366, 202, 0, 12], [332, 172, 0, 12], [310, 202, 0, 10], [335, 204, 0, 10], [320, 251, 0, 13], [406, 236, 0, 18], [362, 312, 0, 8], [626, 155, 0, 14], [672, 181, 0, 14], [702, 172, 0, 10], [712, 209, 0, 13], [686, 224, 0, 12], [710, 232, 0, 10], [760, 274, 0, 14], [802, 292, 0, 18], [834, 292, 0, 10], [854, 326, 0, 16], [888, 330, 0, 10], [820, 344, 0, 17], [362, 456, 0, 18], [404, 458, 0, 18], [345, 485, 0, 11], [379, 502, 0, 16], [602, 444, 0, 14], [680, 456, 0, 14], [556, 476, 0, 12], [575, 465, 0, 12], [727, 494, 0, 17], [330, 225, 0, 9], [300, 172, 0, 8], [425, 142, 0, 7], [862, 237, 0, 11]], rate: 0.3, max: 3, color: [190, 245, 255], size: [5, 9], life: [1.8, 2.6], alpha: 0.22 },
+      { id: 'centreRipples', type: 'particles', kind: 'ripple', from: [[575, 400, 0]], rate: 0.22, max: 2, color: [210, 250, 255], size: [30, 44], life: [3.5, 4.5], alpha: 0.24 },
+      { id: 'eelRipples', type: 'particles', kind: 'ripple', from: [[114, 277, 3], [104, 361, 3], [952, 283, 3], [206, 330, 4], [172, 352, 4], [868, 296, 4]], rate: 0.35, max: 4, color: [190, 245, 255], size: [4, 7], life: [1.4, 2], alpha: 0.24 },
+      { id: 'wheelRipples', type: 'particles', kind: 'ripple', from: [[815, 470, 12], [845, 540, 14]], rate: 0.5, max: 3, color: [190, 245, 255], size: [8, 14], life: [1.6, 2.4], alpha: 0.26 },
+      // Bubbles rise from the eels' mouths, the pool, under the wheel, and here and there from the bottom.
+      { id: 'bubbles', type: 'particles', kind: 'bubble', from: [[197, 480, 2], [196, 323, 1], [163, 343, 1], [532, 144, 1], [879, 292, 1], [812, 470, 10], [300, 300, 30], [700, 380, 40]], rate: 0.6, max: 7, color: [210, 250, 255], size: [0.9, 1.8], life: [1.6, 2.8], speed: 0.7 },
+      // Water drips off the wheel's paddles into the stream.
+      { id: 'wheelDrips', type: 'particles', kind: 'drip', from: [[858, 520, 6], [905, 548, 6], [948, 560, 5], [972, 532, 4]], rate: 0.7, max: 5, color: [190, 240, 255], size: [0.7, 1.1], life: [2, 3], fall: 16, splashColor: [190, 245, 255] },
+      // Drops fall from the tips of the hanging strands.
+      { id: 'vineDrips', type: 'particles', kind: 'drip', from: [[461, 78, 2], [514, 112, 2], [597, 102, 2]], rate: 0.12, max: 2, color: [170, 240, 255], size: [0.6, 1], life: [3, 5], fall: 26, splashColor: [170, 240, 255] },
+      // 4. Lighting. Each fungus cluster breathes on its own slow rhythm and lights the rock and
+      // roots around it; spores drift up from them now and then. The glass insulators glow too.
+      { id: 'shroom1', type: 'mask', mask: 'shroom1', anim: { kind: 'flicker', speed: 0.32 }, alpha: [0.06, 0.34], bloom: 0.45, kickDur: 2 },
+      { id: 'shroom2', type: 'mask', mask: 'shroom2', anim: { kind: 'flicker', speed: 0.27 }, alpha: [0.06, 0.3], bloom: 0.45, kickDur: 2 },
+      { id: 'shroom3', type: 'mask', mask: 'shroom3', anim: { kind: 'flicker', speed: 0.36 }, alpha: [0.05, 0.3], bloom: 0.4, kickDur: 2 },
+      { id: 'shroom4', type: 'mask', mask: 'shroom4', anim: { kind: 'flicker', speed: 0.3 }, alpha: [0.06, 0.32], bloom: 0.45, kickDur: 2 },
+      { id: 'shroom5', type: 'mask', mask: 'shroom5', anim: { kind: 'flicker', speed: 0.25 }, alpha: [0.05, 0.28], bloom: 0.4, kickDur: 2 },
+      { id: 'shroom6', type: 'mask', mask: 'shroom6', anim: { kind: 'flicker', speed: 0.34 }, alpha: [0.05, 0.26], bloom: 0.4, kickDur: 2 },
+      { id: 'shroomLight', type: 'glow', points: [[370, 40, 46], [423, 97, 34], [520, 38, 40], [742, 22, 34], [815, 66, 30], [714, 85, 24]], color: [90, 220, 255], anim: 'flicker', speed: 0.3, alpha: [0.03, 0.1], kickDur: 2 },
+      { id: 'spores', type: 'particles', kind: 'mote', from: [[370, 45, 22], [423, 100, 14], [520, 42, 40], [742, 28, 14], [815, 70, 12]], rate: 0.5, max: 7, color: [140, 240, 255], size: [0.5, 1.1], life: [4, 7], alpha: 0.6, speed: 0.4 },
+      { id: 'glass', type: 'mask', mask: 'glass', anim: { kind: 'flicker', speed: 0.4 }, alpha: [0.08, 0.36], bloom: 0.5, kickDur: 2 },
+      { id: 'glassHalo', type: 'glow', points: [[905, 32, 34], [882, 82, 28], [982, 105, 32], [945, 143, 24]], color: [90, 255, 210], anim: 'flicker', speed: 0.4, alpha: [0.02, 0.08], kickDur: 2 },
+      // The rod (top left): a spark wakes on it only when tapped.
+      { id: 'rodGlow', type: 'glow', points: [[112, 70, 34]], color: [140, 220, 255], anim: 'pulse', period: 7, alpha: [0, 0.04], kickDur: 1.6 },
+      { id: 'rodBolt', type: 'lightning', every: [9999, 9999], color: [170, 235, 255], zones: [
+        { from: [60, 0, 160, 10], to: [100, 40, 130, 70], jag: 14, flash: [112, 60, 40] },
+      ] },
+      { id: 'rodSparks', type: 'particles', kind: 'glint', from: [[112, 60, 18]], rate: 0, max: 16, color: [220, 245, 255], size: [1, 2], life: [0.3, 0.7] },
+      // The water-wheel's painted sparks crackle softly; a warm glint where they fly.
+      { id: 'sparks', type: 'mask', mask: 'sparks', anim: { kind: 'flicker', speed: 5 }, alpha: [0.04, 0.26], bloom: 0.4, kickDur: 1.5 },
+      { id: 'wheelGlow', type: 'glow', points: [[835, 405, 26]], color: [255, 190, 90], anim: 'flicker', speed: 3, alpha: [0.03, 0.1], kickDur: 1.5 },
+      { id: 'wheelSparks', type: 'particles', kind: 'ember', from: [[835, 405, 12]], rate: 0.5, max: 6, color: [255, 210, 110], size: [0.5, 1], life: [0.4, 0.9], speed: 1.2 },
+      // A tapped Chain across the water (also played when a Chain goes off in a match).
+      { id: 'zap', type: 'lightning', every: [9999, 9999], color: [120, 230, 255], zones: [
+        { from: [440, 200, 520, 240], to: [600, 300, 680, 360], jag: 22, flash: [560, 280, 50] },
+        { from: [600, 190, 660, 220], to: [520, 330, 580, 390], jag: 22, flash: [580, 290, 50] },
+      ] },
+      // 5. Air. A few specks drifting at different depths in the dark, a thin haze among the roots.
+      { type: 'fog', area: [-40, -20, 1060, 150], count: 5, size: [90, 150], speed: 2, color: [40, 110, 140], alpha: 0.05 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 0.7, max: 10, color: [150, 230, 255], size: [0.4, 1], life: [5, 9], alpha: 0.45, speed: 0.35 },
+    ],
+    pokes: [
+      { area: [50, 10, 180, 165], sound: 'crack', strike: 'rodBolt', kick: ['rodGlow'], flare: [170, 235, 255], glyph: '⚡', burst: { layer: 'rodSparks', n: 14, spread: 24 } },
+      { area: [860, 0, 1015, 170], sound: 'chime', kick: ['glass', 'glassHalo'], flare: [90, 255, 200], glyph: '✨' },
+      { area: [330, 5, 450, 115], sound: 'chime', kick: ['shroom1', 'shroom2', 'shroomLight'], flare: [90, 220, 255], glyph: '✨', burst: { layer: 'spores', n: 8, spread: 26 } },
+      { area: [40, 405, 215, 545], sound: 'splash', rustle: 80, flare: [255, 240, 120], glyph: '⚡', burst: { layer: 'bubbles', n: 5, at: [197, 480], spread: 4 } },
+      { area: [790, 375, 1005, 570], sound: 'grind', kick: ['wheelGlow', 'sparks'], flare: [255, 190, 90], glyph: '⚙️', burst: { layer: 'wheelSparks', n: 10, spread: 14 } },
+      { area: [430, 190, 710, 410], sound: 'crack', strike: 'zap', kick: ['cracks', 'cracks2', 'caustics'], flare: [120, 230, 255], glyph: '⚡', burst: { layer: 'ripples', n: 2 } },
+    ],
+    // Match events (cosmetic): when a Chain goes off, light runs through the water and it stirs.
+    reactions: {
+      chain: { kick: ['cracks', 'cracks2', 'caustics', 'shroomLight'], burst: [{ layer: 'ripples', n: 2 }, { layer: 'centreRipples', n: 1 }] },
+    },
+  },
+  'eels-portrait': {
+    layers: [
+      // The same flooded cave, stood on end for phones. Same layers as the landscape board, every
+      // position measured again on this painting.
+      // 1. Ambient water.
+      { id: 'waterFlow', type: 'flow', mask: 'water', dir: [0.2, 1], dist: 9, period: 4.2, alpha: 0.55 },
+      { id: 'water', type: 'mask', mask: 'water', anim: { kind: 'wave', along: 'y', band: 150, speed: 9 }, alpha: [0, 0.2], gain: 0.55 },
+      { id: 'water2', type: 'mask', mask: 'water', anim: { kind: 'wave', along: 'x', band: 90, speed: 5 }, alpha: [0, 0.14], gain: 0.45 },
+      { id: 'caustics', type: 'caustics', mask: 'water', cell: 20, scale: 1.1, speed: 4.5, alpha: 0.16, color: [200, 250, 255] },
+      { id: 'cracks', type: 'mask', mask: 'cracks', anim: { kind: 'wave', along: 'y', band: 120, speed: 7 }, alpha: [0, 0.32], gain: 0.5, kickDur: 1.6 },
+      { id: 'cracks2', type: 'mask', mask: 'cracks', anim: { kind: 'wave', along: 'x', band: 80, speed: 4 }, alpha: [0, 0.22], gain: 0.4, kickDur: 1.6 },
+      // 2. Living creatures: six eels (spines head first).
+      { id: 'eels', type: 'bend', fps: 30, items: [
+        // Top left, the eel doubled back on itself in its basin.
+        { kind: 'eel', spine: [[46, 182], [44, 170], [40, 158], [33, 145], [26, 130], [20, 115], [16, 98], [18, 80], [25, 65], [38, 55], [50, 52], [62, 56], [72, 65], [78, 80], [80, 95], [78, 110], [72, 125], [70, 140], [70, 160]],
+          r: [6, 2], amp: 1.5, waves: 0.9, period: 5.5, rest: 0.25, still: 0.3, head: 0.04, falloff: 6, burstEvery: [12, 24], burstLen: 4 },
+        // The two young eels in the dark pool at the top.
+        { kind: 'eel', spine: [[169, 158], [168, 148], [166, 138], [164, 128], [162, 118], [158, 110]],
+          r: [3, 1.2], amp: 2.0, waves: 1.1, period: 2.2, rest: 0.65, still: 0.2, head: 0.15, falloff: 5, drift: 0.4, driftPeriod: 5, burstEvery: [5, 11], burstLen: 2 },
+        { kind: 'eel', spine: [[189, 184], [190, 175], [194, 166], [200, 158], [205, 148], [207, 138], [208, 128], [212, 120], [220, 113], [226, 110]],
+          r: [3.5, 1.5], amp: 2.3, waves: 1.3, period: 2.6, rest: 0.6, still: 0.2, head: 0.15, falloff: 5, drift: 0.5, driftPeriod: 6, burstEvery: [6, 12], burstLen: 2.5 },
+        // The eel slipping through the roots on the right.
+        { kind: 'eel', spine: [[358, 528], [364, 536], [371, 544], [378, 553], [382, 562], [388, 570], [398, 574], [408, 574]],
+          r: [3.5, 1.5], amp: 2.2, waves: 1.1, period: 3.2, rest: 0.5, still: 0.25, head: 0.1, falloff: 6, drift: 0.4, driftPeriod: 8, burstEvery: [8, 16], burstLen: 3 },
+        // The small eel nosing along the left bank.
+        { kind: 'eel', spine: [[100, 793], [92, 792], [84, 792], [76, 794], [68, 796], [60, 798]],
+          r: [3, 1.5], amp: 2.0, waves: 1.0, period: 2.8, rest: 0.6, still: 0.2, head: 0.15, falloff: 5, drift: 0.4, driftPeriod: 6, burstEvery: [6, 13], burstLen: 2 },
+        // Bottom left, the big eel coiled in the rock pool.
+        { kind: 'eel', spine: [[126, 928], [115, 931], [103, 935], [92, 940], [82, 948], [72, 955], [62, 962], [50, 966], [36, 964], [24, 955], [16, 940], [16, 922], [22, 905], [34, 892], [50, 886], [65, 887], [80, 893], [95, 899], [108, 902], [118, 902]],
+          r: [7, 2], amp: 1.5, waves: 0.9, period: 6, rest: 0.25, still: 0.3, head: 0.04, falloff: 6, burstEvery: [14, 26], burstLen: 4 },
+      ] },
+      // Every lily pad rides the water on its own.
+      { id: 'pads', type: 'bend', fps: 24, items: [
+        { kind: 'pad', at: [205, 60, 6], period: 4.8, bob: 0.50, tilt: 0.013, sway: 0.32 },
+        { kind: 'pad', at: [230, 62, 6], period: 5.3, bob: 0.58, tilt: 0.008, sway: 0.44 },
+        { kind: 'pad', at: [222, 78, 5], period: 4.1, bob: 0.60, tilt: 0.009, sway: 0.33 },
+        { kind: 'pad', at: [240, 90, 5], period: 5.1, bob: 0.74, tilt: 0.009, sway: 0.36 },
+        { kind: 'pad', at: [155, 84, 7], period: 5.6, bob: 0.78, tilt: 0.013, sway: 0.41 },
+        { kind: 'pad', at: [260, 305, 10], period: 6.4, bob: 0.47, tilt: 0.015, sway: 0.38 },
+        { kind: 'pad', at: [300, 300, 9], period: 4.4, bob: 0.49, tilt: 0.010, sway: 0.53 },
+        { kind: 'pad', at: [276, 325, 7], period: 4.5, bob: 0.65, tilt: 0.013, sway: 0.40 },
+        { kind: 'pad', at: [304, 320, 9], period: 5.4, bob: 0.47, tilt: 0.008, sway: 0.36 },
+        { kind: 'pad', at: [330, 296, 8], period: 5.7, bob: 0.60, tilt: 0.011, sway: 0.46 },
+        { kind: 'pad', at: [338, 322, 15], period: 5.1, bob: 0.55, tilt: 0.014, sway: 0.50 },
+        { kind: 'pad', at: [300, 345, 8], period: 4.6, bob: 0.65, tilt: 0.012, sway: 0.55 },
+        { kind: 'pad', at: [275, 397, 18], period: 5.8, bob: 0.55, tilt: 0.016, sway: 0.33 },
+        { kind: 'pad', at: [332, 386, 20], period: 5.0, bob: 0.71, tilt: 0.009, sway: 0.44 },
+        { kind: 'pad', at: [324, 423, 12], period: 4.1, bob: 0.68, tilt: 0.014, sway: 0.46 },
+        { kind: 'pad', at: [361, 416, 7], period: 6.2, bob: 0.56, tilt: 0.014, sway: 0.47 },
+        { kind: 'pad', at: [365, 367, 8], period: 5.4, bob: 0.61, tilt: 0.015, sway: 0.56 },
+        { kind: 'pad', at: [230, 370, 6], period: 5.2, bob: 0.68, tilt: 0.008, sway: 0.50 },
+        { kind: 'pad', at: [202, 356, 10], period: 5.6, bob: 0.80, tilt: 0.015, sway: 0.38 },
+        { kind: 'pad', at: [28, 370, 18], period: 5.0, bob: 0.68, tilt: 0.008, sway: 0.43 },
+        { kind: 'pad', at: [68, 397, 17], period: 4.4, bob: 0.49, tilt: 0.008, sway: 0.52 },
+        { kind: 'pad', at: [48, 345, 10], period: 4.3, bob: 0.54, tilt: 0.011, sway: 0.54 },
+        { kind: 'pad', at: [65, 350, 10], period: 4.2, bob: 0.61, tilt: 0.012, sway: 0.55 },
+        { kind: 'pad', at: [58, 550, 9], period: 6.0, bob: 0.75, tilt: 0.010, sway: 0.42 },
+        { kind: 'pad', at: [68, 575, 9], period: 4.9, bob: 0.76, tilt: 0.016, sway: 0.34 },
+        { kind: 'pad', at: [85, 600, 13], period: 4.4, bob: 0.53, tilt: 0.010, sway: 0.44 },
+        { kind: 'pad', at: [75, 678, 16], period: 5.5, bob: 0.54, tilt: 0.008, sway: 0.42 },
+        { kind: 'pad', at: [44, 727, 16], period: 4.9, bob: 0.65, tilt: 0.016, sway: 0.49 },
+        { kind: 'pad', at: [37, 624, 6], period: 5.3, bob: 0.67, tilt: 0.013, sway: 0.32 },
+        { kind: 'pad', at: [351, 621, 11], period: 6.2, bob: 0.72, tilt: 0.015, sway: 0.52 },
+        { kind: 'pad', at: [330, 672, 12], period: 5.0, bob: 0.59, tilt: 0.009, sway: 0.48 },
+        { kind: 'pad', at: [290, 685, 12], period: 4.2, bob: 0.47, tilt: 0.010, sway: 0.35 },
+        { kind: 'pad', at: [298, 711, 16], period: 4.9, bob: 0.47, tilt: 0.008, sway: 0.34 },
+        { kind: 'pad', at: [338, 697, 8], period: 4.3, bob: 0.58, tilt: 0.008, sway: 0.54 },
+        { kind: 'pad', at: [248, 763, 13], period: 5.5, bob: 0.50, tilt: 0.010, sway: 0.40 },
+        { kind: 'pad', at: [236, 800, 14], period: 4.9, bob: 0.49, tilt: 0.015, sway: 0.58 },
+        { kind: 'pad', at: [45, 800, 8], period: 5.2, bob: 0.62, tilt: 0.009, sway: 0.33 },
+        { kind: 'pad', at: [215, 905, 10], period: 4.9, bob: 0.54, tilt: 0.015, sway: 0.35 },
+        { kind: 'pad', at: [250, 905, 14], period: 4.1, bob: 0.78, tilt: 0.012, sway: 0.34 },
+        { kind: 'pad', at: [230, 940, 15], period: 5.4, bob: 0.46, tilt: 0.012, sway: 0.57 },
+        { kind: 'pad', at: [275, 905, 10], period: 6.2, bob: 0.69, tilt: 0.010, sway: 0.40 },
+        { kind: 'pad', at: [200, 930, 7], period: 4.4, bob: 0.72, tilt: 0.012, sway: 0.52 },
+      ] },
+      // 3. Details: rings across the water, around the pads, from the painted ripple centre, off
+      // the eels and where the wheel meets the stream.
+      { id: 'ripples', type: 'particles', kind: 'ripple', area: { mask: 'water' }, rate: 0.3, max: 3, color: [190, 245, 255], size: [10, 18], life: [2.4, 3.6], alpha: 0.28 },
+      { id: 'padRipples', type: 'particles', kind: 'ripple', from: [[205, 60, 0, 7], [230, 62, 0, 7], [222, 78, 0, 6], [240, 90, 0, 6], [155, 84, 0, 8], [260, 305, 0, 11], [300, 300, 0, 10], [276, 325, 0, 8], [304, 320, 0, 10], [330, 296, 0, 9], [338, 322, 0, 16], [300, 345, 0, 9], [275, 397, 0, 19], [332, 386, 0, 21], [324, 423, 0, 13], [361, 416, 0, 8], [365, 367, 0, 9], [230, 370, 0, 7], [202, 356, 0, 11], [28, 370, 0, 19], [68, 397, 0, 18], [48, 345, 0, 11], [65, 350, 0, 11], [58, 550, 0, 10], [68, 575, 0, 10], [85, 600, 0, 14], [75, 678, 0, 17], [44, 727, 0, 17], [37, 624, 0, 7], [351, 621, 0, 12], [330, 672, 0, 13], [290, 685, 0, 13], [298, 711, 0, 17], [338, 697, 0, 9], [248, 763, 0, 14], [236, 800, 0, 15], [45, 800, 0, 9], [215, 905, 0, 11], [250, 905, 0, 15], [230, 940, 0, 16], [275, 905, 0, 11], [200, 930, 0, 8]], rate: 0.3, max: 3, color: [190, 245, 255], size: [5, 9], life: [1.8, 2.6], alpha: 0.22 },
+      { id: 'centreRipples', type: 'particles', kind: 'ripple', from: [[127, 572, 0]], rate: 0.22, max: 2, color: [210, 250, 255], size: [26, 38], life: [3.5, 4.5], alpha: 0.24 },
+      { id: 'eelRipples', type: 'particles', kind: 'ripple', from: [[171, 168, 3], [187, 194, 3], [231, 107, 3], [108, 792, 3], [414, 576, 3]], rate: 0.3, max: 3, color: [190, 245, 255], size: [4, 7], life: [1.4, 2], alpha: 0.24 },
+      { id: 'wheelRipples', type: 'particles', kind: 'ripple', from: [[318, 880, 10], [300, 915, 10]], rate: 0.5, max: 3, color: [190, 245, 255], size: [8, 13], life: [1.6, 2.4], alpha: 0.26 },
+      { id: 'bubbles', type: 'particles', kind: 'bubble', from: [[47, 184, 2], [169, 160, 1], [189, 186, 1], [128, 927, 2], [101, 793, 1], [320, 885, 8], [200, 420, 30], [180, 700, 30]], rate: 0.6, max: 7, color: [210, 250, 255], size: [0.9, 1.8], life: [1.6, 2.8], speed: 0.7 },
+      { id: 'wheelDrips', type: 'particles', kind: 'drip', from: [[334, 856, 4], [324, 873, 4]], rate: 0.6, max: 4, color: [190, 240, 255], size: [0.7, 1.1], life: [2, 3], fall: 12, splashColor: [190, 245, 255] },
+      // 4. Lighting: the fungus down the right wall breathes cluster by cluster; spores drift off it.
+      { id: 'shroom1', type: 'mask', mask: 'shroom1', anim: { kind: 'flicker', speed: 0.32 }, alpha: [0.06, 0.34], bloom: 0.45, kickDur: 2 },
+      { id: 'shroom2', type: 'mask', mask: 'shroom2', anim: { kind: 'flicker', speed: 0.27 }, alpha: [0.06, 0.3], bloom: 0.45, kickDur: 2 },
+      { id: 'shroom3', type: 'mask', mask: 'shroom3', anim: { kind: 'flicker', speed: 0.36 }, alpha: [0.05, 0.3], bloom: 0.4, kickDur: 2 },
+      { id: 'shroom4', type: 'mask', mask: 'shroom4', anim: { kind: 'flicker', speed: 0.3 }, alpha: [0.06, 0.32], bloom: 0.45, kickDur: 2 },
+      { id: 'shroom5', type: 'mask', mask: 'shroom5', anim: { kind: 'flicker', speed: 0.25 }, alpha: [0.05, 0.28], bloom: 0.4, kickDur: 2 },
+      { id: 'shroomLight', type: 'glow', points: [[442, 358, 34], [397, 412, 24], [430, 540, 34], [432, 716, 26], [424, 806, 20]], color: [90, 220, 255], anim: 'flicker', speed: 0.3, alpha: [0.03, 0.1], kickDur: 2 },
+      { id: 'spores', type: 'particles', kind: 'mote', from: [[442, 358, 14], [397, 412, 10], [430, 540, 20], [432, 716, 14]], rate: 0.5, max: 7, color: [140, 240, 255], size: [0.5, 1.1], life: [4, 7], alpha: 0.6, speed: 0.4 },
+      // The rod (top right): a spark wakes on it only when tapped.
+      { id: 'rodGlow', type: 'glow', points: [[410, 95, 30]], color: [140, 220, 255], anim: 'pulse', period: 7, alpha: [0, 0.04], kickDur: 1.6 },
+      { id: 'rodBolt', type: 'lightning', every: [9999, 9999], color: [170, 235, 255], zones: [
+        { from: [380, 0, 459, 10], to: [415, 50, 430, 65], jag: 12, flash: [420, 60, 34] },
+      ] },
+      { id: 'rodSparks', type: 'particles', kind: 'glint', from: [[420, 60, 16]], rate: 0, max: 16, color: [220, 245, 255], size: [1, 2], life: [0.3, 0.7] },
+      // The water-wheel's painted sparks crackle softly.
+      { id: 'sparks', type: 'mask', mask: 'sparks', anim: { kind: 'flicker', speed: 5 }, alpha: [0.04, 0.26], bloom: 0.4, kickDur: 1.5 },
+      { id: 'wheelGlow', type: 'glow', points: [[402, 858, 22]], color: [255, 190, 90], anim: 'flicker', speed: 3, alpha: [0.03, 0.1], kickDur: 1.5 },
+      { id: 'wheelSparks', type: 'particles', kind: 'ember', from: [[402, 858, 10]], rate: 0.5, max: 6, color: [255, 210, 110], size: [0.5, 1], life: [0.4, 0.9], speed: 1.2 },
+      { id: 'zap', type: 'lightning', every: [9999, 9999], color: [120, 230, 255], zones: [
+        { from: [200, 480, 260, 520], to: [260, 640, 320, 700], jag: 18, flash: [260, 590, 50] },
+        { from: [280, 500, 330, 540], to: [190, 620, 250, 680], jag: 18, flash: [240, 580, 50] },
+      ] },
+      // 5. Air.
+      { type: 'fog', area: [-20, -20, 480, 220], count: 3, size: [80, 130], speed: 2, color: [40, 110, 140], alpha: 0.05 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 0.7, max: 10, color: [150, 230, 255], size: [0.4, 1], life: [5, 9], alpha: 0.45, speed: 0.35 },
+    ],
+    pokes: [
+      { area: [340, 30, 459, 175], sound: 'crack', strike: 'rodBolt', kick: ['rodGlow'], flare: [170, 235, 255], glyph: '⚡', burst: { layer: 'rodSparks', n: 14, spread: 22 } },
+      { area: [0, 35, 110, 205], sound: 'splash', rustle: 70, flare: [255, 240, 120], glyph: '⚡', burst: { layer: 'bubbles', n: 5, at: [47, 184], spread: 4 } },
+      { area: [0, 860, 145, 995], sound: 'splash', rustle: 70, flare: [255, 240, 120], glyph: '⚡', burst: { layer: 'bubbles', n: 5, at: [128, 927], spread: 4 } },
+      { area: [380, 320, 459, 600], sound: 'chime', kick: ['shroom1', 'shroom2', 'shroom3', 'shroomLight'], flare: [90, 220, 255], glyph: '✨', burst: { layer: 'spores', n: 8, spread: 26 } },
+      { area: [300, 815, 459, 1010], sound: 'grind', kick: ['wheelGlow', 'sparks'], flare: [255, 190, 90], glyph: '⚙️', burst: { layer: 'wheelSparks', n: 10, spread: 14 } },
+      { area: [180, 470, 340, 730], sound: 'crack', strike: 'zap', kick: ['cracks', 'cracks2', 'caustics'], flare: [120, 230, 255], glyph: '⚡', burst: { layer: 'ripples', n: 2 } },
+    ],
+    reactions: {
+      chain: { kick: ['cracks', 'cracks2', 'caustics', 'shroomLight'], burst: [{ layer: 'ripples', n: 2 }, { layer: 'centreRipples', n: 1 }] },
+    },
+  },
   // ---- Ice Age: a half-thawed tundra ----------------------------------------------------
   'ice-age-land': {
     wind: { dir: 1, every: [5, 10], speed: [170, 260], width: [150, 260], lean: 0.35 },

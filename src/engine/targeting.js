@@ -53,6 +53,9 @@ export function minionPasses(m, f) {
   if (f.minAttack != null && effectiveAttack(m) < f.minAttack) return false;
   if (f.buffedOrDefended && !isBuffed(m) && !defensiveKeywordOf(m)) return false;
   if (f.corroded && !((m.corrosion ?? 0) > 0)) return false;
+  // Eels: at least N Volts; Conductive.
+  if (f.minVolts != null && (m.volts ?? 0) < f.minVolts) return false;
+  if (f.conductive != null && !!m.conductive !== f.conductive) return false;
   if (f.unresurrected && m.resurrected) return false; // Resurrection: once per minion
   // Attack below its card's printed Attack (Mycelium Lord).
   if (f.reducedAttack && effectiveAttack(m) >= (getCard(m.cardId).attack ?? 0)) return false;
@@ -177,6 +180,11 @@ export function matchFilter(state, filter, ctx) {
     // Aliens (Hive Brood): the minion that died was Implanted (Hive Brute).
     if (key === 'deadImplanted') {
       if ((ev.dead?.implanted != null) !== want) return false;
+      continue;
+    }
+    // Eels: the trap's owner has a minion with at least N Volts (Short Circuit).
+    if (key === 'myVoltsAtLeast') {
+      if (!state.players[ctx.controller].board.some((m) => (m.volts ?? 0) >= want && m.health > 0)) return false;
       continue;
     }
     // Sand Sharks: the trap's owner has a Burrowed minion (Tremor Sense).

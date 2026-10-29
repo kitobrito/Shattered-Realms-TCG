@@ -43,6 +43,11 @@
 //   stream     particles flowing along a path (the storm of souls, the Styx, a lava fall)
 //   vortex     a slow spiral of streaks around a centre (a storm eye)
 //   flyers     bats and harpies crossing the sky
+//   bend       the painting's own pixels bent in place by a smooth displacement field that fades
+//              to nothing at its edges (no cut-out, so no seam): eels undulate along their spine
+//              (a wave running head to tail, the head nearly still), lily pads bob and tilt on
+//              the water, thin hanging vines sway from where they hang
+//   caustics   shifting underwater light (a drifting web of bright lines) shown only on a mask
 //
 // Tapping the scenery (pokes) makes it react: a sound plus a burst, a strike or a flare, and a
 // flash of the circle's light with sparks flying out (flare); its glyph is flung by main.js.
@@ -180,7 +185,7 @@ export async function startBoardFx(host, key, orient, opts = {}) {
   const maskInfo = BOARD_MASKS[`${fxKey(key)}-${orient}`] ?? {};
   const file = fxKey(key);
   const boardSrc = orient === 'land' ? `art/boards-v2/${file}.jpg` : `art/boards-portrait/${file}.jpg`;
-  const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers' || l.type === 'warp');
+  const needBoard = def.layers.some((l) => l.type === 'echo' || l.type === 'crawlers' || l.type === 'warp' || l.type === 'bend');
   const usedMasks = new Set(def.layers.flatMap((l) => [l.mask, l.area?.mask, l.flashMask].filter(Boolean)));
   const masks = {};
   await Promise.all([...usedMasks].map(async (name) => {
@@ -217,6 +222,214 @@ export async function startBoardFx(host, key, orient, opts = {}) {
   resize();
   const ro = new ResizeObserver(resize);
   ro.observe(host);
+
+  // ---- Bend: the painting's own pixels, bent by a smooth field (eels, lily pads, vines) ----
+  // Each item gets a box (painting pixels), the pixels it touches, and per pixel what the motion
+  // needs (where along the eel it is, which way is sideways, how strongly it moves (dw) and how
+  // much of the bent copy shows (aw)). Each update samples the painting at (pixel - offset), so the
+  // shape bends instead of sliding as a block; aw fades to 0 at the edge, so there is no seam.
+  let boardData = null, bnW = 0, bnH = 0, bsx = 1, bsy = 1;
+  function boardPixels() {
+    if (boardData) return boardData;
+    const c = document.createElement('canvas');
+    bnW = c.width = board.naturalWidth; bnH = c.height = board.naturalHeight;
+    bsx = bnW / IW; bsy = bnH / IH;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(board, 0, 0);
+    boardData = g.getImageData(0, 0, bnW, bnH).data;
+    return boardData;
+  }
+  const smooth = (a, b, x) => { const k = Math.max(0, Math.min(1, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
+  function prepBend(it) {
+    boardPixels();
+    const pts = [];
+    let box;
+    if (it.kind === 'eel') {
+      // Resample the spine (head -> tail) every half pixel, with arc length.
+      const sp = it.spine.map(([x, y]) => [x * bsx, y * bsy]);
+      let tot = 0;
+      const samp = [];
+      for (let i = 1; i < sp.length; i++) {
+        const [ax, ay] = sp[i - 1], [bx, by] = sp[i];
+        const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(len * 2));
+        for (let k = 0; k < n; k++) samp.push({ x: ax + (bx - ax) * k / n, y: ay + (by - ay) * k / n, tx: (bx - ax) / len, ty: (by - ay) / len, l: tot + len * k / n });
+        tot += len;
+      }
+      samp.push({ ...samp[samp.length - 1], x: sp[sp.length - 1][0], y: sp[sp.length - 1][1], l: tot });
+      const [r0, r1] = (it.r ?? [5, 2]).map((v) => v * bsx);
+      const reach = (it.amp ?? 2) * bsx + 1;
+      const fall = (it.falloff ?? 6) * bsx;
+      const pad = r0 + reach + fall + 3;
+      const xs = sp.map((q) => q[0]), ys = sp.map((q) => q[1]);
+      box = [Math.max(0, Math.floor(Math.min(...xs) - pad)), Math.max(0, Math.floor(Math.min(...ys) - pad)), Math.min(bnW, Math.ceil(Math.max(...xs) + pad)), Math.min(bnH, Math.ceil(Math.max(...ys) + pad))];
+      for (let y = box[1]; y < box[3]; y++) for (let x = box[0]; x < box[2]; x++) {
+        let best = null, bd = Infinity;
+        for (const q of samp) { const d = (q.x - x) ** 2 + (q.y - y) ** 2; if (d < bd) { bd = d; best = q; } }
+        const d = Math.sqrt(bd), s = best.l / tot, r = r0 + (r1 - r0) * s;
+        const dw = 1 - smooth(r + 1, r + fall, d);
+        // Past the tail tip the field fades too, so the water behind it stays put.
+        const end = s >= 0.999 ? 1 - smooth(r * 0.5, r + fall * 0.6, Math.hypot(x - best.x, y - best.y)) : 1;
+        const aw = (1 - smooth(r + reach, r + reach + 3 * bsx, d)) * end;
+        if (aw <= 0.004 && dw <= 0.004) continue;
+        pts.push([x, y, s, -best.ty, best.tx, best.tx, best.ty, dw * end, aw]);
+      }
+    } else if (it.kind === 'pad') {
+      const [cx, cy, r] = [it.at[0] * bsx, it.at[1] * bsy, it.at[2] * bsx];
+      const pad = r * 1.45 + 3;
+      box = [Math.max(0, Math.floor(cx - pad)), Math.max(0, Math.floor(cy - pad)), Math.min(bnW, Math.ceil(cx + pad)), Math.min(bnH, Math.ceil(cy + pad))];
+      for (let y = box[1]; y < box[3]; y++) for (let x = box[0]; x < box[2]; x++) {
+        const d = Math.hypot(x - cx, y - cy);
+        const dw = 1 - smooth(r * 0.9, r * 1.35, d);
+        const aw = 1 - smooth(r + 2 * bsx, r * 1.45 + 2, d);
+        if (aw <= 0.004) continue;
+        pts.push([x, y, 0, 0, 0, x - cx, y - cy, dw, aw]);
+      }
+      it.c = [cx, cy];
+    } else if (it.kind === 'hang') {
+      // A hanging vine or thin root: it sways more the further down it hangs.
+      const [x0, y0, x1, y1] = [it.box[0] * bsx, it.box[1] * bsy, it.box[2] * bsx, it.box[3] * bsy];
+      box = [Math.max(0, Math.floor(x0)), Math.max(0, Math.floor(y0)), Math.min(bnW, Math.ceil(x1)), Math.min(bnH, Math.ceil(y1))];
+      const f = (it.feather ?? 6) * bsx;
+      for (let y = box[1]; y < box[3]; y++) for (let x = box[0]; x < box[2]; x++) {
+        const down = (y - y0) / (y1 - y0);
+        const edge = smooth(x0, x0 + f, x) * (1 - smooth(x1 - f, x1, x)) * (1 - smooth(y1 - f, y1, y));
+        if (edge <= 0.004) continue;
+        pts.push([x, y, down, 0, 0, 0, 0, Math.pow(down, 1.4) * edge, edge]);
+      }
+    }
+    const w = box[2] - box[0], h = box[3] - box[1];
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, w); c.height = Math.max(1, h);
+    const g = c.getContext('2d');
+    // Flat typed arrays for speed.
+    const n = pts.length;
+    const P = new Float32Array(n * 9);
+    pts.forEach((q, i) => P.set(q, i * 9));
+    return { ...it, box, w, h, canvas: c, g, img: g.createImageData(Math.max(1, w), Math.max(1, h)), P, n, seed: Math.random() * 100, ph: Math.random() * TAU, next: 0, burst: rand(...(it.burstEvery ?? [9, 18])), kick: -99 };
+  }
+  // How lively an eel is right now: its resting level, plus now and then a stretch of stronger
+  // swimming (it shifts in its pool), rising and falling smoothly; a tap rouses it.
+  function eelEnergy(it, t) {
+    if (t > it.burst + (it.burstLen ?? 3.5)) it.burst = t + rand(...(it.burstEvery ?? [9, 18]));
+    const b = t < it.burst ? 0 : Math.sin(Math.PI * Math.min(1, (t - it.burst) / (it.burstLen ?? 3.5)));
+    const k = Math.max(0, 1 - (t - it.kick) / 2.5);
+    return (it.rest ?? 0.4) + (1 - (it.rest ?? 0.4)) * b * b + k * 0.9 + 0.12 * wave(t * 0.35, it.seed);
+  }
+  function bendItem(it, t) {
+    const D = boardData, P = it.P, out = it.img.data;
+    out.fill(0);
+    const [bx0, by0] = it.box, w = it.w;
+    let f;
+    if (it.kind === 'eel') {
+      const e = eelEnergy(it, t);
+      const amp = (it.amp ?? 2) * bsx * e;
+      const om = TAU / (it.period ?? 3) * (0.85 + 0.3 * Math.min(1, e));
+      const k = TAU * (it.waves ?? 1.2), still = it.still ?? 0.25, head = it.head ?? 0.12;
+      const drift = (it.drift ?? 0) * bsx * Math.sin(t * TAU / (it.driftPeriod ?? 7) + it.ph);
+      f = (s, nx, ny, tx, ty) => {
+        const a = amp * (head + (1 - head) * smooth(0, 1, (s - still * 0.4) / (1 - still * 0.4)) ** 1.2);
+        const lat = a * Math.sin(om * t - k * s + it.ph) + amp * 0.25 * Math.sin(om * 0.5 * t - k * 0.5 * s + it.seed) * s;
+        return [nx * lat + tx * drift, ny * lat + ty * drift];
+      };
+    } else if (it.kind === 'pad') {
+      const bob = (it.bob ?? 0.7) * bsx * Math.sin(TAU * t / (it.period ?? 4.5) + it.ph);
+      const kk = Math.max(0, 1 - (t - it.kick) / 2);
+      const rot = ((it.tilt ?? 0.012) * Math.sin(TAU * t / ((it.period ?? 4.5) * 1.37) + it.seed) + kk * 0.03 * Math.sin(t * 9));
+      const sway = (it.sway ?? 0.5) * bsx * Math.sin(TAU * t / ((it.period ?? 4.5) * 1.9) + it.seed * 2);
+      f = (s, nx, ny, dx, dy) => [-rot * dy + sway, rot * dx + bob];
+    } else {
+      const amp = (it.amp ?? 1.5) * bsx, om = TAU / (it.period ?? 5), k = TAU * (it.waves ?? 0.6);
+      f = (s) => [amp * Math.sin(om * t - k * s + it.ph) + amp * 0.3 * Math.sin(om * 2.3 * t + it.seed), 0];
+    }
+    for (let i = 0; i < it.n; i++) {
+      const o = i * 9;
+      const x = P[o], y = P[o + 1], dw = P[o + 7], aw = P[o + 8];
+      const [ox, oy] = dw > 0 ? f(P[o + 2], P[o + 3], P[o + 4], P[o + 5], P[o + 6]) : [0, 0];
+      // Bilinear sample of the painting at (x - offset).
+      let sx = x - ox * dw, sy = y - oy * dw;
+      sx = Math.max(0, Math.min(bnW - 1.001, sx)); sy = Math.max(0, Math.min(bnH - 1.001, sy));
+      const ix = sx | 0, iy = sy | 0, fx = sx - ix, fy = sy - iy;
+      const a = (iy * bnW + ix) * 4, b = a + 4, c = a + bnW * 4, d = c + 4;
+      const q = ((y - by0) * w + (x - bx0)) * 4;
+      for (let ch = 0; ch < 3; ch++) {
+        const top = D[a + ch] + (D[b + ch] - D[a + ch]) * fx, bot = D[c + ch] + (D[d + ch] - D[c + ch]) * fx;
+        out[q + ch] = top + (bot - top) * fy;
+      }
+      out[q + 3] = aw * 255;
+    }
+    it.g.putImageData(it.img, 0, 0);
+  }
+  function drawBend(st, t) {
+    const every = 1 / (st.fps ?? 30);
+    ctx.globalCompositeOperation = 'source-over';
+    for (const it of st.items) {
+      if (t >= it.next) { bendItem(it, t); it.next = t + every * (0.9 + Math.random() * 0.2); }
+      const [x0, y0] = it.box;
+      ctx.drawImage(it.canvas, x0 / bsx * SX, y0 / bsy * SY, it.w / bsx * SX, it.h / bsy * SY);
+    }
+  }
+
+  // ---- Caustics: a drifting web of underwater light, only on its mask ----
+  // A tileable cell pattern whose borders glow (light focused by the moving surface). Two copies
+  // drift different ways at different sizes, so the web keeps reshaping instead of sliding.
+  function causticTile(cell, seed) {
+    const N = 128, c = document.createElement('canvas');
+    c.width = c.height = N;
+    const g = c.getContext('2d');
+    const img = g.createImageData(N, N);
+    let r = seed * 9301 + 49297;
+    const rnd = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; };
+    const n = Math.max(4, Math.round((N / cell) ** 2));
+    const P = Array.from({ length: n }, () => [rnd() * N, rnd() * N]);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      let d1 = 1e9, d2 = 1e9;
+      for (const [px, py] of P) for (let ox = -N; ox <= N; ox += N) for (let oy = -N; oy <= N; oy += N) {
+        const d = (px + ox - x) ** 2 + (py + oy - y) ** 2;
+        if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) d2 = d;
+      }
+      const edge = Math.sqrt(d2) - Math.sqrt(d1);
+      const v = Math.max(0, 1 - edge / 3.2) ** 2.2;
+      const i = (y * N + x) * 4;
+      img.data[i] = 255; img.data[i + 1] = 255; img.data[i + 2] = 255; img.data[i + 3] = v * 255;
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+  const causOff = document.createElement('canvas');
+  const causCtx = causOff.getContext('2d');
+  function drawCaustics(st, t) {
+    const m = masks[st.mask];
+    if (!m) return;
+    const [x0, y0, x1, y1] = m.box;
+    const dw = Math.max(1, Math.ceil((x1 - x0) * SX)), dh = Math.max(1, Math.ceil((y1 - y0) * SY));
+    if (causOff.width !== dw || causOff.height !== dh) { causOff.width = dw; causOff.height = dh; } else causCtx.clearRect(0, 0, dw, dh);
+    causCtx.globalCompositeOperation = 'source-over';
+    const sc = (st.scale ?? 1) * S;
+    st.pat ??= causCtx.createPattern(st.tile, 'repeat');
+    for (const [k, vx, vy, a, z] of [[0, 1, 0.35, 1, 1], [1, -0.6, 0.8, 0.8, 1.37]]) {
+      const sp = (st.speed ?? 6) * S;
+      causCtx.save();
+      causCtx.globalAlpha = a;
+      causCtx.globalCompositeOperation = k ? 'lighter' : 'source-over';
+      causCtx.scale(sc * z, sc * z);
+      causCtx.translate((t * sp * vx + st.seed * 13) / (sc * z) % 128, (t * sp * vy + st.seed * 7) / (sc * z) % 128);
+      causCtx.fillStyle = st.pat;
+      causCtx.fillRect(-256, -256, dw / (sc * z) + 512, dh / (sc * z) + 512);
+      causCtx.restore();
+    }
+    causCtx.globalAlpha = 1;
+    causCtx.globalCompositeOperation = 'destination-in';
+    causCtx.drawImage(m.img, 0, 0, dw, dh);
+    // Tint it the water's own colour.
+    causCtx.globalCompositeOperation = 'source-in';
+    causCtx.fillStyle = rgba(st.color ?? [190, 250, 255], 1);
+    causCtx.fillRect(0, 0, dw, dh);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = (st.alpha ?? 0.14) * (0.8 + 0.2 * wave(t * 0.4, st.seed)) * (1 + kicked(st, t, 1.5));
+    ctx.drawImage(causOff, x0 * SX, y0 * SY, dw, dh);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
 
   // ---- Per-layer state ----
   const layers = def.layers.map((l, i) => {
@@ -263,6 +476,8 @@ export async function startBoardFx(host, key, orient, opts = {}) {
       st.segs = segs; st.total = tot;
       st.parts = Array.from({ length: l.count ?? 30 }, () => ({ s: Math.random() * tot, o: rand(-1, 1), v: rand(0.7, 1.3), ph: Math.random() * TAU, size: rand(...(l.size ?? [1, 3])) }));
     }
+    if (l.type === 'bend') st.items = l.items.map((it) => prepBend(it));
+    if (l.type === 'caustics') st.tile = causticTile(l.cell ?? 22, l.seedTile ?? 7);
     if (l.type === 'vortex') st.parts = Array.from({ length: l.count ?? 40 }, () => ({ a: Math.random() * TAU, r: Math.random(), v: rand(0.6, 1.4), len: rand(0.3, 0.9) }));
     return st;
   });
@@ -331,20 +546,22 @@ export async function startBoardFx(host, key, orient, opts = {}) {
     else if (k === 'fly') { p.cx = x; p.cy = y; p.vx = 0; p.vy = 0; p.r = rand(5, 12); p.w = rand(4, 8) * (Math.random() < 0.5 ? -1 : 1); }
     else if (k === 'smoke') { p.vx = rand(-2, 3) * sp; p.vy = rand(-12, -6) * sp; }
     else if (k === 'splash') { p.vx = 0; p.vy = 0; }
+    else if (k === 'ripple') { p.vx = 0; p.vy = 0; }
     else { p.vx = 0; p.vy = 0; }
     st.parts.push(p);
     return p;
   }
   function emitPoint(st) {
     if (st.points?.length) { const q = pick(st.points); return [q[0] + rand(-1, 1), q[1] + rand(-1, 1)]; }
-    if (st.from?.length) { const q = pick(st.from); return [q[0] + rand(-(q[2] ?? 0), q[2] ?? 0), q[1]]; }
+    // from: [x, y, spread, r0?] — r0: a ripple that starts as a ring of that size (around a lily pad).
+    if (st.from?.length) { const q = pick(st.from); return [q[0] + rand(-(q[2] ?? 0), q[2] ?? 0), q[1], q[3]]; }
     const a = st.area;
     return [rand(a[0], a[2]), rand(a[1], a[3])];
   }
   function stepParticles(st, dt, t) {
     const max = st.max ?? 60;
     st.acc += (st.rate ?? 6) * dt;
-    while (st.acc >= 1) { st.acc -= 1; if (st.parts.length < max) { const [x, y] = emitPoint(st); spawn(st, x, y); } }
+    while (st.acc >= 1) { st.acc -= 1; if (st.parts.length < max) { const [x, y, r0] = emitPoint(st); spawn(st, x, y, r0 != null ? { r0 } : {}); } }
     const k = st.kind;
     for (const p of st.parts) {
       p.age += dt;
@@ -472,6 +689,15 @@ export async function startBoardFx(host, key, orient, opts = {}) {
         ctx.fillStyle = rgba(c, 0.8);
         const stretch = p.age < p.hang ? 1 + (p.age / p.hang) * 0.8 : 1.6;
         ctx.beginPath(); ctx.ellipse(x, y, r * 0.7, r * stretch, 0, 0, TAU); ctx.fill();
+      } else if (k === 'ripple') {
+        // A ring spreading on the water (seen from above), with a fainter second ring inside it.
+        const e = 1 - (1 - life) ** 2;
+        const R = ((p.r0 ?? 1) + e * p.size) * S;
+        const a = (st.alpha ?? 0.35) * Math.min(1, p.age / 0.25) * (1 - life);
+        ctx.lineWidth = Math.max(0.8, 1.1 * S * (1 - life * 0.5));
+        ctx.strokeStyle = rgba(c, a);
+        ctx.beginPath(); ctx.ellipse(x, y, R, R * (st.squash ?? 0.92), 0, 0, TAU); ctx.stroke();
+        if (life > 0.18) { ctx.strokeStyle = rgba(c, a * 0.5); ctx.beginPath(); ctx.ellipse(x, y, R * 0.62, R * 0.62 * (st.squash ?? 0.92), 0, 0, TAU); ctx.stroke(); }
       } else if (k === 'bubble') {
         ctx.strokeStyle = rgba(c, 0.6 * fade);
         ctx.lineWidth = Math.max(1, 0.7 * S);
@@ -812,7 +1038,7 @@ export async function startBoardFx(host, key, orient, opts = {}) {
     st.points.forEach(([x, y, r], i) => {
       let k;
       const an = st.anim ?? 'pulse';
-      if (an === 'flicker') k = 0.55 + 0.45 * wave(t * 4, i * 7.3 + st.seed);
+      if (an === 'flicker') k = 0.55 + 0.45 * wave(t * (st.speed ?? 4), i * 7.3 + st.seed);
       else if (an === 'blink') {
         // Eyes: open most of the time, a quick blink every few seconds (pairs blink together).
         const cyc = (t + (st.pair ? Math.floor(i / 2) : i) * 1.7 + st.seed) % (st.period ?? 5);
@@ -1129,6 +1355,8 @@ export async function startBoardFx(host, key, orient, opts = {}) {
         case 'stream': drawStream(st, dt, t); break;
         case 'vortex': drawVortex(st, dt, t); break;
         case 'flyers': stepFlyers(st, dt, t); drawFlyers(st, t); break;
+        case 'bend': drawBend(st, t); break;
+        case 'caustics': drawCaustics(st, t); break;
         default: break;
       }
     }
@@ -1147,6 +1375,7 @@ export async function startBoardFx(host, key, orient, opts = {}) {
     for (const id of [].concat(p.kick ?? [])) { const l = layers.find((q) => q.id === id); if (l) l.kick = t; }
     // Grass and twigs right around the tap rustle; creatures near it scurry.
     for (const l of layers) if (l.type === 'sprites') for (const q of l.parts) if (Math.hypot(q.px - x, q.py - y) < (p.rustle ?? 40)) q.kick = t;
+    for (const l of layers) if (l.type === 'bend') for (const q of l.items) { const c = q.c ?? [(q.box[0] + q.box[2]) / 2 / bsx, (q.box[1] + q.box[3]) / 2 / bsy]; if (Math.hypot(c[0] - x, c[1] - y) < (p.rustle ?? 60) + 40) q.kick = t; }
     for (const l of layers) if (l.type === 'crawlers') for (const q of l.items) if (Math.hypot((q.box[0] + q.box[2]) / 2 - x, (q.box[1] + q.box[3]) / 2 - y) < (p.rustle ?? 60)) q.kick = t;
     if (p.strike != null) { const l = layers.find((q) => q.id === p.strike); if (l) strike(l, t, l.zones[p.zone ?? 0]); }
     if (p.loose != null) { const l = layers.find((q) => q.id === p.loose); if (l) loose(l, t, l.shooters[p.shooter ?? 0]); }
@@ -1168,6 +1397,17 @@ export async function startBoardFx(host, key, orient, opts = {}) {
     pause() { running = false; },
     resume() { if (!running) { running = true; prev = performance.now(); } },
     poke, canPoke,
+    // A match event the board answers (cosmetic): def.reactions[name] = { kick: [layer ids], burst: [{ layer, n, at?, spread? }] }.
+    react(name) {
+      const r = def.reactions?.[name];
+      if (!r) return;
+      const t = (performance.now() - start) / 1000;
+      for (const id of [].concat(r.kick ?? [])) { const l = layers.find((q) => q.id === id); if (l) l.kick = t; }
+      for (const b of [].concat(r.burst ?? [])) {
+        const l = layers.find((q) => q.id === b.layer);
+        if (l) for (let i = 0; i < (b.n ?? 6); i++) { const [x, y] = b.at ?? emitPoint(l); spawn(l, x + rand(-(b.spread ?? 0), b.spread ?? 0), y + rand(-(b.spread ?? 0), b.spread ?? 0)); }
+      }
+    },
     // Kick every layer at once (as if each were tapped): for tests.
     kickAll() { const t = (performance.now() - start) / 1000; for (const l of layers) l.kick = t; },
     canvas,

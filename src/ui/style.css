@@ -4937,6 +4937,13 @@ body.reduced-motion .descent { display: none; }
 .big-card.shard.f-void, .minion.shardm.f-void { --accent: #b48cff; }
 .arena.f-void { --felt: #1c1430; --felt-2: #07040e; --rim: #b48cff; }
 .medallion.f-void { --fc: #b48cff; } .ts-guide.f-void { --fc: #b48cff; }
+.big-card.f-eels { --frame: #0e3a48; --frame-hi: #6aeaff; --body: #041016; }
+.big-card.t-spell.f-eels { --frame: #3a3a10; --frame-hi: #ffe84a; --body: #101004; }
+.big-card.t-trap.f-eels { --frame: #3a2410; --frame-hi: #e0904a; --body: #120a04; }
+.big-card.shard.f-eels, .minion.shardm.f-eels { --accent: #5ae8ff; }
+.arena.f-eels { --felt: #12303a; --felt-2: #04121a; --rim: #5ae8ff; }
+.medallion.f-eels { --fc: #5ae8ff; } .ts-guide.f-eels { --fc: #5ae8ff; }
+.fx-p.voltspark { width: 7px; height: 7px; background: #fffbe0; clip-path: polygon(40% 0, 70% 0, 52% 42%, 85% 42%, 30% 100%, 45% 55%, 15% 55%); filter: drop-shadow(0 0 4px #5ae8ff); }
 .big-card.f-ice-age { --frame: #2a4258; --frame-hi: #c8f0ff; --body: #0a141c; }
 .big-card.t-spell.f-ice-age { --frame: #4a3a2a; --frame-hi: #ffb86a; --body: #140e08; }
 .big-card.t-trap.f-ice-age { --frame: #3a3a32; --frame-hi: #d8c8a0; --body: #100e0a; }
@@ -5142,6 +5149,8 @@ body.reduced-motion .descent { display: none; }
 /* Lycanthropes: dark wood bound in moonlit silver. */
 .arena.frame-silverwood { --fr-line: #0c0a08; --fr-mid: #4a3a2a; --fr-hi: #dfe8ff; }
 /* Sharks: sea-worn brass porthole, sunlit aqua edge. */
+/* Eels: green-tarnished copper with an electric glint. */
+.arena.frame-copper { --fr-line: #0a1c1c; --fr-mid: #b8703a; --fr-hi: #8af4ff; }
 .arena.frame-coral { --fr-line: #062428; --fr-mid: #b08a4a; --fr-hi: #9ff8ff; }
 /* Ultraterrestrials: gold and violet, folded light. */
 .arena.frame-astral { --fr-line: #1a0c2c; --fr-mid: #c8a04a; --fr-hi: #e8c8ff; }
@@ -5448,7 +5457,7 @@ body.colorblind .arena .end-turn.done { background: linear-gradient(#a8d0ff, #2f
 .coll2 .f-fungus { --fc: #b07ae8; } .coll2 .f-zombies { --fc: #86d43a; } .coll2 .f-dragons { --fc: #f0661a; } .coll2 .f-demons { --fc: #e82a2a; }
 .coll2 .f-divine { --fc: #f0c860; } .coll2 .f-robots { --fc: #3a9ef0; } .coll2 .f-radioactive { --fc: #98e82a; } .coll2 .f-bees { --fc: #f0b414; }
 .coll2 .f-ghosts { --fc: #7ac8e8; } .coll2 .f-ultraterrestrials { --fc: #a86af0; } .coll2 .f-sharks { --fc: #3a8ad0; } .coll2 .f-acidic { --fc: #a8e030; }
-.coll2 .f-lycanthropes { --fc: #8a9ab8; } .coll2 .f-void { --fc: #8a5af0; } .coll2 .f-ice-age { --fc: #8ad0f0; } .coll2 .f-fusion { --fc: #f0a0e0; }
+.coll2 .f-lycanthropes { --fc: #8a9ab8; } .coll2 .f-void { --fc: #8a5af0; } .coll2 .f-ice-age { --fc: #8ad0f0; } .coll2 .f-eels { --fc: #5ad8f0; } .coll2 .f-fusion { --fc: #f0a0e0; }
 body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0%, #1a1420 0%, #0b0a0f 60%); }
 
 /* Header: logo | title | search + filter | progress | back */
@@ -5632,3 +5641,21 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 .fx-kw-recoil { color: #ffb45a; font-weight: 900; text-shadow: 0 0 10px #ff7a1a, 0 2px 3px #000; }
 .fx-kw-hugger { position: fixed; z-index: 913; pointer-events: none; filter: drop-shadow(0 4px 4px #000a) drop-shadow(0 0 6px #5affd855); }
 .fx-kw-hugger .hug-legs, .fx-kw-hugger .hug-tail { transform-box: view-box; transform-origin: 50% 40%; }
+
+/* ---- Eels: Volts and Conductive ---- */
+/* The Volt badge (top right): how much charge the minion is holding; it crackles when full. */
+.volt-badge { position: absolute; z-index: 7; top: -10%; right: -14%; padding: 0.05em 0.35em; border-radius: 999px; pointer-events: auto; white-space: nowrap;
+  background: linear-gradient(#fff8a8, #e8b812); border: 2px solid #2a2004; color: #1a1404; font-family: 'Stat Numbers', 'Alegreya Sans', sans-serif; font-weight: 900;
+  font-size: calc(var(--minion-w, 70px) * 0.17); box-shadow: 0 0 8px #ffe84a, 0 0 14px #5ae8ff88, 0 2px 4px #000c; }
+.volt-badge.full { animation: volt-crackle 1.1s steps(2, end) infinite; }
+@keyframes volt-crackle { 0%, 100% { box-shadow: 0 0 8px #ffe84a, 0 0 16px #5ae8ff, 0 2px 4px #000c; } 50% { box-shadow: 0 0 14px #fff, 0 0 24px #5ae8ff, 0 2px 4px #000c; } }
+/* A charged minion: a faint electric rim that flickers now and then. */
+.minion.charged .m-art { box-shadow: inset 0 0 calc(var(--minion-w, 70px) * 0.12) #5ae8ff66; }
+/* Conductive: soaked in glowing water for the rest of the turn. */
+.minion .ov-wet { position: absolute; inset: 6%; z-index: 4; border-radius: 22%; pointer-events: none;
+  background: linear-gradient(180deg, #6adcff00 30%, #6adcff55 100%), repeating-linear-gradient(100deg, #ffffff00 0 9px, #bff4ff33 9px 11px);
+  box-shadow: inset 0 0 12px #6adcff99; animation: wet-shimmer 2.4s ease-in-out infinite; }
+@keyframes wet-shimmer { 50% { opacity: 0.6; } }
+/* Chain lightning: a full-screen SVG the bolts are drawn in. */
+.fx-kw-bolt { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 915; pointer-events: none; overflow: visible;
+  filter: drop-shadow(0 0 6px #5ae8ff) drop-shadow(0 0 2px #fff); }

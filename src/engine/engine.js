@@ -814,6 +814,8 @@ const STEPS = {
       state.deathsThisGame = (state.deathsThisGame ?? 0) + 1;
       state.players[m.controller].minionDeaths = (state.players[m.controller].minionDeaths ?? 0) + 1;
       const card = getCard(m.cardId);
+      // Eels: a minion that dies holding 2+ Volts Discharges half of them at a random enemy.
+      if (m.volts > 1) steps.push({ kind: 'effect', effect: { op: 'deathDischarge', volts: m.volts, uid: m.uid, cardId: m.cardId }, ctx: { controller: m.controller, self: null } }, { kind: 'deaths' });
       const event = {
         type: 'minionDied', source: m.uid, player: m.controller, cardId: m.cardId,
         killer: m.lastDamagedBy, killerPlayer: m.lastDamagedByController, killerMinion: killerMinion.get(m.uid), byBurn: !!m.diedToBurn,
@@ -1003,6 +1005,7 @@ const STEPS = {
         m.justReturned = false;
         m.preyRush = false;
         m.bonusAttacks = 0;
+        m.conductive = false; // Eels: Conductive lasts until the end of the turn
         if (m.grantedTriggers?.some((t) => t.temporary)) m.grantedTriggers = m.grantedTriggers.filter((t) => !t.temporary);
         if (m.tempHealth > 0) {
           m.maxHealth -= m.tempHealth;
