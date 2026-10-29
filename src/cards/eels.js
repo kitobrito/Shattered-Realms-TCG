@@ -177,6 +177,9 @@ export const EEL_CARDS = [
   },
 
   // ---- Storm Season (expansion, unlockable): rays, morays and two storm legends ----
+  // Balance (sims, Expansion deck vs every Classic deck): 58% as first drafted; Ball Lightning 6→7,
+  // Thundercloud Ray 4/5→4/4, Static Snare 2→3, Riptide Ambush 3→4, Thalassa 9→10 bring it to 54%,
+  // level with the Classic Eels deck.
   {
     ...EEL, extra: true, id: 'pond_spark', name: 'Pond Spark', art: '✨', cost: 1, attack: 1, health: 2,
     text: 'Arrival: Give a friendly minion 1 Volt.', target: { type: 'minion', side: 'friendly' },
@@ -213,7 +216,7 @@ export const EEL_CARDS = [
     triggers: [{ on: 'discharged', filter: { player: 'friendly' }, effects: [{ op: 'oncePerTurn', key: 'wellspring', effects: [{ op: 'draw', count: 1 }] }] }],
   },
   {
-    ...BEAST, extra: true, id: 'thundercloud_ray', name: 'Thundercloud Ray', art: '⛈️', cost: 5, attack: 4, health: 5,
+    ...BEAST, extra: true, id: 'thundercloud_ray', name: 'Thundercloud Ray', art: '⛈️', cost: 5, attack: 4, health: 4,
     text: 'Arrival: Chain 3.', target: ENEMY_CHAR,
     triggers: [{ on: 'battlecry', effects: [chain(3)] }],
   },
@@ -223,7 +226,7 @@ export const EEL_CARDS = [
     triggers: [{ ...MY_TURN_END, effects: [{ op: 'ohmraDrain', unleashAt: 10 }] }],
   },
   {
-    ...EEL, extra: true, id: 'thalassa_the_endless_storm', name: 'Thalassa, the Endless Storm', art: '🌪️', cost: 9, attack: 7, health: 7,
+    ...EEL, extra: true, id: 'thalassa_the_endless_storm', name: 'Thalassa, the Endless Storm', art: '🌪️', cost: 10, attack: 7, health: 7,
     text: 'Arrival: A storm stays for the rest of the game: at the end of each of your turns, Chain 2 at a random enemy.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'endlessStorm', amount: 2 }] }],
   },
@@ -236,17 +239,17 @@ export const EEL_CARDS = [
     text: 'Give a friendly minion +2/+2 and 2 Volts.', effects: [{ op: 'buff', target: 'chosen', attack: 2, health: 2 }, volts('chosen', 2)],
   },
   {
-    ...S, extra: true, id: 'ball_lightning', name: 'Ball Lightning', art: '🔵', cost: 6,
+    ...S, extra: true, id: 'ball_lightning', name: 'Ball Lightning', art: '🔵', cost: 7,
     text: 'Make all enemy minions Conductive, then every friendly minion with Volts Discharges.',
     effects: [{ op: 'conductive', target: ENEMY_MINIONS }, { op: 'dischargeAll' }],
   },
   {
-    ...T, extra: true, id: 'static_snare', name: 'Static Snare', art: '🕸️', cost: 2,
+    ...T, extra: true, id: 'static_snare', name: 'Static Snare', art: '🕸️', cost: 3,
     text: 'When your opponent plays a minion: Chain 2 starting at it.',
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [{ op: 'chain', amount: 2, start: 'eventSource' }] },
   },
   {
-    ...T, extra: true, id: 'riptide_ambush', name: 'Riptide Ambush', art: '🌊', cost: 3,
+    ...T, extra: true, id: 'riptide_ambush', name: 'Riptide Ambush', art: '🌊', cost: 4,
     text: 'When an enemy minion attacks your Hero: give your minions 2 Volts, then your minion with the most Volts Discharges at the attacker.',
     trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [volts(FRIENDLY_MINIONS, 2), { op: 'dischargeMost', at: 'eventSource' }] },
   },

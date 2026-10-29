@@ -610,7 +610,7 @@ export function chainLightning(state, ctx, power, opts = {}) {
   if (opts.preyLast) { const last = [...hits].reverse().find((h) => findCharacter(state, h.uid)?.kind === 'minion'); if (last) markPrey(state, findCharacter(state, last.uid), true); }
   if (opts.healPerHit && hits.length) heal(state, heroOf(state, ctx.controller).uid, opts.healPerHit * hits.length, { source: ctx.self });
   const srcMinion = opts.from ?? (findCharacter(state, ctx.self)?.kind === 'minion' ? ctx.self : null);
-  traceFx(state, { type: 'chain', source: srcMinion, caster: heroOf(state, ctx.controller).uid, player: ctx.controller, hits: hits.map(({ uid, amount }) => ({ uid, amount })) });
+  traceFx(state, { type: 'chain', source: srcMinion, caster: heroOf(state, ctx.controller).uid, player: ctx.controller, cardId: ctx.cardId, hits: hits.map(({ uid, amount }) => ({ uid, amount })) });
   emit(state, { type: 'chainResolved', player: ctx.controller, hits: hits.length });
   return hits.length;
 }
