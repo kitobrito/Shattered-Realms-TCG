@@ -7,8 +7,11 @@
 //
 // Touch: there is no hover, so the first tap on a hand card inspects it (big
 // preview, card lifted); a second tap plays it, and dragging plays it as usual.
-// Pressing and holding a hand card shows its big preview until you let go
-// (the release neither picks the card up nor plays it).
+// Pressing and holding any hand card (playable or not, on either player's turn)
+// shows its big preview until you let go; sliding along the hand while holding
+// reads the other cards, and pulling the held card up out of the hand plays it.
+// Landscape: the hand rests small in the corner (board.js). Its cards work the
+// same there (hold to read, drag out to play); a quick tap brings the hand up.
 //
 // While the last move is still animating you can already pick up and drag your
 // next card: dropping it holds the play, and it goes through (if it is still
@@ -18,7 +21,7 @@ import { ghost } from './fx.js';
 import { setHandOpen } from './board.js';
 
 const DRAG_START = 6; // px of movement before a press becomes a drag
-const HOLD_MS = 420;  // press and hold a hand card this long (without moving) for its big preview
+const HOLD_MS = 320;  // press and hold a hand card this long (without moving) for its big preview
 
 let api = null;
 let press = null;   // pointer is down on something
@@ -154,7 +157,24 @@ function clearInspect() {
 function endHold() {
   if (!press) return;
   clearTimeout(press.holdTimer);
-  if (press.held) { press.held = false; api.inspect?.(null); }
+  if (press.held) { press.held = false; press.el?.classList.remove('reading'); api.inspect?.(null); }
+}
+
+// The plays a hand card has right now: null while your last move still animates (it may be
+// picked up early), none on the other player's turn.
+function playsOf(uid) {
+  if (!api.canAct()) return api.canPlan?.() && !queued ? null : [];
+  return api.legal().filter((a) => a.type === 'play' && a.card === uid);
+}
+
+// Hold: the pressed card is read (big preview, card lifted) until you let go.
+function startHold(p) {
+  p.holdTimer = setTimeout(() => {
+    if (press !== p || drag || aim || !p.el.isConnected) return;
+    p.held = true;
+    p.el.classList.add('reading');
+    api.inspect?.(p.el);
+  }, HOLD_MS);
 }
 
 // The lifted (clicked) hand card goes back down and its preview closes.
@@ -248,29 +268,15 @@ function onDown(e) {
   pointerId = e.pointerId;
   // Touching anything other than the inspected card puts it back.
   if (inspected != null && !e.target.closest(`[data-hand="${inspected}"]`)) clearInspect();
-  // Landscape: the hand rests small in the corner; the first click on it only brings it up.
-  if (e.button === 0 && !aim && !drag && e.target.closest('.my-hand.docked [data-hand]')) {
-    e.preventDefault();
-    setHandOpen(true, api.root());
-    return;
-  }
-  // Hand cards can be tapped or clicked to read them even when you can't play (enemy turn).
-  const tapped = e.button === 0 ? handCardAt(e) : null;
-  // Your turn, but the last move is still animating: you may already pick up a card.
-  const planning = !api.canAct() && !!api.canPlan?.() && !queued;
-  if (tapped && planning) {
+  // Hand cards, in any state: hold to read, drag out to play, tap to pick up (or, in the corner,
+  // to bring the hand up). What a release means is settled in onUp.
+  const tapped = e.button === 0 && !aim ? handCardAt(e) : null;
+  if (tapped) {
     const uid = Number(tapped.dataset.hand);
-    press = { kind: 'hand', el: tapped, uid, options: null, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch' };
+    press = { kind: 'hand', el: tapped, uid, options: playsOf(uid), x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch',
+      docked: !!tapped.closest('.my-hand.docked') };
+    startHold(press);
     e.preventDefault();
-    return;
-  }
-  if (tapped && !api.canAct()) {
-    const uid = Number(tapped.dataset.hand);
-    if (inspected === uid) { clearInspect(); return; }
-    clearInspect();
-    inspected = uid;
-    tapped.classList.add('inspect');
-    api.inspect?.(tapped);
     return;
   }
   // Mouse: trying to use a card or minion when you can't says why (not on touch, which inspects).
@@ -289,22 +295,9 @@ function onDown(e) {
     if (action) api.act(action, { from: shiftEl });
     return;
   }
-  const handEl = handCardAt(e);
   const hsEl = e.target.closest('[data-hs]');
   const charEl = e.target.closest('[data-char]');
-  if (handEl) {
-    const uid = Number(handEl.dataset.hand);
-    const options = legal.filter((a) => a.type === 'play' && a.card === uid);
-    // Touch (and portrait): unplayable cards can still be tapped to read them.
-    if (!options.length && e.pointerType !== 'touch' && !api.root().querySelector('.arena.portrait')) { api.deny?.(handEl, 'card', uid); return; }
-    press = { kind: 'hand', el: handEl, uid, options, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch' };
-    const held = press;
-    held.holdTimer = setTimeout(() => {
-      if (press !== held || drag || aim || !handEl.isConnected) return;
-      held.held = true;
-      api.inspect?.(handEl);
-    }, HOLD_MS);
-  } else if (hsEl) {
+  if (hsEl) {
     const options = legal.filter((a) => a.type === 'heroSpell' && a.card === hsEl.dataset.hs);
     if (!options.length) return;
     press = { kind: 'heroSpell', el: hsEl, options, x: e.clientX, y: e.clientY };
@@ -323,8 +316,37 @@ function onDown(e) {
   e.preventDefault();
 }
 
+// While reading, the card nearest the finger (the cards overlap, and the one being read is lifted
+// over its neighbours, so what's under the finger isn't always the card it points at).
+function nearestHandCard(x, y) {
+  let best = null, bestD = Infinity;
+  for (const el of api.root().querySelectorAll('.my-hand [data-hand]')) {
+    const r = el.getBoundingClientRect();
+    if (y < r.top - 60 || y > r.bottom + 30) continue;
+    const d = Math.abs(x - (r.left + r.width / 2));
+    if (d < bestD) { best = el; bestD = d; }
+  }
+  return best;
+}
+
 function onMove(e) {
   if (pointerId != null && e.pointerId !== pointerId) return;
+  if (press && !drag && press.kind === 'hand' && press.held) {
+    // Reading: sliding along the hand reads the card under the finger.
+    const over = nearestHandCard(e.clientX, e.clientY);
+    if (over && over !== press.el) {
+      press.el.classList.remove('reading');
+      press.el = over;
+      press.uid = Number(over.dataset.hand);
+      press.options = playsOf(press.uid);
+      press.docked = !!over.closest('.my-hand.docked');
+      over.classList.add('reading');
+      api.inspect?.(over);
+    }
+    // Pulling the card up out of the hand plays it (if it can be played); otherwise keep reading.
+    if (!aboveHand(e.clientY) || !(press.options === null || press.options.length)) return;
+    endHold();
+  }
   if (press && !drag && press.kind === 'hand' && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) endHold();
   if (press && !drag && press.kind === 'hand' && (press.options === null || press.options.length) && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) {
     clearInspect();
@@ -390,6 +412,9 @@ function onUp(e) {
     return;
   }
 
+  // A quick tap on the hand resting in the corner brings it up.
+  if (kind === 'hand' && press.docked && !drag) { press = null; setHandOpen(true, api.root()); return; }
+
   if (kind === 'hand' && options === null) {
     // Picked up during an animation.
     if (drag && droppedOnField(e)) {
@@ -452,6 +477,8 @@ function onUp(e) {
         inspectedAt = Date.now();
         el.classList.add('inspect');
         api.inspect?.(el);
+        // Your turn but it can't be played yet: you can read it, and you're told why.
+        if (options && !options.length && api.canAct()) api.deny?.(el, 'card', press.uid);
       }
       press = null;
       return;
@@ -460,7 +487,7 @@ function onUp(e) {
     press = null;
     // Portrait: a second tap only puts the card back; dragging is the way to play it.
     if (api.root().querySelector('.arena.portrait')) { api.inspect?.(null); return; }
-    if (!options.length) return;
+    if (!options.length) { api.inspect?.(null); return; }
     // Plain click on a hand card.
     if (needsTarget) { startAim(el, options, { source: el }); return; }
     api.act(options[0], { from: el });

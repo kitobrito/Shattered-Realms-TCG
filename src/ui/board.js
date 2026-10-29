@@ -813,7 +813,7 @@ export function layoutPortraitBoard(root) {
   set('--hero', ((pb.opp[2] - pb.opp[0]) + (pb.me[2] - pb.me[0])) / 2 * s);
 }
 
-// Landscape: your hand rests small in the bottom-left corner, clear of your Hero and its
+// Landscape: your hand rests small in the bottom-right corner, clear of your Hero and its
 // Health. Click it and it rises into the middle at full size; hover a card there and it lifts
 // further. Playing a card, ending the turn or clicking elsewhere puts the hand back.
 let handOpen = false;
@@ -870,14 +870,16 @@ export function layoutHands(root, { animate = false } = {}) {
     }
     const docked = hand.classList.contains('my-hand') && !handIsOpen();
     hand.classList.toggle('docked', docked);
+    hand.classList.toggle('raised', hand.classList.contains('my-hand') && handOpen && handDocks);
     if (docked) {
-      // A small fan in the bottom-left corner of the table.
+      // A small fan in the bottom-right corner of the table.
       const cw = cards[0].offsetWidth;
       const hr = hand.getBoundingClientRect();
       const ar = (hand.closest('.arena') ?? hand).getBoundingClientRect();
       const s = 0.56;
-      const step = n > 1 ? Math.min(cw * s * 0.46, (ar.width * 0.2) / (n - 1)) : 0;
-      const centre = ar.left + ar.width * 0.155 - (hr.left + hr.width / 2);
+      // Bottom right, just past your Mana: the fan's right edge sits near the table's edge.
+      const step = n > 1 ? Math.min(cw * s * 0.46, (ar.width * 0.11) / (n - 1)) : 0;
+      const centre = ar.right - 10 - (cw * s) / 2 - (step * (n - 1)) / 2 - (hr.left + hr.width / 2);
       cards.forEach((c, i) => {
         const o = i - (n - 1) / 2;
         c.style.setProperty('--x', `${centre + o * step}px`);
