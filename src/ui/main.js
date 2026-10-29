@@ -3280,8 +3280,22 @@ function showPreview(target) {
   // Lycanthropes: the other form is shown beside it.
   const twinId = card.beastForm ?? card.humanForm;
   const twin = twinId ? getCard(twinId) : null;
-  el.innerHTML = bigCardHTML(card, live) + (twin ? `<div class="preview-twin"><span>${twin.form === 'beast' ? 'Beast Form' : 'Humanoid Form'}</span>${bigCardHTML(twin)}</div>` : '') + note;
+  // Beside the card, what each of its keywords means (as when you hold a card in Hearthstone).
+  const terms = cardTerms(card).filter((t) => KEYWORD_TEXT[t]).slice(0, 4);
+  const glossary = terms.length ? `<aside class="preview-terms">${terms.map((t) => `<div class="preview-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}</aside>` : '';
+  el.innerHTML = `<div class="preview-row">${bigCardHTML(card, live)}${glossary}</div>` + (twin ? `<div class="preview-twin"><span>${twin.form === 'beast' ? 'Beast Form' : 'Humanoid Form'}</span>${bigCardHTML(twin)}</div>` : '') + note;
   const r = target.getBoundingClientRect();
+  // A card in your hand is read up in the open, above the hand (not squeezed in beside it).
+  const fromHand = !!target.closest('.my-hand');
+  el.classList.toggle('hand-read', fromHand);
+  if (fromHand) {
+    el.classList.remove('from-right', 'centered');
+    el.style.right = '';
+    el.style.left = `${Math.max(8, (window.innerWidth - el.offsetWidth) / 2)}px`;
+    el.classList.add('show');
+    fitAllText(el);
+    return;
+  }
   const right = r.left + r.width / 2 < window.innerWidth / 2;
   el.style.left = right ? `${Math.min(r.right + 16, window.innerWidth - 20)}px` : '';
   el.style.right = right ? '' : `${Math.max(window.innerWidth - r.left + 16, 20)}px`;
@@ -3313,6 +3327,8 @@ document.addEventListener('pointerout', (e) => {
   if (previewFor === t) previewFor = null;
   // Mouse: a hand card you clicked (lifted) settles back into the hand once you move off it.
   if (e.pointerType !== 'touch' && t.matches('.my-hand [data-hand].inspect') && !drag.busy()) drag.putBack();
+  // A finger lifting off also counts as leaving the card: that must not close a card you tapped to read.
+  if (e.pointerType === 'touch') return;
   hidePreview();
 });
 document.addEventListener('pointerdown', hidePreview);

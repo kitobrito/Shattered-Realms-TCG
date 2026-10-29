@@ -5660,7 +5660,7 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 .fx-kw-bolt { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 915; pointer-events: none; overflow: visible;
   filter: drop-shadow(0 0 6px #5ae8ff) drop-shadow(0 0 2px #fff); }
 
-/* Landscape: the hand rests as a small fan in the bottom-left corner (clear of your Hero's
+/* Landscape: the hand rests as a small fan in the bottom-right corner (clear of your Hero's
    Health) until you click it; then it rises into the middle at full size (board.js). */
 .arena:not(.portrait) .my-hand.docked .card,
 .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
@@ -5676,3 +5676,30 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 .arena:not(.portrait) .my-hand.docked .card > .big-card { transform: none !important; }
 .arena:not(.portrait) .my-hand.docked .card > .big-card::after { display: none; }
 .arena .my-hand.gliding .card { transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s !important; }
+
+/* Reading a card: hold it (or hover it) for the big card, with what its keywords mean beside it. */
+#preview .preview-row { display: flex; align-items: flex-start; gap: 12px; }
+#preview .preview-terms { display: flex; flex-direction: column; gap: 8px; width: clamp(170px, 22vw, 300px); margin-top: 4%; }
+#preview .preview-term { background: linear-gradient(#2e2a26f2, #1b1814f2); border: 2px solid #8f8576; border-radius: 10px; padding: 8px 12px;
+  box-shadow: 0 6px 18px #000a, inset 0 0 0 1px #0008; color: #f3ead9; font-size: clamp(12px, 1.25vw, 18px); line-height: 1.3; }
+#preview .preview-term b { display: block; font-family: Cinzel, Georgia, serif; font-weight: 900; font-size: 1.15em; color: #fff; margin-bottom: 2px; }
+#preview.hand-read { top: 44%; }
+/* Portrait phones: the explanations sit under the card. */
+@media (max-aspect-ratio: 5/6) {
+  #preview .preview-row { flex-direction: column; align-items: center; }
+  #preview .preview-terms { width: min(86vw, 340px); margin-top: 0; }
+  #preview .preview-term { font-size: 13px; padding: 6px 10px; }
+  #preview.hand-read { top: 42%; }
+}
+
+/* The card you're holding to read rises out of the hand. */
+.arena:not(.portrait) .my-hand:not(.docked) .card.reading { transform: translate(calc(-50% + var(--x, 0px)), -2%) rotate(0deg) scale(1.15) !important; z-index: 200 !important; }
+.arena:not(.portrait) .my-hand.docked .card.reading { transform: translate(calc(-50% + var(--x, 0px)), calc(var(--y, 0px) - 22px)) rotate(0deg) scale(calc(var(--s, 0.56) * 1.15)) !important;
+  z-index: 200 !important; filter: brightness(1.2); }
+.arena.portrait .my-hand .card.reading { transform: translate(calc(-50% + var(--x, 0px)), calc(2% + var(--y, 0px))) rotate(0deg) scale(1.06) !important; z-index: 200 !important; }
+
+/* Landscape: the hand you brought up from the corner stands higher, so the cards can be read. */
+.arena:not(.portrait) .my-hand.raised .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(16% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+@media (max-height: 520px) {
+  .arena:not(.portrait) .my-hand.raised .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(-2% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+}
