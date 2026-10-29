@@ -8,7 +8,7 @@ import { journeyDone, restartJourney, unlockEverything } from './journey.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false, orientation: 'landscape' };
 // Extra speed-up just for the AI's turns (on top of Game speed).
 export const AI_SPEEDS = { same: 1, fast: 0.55, turbo: 0.3 };
 
@@ -70,6 +70,17 @@ export function applySettings(settings = getSettings()) {
   document.body.classList.toggle('colorblind', settings.colorBlind);
   document.body.classList.toggle('classic-cards', settings.classicCards);
   sound.setHaptics(settings.vibration);
+  applyOrientation(settings.orientation);
+}
+
+// Android app only: hold the phone sideways (landscape, the default) or upright (portrait). The
+// game lays itself out for either shape on its own; this just turns the app's screen lock.
+const orientationPlugin = () => (window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.ScreenOrientation : null);
+export const canSetOrientation = () => !!orientationPlugin()?.lock;
+function applyOrientation(o) {
+  const plugin = orientationPlugin();
+  if (!plugin?.lock) return;
+  plugin.lock({ orientation: o === 'portrait' ? 'portrait' : 'landscape' }).catch(() => {});
 }
 
 export function openSettings() {
@@ -89,6 +100,9 @@ export function openSettings() {
         <div class="seg">${Object.keys(SPEEDS).map((k) => `<button data-speed="${k}" class="${st.speed === k ? 'on' : ''}">${k === 'turbo' ? 'Very fast' : k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
       <div class="set-row"><span>AI turn speed</span>
         <div class="seg">${Object.keys(AI_SPEEDS).map((k) => `<button data-aispeed="${k}" class="${st.aiSpeed === k ? 'on' : ''}">${k === 'same' ? 'Same' : k === 'fast' ? 'Fast' : 'Very fast'}</button>`).join('')}</div></div>
+      ${canSetOrientation() ? `<div class="set-row"><span>Screen</span>
+        <div class="seg">${[['landscape', 'Landscape'], ['portrait', 'Portrait']].map(([k, n]) => `<button data-orientation="${k}" class="${st.orientation === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+        <i>Hold your phone sideways (Landscape) or upright (Portrait)</i></div>` : ''}
       <label class="set-row"><span>Turn timer vs AI</span><input type="checkbox" data-set="turnTimerVsAI" ${st.turnTimerVsAI ? 'checked' : ''}><i>Off: take as long as you like against the computer (online and hot-seat games are always timed)</i></label>
       <label class="set-row"><span>Basic board</span><input type="checkbox" data-set="basicBoard" ${st.basicBoard ? 'checked' : ''}><i>Play on a plain, calm hilltop instead of your realm's board</i></label>
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>
@@ -126,6 +140,11 @@ export function openSettings() {
     if (ai) {
       update({ aiSpeed: ai.dataset.aispeed });
       for (const b of el.querySelectorAll('[data-aispeed]')) b.classList.toggle('on', b === ai);
+    }
+    const or = e.target.closest('[data-orientation]');
+    if (or) {
+      update({ orientation: or.dataset.orientation });
+      for (const b of el.querySelectorAll('[data-orientation]')) b.classList.toggle('on', b === or);
     }
     const sp = e.target.closest('[data-speed]');
     if (sp) {
