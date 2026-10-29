@@ -15,6 +15,7 @@
 // legal) the moment the animation ends.
 
 import { ghost } from './fx.js';
+import { setHandOpen } from './board.js';
 
 const DRAG_START = 6; // px of movement before a press becomes a drag
 const HOLD_MS = 420;  // press and hold a hand card this long (without moving) for its big preview
@@ -247,6 +248,12 @@ function onDown(e) {
   pointerId = e.pointerId;
   // Touching anything other than the inspected card puts it back.
   if (inspected != null && !e.target.closest(`[data-hand="${inspected}"]`)) clearInspect();
+  // Landscape: the hand rests small in the corner; the first click on it only brings it up.
+  if (e.button === 0 && !aim && !drag && e.target.closest('.my-hand.docked [data-hand]')) {
+    e.preventDefault();
+    setHandOpen(true, api.root());
+    return;
+  }
   // Hand cards can be tapped or clicked to read them even when you can't play (enemy turn).
   const tapped = e.button === 0 ? handCardAt(e) : null;
   // Your turn, but the last move is still animating: you may already pick up a card.

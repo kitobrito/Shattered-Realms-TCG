@@ -5659,3 +5659,20 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 /* Chain lightning: a full-screen SVG the bolts are drawn in. */
 .fx-kw-bolt { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 915; pointer-events: none; overflow: visible;
   filter: drop-shadow(0 0 6px #5ae8ff) drop-shadow(0 0 2px #fff); }
+
+/* Landscape: the hand rests as a small fan in the bottom-left corner (clear of your Hero's
+   Health) until you click it; then it rises into the middle at full size (board.js). */
+.arena:not(.portrait) .my-hand.docked .card,
+.arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
+  transform-origin: 50% 100%;
+  transform: translate(calc(-50% + var(--x, 0px)), var(--y, 0px)) rotate(var(--rot, 0deg)) scale(var(--s, 0.56));
+  cursor: pointer;
+}
+.arena:not(.portrait) .my-hand.docked:hover .card { filter: brightness(1.12); }
+.arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
+  transform: translate(calc(-50% + var(--x, 0px)), calc(var(--y, 0px) - 12px)) rotate(var(--rot, 0deg)) scale(var(--s, 0.56));
+  filter: brightness(1.25) drop-shadow(0 0 8px rgba(255, 220, 120, 0.7));
+}
+.arena:not(.portrait) .my-hand.docked .card > .big-card { transform: none !important; }
+.arena:not(.portrait) .my-hand.docked .card > .big-card::after { display: none; }
+.arena .my-hand.gliding .card { transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s !important; }
