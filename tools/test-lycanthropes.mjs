@@ -59,10 +59,10 @@ function test(name, fn) {
 
 const lycs = allCards().filter((c) => c.faction === 'Lycanthropes');
 
-test('The faction has 30 standard cards, a Hero Spell, 16 Wild Pack cards and a Beast twin for every shifter', () => {
+test('The faction has 30 standard cards, a Hero Spell, 16 Wild Pack cards (+ The Pale Wanderer) and a Beast twin for every shifter', () => {
   const std = lycs.filter((c) => !c.token && !c.heroSpell && !c.extra);
   const ext = lycs.filter((c) => !c.token && !c.heroSpell && c.extra);
-  if (std.length !== 30 || ext.length !== 16) return `${std.length} / ${ext.length}`;
+  if (std.length !== 30 || ext.length !== 17) return `${std.length} / ${ext.length}`;
   if (!getCard('primal_unleashing')?.heroSpell) return 'no hero spell';
   for (const c of lycs.filter((x) => x.beastForm)) if (getCard(c.beastForm)?.humanForm !== c.id) return `${c.id} twin broken`;
 });

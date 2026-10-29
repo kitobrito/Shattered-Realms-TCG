@@ -291,4 +291,11 @@ export const ULTRATERRESTRIAL_CARDS = [
     text: 'Trap: When a friendly minion comes back from Displacement, give it +2/+2 and Taunt.',
     trap: { on: 'minionReturned', filter: { source: { side: 'friendly' }, echo: false }, effects: [{ op: 'buff', target: 'eventSource', attack: 2, health: 2, keywords: ['Taunt'] }] },
   },
+
+  // ---- New legendary ----
+  {
+    ...U, id: 'the_tesseract_prism', name: 'The Tesseract Prism', art: '💎', extra: true, cost: 7, attack: 5, health: 5, keywords: ['Elusive'],
+    text: 'Elusive. Arrival: Displace every other minion. Yours return with +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [displace({ minions: { side: 'any', excludeSelf: true } }, { ifFriendly: { attack: 2, health: 2 } })] }],
+  },
 ];

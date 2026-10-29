@@ -12,9 +12,10 @@ export const UNLOCKS_PER_WIN = 2;
 function saved() {
   try { return new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]')); } catch { return new Set(); }
 }
-const extras = () => allCards().filter((c) => c.extra && !c.token && !c.custom);
+// alwaysUnlocked: an expansion card everyone already has (the plain T. Rex, moved out of the original set).
+const extras = () => allCards().filter((c) => c.extra && !c.token && !c.custom && !c.alwaysUnlocked);
 
-export const isLocked = (id) => !!getCard(id)?.extra && !saved().has(id);
+export const isLocked = (id) => !!getCard(id)?.extra && !getCard(id).alwaysUnlocked && !saved().has(id);
 export const lockedCount = (faction) => extras().filter((c) => (!faction || c.faction === faction) && !saved().has(c.id)).length;
 
 // Unlock up to n locked cards from the factions the player won with, taking turns between

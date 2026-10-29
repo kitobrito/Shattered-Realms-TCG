@@ -27,7 +27,7 @@ export const PAIR_GUIDES = {
     "Your Health is a resource, not a bank. Corrosion buys time, but paying for Demons while the enemy chips at you can end the game fast."),
   'Acidic+Dinosaurs': G(
     "Dinosaurs get double Mana and hit hard; Acidic makes the enemy's blockers useless so your Dinos trade up or go face. Spend the extra Mana on big finishers and let cheap Corrosion do the defending.",
-    [["caustic_bath", "tyrannosaurus_rex", "Caustic Bath shrinks every blocker by 1 (and draws on any that hit 0); the T. Rex then charges in with nothing able to hit back hard."],
+    [["caustic_bath", "rex_the_tyrant_king", "Caustic Bath shrinks every blocker by 1 (and draws on any that hit 0); the T. Rex then charges in with nothing able to hit back hard."],
       ["acid_rain", "spinosaurus", "Acid Rain deals 2 to the whole enemy board and corrodes the survivors; Spinosaurus's 2-damage Arrival finishes the biggest one."]],
     "Tar Pit corrodes an enemy minion by 2; if that takes it to 0 Attack you also gain a Primal Mana. Aim it at 2-Attack minions for the extra Mana.",
     "The Extinction Cycle wipes your own board every 7 turns. Spend your removal after the wipe, not on minions it was about to clear anyway."),
@@ -131,7 +131,7 @@ export const PAIR_GUIDES = {
     "Demon payments plus enemy pressure add up. Keep track of your Health before each Arrival."),
   'Aliens+Dinosaurs': G(
     "Dinosaurs bring double Mana and big bodies; Aliens give those bodies keywords. A T. Rex with Lifesteal or Evade is very hard to deal with, and Aliens' Traps buy time for the eggs to hatch.",
-    [["gene_mutation", "tyrannosaurus_rex", "Two random keywords on an 8/8 Charge minion: Lifesteal, Evade or Poisonous all make it brutal."],
+    [["gene_mutation", "rex_the_tyrant_king", "Two random keywords on an 8/8 Charge minion: Lifesteal, Evade or Poisonous all make it brutal."],
       ["replication_protocol", "nest_of_dinosaur_eggs", "Two cheaper extra Nests: nine Baby Dinosaurs waiting to hatch."]],
     "Gene Raptor Discovers a Dinosaur from your deck and makes it cost 1 less: card draw that also smooths your curve.",
     "The Extinction Cycle wipes your own board. Keywords on a minion about to be wiped are wasted."),
@@ -229,7 +229,7 @@ export const PAIR_GUIDES = {
     "If the Queen dies your Hero takes 10 damage. Never let Demon payments put you within reach of that."),
   'Bees+Dinosaurs': G(
     "Dinosaurs bring double Mana and big hitters; Bees hold the line around the Hive. Defend early with bees, then crash in with Dinosaurs once the Mana comes.",
-    [["hive_enforcer", "tyrannosaurus_rex", "Enforcer soaks the attacks so your Hive lives; the Rex charges straight at the enemy Hero."],
+    [["hive_enforcer", "rex_the_tyrant_king", "Enforcer soaks the attacks so your Hive lives; the Rex charges straight at the enemy Hero."],
       ["royal_nurse", "nest_of_dinosaur_eggs", "Keep the Hive healthy while the Nest waits to hatch three Baby Dinosaurs."]],
     "Amber Fossil gives 2 Primal Mana this turn and +0/+3 to your Hive: ramp and defence in one.",
     "The Extinction Cycle wipes your own board, but not the Hive. Rebuild around it after each wipe."),
@@ -321,7 +321,7 @@ export const PAIR_GUIDES = {
   // ---- Demons ----
   'Demons+Dinosaurs': G(
     "Two hard-hitting realms. Dinosaurs ramp with double Mana and drop huge bodies; Demons trade Health for strong Arrivals and board clears. Push damage early and end the game before your own Health runs out.",
-    [["blood_pact", "tyrannosaurus_rex", "Blood Pact gives a Demon +2/+2; pair it with a Charge T. Rex the same turn and the enemy faces two big threats at once."],
+    [["blood_pact", "rex_the_tyrant_king", "Blood Pact gives a Demon +2/+2; pair it with a Charge T. Rex the same turn and the enemy faces two big threats at once."],
       ["pit_lord", "large_dinosaur_egg", "Pit Lord's 3 damage to everything breaks your own Egg, which hatches a 3/3 Charge Baby T. Rex."]],
     "Primal Pact costs 3 Health and summons a random 3-cost-or-less Dinosaur and Demon: two bodies for one card.",
     "You lose Health from Demons and your board from the Extinction Cycle. Don't let both happen in the same stretch, or you'll have nothing left."),
@@ -420,13 +420,13 @@ export const PAIR_GUIDES = {
   'Dinosaurs+Dragons': G(
     "Dinosaurs bring double Mana and big bodies; Dragons Burn the enemy every turn. Use the extra Mana to land Dragon spreads early, then trample the weakened board with Dinosaurs.",
     [["scorching_breath", "spinosaurus", "Scorching Breath Burns every enemy minion; Spinosaurus's 2 damage finishes the biggest one off."],
-      ["fireball", "tyrannosaurus_rex", "Late game, a Charging T. Rex plus a Fireball to the face is 11 or 12 damage out of nowhere."]],
+      ["fireball", "rex_the_tyrant_king", "Late game, a Charging T. Rex plus a Fireball to the face is 11 or 12 damage out of nowhere."]],
     "Meteor Breath applies Burn 2 to every enemy minion and pushes your next Extinction back by a turn: board damage and more time.",
     "Dragon damage is slow Burn; the Extinction Cycle is a deadline. Plan to win before your board gets wiped, or have Not Yet ready."),
   'Dinosaurs+Fungus': G(
     "Fungus fills the enemy deck with Mushrooms while Dinosaurs ramp and hit. Use the double Mana for big Fungus spells like Mushroom City, and let your Dinosaurs pressure the board while every draw hurts them.",
     [["mushroom_city", "nest_of_dinosaur_eggs", "Mushroom City places 10 Mushrooms in one go; the Nest guards your board and hatches three Babies when it breaks."],
-      ["cordyceps_mind_control", "tyrannosaurus_rex", "With double Mana, take control of their best minion for good and charge the T. Rex in on the same turn."]],
+      ["cordyceps_mind_control", "rex_the_tyrant_king", "With double Mana, take control of their best minion for good and charge the T. Rex in on the same turn."]],
     "Fossil Spores places 3 Mushrooms and gives you a Primal Mana this turn: Mushrooms that pay for themselves.",
     "Fungus damage is slow. Make sure you have enough board to survive until the Mushrooms kick in, especially around each Extinction."),
   'Dinosaurs+Ghosts': G(
@@ -437,31 +437,31 @@ export const PAIR_GUIDES = {
     "Haunts are random, so you might bring back a 1-cost Egg instead of a Triceratops. Make sure your Graveyard has good targets first."),
   'Dinosaurs+Ice Age': G(
     "Two prehistoric realms: Dinosaurs bring double Mana and Charge, Ice Age brings Thick Fur Taunts and Freezes. Freeze the enemy, then Charge past them; hide behind Mammoths while you rebuild after each Extinction.",
-    [["avalanche", "tyrannosaurus_rex", "Avalanche Freezes the enemy board, so your T. Rex charges past with nothing able to hit back next turn."],
+    [["avalanche", "rex_the_tyrant_king", "Avalanche Freezes the enemy board, so your T. Rex charges past with nothing able to hit back next turn."],
       ["sabertooth_cat", "spinosaurus", "Spinosaurus deals 2 to a Frozen minion; Sabertooth deals double damage to Frozen minions. Freeze, then clean up."]],
     "Last of the Giants gives you 2 Primal Mana this turn and +2/+2 and Thick Fur to a minion: a big turn, and that minion ignores the Great Freeze.",
     "The Great Freeze also freezes your Dinosaurs (no Thick Fur), and the Extinction wipes your board. Count both timers before committing."),
   'Dinosaurs+Lycanthropes': G(
     "Dinosaurs give you double Mana; Lycanthropes turn Mana into Transforms. With the extra Mana you can Transform several beasts and still play cards each turn.",
     [["unleash_the_pack", "velociraptor_packleader", "Transform every Lycanthrope at once, and every attacking Dinosaur gets +1 Attack from Packleader: a huge attack turn."],
-      ["apex_ascension", "tyrannosaurus_rex", "Late game, Apex Ascension Transforms your pack with +2/+2 while T. Rex charges in."]],
+      ["apex_ascension", "rex_the_tyrant_king", "Late game, Apex Ascension Transforms your pack with +2/+2 while T. Rex charges in."]],
     "Primeval Instinct gives you 2 Primal Mana this turn and +3 Attack to a Beast Form: enough Mana to Transform two more Lycanthropes.",
     "The Extinction Cycle wipes your board, Beast Forms and all. Time your big Transform turns before it hits."),
   'Dinosaurs+Plants': G(
     "Plants grow every turn; Dinosaurs ramp and hit hard. Eggs and Seedlings both start small and grow, so the board gets bigger every turn until the Extinction resets it.",
     [["world_tree", "nest_of_dinosaur_eggs", "World Tree adds Seedlings or +1/+1 every turn while the Nest waits to hatch three Babies."],
-      ["entangler", "tyrannosaurus_rex", "Entangler gives their biggest blocker -2 Attack, so your T. Rex can attack it and survive, or ignore it and charge the Hero."]],
+      ["entangler", "rex_the_tyrant_king", "Entangler gives their biggest blocker -2 Attack, so your T. Rex can attack it and survive, or ignore it and charge the Hero."]],
     "Primal Seed summons a 0/3 Primal Egg that hatches into a random 3-cost Dinosaur two turns later.",
     "The Extinction Cycle wipes your Seedlings too. Don't invest in growing them right before it hits."),
   'Dinosaurs+Radioactive': G(
     "Dinosaurs hit hard with double Mana; Radiation auras drain every character without Radiation. Irradiate your biggest Dinosaur so it's immune while the enemy's small minions melt, then trample what's left.",
-    [["critical_mass_horror", "tyrannosaurus_rex", "Radiation 2 on an enemy shrinks every other minion without Radiation by 2, so the T. Rex kills blockers and survives."],
+    [["critical_mass_horror", "rex_the_tyrant_king", "Radiation 2 on an enemy shrinks every other minion without Radiation by 2, so the T. Rex kills blockers and survives."],
       ["reactor_meltdown", "triceratops", "Meltdown deals 3 to every minion and Obliterates the dead; the 4/5 Triceratops survives it."]],
     "Kaiju Awakening gives a Dinosaur +3/+3 and Radiation 1 permanently: it's immune to Radiation and drains 1 Health from every character without it, yours included.",
     "Obliterate skips death effects, so Reactor Meltdown won't hatch your Eggs. And your own board clears plus the Extinction can leave you empty: don't clear twice in a row."),
   'Dinosaurs+Robots': G(
     "Robots stack Upgrades on a few machines; Dinosaurs give the Mana to Upgrade twice a turn. Build a huge Upgraded threat early, then back it up with Dinosaurs.",
-    [["annihilation_beam", "tyrannosaurus_rex", "With double Mana you can Annihilation Beam their biggest blocker (6 damage) and charge the T. Rex in on the same turn."],
+    [["annihilation_beam", "rex_the_tyrant_king", "With double Mana you can Annihilation Beam their biggest blocker (6 damage) and charge the T. Rex in on the same turn."],
       ["triceratops", "titan_guard", "Two big Taunts, a 4/5 and a 5/9: the enemy has to chew through both while your Upgraded Robots grow."]],
     "Mecha Rex upgrades any minion with +3/+3 and Taunt, and it becomes a Robot and a Mech: cast it on a Dinosaur and your Robot Upgrades (Targeting Matrix, Laser Cannon) can target it too.",
     "Robot Upgrades only target Robots, and the Extinction Cycle wipes your Upgraded Robots too. Upgrade right after the wipe, not just before."),
@@ -473,26 +473,26 @@ export const PAIR_GUIDES = {
     "Both realms are aggressive. If the enemy stabilises, the Extinction can leave you with nothing."),
   'Dinosaurs+Ultraterrestrials': G(
     "Displacing your own minions keeps them safe from the Extinction: they come back after the wipe with +1/+1. Use that to keep your best Dinosaurs through every Extinction.",
-    [["pocket_dimension", "tyrannosaurus_rex", "Displace your T. Rex the turn the Extinction hits; it is off the board during the wipe and comes back at the start of your next turn."],
+    [["pocket_dimension", "rex_the_tyrant_king", "Displace your T. Rex the turn the Extinction hits; it is off the board during the wipe and comes back at the start of your next turn."],
       ["null_behemoth", "triceratops", "Null Behemoth Displaces a friendly minion and gets +2/+2 when it returns."]],
     "Fossil Rift Displaces a friendly minion until your next turn; it returns with +2/+2 (+4/+4 if it's a Dinosaur). Perfect right before an Extinction.",
     "Displaced minions are gone for a turn. Don't leave yourself with an empty board while the enemy attacks."),
   'Dinosaurs+Vampires': G(
     "Vampires attack and heal with Lifesteal; Dinosaurs ramp and hit hard. A Lifesteal T. Rex heals a lot, and the double Mana lets you play Vampire tricks alongside big Dinosaurs.",
     [["vampire_bite", "baby_t_rex", "Vampire Bite deals 3 to a blocker with Lifesteal (and gives you a Thrall if it dies); Baby T. Rex then charges straight in."],
-      ["the_crimson_king", "tyrannosaurus_rex", "Two huge late threats: with double Mana you can land both in one turn, the King healing you with Lifesteal while the Rex charges."]],
+      ["the_crimson_king", "rex_the_tyrant_king", "Two huge late threats: with double Mana you can land both in one turn, the King healing you with Lifesteal while the Rex charges."]],
     "Primal Thirst costs 2 Health: 2 Primal Mana, and a random Dinosaur gets +2 Attack and Lifesteal this turn.",
     "The Extinction Cycle wipes your Lifesteal minions too. Heal up before it hits."),
   'Dinosaurs+Void': G(
     "Void dumps its hand fast; Dinosaurs give you the Mana to do it. Play out your hand quickly with the double Mana, go Hollow, and finish with Charge minions.",
-    [["star_swallower", "tyrannosaurus_rex", "Star Swallower discards your hand for 2 damage per card; T. Rex charges for 8 more."],
+    [["star_swallower", "rex_the_tyrant_king", "Star Swallower discards your hand for 2 damage per card; T. Rex charges for 8 more."],
       ["riftmaw_devourer", "baby_t_rex", "Riftmaw has Charge while your hand is empty and Baby T. Rex always has it: 8 damage straight to the Hero the turn they land."]],
     "Extinction Event discards your hand and deals 1 damage to every enemy minion for each card discarded (up to 4).",
     "Void runs out of cards fast, and the Extinction wipes your board. Make sure you can finish before both run out."),
   'Dinosaurs+Zombies': G(
     "Zombies come back and leave Corpses; Dinosaurs die to the Extinction. Zombie Exits and Corpses turn every wipe into value, so the Extinction hurts the enemy more than you.",
     [["zombie_horde", "extremely_large_meteor", "Extremely Large Meteor makes the next Extinction wipe both boards; Zombie Horde leaves three Walkers when it dies."],
-      ["tarman", "tyrannosaurus_rex", "Two huge late threats: with double Mana you can land both in one turn, and Tarman's Reborn means even the Extinction can't keep him down."]],
+      ["tarman", "rex_the_tyrant_king", "Two huge late threats: with double Mana you can land both in one turn, and Tarman's Reborn means even the Extinction can't keep him down."]],
     "Fossil Revival brings back a random friendly Dinosaur that died, with 1 Health and Reborn.",
     "Zombie Exits hurt your own minions too. Make sure you won't wipe yourself."),
 

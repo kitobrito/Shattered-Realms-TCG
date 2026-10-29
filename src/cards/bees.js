@@ -358,4 +358,15 @@ export const BEE_CARDS = [
     target: { type: 'minion', side: 'friendly', tribes: ['Insect', 'Hive'] },
     effects: [{ op: 'heal', target: 'chosen', amount: 2 }],
   },
+
+  // ---- New legendaries ----
+  {
+    ...BEE, id: 'bomba_the_gentle_queen', name: 'Bomba, the Gentle Queen', art: '🐝', extra: true, cost: 6, attack: 4, health: 8, keywords: ['Taunt'],
+    text: 'Taunt. At the end of your turn, restore 3 Health to your Hive and give your other Bees +1/+1.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'heal', target: HIVE, amount: 3 }, { op: 'buff', target: { minions: { side: 'friendly', tribe: 'Bee', excludeSelf: true } }, attack: 1, health: 1 }] }],
+  },
+  {
+    ...HORNET, id: 'the_slayer_hornet', name: 'The Slayer Hornet', art: '🦂', extra: true, cost: 7, attack: 6, health: 5, keywords: ['Rush', 'Venomous'], killAttacks: 2,
+    text: 'Rush. Venomous. After it kills a minion, it can attack again (up to 3 attacks a turn).',
+  },
 ];

@@ -277,9 +277,9 @@ test('Evolved Xenos: Lycanthrope and Void hosts have their own forms', () => {
 const foeDeckHas = (id) => pl(1).deck.some((c) => c.cardId === id);
 function stackFoeDeck(ids) { pl(1).deck = ids.map((id, i) => ({ uid: 9500 + i, cardId: id, owner: 1 })); }
 
-test('Singularity: 15 expansion cards with art; Gargantua is legendary', () => {
+test('Singularity: 15 expansion cards (+ Pulsar) with art; Gargantua is legendary', () => {
   const ids = allCards().filter((c) => c.faction === 'Void' && c.extra).map((c) => c.id);
-  if (ids.length !== 15) return `${ids.length} expansion cards`;
+  if (ids.length !== 16) return `${ids.length} expansion cards`;
   for (const id of ids) if (!ART[id] || !existsSync(new URL(`../${ART[id]}`, import.meta.url))) return `no art for ${id}`;
   if (!getCard('gargantua_the_living_singularity').legendary) return 'Gargantua not legendary';
 });

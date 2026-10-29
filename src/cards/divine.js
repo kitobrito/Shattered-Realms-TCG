@@ -305,4 +305,18 @@ export const DIVINE_CARDS = [
     triggers: [{ on: 'battlecry', effects: [{ op: 'ashTheBurning' }] }],
   },
   { ...DV, id: 'ember_spirit', name: 'Ember Spirit', art: '✨', token: true, cost: 1, attack: 1, health: 1, text: '' },
+
+  // ---- New legendary ----
+  {
+    ...DV, id: 'seraphael_the_redeemed', name: 'Seraphael, the Redeemed', art: '😇', extra: true, cost: 7, attack: 6, health: 7, keywords: ['Lifesteal'],
+    text: 'Lifesteal. Arrival: Transform every enemy Dark or Undead minion into a 1/1 Penitent Wisp. Restore 5 Health to your Hero (Overheal).',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'transform', target: { minions: ENEMY_DARK }, into: 'penitent_wisp' },
+      { op: 'heal', target: 'friendlyHero', amount: 5, overheal: true },
+    ] }],
+  },
+  {
+    faction: 'Divine', type: 'minion', tribes: ['Spirit'], token: true, id: 'penitent_wisp', name: 'Penitent Wisp', art: '🕯️', cost: 1, attack: 1, health: 1,
+    text: 'Redeemed by Seraphael.',
+  },
 ];
