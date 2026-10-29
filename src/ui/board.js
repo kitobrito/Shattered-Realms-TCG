@@ -813,14 +813,32 @@ export function layoutPortraitBoard(root) {
   set('--hero', ((pb.opp[2] - pb.opp[0]) + (pb.me[2] - pb.me[0])) / 2 * s);
 }
 
-export function layoutHands(root) {
+// Landscape: your hand rests small in the bottom-left corner, clear of your Hero and its
+// Health. Click it and it rises into the middle at full size; hover a card there and it lifts
+// further. Playing a card, ending the turn or clicking elsewhere puts the hand back.
+let handOpen = false;
+let handDocks = true; // the tutorial keeps the hand up (its arrows point into it)
+export const handIsOpen = () => handOpen || !handDocks;
+export function setHandDocks(on) { handDocks = on; }
+export function setHandOpen(open, root) {
+  if (handOpen === open) return;
+  handOpen = open;
+  if (root) layoutHands(root, { animate: true });
+}
+
+export function layoutHands(root, { animate = false } = {}) {
   for (const hand of root.querySelectorAll('.my-hand, .opp-hand')) {
     const cards = [...hand.children];
     const n = cards.length;
     if (!n) continue;
     // Place the cards without animating: measuring below forces a layout, and the
     // hover transition would otherwise sweep every card out from the centre.
-    hand.classList.add('settling');
+    // (Opening or putting back the hand does animate: the cards glide between the two places.)
+    if (animate) {
+      hand.classList.add('gliding');
+      clearTimeout(hand._glide);
+      hand._glide = setTimeout(() => hand.classList.remove('gliding'), 420);
+    } else hand.classList.add('settling');
     // Portrait: your hand spans the full width, almost flat. With 6+ cards it splits
     // into two rows (back row raised, front row below) of up to 5, so every card
     // shows most of its width. Tap a card to read it full size.
@@ -845,6 +863,29 @@ export function layoutHands(root) {
           c.style.setProperty('--push', '0px');
           c.style.zIndex = String((two && r === 1 ? 40 : 10) + i);
         });
+      });
+      void hand.offsetWidth;
+      hand.classList.remove('settling');
+      continue;
+    }
+    const docked = hand.classList.contains('my-hand') && !handIsOpen();
+    hand.classList.toggle('docked', docked);
+    if (docked) {
+      // A small fan in the bottom-left corner of the table.
+      const cw = cards[0].offsetWidth;
+      const hr = hand.getBoundingClientRect();
+      const ar = (hand.closest('.arena') ?? hand).getBoundingClientRect();
+      const s = 0.56;
+      const step = n > 1 ? Math.min(cw * s * 0.46, (ar.width * 0.2) / (n - 1)) : 0;
+      const centre = ar.left + ar.width * 0.155 - (hr.left + hr.width / 2);
+      cards.forEach((c, i) => {
+        const o = i - (n - 1) / 2;
+        c.style.setProperty('--x', `${centre + o * step}px`);
+        c.style.setProperty('--y', `${-26 + o * o * 1.2}px`);
+        c.style.setProperty('--rot', `${o * Math.min(4, 26 / n)}deg`);
+        c.style.setProperty('--s', String(s));
+        c.style.setProperty('--push', '0px');
+        c.style.zIndex = String(10 + i);
       });
       void hand.offsetWidth;
       hand.classList.remove('settling');

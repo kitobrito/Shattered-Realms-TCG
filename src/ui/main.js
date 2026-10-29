@@ -17,7 +17,7 @@ import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, hasCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
-import { boardFaction, boardHTML, descentCalloutHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
+import { boardFaction, boardHTML, descentCalloutHTML, handIsOpen, layoutHands, setHandDocks, setHandOpen, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { boardReact, canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startBoardFx } from './circle-fx.js';
 import * as drag from './drag.js';
@@ -746,6 +746,8 @@ async function act(action, meta = {}) {
   // AI turn speed: the computer's moves (and its reactions) can play out faster than yours.
   fx.setBoost(game.mode === 'ai' && isAI(action.player) ? (AI_SPEEDS[getSettings().aiSpeed] ?? 1) : 1);
   if (!isAI(action.player)) recap = null; // the recap closes once you start playing
+  // Playing a card or ending the turn puts your hand back in its corner.
+  if (!meta.remote && !isAI(action.player) && (action.type === 'play' || action.type === 'endTurn')) setHandOpen(false);
   if (meta.remote) {
     // The other player's move must be legal on our copy of the game.
     const legal = legalMatch(game.state, action);
@@ -3055,6 +3057,7 @@ function renderGame() {
   layoutPortraitBoard(app);
   portraitCircleFx(app);
   descentNews(s);
+  setHandDocks(!game.tutorial);
   layoutHands(app);
   // The results panel's numbers count up the first time it appears.
   const summary = app.querySelector('.game-over.fresh');
@@ -3350,12 +3353,20 @@ document.addEventListener('pointerup', () => {
   longPress = null;
 });
 
+// Hand: a click anywhere else (not while dragging or aiming a card) puts an open hand back in its corner.
+document.addEventListener('pointerdown', (e) => {
+  if (screen !== 'game' || !handIsOpen() || drag.busy() || e.button !== 0) return;
+  if (e.target.closest?.('.my-hand [data-hand], .overlay, .reaction, .big-card-preview')) return;
+  setHandOpen(false, app);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && screen === 'game' && handIsOpen()) setHandOpen(false, app); });
+
 // Hand: hovering a card pushes its neighbours apart (mouse only; touch uses inspect).
 document.addEventListener('pointerover', (e) => {
   if (screen !== 'game' || e.pointerType === 'touch') return;
   const card = e.target.closest?.('.my-hand .card');
   // Portrait cards don't grow on hover, so nothing needs to make room (and shifting them made cards overlap).
-  if (!card || drag.busy() || card.closest('.arena.portrait')) return;
+  if (!card || drag.busy() || card.closest('.arena.portrait, .my-hand.docked')) return;
   const cards = [...card.parentElement.children];
   const at = cards.indexOf(card);
   const w = card.offsetWidth;
