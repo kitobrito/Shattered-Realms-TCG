@@ -116,6 +116,17 @@ const SOUNDS = {
   buzz: (ac) => { tone(ac, { freq: 210, to: 240, dur: 0.6, gain: 0.07, type: 'sawtooth' }); tone(ac, { freq: 214, to: 236, dur: 0.6, gain: 0.05, type: 'sawtooth', delay: 0.02 }); noise(ac, { dur: 0.5, freq: 1800, gain: 0.04, type: 'bandpass', q: 3 }); },
   drum: (ac) => { [0, 0.28, 0.46].forEach((d, i) => tone(ac, { freq: i === 2 ? 95 : 75, to: 45, dur: 0.3, gain: 0.4, type: 'sine', delay: d })); noise(ac, { dur: 0.12, freq: 300, gain: 0.15, type: 'bandpass', delay: 0 }); },
   crack: (ac) => { noise(ac, { dur: 0.08, freq: 3500, gain: 0.3, type: 'highpass' }); noise(ac, { dur: 0.25, freq: 900, gain: 0.18, type: 'bandpass', q: 2, delay: 0.04 }); tone(ac, { freq: 1900, to: 600, dur: 0.2, gain: 0.04, type: 'sine', delay: 0.02 }); },
+  // Eels: a Chain's crackle at every jump, thunder for the big ones, charging up, a Discharge's
+  // snap, and the wet fizz of a Conductive soak.
+  zap: (ac) => { noise(ac, { dur: 0.06, freq: 5200, gain: 0.24, type: 'highpass' }); noise(ac, { dur: 0.14, freq: 2300, gain: 0.16, type: 'bandpass', q: 4, delay: 0.01 });
+    tone(ac, { freq: 1900, to: 320, dur: 0.12, gain: 0.05, type: 'sawtooth' }); noise(ac, { dur: 0.05, freq: 6000, gain: 0.14, type: 'highpass', delay: 0.06 }); },
+  thunder: (ac) => { noise(ac, { dur: 0.1, freq: 3000, gain: 0.35, type: 'highpass' }); noise(ac, { dur: 0.22, freq: 1200, gain: 0.25, type: 'bandpass', q: 1, delay: 0.02 });
+    noise(ac, { dur: 1.5, freq: 160, gain: 0.55, delay: 0.06 }); tone(ac, { freq: 62, to: 34, dur: 1.3, gain: 0.3, type: 'triangle', delay: 0.06 }); },
+  charge: (ac) => { tone(ac, { freq: 120, to: 480, dur: 0.32, gain: 0.04, type: 'sawtooth' }); tone(ac, { freq: 240, to: 960, dur: 0.28, gain: 0.02, type: 'square', delay: 0.03 });
+    noise(ac, { dur: 0.3, freq: 3200, gain: 0.04, type: 'bandpass', q: 6 }); },
+  discharge: (ac) => { noise(ac, { dur: 0.08, freq: 4200, gain: 0.3, type: 'highpass' }); tone(ac, { freq: 900, to: 120, dur: 0.26, gain: 0.07, type: 'sawtooth' });
+    noise(ac, { dur: 0.3, freq: 800, gain: 0.2, type: 'bandpass', delay: 0.02 }); },
+  soak: (ac) => { noise(ac, { dur: 0.3, freq: 1800, gain: 0.15, type: 'bandpass', q: 0.7 }); noise(ac, { dur: 0.45, freq: 6500, gain: 0.06, type: 'highpass', delay: 0.1 }); },
   ignite: (ac) => { noise(ac, { dur: 0.7, freq: 500, gain: 0.35, type: 'bandpass', q: 0.7 }); for (let i = 0; i < 6; i++) noise(ac, { dur: 0.03, freq: 3000, gain: 0.12, type: 'highpass', delay: 0.15 + i * 0.09 + Math.random() * 0.05 }); },
 };
 
@@ -127,6 +138,7 @@ const lastPlayed = new Map();
 const HAPTICS = {
   cardPlay: 12, minionLand: 18, trapReveal: 25, quickPlay: 25, attack: 10, hit: 22, bigHit: 40,
   heroExplode: [70, 40, 140], victory: [30, 50, 30, 50, 90], defeat: [160], turnStart: 15,
+  zap: 8, thunder: [40, 30, 70], discharge: 20,
 };
 let haptics = true;
 export const canVibrate = () => typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function' && matchMedia('(pointer: coarse)').matches;

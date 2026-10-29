@@ -151,6 +151,8 @@ export function evaluate(s, me, W = BASE_WEIGHTS) {
   // Burn is damage still to come (and it grows): about two ticks' worth.
   const burnValue = (pl) => [pl.hero, ...pl.board].reduce((t, c) => t + (c.burn ?? 0) * (c.kind === 'hero' ? W.burnHero : W.burnMinion), 0);
   score += burnValue(opp) - burnValue(my);
+  // Thalassa's Endless Storm: a Chain every turn for the rest of the game (about four turns' worth).
+  score += ((my.storm ?? 0) - (opp.storm ?? 0)) * 4;
 
   // What the opponent threatens on their turn, and what I threaten back.
   const theirs = threat(s, 1 - me);

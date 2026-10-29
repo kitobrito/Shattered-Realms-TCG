@@ -14,7 +14,7 @@ import {
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
   traceFx,
 } from './core.js';
-import { addKeyword, canShift, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
+import { addKeyword, canShift, chainLightning, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -914,6 +914,7 @@ const STEPS = {
       { kind: 'event', event },
       { kind: 'window', name: 'endOfTurn', priority: opponentOf(p), ctx: { event } },
       { kind: 'burn', player: p },
+      { kind: 'storm', player: p },
       { kind: 'extinction', player: p },
       { kind: 'circleEnd', player: p },
       { kind: 'deaths' },
@@ -940,6 +941,14 @@ const STEPS = {
     if (!all.length) return;
     log(state, '🔥 The tombs of Heresy burn: 1 damage to all minions.');
     for (const m of all) dealDamage(state, null, m.uid, 1);
+  },
+
+  // Thalassa, the Endless Storm: the storm she left Chains at a random enemy at the end of your turn.
+  storm(state, { player: p }) {
+    const n = state.players[p].storm ?? 0;
+    if (n <= 0 || state.gameOver) return;
+    log(state, `⛈ The endless storm strikes (Chain ${n})!`);
+    chainLightning(state, { controller: p, self: null, cardId: 'thalassa_the_endless_storm' }, n);
   },
 
   burn(state, { player: p }) {

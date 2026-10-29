@@ -569,7 +569,8 @@ export function chainLightning(state, ctx, power, opts = {}) {
   const foe = opponentOf(ctx.controller);
   const board = state.players[foe].board;
   const mine = state.players[ctx.controller].board.filter((m) => m.health > 0 && !m.destroyed && !m.textLost);
-  const lossless = mine.some((m) => getCard(m.cardId).chainLossless);
+  // lossless: this Chain never weakens (Ohmra's unleash); The Thunderhead makes every Chain so.
+  const lossless = !!opts.lossless || mine.some((m) => getCard(m.cardId).chainLossless);
   let freeJumps = mine.some((m) => getCard(m.cardId).chainFirstJumpFree) ? 1 : 0;
   const hit = new Set();
   const hits = [];
@@ -609,7 +610,7 @@ export function chainLightning(state, ctx, power, opts = {}) {
   if (opts.preyLast) { const last = [...hits].reverse().find((h) => findCharacter(state, h.uid)?.kind === 'minion'); if (last) markPrey(state, findCharacter(state, last.uid), true); }
   if (opts.healPerHit && hits.length) heal(state, heroOf(state, ctx.controller).uid, opts.healPerHit * hits.length, { source: ctx.self });
   const srcMinion = opts.from ?? (findCharacter(state, ctx.self)?.kind === 'minion' ? ctx.self : null);
-  traceFx(state, { type: 'chain', source: srcMinion, caster: heroOf(state, ctx.controller).uid, player: ctx.controller, hits: hits.map(({ uid, amount }) => ({ uid, amount })) });
+  traceFx(state, { type: 'chain', source: srcMinion, caster: heroOf(state, ctx.controller).uid, player: ctx.controller, cardId: ctx.cardId, hits: hits.map(({ uid, amount }) => ({ uid, amount })) });
   emit(state, { type: 'chainResolved', player: ctx.controller, hits: hits.length });
   return hits.length;
 }
@@ -622,7 +623,7 @@ export function dischargeMinion(state, m, opts = {}) {
   emit(state, { type: 'discharged', source: m.uid, player: m.controller, amount: n });
   return chainLightning(state, { self: m.uid, controller: m.controller, cardId: m.cardId }, n, { start: opts.start, from: m.uid });
 }
-const CHAIN_OPTS = ['lifesteal', 'burn', 'corrode', 'radiate', 'preyLast', 'healPerHit', 'freeze'];
+const CHAIN_OPTS = ['lifesteal', 'burn', 'corrode', 'radiate', 'preyLast', 'healPerHit', 'freeze', 'lossless'];
 
 export const EFFECT_OPS = {
   // ---- Eels ----
@@ -688,6 +689,34 @@ export const EFFECT_OPS = {
     log(state, `⚡ ${getCard(e.cardId).name} Discharges as it dies (${n})!`);
     emit(state, { type: 'discharged', source: e.uid, player: ctx.controller, amount: n, onDeath: true });
     chainLightning(state, { controller: ctx.controller, self: null, cardId: e.cardId }, n, { from: e.uid });
+  },
+
+  // Ohmra, the Living Battery (end of your turn): every other friendly minion's Volts flow into
+  // her (no limit). At 10 or more she unleashes them all as a Chain that never gets weaker.
+  ohmraDrain(state, e, ctx) {
+    const self = findCharacter(state, ctx.self);
+    if (!self || self.health <= 0 || self.destroyed) return;
+    for (const m of state.players[ctx.controller].board) {
+      if (m.uid === self.uid || !(m.volts > 0) || m.health <= 0 || m.destroyed) continue;
+      const n = m.volts;
+      m.volts = 0;
+      log(state, `⚡ ${nameOf(state, m)}'s ${n} Volt${n === 1 ? '' : 's'} flow into ${nameOf(state, self)}.`);
+      gainVolts(state, self, n, { overcap: true });
+    }
+    const n = self.volts ?? 0;
+    if (n < (e.unleashAt ?? 10)) return;
+    self.volts = 0;
+    log(state, `⚡ ${nameOf(state, self)} unleashes ${n} Volts!`);
+    emit(state, { type: 'discharged', source: self.uid, player: ctx.controller, amount: n });
+    chainLightning(state, { self: self.uid, controller: ctx.controller, cardId: self.cardId }, n, { from: self.uid, lossless: true });
+  },
+  // Thalassa, the Endless Storm: a storm over the board for the rest of the game; at the end of
+  // each of your turns it Chains `amount` at a random enemy (engine 'storm' step). It stacks.
+  endlessStorm(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    pl.storm = (pl.storm ?? 0) + (e.amount ?? 2);
+    log(state, `⛈ An endless storm gathers over ${pl.name}'s side of the river (Chain ${pl.storm} each turn).`);
+    emit(state, { type: 'stormGathers', player: ctx.controller, amount: pl.storm });
   },
 
   // Run several effects as one (useful with `if` / `else`).

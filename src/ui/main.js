@@ -973,13 +973,16 @@ function keywordTraceFx(trace, rects, oldMinions, action) {
       case 'regenerated': jobs.push(kfx.regenerated(rectOf(e.source))); break;
       // Eels: charge-ups, Conductive, Discharges and Chains play in order (a Chain waits for the
       // Discharge that fires it, and several Chains in one move go one after another).
-      case 'voltsGained': if (once(`v${t}`)) jobs.push(fx.wait(eelAt).then(() => kfx.voltsGained(el(t), rectOf(t), e.amount))); break;
-      case 'conductive': jobs.push(kfx.conductive(el(t), rectOf(t))); break;
-      case 'discharged': { const at = eelAt; jobs.push(fx.wait(at).then(() => kfx.discharged(el(e.source), oldRect(e.source)))); eelAt += 260; break; }
+      case 'voltsGained': if (once(`v${t}`)) jobs.push(fx.wait(eelAt).then(() => { sound.play('charge'); return kfx.voltsGained(el(t), rectOf(t), e.amount); })); break;
+      case 'conductive': sound.play('soak'); jobs.push(kfx.conductive(el(t), rectOf(t))); break;
+      case 'discharged': { const at = eelAt; jobs.push(fx.wait(at).then(() => { sound.play('discharge'); return kfx.discharged(el(e.source), oldRect(e.source)); })); eelAt += 260; break; }
       case 'chain': {
         const from = e.source != null ? oldRect(e.source) : rectOf(e.caster);
         const hits = e.hits.map((h) => ({ ...h, rect: oldRect(h.uid) }));
         jobs.push(kfx.chainBolt(from, hits, { delay: eelAt }));
+        // A crackle at every jump (the bolt hops every 120 ms); thunder for a big one, Ohmra's unleash or the storm.
+        hits.forEach((h, i) => fx.wait(eelAt + i * 120).then(() => sound.play('zap')));
+        if ((hits[0]?.amount ?? 0) >= 5 || e.cardId === 'ohmra_the_living_battery' || e.cardId === 'thalassa_the_endless_storm') fx.wait(eelAt).then(() => sound.play('thunder'));
         fx.wait(eelAt).then(() => boardReact('chain')); // a living board that answers Chains (the Eels' cave) stirs
         eelAt += 120 * hits.length + 260;
         break;

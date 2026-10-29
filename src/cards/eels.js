@@ -1,6 +1,6 @@
 // EELS FACTION — Storm Eels. Electric eels that store up electricity (Volts) and release it as
 // Chain lightning that jumps from enemy to enemy. The designer's 30-card list, the Hero Spell
-// Static Field and the Elver token.
+// Static Field and the Elver token, plus the Storm Season expansion (15, unlockable).
 //
 // Volts (core.js gainVolts): stored on a minion, up to 5 (Capacitor Eel: 10). Silence drains them.
 // Discharge (effects.js dischargeMinion): spend all of a minion's Volts on a Chain of that strength.
@@ -174,6 +174,84 @@ export const EEL_CARDS = [
     ...T, id: 'lightning_rod', name: 'Lightning Rod', art: '🗼', cost: 3,
     text: 'When your opponent casts a spell: give your minions 2 Volts.',
     trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'spell' }, effects: [volts(FRIENDLY_MINIONS, 2)] },
+  },
+
+  // ---- Storm Season (expansion, unlockable): rays, morays and two storm legends ----
+  // Balance (sims, Expansion deck vs every Classic deck): 58% as first drafted; Ball Lightning 6→7,
+  // Thundercloud Ray 4/5→4/4, Static Snare 2→3, Riptide Ambush 3→4, Thalassa 9→10 bring it to 54%,
+  // level with the Classic Eels deck.
+  {
+    ...EEL, extra: true, id: 'pond_spark', name: 'Pond Spark', art: '✨', cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Give a friendly minion 1 Volt.', target: { type: 'minion', side: 'friendly' },
+    triggers: [{ on: 'battlecry', effects: [volts('chosen', 1)] }],
+  },
+  {
+    ...BEAST, extra: true, id: 'static_skate', name: 'Static Skate', art: '🪁', cost: 2, attack: 2, health: 2, keywords: ['Rush'],
+    text: 'Rush. Whenever it attacks a minion, make that minion Conductive.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [{ op: 'conductive', target: 'eventTarget' }] }],
+  },
+  {
+    ...EEL, extra: true, id: 'jolt_courier', name: 'Jolt Courier', art: '📨', cost: 2, attack: 2, health: 1,
+    text: 'Exit: Give a random friendly minion 2 Volts.',
+    triggers: [{ on: 'deathrattle', effects: [volts({ randomOf: OTHER_FRIENDLY, aliveOnly: true }, 2)] }],
+  },
+  {
+    ...EEL, extra: true, id: 'grounded_moray', name: 'Grounded Moray', art: '⚓', cost: 3, attack: 2, health: 5, keywords: ['Taunt'],
+    text: 'Taunt. Whenever a friendly minion Discharges, gain +1/+1.',
+    triggers: [{ on: 'discharged', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
+  },
+  {
+    ...BEAST, extra: true, id: 'tesla_ray', name: 'Tesla Ray', art: '🔮', cost: 3, attack: 3, health: 3,
+    text: 'Arrival: A friendly minion Discharges.', target: { type: 'minion', side: 'friendly', minVolts: 1 },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'discharge', target: 'chosen' }] }],
+  },
+  {
+    ...EEL, extra: true, id: 'shocksnout_eel', name: 'Shocksnout Eel', art: '🗡️', cost: 4, attack: 3, health: 5,
+    text: 'Whenever it gains Volts, deal 1 damage to a random enemy minion.',
+    triggers: [{ on: 'voltsGained', filter: { target: 'self', selfAlive: true }, effects: [{ op: 'damage', target: { randomOf: ENEMY_MINIONS, aliveOnly: true }, amount: 1 }] }],
+  },
+  {
+    ...EEL, extra: true, id: 'wellspring_eel', name: 'Wellspring Eel', art: '📜', cost: 4, attack: 3, health: 5,
+    text: 'The first time a friendly minion Discharges each turn, draw a card.',
+    triggers: [{ on: 'discharged', filter: { player: 'friendly' }, effects: [{ op: 'oncePerTurn', key: 'wellspring', effects: [{ op: 'draw', count: 1 }] }] }],
+  },
+  {
+    ...BEAST, extra: true, id: 'thundercloud_ray', name: 'Thundercloud Ray', art: '⛈️', cost: 5, attack: 4, health: 4,
+    text: 'Arrival: Chain 3.', target: ENEMY_CHAR,
+    triggers: [{ on: 'battlecry', effects: [chain(3)] }],
+  },
+  {
+    ...EEL, extra: true, id: 'ohmra_the_living_battery', name: 'Ohmra, the Living Battery', art: '🔋', cost: 6, attack: 4, health: 7, voltCap: 99,
+    text: "At the end of your turn, your other minions' Volts flow into her. At 10+, she unleashes them all as a Chain that never weakens.",
+    triggers: [{ ...MY_TURN_END, effects: [{ op: 'ohmraDrain', unleashAt: 10 }] }],
+  },
+  {
+    ...EEL, extra: true, id: 'thalassa_the_endless_storm', name: 'Thalassa, the Endless Storm', art: '🌪️', cost: 10, attack: 7, health: 7,
+    text: 'Arrival: A storm stays for the rest of the game: at the end of each of your turns, Chain 2 at a random enemy.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'endlessStorm', amount: 2 }] }],
+  },
+  {
+    ...S, extra: true, id: 'spark_jar', name: 'Spark Jar', art: '🫙', cost: 1, target: { type: 'minion', side: 'friendly' },
+    text: 'Give a friendly minion 1 Volt. Draw a card.', effects: [volts('chosen', 1), { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, extra: true, id: 'galvanize', name: 'Galvanize', art: '💪', cost: 3, target: { type: 'minion', side: 'friendly' },
+    text: 'Give a friendly minion +2/+2 and 2 Volts.', effects: [{ op: 'buff', target: 'chosen', attack: 2, health: 2 }, volts('chosen', 2)],
+  },
+  {
+    ...S, extra: true, id: 'ball_lightning', name: 'Ball Lightning', art: '🔵', cost: 7,
+    text: 'Make all enemy minions Conductive, then every friendly minion with Volts Discharges.',
+    effects: [{ op: 'conductive', target: ENEMY_MINIONS }, { op: 'dischargeAll' }],
+  },
+  {
+    ...T, extra: true, id: 'static_snare', name: 'Static Snare', art: '🕸️', cost: 3,
+    text: 'When your opponent plays a minion: Chain 2 starting at it.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [{ op: 'chain', amount: 2, start: 'eventSource' }] },
+  },
+  {
+    ...T, extra: true, id: 'riptide_ambush', name: 'Riptide Ambush', art: '🌊', cost: 4,
+    text: 'When an enemy minion attacks your Hero: give your minions 2 Volts, then your minion with the most Volts Discharges at the attacker.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [volts(FRIENDLY_MINIONS, 2), { op: 'dischargeMost', at: 'eventSource' }] },
   },
 
   // ---- Token ----
