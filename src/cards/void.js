@@ -266,4 +266,14 @@ export const VOID_CARDS = [
 
   // ---- Token ----
   { ...K, id: 'void_spawn', name: 'Void Spawn', art: '🌑', token: true, cost: 1, attack: 1, health: 1, keywords: ['Rush'], text: 'Rush.' },
+
+  // ---- New legendary ----
+  {
+    ...K, id: 'pulsar_the_neutron_heart', name: 'Pulsar, the Neutron Heart', art: '💫', extra: true, cost: 8, attack: 6, health: 8,
+    text: 'Arrival: Discard your hand and gain +1/+1 for each card. Hollow: at the start of your turn, deal 3 damage to all enemy minions.',
+    triggers: [
+      { on: 'battlecry', effects: [{ op: 'discardHandGrow', per: 1 }] },
+      { on: 'startOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 3, if: HOLLOW }] },
+    ],
+  },
 ];

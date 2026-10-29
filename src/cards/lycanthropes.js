@@ -45,6 +45,7 @@ function lycan(h, b) {
   ];
 }
 
+const SKINWALKER_NAME = 'Skinwalker';
 export const LYCANTHROPE_CARDS = [
   // ---- Hero Spell ----
   {
@@ -325,4 +326,15 @@ export const LYCANTHROPE_CARDS = [
 
   // ---- Token ----
   { ...K, id: 'pack_rat', name: 'Rat', art: '🐀', token: true, tribes: [], cost: 1, attack: 1, health: 1, text: '' },
+
+  // ---- New legendary: a skinwalker ----
+  ...lycan(
+    { id: 'the_pale_wanderer', name: 'The Pale Wanderer', art: '🎩', extra: true, cost: 5, attack: 3, health: 5, keywords: ['Stealth'],
+      target: { type: 'minion', side: 'enemy' },
+      text: 'Stealth. Arrival: Copy the keywords of an enemy minion.',
+      triggers: [arrival([{ op: 'copyKeywords', from: 'chosen', to: 'self' }])] },
+    { attack: 7, health: 6, stealKeywordsOnKill: true, text: "Whenever it kills a minion, it takes that minion's keywords (they stay when it changes back)." },
+  ),
 ];
+// The Pale Wanderer's Beast Form has its own name.
+for (const c of LYCANTHROPE_CARDS) if (c.id === 'the_pale_wanderer_beast') c.name = SKINWALKER_NAME;

@@ -101,6 +101,16 @@ export const LEGENDARY = new Set([
   'leviathan_of_the_deep_storm',
   'ohmra_the_living_battery',
   'thalassa_the_endless_storm',
+  'bomba_the_gentle_queen',
+  'the_slayer_hornet',
+  'drosera_the_dewtrap_queen',
+  'amanita_the_fly_agaric',
+  'seraphael_the_redeemed',
+  'the_lantern_ferryman',
+  'the_tesseract_prism',
+  'the_pale_wanderer',
+  'pulsar_the_neutron_heart',
+  'rex_the_tyrant_king',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).

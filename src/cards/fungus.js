@@ -333,4 +333,11 @@ export const FUNGUS_CARDS = [
     text: 'Trap: When your Hero takes damage, gain 3 Corpses and summon two 1/2 Rotgrub Caps.',
     trap: { on: 'damageDealt', filter: { target: 'friendlyHero' }, effects: [{ op: 'addCorpses', count: 3 }, { op: 'summon', cardId: 'rotgrub_cap', count: 2 }] },
   },
+
+  // ---- New legendary ----
+  {
+    ...F, id: 'amanita_the_fly_agaric', name: 'Amanita, the Fly Agaric', art: '🍄', extra: true, cost: 5, attack: 4, health: 4, keywords: ['Poisonous'], doubleMushrooms: true,
+    text: 'Poisonous. Arrival: Place 4 Mushrooms in the enemy deck. While she lives, your Mushrooms deal double damage.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'placeMushrooms', count: 4 }] }],
+  },
 ];

@@ -24,7 +24,7 @@ export const CLASSIC_DECK_NAMES = {
 };
 
 const cost = (id) => getCard(id).cost;
-export const expansionCards = (f) => (FACTION_POOLS[f] ?? []).filter((id) => !(FACTION_LISTS[f] ?? []).includes(id));
+export const expansionCards = (f) => (FACTION_POOLS[f] ?? []).filter((id) => !(FACTION_LISTS[f] ?? []).includes(id) && !getCard(id).alwaysUnlocked);
 
 // Hand-tuned Expansion decks (from sims vs every Classic deck): standard cards swapped out
 // (`out`) for others (`in`), one for one, to land near a 50% win rate.

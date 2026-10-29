@@ -505,7 +505,7 @@ function makeHybrid(state, enemyId, mineId) {
   };
 }
 
-function applyBuff(state, c, e) {
+export function applyBuff(state, c, e) {
   const parts = [];
   // Radioactive passive: their minions ignore Attack / Health reductions their enemies cause.
   if (e.byController != null && c.kind === 'minion' && c.controller !== e.byController && getCard(c.cardId).faction === 'Radioactive'
@@ -717,6 +717,41 @@ export const EFFECT_OPS = {
     pl.storm = (pl.storm ?? 0) + (e.amount ?? 2);
     log(state, `⛈ An endless storm gathers over ${pl.name}'s side of the river (Chain ${pl.storm} each turn).`);
     emit(state, { type: 'stormGathers', player: ctx.controller, amount: pl.storm });
+  },
+
+  // ---- New legendaries ----
+  // Drosera, the Dewtrap Queen: devour a random Frozen enemy minion with `maxHealth` or less
+  // Health; she gains its Attack and Health.
+  devourFrozen(state, e, ctx) {
+    const me = findCharacter(state, ctx.self);
+    if (!me || me.health <= 0 || me.destroyed) return;
+    const prey = pickRandom(state, state.players[opponentOf(ctx.controller)].board
+      .filter((m) => m.health > 0 && !m.destroyed && hasKeyword(m, 'Frozen') && m.health <= (e.maxHealth ?? 4)));
+    if (!prey) return;
+    const atk = effectiveAttack(prey), hp = Math.max(0, prey.health);
+    prey.destroyed = true;
+    prey.lastDamagedBy = ctx.self;
+    prey.lastDamagedByController = ctx.controller;
+    log(state, `🌺 ${nameOf(state, me)} devours ${nameOf(state, prey)}, stuck fast in her dew!`);
+    applyBuff(state, me, { attack: atk, health: hp });
+  },
+  // The Pale Wanderer: { from, to } — `to` gains the positive keywords `from` has.
+  copyKeywords(state, e, ctx) {
+    const src = findCharacter(state, resolveSelector(state, e.from, ctx)[0]);
+    const dest = findCharacter(state, resolveSelector(state, e.to, ctx)[0]);
+    if (!src || !dest) return;
+    const kws = allKeywords(src).filter((k) => !NEGATIVE_KEYWORDS.includes(k) && !hasKeyword(dest, k));
+    for (const k of kws) addKeyword(dest, k, false, state);
+    log(state, `${nameOf(state, dest)} copies ${kws.join(', ') || 'nothing'} from ${nameOf(state, src)}.`);
+  },
+  // Pulsar, the Neutron Heart: discard your hand; gain +per/+per for each card discarded.
+  discardHandGrow(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const before = pl.hand.length;
+    for (const c of [...pl.hand]) discardFromHand(state, ctx.controller, c.uid, ctx);
+    const n = before - pl.hand.length;
+    const me = findCharacter(state, ctx.self);
+    if (me && n > 0) applyBuff(state, me, { attack: n * (e.per ?? 1), health: n * (e.per ?? 1) });
   },
 
   // Run several effects as one (useful with `if` / `else`).

@@ -12,13 +12,13 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
-  traceFx,
+  traceFx, allKeywords,
 } from './core.js';
-import { addKeyword, canShift, chainLightning, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
+import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
-import { DEFAULT_QUICK_PLAY_WINDOWS, DEFAULT_RULES } from './rules.js';
+import { DEFAULT_QUICK_PLAY_WINDOWS, DEFAULT_RULES, NEGATIVE_KEYWORDS } from './rules.js';
 import { matchFilter, resolveSelector, targetCandidates } from './targeting.js';
 import { dispatchEvent, enterBattlefield, selfTriggerSteps } from './triggers.js';
 
@@ -668,7 +668,8 @@ function extinction(state, p) {
     clearPrimal(pl);
   } else {
     log(state, `☄ EXTINCTION! ${pl.name}'s Mana Crystals are destroyed.`);
-    const victims = ext.mode === 'bothBoards' ? minionsInOrder(state) : pl.board;
+    // Rex, the Tyrant King survives Extinction.
+    const victims = (ext.mode === 'bothBoards' ? minionsInOrder(state) : pl.board).filter((m) => !getCard(m.cardId).survivesExtinction);
     for (const m of victims) m.destroyed = true;
     pl.mana.max = 0;
     pl.mana.current = 0;
@@ -775,6 +776,26 @@ const STEPS = {
       log(state, `${nameOf(state, d)} succumbs to venom.`);
       traceFx(state, { type: 'venom', source: a.uid, target: d.uid });
     }
+    // New legendaries: what a killer gains from a kill. The Slayer Hornet (killAttacks: N) may
+    // attack again after each kill, up to N extra attacks a turn; Rex, the Tyrant King grows
+    // (killGrow); the Skinwalker takes the victim's keywords (stealKeywordsOnKill).
+    if (d.kind === 'minion' && (d.health <= 0 || d.destroyed) && a.kind === 'minion' && a.health > 0) {
+      const ac = getCard(a.cardId);
+      if (ac.killAttacks) {
+        if (a.killAttackTurn !== state.turn) { a.killAttackTurn = state.turn; a.killAttacksUsed = 0; }
+        if (a.killAttacksUsed < ac.killAttacks) {
+          a.killAttacksUsed += 1;
+          a.bonusAttacks = (a.bonusAttacks ?? 0) + 1;
+          log(state, `${nameOf(state, a)} can attack again!`);
+        }
+      }
+      if (ac.killGrow) applyBuff(state, a, ac.killGrow);
+      if (ac.stealKeywordsOnKill) {
+        const taken = allKeywords(d).filter((k) => !NEGATIVE_KEYWORDS.includes(k) && !hasKeyword(a, k));
+        for (const k of taken) addKeyword(a, k, false, state);
+        if (taken.length) log(state, `${nameOf(state, a)} takes ${taken.join(', ')} from ${nameOf(state, d)}.`);
+      }
+    }
     // Varkhul, the Crimson Maw: killing a minion lets it attack again this turn (once).
     if (d.kind === 'minion' && (d.health <= 0 || d.destroyed) && a.kind === 'minion' && a.health > 0 && getCard(a.cardId).extraAttackOnKill && a.extraAttackTurn !== state.turn) {
       a.extraAttackTurn = state.turn;
@@ -875,8 +896,11 @@ const STEPS = {
     const n = inst?.mushrooms ?? 0;
     if (!n) return;
     inst.mushrooms = 0;
-    log(state, `🍄 ${n} Mushroom${n === 1 ? '' : 's'} burst from ${pl.name}'s card!`);
-    dealDamage(state, null, pl.hero.uid, n, { sourceController: opponentOf(p) });
+    // Amanita, the Fly Agaric: the Mushrooms of the player who controls her deal double damage.
+    const doubled = state.players[opponentOf(p)].board.some((m) => getCard(m.cardId).doubleMushrooms && m.health > 0 && !m.destroyed);
+    const dmg = doubled ? n * 2 : n;
+    log(state, `🍄 ${n} Mushroom${n === 1 ? '' : 's'} burst from ${pl.name}'s card${doubled ? ' (doubled by the Fly Agaric)' : ''}!`);
+    dealDamage(state, null, pl.hero.uid, dmg, { sourceController: opponentOf(p) });
     emit(state, { type: 'mushroomTriggered', player: p, amount: n, cardUid });
   },
 

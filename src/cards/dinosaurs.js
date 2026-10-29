@@ -89,7 +89,13 @@ export const DINOSAUR_CARDS = [
     triggers: [{ on: 'attackDeclared', filter: { source: { ...FRIENDLY_DINO, notSelf: true } },
       effects: [{ op: 'buff', target: 'eventSource', attack: 1, temporary: true }] }],
   },
-  { ...D, id: 'tyrannosaurus_rex', name: 'Tyrannosaurus Rex', art: '🦖', cost: 8, attack: 8, health: 8, keywords: ['Charge'], text: 'Charge.' },
+  // Rex, the Tyrant King took the plain T. Rex's place in the original set; the plain one is still
+  // in every collection (an expansion card that is never locked), so saved decks keep it.
+  {
+    ...D, id: 'rex_the_tyrant_king', name: 'Rex, the Tyrant King', art: '🦖', cost: 8, attack: 8, health: 8, keywords: ['Charge'], killGrow: { attack: 2, health: 2 }, survivesExtinction: true,
+    text: 'Charge. Whenever it kills a minion, it gains +2/+2. It survives Extinction.',
+  },
+  { ...D, id: 'tyrannosaurus_rex', name: 'Tyrannosaurus Rex', art: '🦖', extra: true, alwaysUnlocked: true, cost: 8, attack: 8, health: 8, keywords: ['Charge'], text: 'Charge.' },
   {
     ...D, id: 'broodmother', name: 'Broodmother', art: '🐉',
     cost: 5, attack: 4, health: 5,

@@ -328,4 +328,11 @@ export const GHOST_CARDS = [
     id: 'phantom_blade', name: 'Phantom Blade', art: '🗡️', token: true, cost: 2,
     text: 'Relic. Hero: a 2/2 Weapon. Ghost: +2 Attack. (Taken up by Banshee Blade-Bearer.)',
   },
+
+  // ---- New legendary ----
+  {
+    ...G, id: 'the_lantern_ferryman', name: 'The Lantern Ferryman', art: '🏮', extra: true, cost: 6, attack: 5, health: 5, keywords: ['Elusive'],
+    text: 'Elusive. At the end of your turn, Haunt a minion that died this game. Exit: Haunt two more.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [haunt()] }, { on: 'deathrattle', effects: [haunt({ count: 2 })] }],
+  },
 ];

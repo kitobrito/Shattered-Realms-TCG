@@ -354,4 +354,14 @@ export const PLANT_CARDS = [
     triggers: [{ on: 'startOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'randomBuff', target: 'self', options: [{ attack: 1 }, { health: 1 }] }] }],
   },
   { ...P, id: 'treant', name: 'Treant', art: '🌳', token: true, cost: 5, attack: 5, health: 5, keywords: ['Taunt'], text: 'Taunt.' },
+
+  // ---- New legendary ----
+  {
+    ...P, id: 'drosera_the_dewtrap_queen', name: 'Drosera, the Dewtrap Queen', art: '🌺', extra: true, cost: 6, attack: 3, health: 8, keywords: ['Taunt'],
+    text: 'Taunt. Enemy minions that attack her are Frozen. At the end of your turn, she devours a Frozen enemy minion with 4 or less Health and gains its stats.',
+    triggers: [
+      { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [{ op: 'buff', target: 'eventSource', keywords: ['Frozen'] }] },
+      { on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'devourFrozen', maxHealth: 4 }] },
+    ],
+  },
 ];
