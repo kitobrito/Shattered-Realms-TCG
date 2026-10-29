@@ -41,21 +41,6 @@ SPEC = {
         'hands': ['ochre', [[384, 592, 459, 640], [368, 940, 440, 990]], {'grow': 1, 'blur': 0.8, 'show': [0, 255, 0]}],
         'rock': ['stone', [[372, 584, 459, 664], [356, 930, 448, 1010]], {'exclude': [[384, 592, 459, 640], [368, 940, 440, 990]], 'show': [120, 120, 255]}],
     },
-    # ---- Fruit Pirates: the deck of a pirate ship ----
-    'fruit-pirates-land': {
-        # The turquoise sea past the rails (top corners) and the waves along the hull.
-        'sea': ['sea', [[0, 0, 215, 420], [860, 0, 1024, 420]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}],
-        # The glowing swirl fruits in the crates (top right, bottom right).
-        'fruit': ['fruitglow', [[664, 52, 762, 110], [712, 466, 878, 566]], {'grow': 1, 'blur': 0.6, 'show': [255, 0, 255]}],
-        # Gold: the treasure chests and the spilled coins.
-        'gold': ['gold', [[726, 98, 802, 140], [672, 138, 800, 192], [870, 350, 1010, 430], [960, 520, 1024, 572]], {'blur': 0.6, 'show': [255, 220, 0]}],
-        'lantern': ['warmlight', [[14, 388, 72, 472]], {'grow': 1, 'blur': 1, 'show': [255, 140, 0]}],
-    },
-    'fruit-pirates-portrait': {
-        'sea': ['sea', [[0, 120, 110, 1024], [370, 140, 459, 1024]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}],
-        'fruit': ['fruitglow', [[330, 740, 459, 940]], {'blur': 0.6, 'show': [255, 0, 255]}],
-        'lantern': ['warmlight', [[74, 450, 110, 505]], {'grow': 1, 'blur': 1, 'show': [255, 140, 0]}],
-    },
     # ---- Acidic: an acid cavern ----
     'acidic-land': {
         'pools': ['acid', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],

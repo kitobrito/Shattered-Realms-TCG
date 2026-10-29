@@ -26,7 +26,7 @@ import {
   descentDepth, maxHand, sinkOneCircle,
   traceFx,
 } from './core.js';
-import { allCards, collectibleMinions, getCard, registerCustom } from './registry.js';
+import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
 import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL, REMADE_FORMS } from './rules.js';
 import { minionPasses, resolveSelector, targetCandidates } from './targeting.js';
@@ -245,7 +245,7 @@ export const XENO_FORMS = {
   Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
   Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
   Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
-  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno', 'Fruit Pirates': 'xeno_corsair',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno',
 };
 const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
 export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
@@ -272,13 +272,6 @@ export function tickChestbursters(state, p) {
     if (m.evolveProgress >= need) evolveChestburster(state, m);
   }
 }
-
-// ---- Fruit Pirates: Fruits ---------------------------------------------------------------
-// A Fruit is a spell a friendly minion eats (eatFruit): it keeps that power for good. A minion eats
-// only one Fruit ever; Ruddy's Gears are born fruit eaters (fruitEater on the card). Silence strips
-// the Fruit's keywords and ability (addKeyword 'Silenced'), but the minion still can't eat another.
-export const isFruitEater = (m) => !!m && (m.fruit != null || !!getCard(m.cardId)?.fruitEater);
-export const FRUIT_IDS = () => allCards().filter((c) => c.fruit && !c.token && !c.custom && !c.extra).map((c) => c.id);
 
 // ---- Ice Age (Frozen in Time): Thawing ------------------------------------------------
 // A Thawing (N) minion arrives sealed in ice (m.encased = N): it can't attack, can't be attacked,
@@ -350,8 +343,7 @@ const cardMatches = (card, f = {}) =>
   (!f.tribes || f.tribes.some((t) => hasTribe(card.tribes, t))) &&
   (!f.faction || card.faction === f.faction) &&
   (!f.cardId || card.id === f.cardId) &&
-  (!f.thawing || !!card.thawing) &&
-  (!f.fruit || !!card.fruit);
+  (!f.thawing || !!card.thawing);
 
 // ---- Conditions -----------------------------------------------------------
 // { controls: { tribe?, cardId?, excludeSelf? } }  — you control a matching minion
@@ -432,7 +424,6 @@ export function checkCondition(state, cond, ctx) {
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
     if (cond.infected != null && (c.infected != null) !== cond.infected) return false;
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
-    if (cond.fruitEater != null && isFruitEater(c) !== cond.fruitEater) return false; // Fruit Pirates
     if (cond.notKeyword && hasKeyword(c, cond.notKeyword)) return false;
     if (cond.prey != null && !!c.prey !== cond.prey) return false;
     if (cond.corroded != null && ((c.corrosion ?? 0) > 0) !== cond.corroded) return false; // Acidic
@@ -466,7 +457,6 @@ export function addKeyword(c, k, temporary = false, state = null, lingerUntil = 
   if (k === 'Frozen' && hasKeyword(c, 'Thick Fur')) return;
   if (k === 'Silenced') {
     if (c.encased > 0) delete c.encased; // Frozen in Time: silence breaks the ice (no Breaks free)
-    if (c.grantedTriggers) c.grantedTriggers = c.grantedTriggers.filter((t) => !t.fruit); // Fruit Pirates: the Fruit's power is gone
     for (const old of allKeywords(c)) state ? loseKeyword(state, c, old) : null;
     c.keywords = []; c.tempKeywords = []; c.lingerKeywords = [];
   }
@@ -629,37 +619,6 @@ export const EFFECT_OPS = {
     if (!gf) return;
     gf.turns += e.turns ?? 1;
     log(state, `❄ The Great Freeze draws nearer.`);
-  },
-
-  // ---- Fruit Pirates ----
-  // { target } — the chosen minion eats this Fruit (ctx.cardId): it gains the Fruit's stats and keywords
-  // for good, plus its ability (granted triggers marked fruit: true, so Silence can strip them).
-  eatFruit(state, e, ctx) {
-    const fruit = getCard(e.fruit ?? ctx.cardId);
-    const f = fruit?.fruit;
-    if (!f) return;
-    each(state, e.target, ctx, (m) => {
-      if (m.kind !== 'minion' || m.health <= 0 || m.destroyed || isFruitEater(m)) return;
-      m.fruit = fruit.id;
-      if (f.attack || f.health) EFFECT_OPS.buff(state, { target: { uid: m.uid }, attack: f.attack ?? 0, health: f.health ?? 0 }, ctx);
-      for (const k of f.keywords ?? []) addKeyword(m, k, false, state);
-      m.grantedTriggers ??= [];
-      for (const t of f.triggers ?? []) m.grantedTriggers.push({ ...t, controller: m.controller, fruit: true });
-      log(state, `🍎 ${nameOf(state, m)} eats the ${fruit.name}!`);
-      emit(state, { type: 'fruitEaten', target: m.uid, player: m.controller, cardId: fruit.id });
-    });
-  },
-  // Rubber Captain Ruddy: at the end of your turn, if he attacked this turn, he shifts into his next Gear.
-  gearUp(state, e, ctx) {
-    const m = findCharacter(state, ctx.self);
-    const next = m && getCard(m.cardId).nextGear;
-    if (!next || !(m.attacksThisTurn > 0) || m.health <= 0 || m.destroyed) return;
-    const fruit = m.fruit;
-    EFFECT_OPS.transform(state, { target: { uid: m.uid }, into: next }, ctx);
-    if (fruit) m.fruit = fruit;
-    log(state, `💨 ${getCard(next).name}!`);
-    queueSelfTrigger(state, m, 'gear');
-    emit(state, { type: 'gearShift', source: m.uid, player: m.controller, cardId: next });
   },
 
   // Frozen in Time: { target, turns } — Thawing minions come that many turns closer to breaking free.
@@ -1141,8 +1100,6 @@ export const EFFECT_OPS = {
       if (!pool.length) { log(state, 'No friendly minion has died yet.'); return; }
       cardId = pickRandom(state, pool);
     }
-    // randomFruit: a random Fruit card (Fruit Pirates: Fruit Forager, fusions).
-    if (e.randomFruit) cardId = pickRandom(state, FRUIT_IDS());
     addToHand(state, ctx.controller, cardId, { ...(e.costMod ? { costMod: e.costMod } : {}), ...(e.minCost != null ? { minCost: e.minCost } : {}) });
   },
 

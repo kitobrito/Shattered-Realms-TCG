@@ -5,7 +5,7 @@ export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Lycanthropes', 'Aquatic', 'Radioactive', 'Old Gods',
-  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age', 'Fruit Pirates',
+  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -119,8 +119,6 @@ export const KEYWORD_TEXT = {
   Hardy: 'Ice Age: takes 1 less damage from each hit (never less than 1).',
   Thawing: "Ice Age: arrives sealed in a block of ice for that many of its turns. Until it breaks free it can't attack or be attacked, takes no damage and its Taunt doesn't count. At the start of each of your turns the number drops by 1. Silence breaks the ice at once.",
   'Breaks free': 'Happens when a Thawing minion comes out of its ice.',
-  Fruit: "Fruit Pirates: a spell a friendly minion eats. It keeps the Fruit's power for good. A minion can eat only one Fruit, ever. Silence takes the power away (and it still can't eat another).",
-  Gear: "Rubber Captain Ruddy: at the end of your turn, if he attacked that turn, he shifts up into his next Gear: Steam, Titan, Bounce and finally Dawn.",
   'Great Freeze': 'Ice Age: at the end of every 4th turn of the Ice Age player, every character without Thick Fur (both sides, Heroes too) is Frozen.',
   Hollow: "Void: a bonus that's on only while your hand is empty. Play out (or discard) every card to wake it.",
   Pull: "Void: Discover a card from your opponent's deck (pick 1 of 3) and take it into your hand. It's gone from their deck.",
@@ -140,7 +138,7 @@ export const UNDEFINED_KEYWORDS = [];
 // Self triggers fire only for the card that owns them.
 // Internal ids. Players see 'Arrival' for 'battlecry' and 'Exit' for 'deathrattle'
 // (renamed from Hearthstone's terms).
-export const SELF_TRIGGERS = ['battlecry', 'summon', 'deathrattle', 'surface', 'thaw', 'gear'];
+export const SELF_TRIGGERS = ['battlecry', 'summon', 'deathrattle', 'surface', 'thaw'];
 
 // Board events any minion/trap can listen to.
 export const BOARD_EVENTS = [
@@ -157,8 +155,6 @@ export const BOARD_EVENTS = [
   'remade',           // Aliens (The Qu): an enemy minion was Remade ({ target, player: its controller, by })
   'chestburst',       // Aliens (Hive Brood): a Chestburster burst out ({ source, player })
   'minionEvolved',    // Aliens (Hive Brood): a Chestburster Evolved ({ source, player })
-  'fruitEaten',       // Fruit Pirates: a minion ate a Fruit ({ target, player: its controller, cardId: the Fruit })
-  'gearShift',        // Fruit Pirates: Rubber Captain Ruddy shifted into his next Gear ({ source, player, cardId })
   'minionThawed',     // Ice Age (Frozen in Time): a Thawing minion broke free ({ source, player })
   'minionEncased',    // Ice Age (Frozen in Time): a minion was sealed in ice ({ target, player: its controller })
   'minionLostStats',  // a minion lost Attack or Health (damage, -X debuffs)

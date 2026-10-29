@@ -43,12 +43,6 @@ export const PAIR_GUIDES = {
       ["shell_melter", "inferno_stalker", "Shell Melter corrodes whatever it attacks; Inferno Stalker gets +2 Attack into anything Burning. Weak, burning minions fall to either."]],
     "Acid Breath applies Burn 1 and Corrosion 1 to every enemy minion for 3 Mana: a strong opener against a wide board.",
     "Much of your damage is slow Burn. Keep a Taunt (Caustic Jelly, Scorchscale Guardian) up while it ticks, or fast decks will race you."),
-  'Acidic+Fruit Pirates': G(
-    "Fruit Pirates power up one minion at a time; Acidic keeps the enemy from answering it in combat. Corrode their blockers, then let a Fruit-fed pirate or Rubber Captain Ruddy attack every turn.",
-    [["caustic_bath", "rubber_captain_ruddy", "Ruddy only shifts Gear at the end of a turn he attacked; corroded blockers let him attack every turn without dying."],
-      ["three_blade_duelist", "false_floor", "Twin Strike hits twice a turn; with the enemy corroded, both hits are safe trades."]],
-    "Corrosive Cannonball deals 3 and corrodes 1: cheap removal that also weakens a minion it fails to kill.",
-    "Silence and removal waste a Fruit. Feed Fruits to minions the enemy will struggle to kill, not to your 1-drops."),
   'Acidic+Fungus': G(
     "A slow poison deck. Corrosion and Poisonous handle the board while Mushrooms pile up in the enemy deck. Hold the line, and let every card they draw hurt.",
     [["caustic_jelly", "cordyceps_fungus", "Jelly corrodes attackers; Cordyceps places 2 Mushrooms every time an enemy minion attacks. Attacking you becomes a losing move."],
@@ -153,12 +147,6 @@ export const PAIR_GUIDES = {
       ["fleet_commander", "ashen_ambush", "Fleet Commander makes Ashen Ambush cheaper and draws a card every time a Trap goes off."]],
     "Plasma Burn strips an enemy minion's keywords and applies Burn 2: takes away Taunt or Evade, then lets it burn.",
     "Bouncing a Burning minion takes off its Burn. Pick bounce targets that aren't Burning yet."),
-  'Aliens+Fruit Pirates': G(
-    "Both realms make single minions much stronger: Fruits add powers, Aliens add keywords. Build one or two huge threats and protect them with Traps.",
-    [["gene_mutation", "rubber_captain_ruddy", "Two keywords on Ruddy help him survive attacking, so he keeps shifting Gear."],
-      ["replication_protocol", "slingshot_sniper", "Copy Slingshot Sniper for two cheaper Snipers: three 2-damage Arrivals to clear small minions."]],
-    "Abducted Fruit Implants an enemy minion and adds a random Fruit to your hand: slow removal now and a Fruit for later.",
-    "Each minion can eat only one Fruit. Spread Fruits and keywords across your board so one removal spell doesn't undo everything."),
   'Aliens+Fungus': G(
     "A slow control deck. Traps and bounces stall the enemy while Mushrooms pile into their deck, so every card they draw costs them Health. Fungus Giant gets cheaper as the Mushrooms pile up.",
     [["mass_abduction", "hidden_spores", "Bounce their keyword minions; each card they draw while Hidden Spores is up gets more Mushrooms."],
@@ -257,12 +245,6 @@ export const PAIR_GUIDES = {
       ["hive_champion", "furnace_dragon", "Two big late minions: one walls, the other makes every Burn tick bigger."]],
     "Ember Wasps applies Burn 2 to one minion, and Burn 1 to all other enemy minions if your Hive is up.",
     "Burn is slow. Keep the Hive and the Queen safe while it works, or fast decks race you."),
-  'Bees+Fruit Pirates': G(
-    "Fruit Pirates power up single minions; Bees keep a wall up. Feed a Fruit to a sturdy Taunt or a Venomous bee and the enemy can't break through.",
-    [["venom_guard", "smoke_fruit", "A Venomous Taunt with Evade every turn: attackers die, and it rarely does."],
-      ["royal_executioner", "light_fruit", "Twin Strike on a Venomous minion: two kills a turn, each healing your Hive."]],
-    "Honey-Glazed Fruit gives +2/+2, and Lifesteal too on a minion that has eaten a Fruit.",
-    "Bees die easily to spreads. Feed Fruits to your sturdier minions, not your 1/1s."),
   'Bees+Fungus': G(
     "A slow poison deck: Venomous bees and Poisonous fungi kill anything they touch, and Mushrooms pile up in the enemy deck. Hold the Hive, and let every draw hurt them.",
     [["venom_guard", "cordyceps_fungus", "Attacking your Venomous Taunt kills the attacker, and Cordyceps places 2 Mushrooms every time they try."],
@@ -355,12 +337,6 @@ export const PAIR_GUIDES = {
       ["blazewing", "pit_lord", "Two board clears: 1 to all enemies (more on Burning ones), then 3 to everything."]],
     "Hellfire Pact costs 2 Health and applies Burn 2 to all enemy characters: Burn on everything at once.",
     "Both realms are aggressive. If the enemy stabilises, you may run out of Health and cards together."),
-  'Demons+Fruit Pirates': G(
-    "Demons pay Health for power; Fruit Pirates feed power to single minions. Build one or two big threats fast and push damage before the enemy settles.",
-    [["unholy_empowerment", "rubber_captain_ruddy", "+3/+3 and Lifesteal for a turn lets Ruddy attack safely, so he shifts into his next Gear."],
-      ["succubus_queen", "seastone_bounty_hunter", "Take control of a small enemy for a turn, and Silence or destroy another: two enemy minions dealt with."]],
-    "Devil's Bargain costs 3 Health and gives you two random Fruits: a lot of power for 2 Mana.",
-    "Fruits and Demon payments both cost resources. Don't overcommit to one minion that a single removal spell can answer."),
   'Demons+Fungus': G(
     "Fungus fills the enemy deck with Mushrooms; Demons pay Health for strong Arrivals and board clears. Clear their board, and let every card they draw hurt.",
     [["pit_lord", "deathspore", "Pit Lord kills small enemies; Deathspore places a Mushroom for each enemy minion that dies."],
@@ -447,12 +423,6 @@ export const PAIR_GUIDES = {
       ["fireball", "tyrannosaurus_rex", "Late game, a Charging T. Rex plus a Fireball to the face is 11 or 12 damage out of nowhere."]],
     "Meteor Breath applies Burn 2 to every enemy minion and pushes your next Extinction back by a turn: board damage and more time.",
     "Dragon damage is slow Burn; the Extinction Cycle is a deadline. Plan to win before your board gets wiped, or have Not Yet ready."),
-  'Dinosaurs+Fruit Pirates': G(
-    "Dinosaurs ramp with double Mana; Fruit Pirates turn any minion into a star. Feed a Fruit to a Dinosaur with Charge or Taunt, and use the extra Mana to play a Fruit and a minion on the same turn.",
-    [["magma_fruit", "tyrannosaurus_rex", "An 8/8 Charge T. Rex with +2/+2 that hits the enemy Hero for 2 every time it attacks: 12 damage a swing."],
-      ["light_fruit", "baby_t_rex", "Twin Strike on a Charge Baby T. Rex: two hits the turn it lands."]],
-    "Jurassic Fruit gives any friendly minion +3/+3 and Rush, plus a Primal Mana this turn: a big swing that also pays for itself.",
-    "The Extinction Cycle wipes your own board, Fruits included. Don't feed your best Fruit to a minion the Extinction is about to clear."),
   'Dinosaurs+Fungus': G(
     "Fungus fills the enemy deck with Mushrooms while Dinosaurs ramp and hit. Use the double Mana for big Fungus spells like Mushroom City, and let your Dinosaurs pressure the board while every draw hurts them.",
     [["mushroom_city", "nest_of_dinosaur_eggs", "Mushroom City places 10 Mushrooms in one go; the Nest guards your board and hatches three Babies when it breaks."],
@@ -533,12 +503,6 @@ export const PAIR_GUIDES = {
       ["scorching_breath", "judgment_of_dawn", "Scorching Breath Burns the board; Judgment of Dawn then deals 4 to every enemy minion to finish them off."]],
     "Sacred Flame applies Burn 2 to an enemy character and restores 2 Health to your Hero (Overheal): use it on the enemy Hero for a slow, steady clock.",
     "Burn is slow and Divine doesn't hit hard. Against fast decks, play Taunts early or you'll be out-raced."),
-  'Divine+Fruit Pirates': G(
-    "Fruit Pirates turn single minions into stars; Divine keeps those stars alive with heals and bonus Health. Feed a Fruit to a sturdy minion and keep healing it while it takes over.",
-    [["smoke_fruit", "halo_sentinel", "Smoke Fruit gives Evade every turn; behind Halo Sentinel's Taunt and +1 Health, your Fruit eater is almost impossible to remove."],
-      ["shadow_pull_fruit", "saint_of_mercy", "Lifesteal plus Saint of Mercy's heals every turn: your Fruit eater grows as enemies die and never stays damaged."]],
-    "Blessed Harvest restores 4 Health to a friendly character; on a minion that has eaten a Fruit it also gains Evade, so it shrugs off the next removal or attack.",
-    "Silence (Seastone Bounty Hunter on their side, Cleanse effects) strips a Fruit's power. Protect your Fruit eater, and don't put two Fruits' worth of value on one minion."),
   'Divine+Fungus': G(
     "A slow, safe deck: Divine heals and builds Health while Fungus fills the enemy deck with Mushrooms. Survive every attack, and let every card they draw hurt them.",
     [["halo_sentinel", "cordyceps_fungus", "Halo Sentinel's Taunt draws attacks; Cordyceps places 2 Mushrooms every time an enemy minion attacks."],
@@ -613,12 +577,6 @@ export const PAIR_GUIDES = {
     "Zombies are Dark, but Divine's anti-Dark cards only hit enemies. And Bloater's Exit damages your own minions too."),
 
   // ---- Dragons ----
-  'Dragons+Fruit Pirates': G(
-    "Dragons Burn everything; Fruit Pirates make single minions into stars. Flame Fruit fits right in: a Fruit eater that Burns whatever it hits turns on every Dragon bonus against Burning targets.",
-    [["flame_fruit", "inferno_stalker", "Feed Flame Fruit to Inferno Stalker: it Burns its target as it attacks, then gets +2 Attack against that Burning target."],
-      ["scorching_breath", "sea_queen", "Scorching Breath Burns every enemy minion for 1; Sea Queen's 3 damage to all enemy minions then finishes the board."]],
-    "Dragonfruit Breath deals 2 to every enemy minion and applies Burn 1 to them: a strong board clear that keeps ticking.",
-    "Fruits are wasted if the minion dies straight away. Clear the board with Dragon spells first, then feed your Fruit."),
   'Dragons+Fungus': G(
     "A pure attrition deck. Burn damages them every turn, and Mushrooms damage them every time they draw. Hold the board with Taunts and spreads, and let both clocks run.",
     [["scorching_breath", "deathspore", "Scorching Breath Burns the whole enemy board; Deathspore places a Mushroom every time one of them dies."],
@@ -691,80 +649,6 @@ export const PAIR_GUIDES = {
       ["dragonfire_storm", "zombie_horde", "Dragonfire Storm deals 3 to every enemy character; your Zombie Horde leaves three Walkers when it dies, so you always have a board after."]],
     "Ashen Revenant gives a friendly minion Reborn until your next turn and an Exit that Burns a random enemy for 2.",
     "Zombie Exits (Bloater, Undead Abomination) damage your own minions too. Watch your board before they die."),
-
-  // ---- Fruit Pirates ----
-  'Fruit Pirates+Fungus': G(
-    "Fruit Pirates power up single minions; Fungus fills the enemy deck with Mushrooms. Feed Fruits to your Poisonous fungi for minions that kill anything and keep spreading Mushrooms, and let every enemy draw hurt.",
-    [["light_fruit", "rotbeast", "Twin Strike on a 6/6 Poisonous Rotbeast: two kills a turn, each placing 3 Mushrooms."],
-      ["many_hands_scholar", "cordyceps_fungus", "Scholar Freezes every enemy with 3 or less Attack; Cordyceps punishes the rest with 2 Mushrooms every time they attack."]],
-    "Spore-Fruit places 3 Mushrooms in the enemy deck and draws you a card for just 2 Mana: cheap value any turn.",
-    "Fungus is slow and Fruits need a minion that survives. Against aggro, play Taunts and Freezes before feeding Fruits."),
-  'Fruit Pirates+Ghosts': G(
-    "Ghosts bring minions back; Fruit Pirates make single minions strong. A minion that's Haunted back is a fresh minion, so it can eat another Fruit. Trade your Fruit eaters away and bring them back for a second helping.",
-    [["skeleton_drummer", "soul_binder", "Skeleton Drummer (Reborn, +1 Attack aura) comes back once on its own; Soul Binder can Haunt more cheap minions back to keep the aura busy."],
-      ["shadow_pull_fruit", "wraith_of_the_unforgotten", "Feed Shadow-Pull Fruit to the Elusive Wraith: Lifesteal, and it grows every time an enemy minion dies or one of yours is Haunted."]],
-    "Ghost Ship Haunts a random minion that died this game and gives it Rush: bring back a big one and attack straight away.",
-    "Haunts are random, so you won't always get your Fruit eater back. Fruits stay with the minion that ate them, not the card."),
-  'Fruit Pirates+Ice Age': G(
-    "Ice Age Freezes and walls up with Thick Fur Taunts; Fruit Pirates turn single minions into stars. Freeze their board, then let a Fruit-fed beast attack every turn without fear.",
-    [["frost_fruit", "sabertooth_cat", "Frost Fruit makes Sabertooth Freeze whatever it attacks, and Sabertooth deals double damage to Frozen minions."],
-      ["many_hands_scholar", "avalanche", "Scholar Freezes every enemy minion with 3 or less Attack; Avalanche deals 2 to all and Freezes the survivors. Their whole board sits out a turn."]],
-    "Frozen Cargo summons a random Thawing minion one turn closer to breaking free: a big minion for 3 Mana, if you can wait for it.",
-    "The Great Freeze freezes your pirates too (no Thick Fur). Feed Fruits to your Thick Fur beasts so they keep attacking."),
-  'Fruit Pirates+Lycanthropes': G(
-    "Lycanthropes Transform for bursts of power; Fruit Pirates give one minion a permanent power. A Fruit stays through Transforms, so a Fruit-fed Lycanthrope keeps its power in both forms.",
-    [["light_fruit", "dreadjaw_alpha", "Twin Strike on the Alpha: two attacks a turn, while every other Lycanthrope has +1 Attack."],
-      ["skeleton_drummer", "unleash_the_pack", "Drummer gives your other minions +1 Attack; Unleash the Pack Transforms everything and gives Beast Forms +1 more."]],
-    "Moonlit Mutiny Transforms a friendly Lycanthrope and gives all your minions +1 Attack this turn: a big attack turn for 3 Mana.",
-    "Transforms cost Mana and so do Fruits. Don't try to do both on every turn."),
-  'Fruit Pirates+Plants': G(
-    "Plants grow every turn; Fruit Pirates give one minion a permanent power. Feed Fruits to your Plants and they keep growing with it: a Lifesteal Bloodrose or a Twin Strike Carnivorous Tree is a huge problem.",
-    [["shadow_pull_fruit", "carnivorous_tree", "Carnivorous Tree grows when it attacks a smaller minion; Shadow-Pull adds Lifesteal and +1/+1 for every enemy minion that dies."],
-      ["thunder_fruit", "garden_guardian", "Garden Guardian's Taunt holds the line while Thunder Fruit zaps a random enemy for 2 every turn."]],
-    "Fruit of the Deep Jungle summons two Seedlings and adds a random Fruit to your hand: board and a Fruit in one.",
-    "Seedlings start tiny. Feed Fruits to minions that will survive, not to a 0/1 Seedling the enemy can ping off."),
-  'Fruit Pirates+Radioactive': G(
-    "Radioactive's auras drain every character without Radiation; Fruit Pirates give single minions permanent powers. Feed Fruits to your irradiated mutants, which ignore the drain, and let the auras shrink the rest.",
-    [["magma_fruit", "wasteland_ghoul", "Wasteland Ghoul irradiates itself (+2 Attack, immune to the drain); Magma Fruit adds +2/+2 and 2 damage to the Hero every attack."],
-      ["sea_queen", "reactor_meltdown", "Two board clears: Sea Queen deals 3 to every enemy minion, Meltdown deals 3 to every minion and Obliterates the dead."]],
-    "Glowing Fruit gives an enemy minion Radiation 1 and all your minions +1 Attack this turn: an attack turn plus a lasting drain.",
-    "Radiation drains your own pirates without Radiation, and blocks healing on them. Feed Fruits to irradiated minions first."),
-  'Fruit Pirates+Robots': G(
-    "Both realms make single minions much stronger: Fruits for powers, Upgrades for stats. A Fruit-fed, Upgraded Robot is a monster, and Ruddy's Gears add a second big threat.",
-    [["light_fruit", "laser_cannon", "Twin Strike plus Laser Cannon: two attacks a turn, each pinging the enemy Hero."],
-      ["many_hands_scholar", "overclocked_destroyer", "Scholar Freezes the small enemies; the Destroyer pings every enemy minion each time you Upgrade it."]],
-    "Cannon Upgrade upgrades any friendly minion +2/+1 and deals 2 to a random enemy minion: stats and removal in one.",
-    "Fruits plus Upgrades on one minion is a huge target. Spread your power across two minions."),
-  'Fruit Pirates+Sharks': G(
-    "Sharks hunt Marked Prey; Fruit Pirates make single minions strong. Feed a Fruit to a Shark and it hunts every turn: Twin Strike or Frost on a Great White is brutal.",
-    [["light_fruit", "great_white", "Twin Strike on Great White: it can kill Prey and attack again, twice."],
-      ["slingshot_sniper", "tiger_shark", "Sniper deals 2 to a minion, often bringing it into Prey range; Tiger Shark then deals 2 more and gains Armor."]],
-    "Shark Bait marks any enemy minion as Prey and gives all your minions +1 Attack this turn.",
-    "Sharks need Prey (3 Health or less). Against big minions, use Seastone Bounty Hunter and Whale-Shark Helmsman instead."),
-  'Fruit Pirates+Ultraterrestrials': G(
-    "Ultraterrestrials Displace minions out of the fight; Fruit Pirates make single minions strong. Displace their blockers so your Fruit eater can attack freely, or Displace your own Fruit eater to dodge removal.",
-    [["smoke_fruit", "pocket_dimension", "Smoke Fruit gives Evade every turn; Pocket Dimension can Displace your Fruit eater out of danger for a turn."],
-      ["whale_shark_helmsman", "rift_hunter", "Whale-Shark returns an enemy minion to hand; Rift Hunter Displaces another. Two blockers gone."]],
-    "Fruit from Beyond Displaces an enemy minion until your next turn and adds a random Fruit to your hand.",
-    "Displaced enemies come back. Use the time to attack, not just wait."),
-  'Fruit Pirates+Vampires': G(
-    "Vampires attack and heal with Lifesteal; Fruit Pirates make single minions strong. Shadow-Pull Fruit (Lifesteal) and Magma Fruit (Hero damage) turn a Vampire into a race-winning threat.",
-    [["magma_fruit", "vampire_bloodlord", "Bloodlord gains Mana when it hits the Hero; Magma Fruit adds 2 damage to the Hero every attack."],
-      ["skeleton_drummer", "crimson_batmaster", "Batmaster brings two 1/1 Bats; Drummer gives every minion +1 Attack."]],
-    "Blood Orange costs 2 Health and gives a friendly minion +2/+2 and Lifesteal: the Health comes straight back.",
-    "Vampires lose Health; don't spend Health on Blood Orange when you're low."),
-  'Fruit Pirates+Void': G(
-    "Void dumps its hand fast and hits hard; Fruit Pirates make single minions strong. Play your Fruits early on minions that will stick, then dump the rest of your hand and go Hollow for a big Charge finish.",
-    [["magma_fruit", "starless_prowler", "Starless Prowler has Charge while your hand is empty; Magma Fruit adds +2/+2 and 2 damage to the enemy Hero every time it attacks."],
-      ["treasure_chest", "star_swallower", "Treasure Chest refills your hand with 3 cards; Star Swallower then discards them all for 2 damage each to the enemy Hero."]],
-    "Fruit of the Abyss discards a card; if it did, it adds a random Fruit to your hand that costs 2 less: turn a dead card into a cheap Fruit.",
-    "Void runs out of cards fast, and Fruits need a minion that survives. Count your damage before you empty your hand."),
-  'Fruit Pirates+Zombies': G(
-    "Zombies keep coming back and leave Corpses; Fruit Pirates make single minions strong. Feed Fruits to sturdy Zombies like Tarman and Zombie Brute, and use Rotten Fruit to turn enemy minions into Rage Runners for your side.",
-    [["shadow_pull_fruit", "tarman", "Shadow-Pull Fruit on Tarman (Reborn, Lifesteal): he grows +1/+1 every time an enemy minion dies, and drags one down when he dies."],
-      ["skeleton_drummer", "zombie_horde", "Skeleton Drummer gives your other minions +1 Attack; Zombie Horde leaves three Walkers when it dies, so the aura always has bodies to buff."]],
-    "Rotten Fruit Infects an enemy minion and deals 2 damage to it: when it dies, you summon a 2/1 Rage Runner with Rush.",
-    "A Reborn minion comes back as a fresh copy, so its Fruit is lost. Don't spend your best Fruit on a minion that's about to die and come back."),
 
   // ---- Fungus ----
   'Fungus+Ghosts': G(

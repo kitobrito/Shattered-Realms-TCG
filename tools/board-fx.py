@@ -123,9 +123,6 @@ RULES = {
     'puddle': lambda h, s, v: (1 - ramp(s, 0.15, 0.3)) * ramp(v, 0.42, 0.62),
     # glowing things in general
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),
-    # Fruit Pirates: the turquoise sea, the glowing swirl fruits, the lantern's warm light.
-    'sea': lambda h, s, v: hue_near(h, 192, 22) * ramp(s, 0.3, 0.55) * ramp(v, 0.45, 0.7),
-    'fruitglow': lambda h, s, v: ramp(s, 0.45, 0.7) * ramp(v, 0.72, 0.92) * (1 - hue_near(h, 30, 12) * (1 - ramp(s, 0.75, 0.9))),
     'dark': lambda h, s, v: 1 - ramp(v, 0.35, 0.55),
 }
 

@@ -15,7 +15,7 @@ import { guideActed, guideAllows, guideEnemyAction, guideOn, markTutorialDone, s
 import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, legalMatch } from '../engine/engine.js';
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
-import { allCards, getCard, restoreCustomCards } from '../engine/registry.js';
+import { allCards, getCard, hasCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
 import { boardFaction, boardHTML, descentCalloutHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
@@ -74,8 +74,13 @@ function save() {
 function loadSaved() {
   try {
     // Saves from before the rename hold The Coin as 'the_coin'.
-    const g = JSON.parse((localStorage.getItem(SAVE_KEY) ?? 'null').replaceAll('"the_coin"', '"mana_potion"'));
-    return g?.version === SAVE_VERSION ? g : null; // older saves predate Hero Spells
+    const raw = (localStorage.getItem(SAVE_KEY) ?? 'null').replaceAll('"the_coin"', '"mana_potion"');
+    const g = JSON.parse(raw);
+    if (g?.version !== SAVE_VERSION) return null; // older saves predate Hero Spells
+    // A save holding a card the game no longer has (a removed realm) can't be continued.
+    const custom = new Set(Object.keys(g.state?.customCards ?? {}));
+    const ids = [...raw.matchAll(/"cardId":"([^"]+)"/g)].map((m) => m[1]);
+    return ids.every((id) => hasCard(id) || custom.has(id)) ? g : null;
   } catch { return null; }
 }
 
@@ -1033,17 +1038,6 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     const furry = els.filter((el) => el.classList.contains('minion') && el.dataset.kw.split(' ').includes('thick-fur'));
     for (const el of caught) el.classList.add('gf-pending');
     greatFreeze = { caught, furry };
-  }
-
-  // Fruit Pirates: a minion that just ate a Fruit, and Rubber Captain Ruddy shifting Gears
-  // (the same minion, now showing a Gear card). Driven by the new board vs the old one.
-  for (const el of app.querySelectorAll('.minion[data-char]')) {
-    const old = oldMinions.get(Number(el.dataset.char));
-    if (!old) continue;
-    const was = old.clone.dataset;
-    if (el.dataset.fruit && el.dataset.fruit !== (was.fruit ?? '')) { sound.play('cardPlay'); jobs.push(fx.fruitEaten(el.getBoundingClientRect(), el.dataset.fruit)); }
-    const id = el.dataset.preview;
-    if (id !== was.preview && getCard(id)?.fruitEater && getCard(was.preview)?.nextGear === id) { sound.play('whoosh'); jobs.push(fx.gearShift(el, id, getCard(id).name)); }
   }
 
   // Extinction: the doomed minions stay on screen while a meteor comes down on them;
@@ -2371,7 +2365,7 @@ function renderMenu() {
     <div class="menu tavern select-screen m2">
       <header class="m2-top">
         <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-        <p class="ts-tag">Twenty realms broke apart. Two of them are yours.</p>
+        <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
         <div class="m2-toggle-row">
           <span class="pick-count">${picked.length}/${pickNeeded()}</span>
           ${pairUnlocked() ? `<div class="format-toggle m2-toggle">
