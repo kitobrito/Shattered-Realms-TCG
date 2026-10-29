@@ -39,7 +39,7 @@ jobs:
         working-directory: build
         run: |
           npm init -y >/dev/null
-          npm install --no-audit --no-fund @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0 @capacitor/assets@3.0.5 @capacitor/app@6.0.2
+          npm install --no-audit --no-fund @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0 @capacitor/assets@3.0.5 @capacitor/app@6.0.2 @capacitor/screen-orientation@6.0.3
           npx cap init "Shattered Realms" com.kitobrito.shatteredrealms --web-dir www
           # Feel like a game, not a web page: dark launch, full screen, Back button, haptics (tools/android/setup-native.py).
           python3 ../tools/android/setup-native.py config
