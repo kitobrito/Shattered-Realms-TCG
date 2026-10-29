@@ -18,7 +18,7 @@ import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, hasCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
 import { boardFaction, boardHTML, descentCalloutHTML, layoutHands, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
-import { canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
+import { boardReact, canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startBoardFx } from './circle-fx.js';
 import * as drag from './drag.js';
 import * as fx from './fx.js';
@@ -933,6 +933,7 @@ function keywordTraceFx(trace, rects, oldMinions, action) {
   const oldRect = (uid) => (uid == null ? null : oldMinions.get(uid)?.rect ?? rects.get(`c${uid}`) ?? rectOf(uid));
   const seen = new Set();
   const once = (key) => (seen.has(key) ? false : (seen.add(key), true));
+  let eelAt = 0; // Eels: when the next Discharge / Chain may start (ms)
   for (const e of trace) {
     const t = e.target ?? e.source;
     switch (e.type) {
@@ -968,6 +969,19 @@ function keywordTraceFx(trace, rects, oldMinions, action) {
       case 'remade': jobs.push(kfx.remade(el(t), rectOf(t))); break;
       case 'weaponEquipped': jobs.push(kfx.weaponEquipped(rectOf(e.source))); break;
       case 'regenerated': jobs.push(kfx.regenerated(rectOf(e.source))); break;
+      // Eels: charge-ups, Conductive, Discharges and Chains play in order (a Chain waits for the
+      // Discharge that fires it, and several Chains in one move go one after another).
+      case 'voltsGained': if (once(`v${t}`)) jobs.push(fx.wait(eelAt).then(() => kfx.voltsGained(el(t), rectOf(t), e.amount))); break;
+      case 'conductive': jobs.push(kfx.conductive(el(t), rectOf(t))); break;
+      case 'discharged': { const at = eelAt; jobs.push(fx.wait(at).then(() => kfx.discharged(el(e.source), oldRect(e.source)))); eelAt += 260; break; }
+      case 'chain': {
+        const from = e.source != null ? oldRect(e.source) : rectOf(e.caster);
+        const hits = e.hits.map((h) => ({ ...h, rect: oldRect(h.uid) }));
+        jobs.push(kfx.chainBolt(from, hits, { delay: eelAt }));
+        fx.wait(eelAt).then(() => boardReact('chain')); // a living board that answers Chains (the Eels' cave) stirs
+        eelAt += 120 * hits.length + 260;
+        break;
+      }
       default: break;
     }
   }
@@ -2365,7 +2379,7 @@ function renderMenu() {
     <div class="menu tavern select-screen m2">
       <header class="m2-top">
         <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-        <p class="ts-tag">Nineteen realms broke apart. Two of them are yours.</p>
+        <p class="ts-tag">Twenty realms broke apart. Two of them are yours.</p>
         <div class="m2-toggle-row">
           <span class="pick-count">${picked.length}/${pickNeeded()}</span>
           ${pairUnlocked() ? `<div class="format-toggle m2-toggle">

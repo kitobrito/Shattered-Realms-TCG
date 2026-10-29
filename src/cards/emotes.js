@@ -53,6 +53,14 @@ export const EMOTES = {
     oops: "Oops. Slipped on the ice.",
     threaten: "Winter is long. We are patient.",
   },
+  Eels: {
+    greetings: "Bzzt! Hello there.",
+    wellPlayed: "Well played. That was electric.",
+    thanks: "Thanks! You've got me all charged up.",
+    wow: "Shocking!",
+    oops: "Oops. Short circuit.",
+    threaten: "I'm building up a charge for you.",
+  },
   Void: {
     greetings: "The stars went quiet. Hello.",
     wellPlayed: "Well played. Even the dark noticed.",

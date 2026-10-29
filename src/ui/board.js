@@ -186,7 +186,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
   const hollow = [].concat(card.aura ?? []).some((a) => a.if?.handEmpty) && !m.textLost
     ? (s.players[m.controller].hand.length === 0 ? 'hollow on' : 'hollow') : '';
   return `
-    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${hollow} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
+    <div class="minion shardm f-${faction} ${keywordClasses(m)} ${cls} ${hollow} ${art ? 'has-art' : ''} ${asleep(m, s) ? 'asleep' : ''} ${m.burn > 0 ? 'burning' : ''} ${m.prey ? 'prey' : ''} ${m.corrosion > 0 ? 'corroded' : ''} ${m.corrosion > 0 && atk === 0 ? 'zeroed' : ''} ${radiationOf(m) ? 'irradiated' : ''} ${m.radReduction > 0 ? 'rad-hit' : ''} ${m.burrowed ? 'burrowed' : ''} ${m.infected != null ? 'infected' : ''} ${m.implanted != null ? 'implanted' : ''} ${m.volts > 0 ? 'charged' : ''} ${m.conductive ? 'conductive' : ''}" data-char="${m.uid}" data-preview="${card.id}" data-kw="${kws.join(' ')}" style="--idle:-${((m.uid * 0.73) % 5).toFixed(2)}s">
       <div class="m-shield"></div>
       <div class="m-wind"></div>
       <i class="sm-frame"><i class="sm-rim"></i><i class="sm-glow"></i><i class="sm-crack"></i></i>
@@ -195,6 +195,8 @@ export function minionHTML(m, s, cls = '', shift = false) {
       <div class="m-ring"></div>
       ${burnHTML(m)}
       ${radHTML(m)}${radHitHTML(m)}
+      ${m.volts > 0 ? `<span class="volt-badge${m.volts >= 5 ? ' full' : ''}" title="${m.volts} Volt${m.volts === 1 ? '' : 's'}: it Discharges them as a Chain when it dies (or when a card makes it)">⚡${m.volts}</span>` : ''}
+      ${m.conductive ? '<i class="ov-wet" title="Conductive: a Chain jumps off it at full power this turn"></i>' : ''}
       ${m.infected != null ? '<i class="ov-infect"><b></b><b></b><b></b><b></b></i>' : ''}
       ${m.implanted != null ? '<i class="ov-implant"><b></b></i>' : ''}
       ${hasKeyword(m, 'Rage') && !hasKeyword(m, 'Silenced') ? '<i class="ov-rage"></i>' : ''}

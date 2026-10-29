@@ -312,4 +312,33 @@ SPEC = {
         'grass': ['grass', [[0, 0, 459, 1024]], {'hp': [2, 1, 0.03, 0.1], 'split': {'join': 2, 'min': 10, 'max': 40}, 'show': [0, 255, 0], 'exclude': [[0, 880, 120, 1024], [200, 900, 459, 1024]]}],
         'leaves': ['leaf', FULL_P, {'grow': 2, 'blur': 1, 'scale': 0.5, 'show': [0, 200, 0]}],
     },
+    # ---- Eels: a flooded river cave lit by its own electricity ----
+    'eels-land': {
+        # The glowing shallows (caustics, flow and sheen are kept to these pixels).
+        'water': ['eelwater', [[250, 170, 820, 540], [0, 240, 260, 340]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}],
+        # The painted streaks of light in the water: light glides along them (never flashes).
+        'cracks': ['bolt', [[430, 185, 710, 410]], {'blur': 0.5, 'show': [255, 255, 255]}],
+        # The blue cave fungus, one mask per cluster so each breathes on its own.
+        'shroom1': ['biolum', [[335, 10, 402, 68]], {'grow': 1, 'blur': 0.6, 'show': [0, 255, 255]}],
+        'shroom2': ['biolum', [[402, 82, 445, 112]], {'grow': 1, 'blur': 0.6, 'show': [0, 200, 255]}],
+        'shroom3': ['biolum', [[455, 25, 585, 52]], {'grow': 1, 'blur': 0.6, 'show': [80, 255, 255]}],
+        'shroom4': ['biolum', [[720, 5, 765, 40]], {'grow': 1, 'blur': 0.6, 'show': [0, 160, 255]}],
+        'shroom5': ['biolum', [[795, 50, 835, 80]], {'grow': 1, 'blur': 0.6, 'show': [0, 120, 255]}],
+        'shroom6': ['biolum', [[700, 72, 728, 98]], {'grow': 1, 'blur': 0.6, 'show': [120, 200, 255]}],
+        # The glass insulators on the post (top right).
+        'glass': ['biolum', [[865, 5, 1010, 160]], {'grow': 1, 'blur': 0.6, 'show': [0, 255, 160]}],
+        # The sparks off the water-wheel.
+        'sparks': ['fire', [[800, 370, 1000, 500]], {'grow': 1, 'blur': 0.5, 'show': [255, 140, 0]}],
+    },
+    'eels-portrait': {
+        'water': ['eelwater', [[0, 230, 350, 1000], [140, 40, 260, 220]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}],
+        'cracks': ['bolt', [[170, 470, 340, 730]], {'blur': 0.5, 'show': [255, 255, 255]}],
+        # The blue cave fungus down the right-hand wall, one mask per cluster.
+        'shroom1': ['biolum', [[425, 325, 459, 392]], {'grow': 1, 'blur': 0.6, 'show': [0, 255, 255]}],
+        'shroom2': ['biolum', [[378, 392, 416, 432]], {'grow': 1, 'blur': 0.6, 'show': [0, 200, 255]}],
+        'shroom3': ['biolum', [[385, 498, 459, 582]], {'grow': 1, 'blur': 0.6, 'show': [80, 255, 255]}],
+        'shroom4': ['biolum', [[400, 688, 459, 746]], {'grow': 1, 'blur': 0.6, 'show': [0, 160, 255]}],
+        'shroom5': ['biolum', [[402, 792, 446, 822]], {'grow': 1, 'blur': 0.6, 'show': [0, 120, 255]}],
+        'sparks': ['fire', [[300, 800, 459, 920]], {'grow': 1, 'blur': 0.5, 'show': [255, 140, 0]}],
+    },
 }
