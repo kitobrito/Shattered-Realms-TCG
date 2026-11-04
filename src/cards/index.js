@@ -104,6 +104,8 @@ export const LEGENDARY = new Set([
   'bomba_the_gentle_queen',
   'the_slayer_hornet',
   'drosera_the_dewtrap_queen',
+  'the_great_pumpkin',
+  'hallowroot_the_headless_harvester',
   'amanita_the_fly_agaric',
   'seraphael_the_redeemed',
   'the_lantern_ferryman',

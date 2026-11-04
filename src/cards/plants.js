@@ -19,6 +19,12 @@ const IF_SEEDLING = { controls: { tribe: 'Seedling' } };
 const ENEMY_MINION = { type: 'minion', side: 'enemy' };
 const sprout = { op: 'summon', cardId: 'flytrap_sprout' };
 
+// Harvest Moon expansion: Pumpkins with Shell hold another friendly Plant inside them (see effects.js Shell).
+const PUMPKIN = { faction: 'Plants', type: 'minion', tribes: ['Plant', 'Pumpkin'] };
+const SHELL_TARGET = { type: 'minion', side: 'friendly', tribe: 'Plant', notTribe: 'Pumpkin' };
+const SHELL_ARRIVAL = { on: 'battlecry', effects: [{ op: 'shellIn', target: 'chosen' }] };
+const FRIENDLY_PUMPKIN = { type: 'minion', side: 'friendly', tribe: 'Pumpkin' };
+
 export const PLANT_CARDS = [
   // ---- Hero Spell ----
   {
@@ -345,8 +351,61 @@ export const PLANT_CARDS = [
     triggers: [{ on: 'battlecry', effects: [{ op: 'devourStrongest' }] }],
   },
 
+  // ---- Harvest Moon expansion (unlockable) ----
+  // Shell: Arrival: put another friendly Plant inside this Pumpkin, where it grows safely until it bursts out.
+  {
+    ...S, id: 'pumpkin_patch', name: 'Pumpkin Patch', art: '🎃', extra: true, set: 'Harvest Moon', cost: 1,
+    text: 'Summon a 0/3 Pumpkin Sprout with a Seedling growing inside it.',
+    effects: [{ op: 'summon', cardId: 'pumpkin_sprout' }, { op: 'shellSpawn', target: 'summoned', cardId: 'seedling' }],
+  },
+  {
+    ...PUMPKIN, id: 'gourd_sentry', name: 'Gourd Sentry', art: '🎃', extra: true, set: 'Harvest Moon', cost: 3, attack: 1, health: 6, keywords: ['Taunt'],
+    shell: { size: 1 },
+    text: 'Taunt. Shell.',
+    target: SHELL_TARGET, triggers: [SHELL_ARRIVAL],
+  },
+  {
+    ...PUMPKIN, id: 'jack_o_lantern_brute', name: "Jack-o'-Lantern Brute", art: '🎃', extra: true, set: 'Harvest Moon', cost: 4, attack: 3, health: 7,
+    shell: { size: 1 },
+    text: 'Shell. Has +2 Attack while a Plant is inside it.',
+    target: SHELL_TARGET, triggers: [SHELL_ARRIVAL],
+    aura: { target: 'self', if: { selfHolding: true }, attack: 2 },
+  },
+  {
+    ...P, id: 'hollow_vine_creeper', name: 'Hollow Vine Creeper', art: '🌿', extra: true, set: 'Harvest Moon', cost: 2, attack: 2, health: 2,
+    text: 'Arrival: Give a friendly Pumpkin +2 Health. If a Plant is inside it, that Plant gains +1/+1.',
+    target: FRIENDLY_PUMPKIN,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: 'chosen', health: 2 }, { op: 'shellBuff', target: 'chosen', attack: 1, health: 1 }] }],
+  },
+  {
+    ...PUMPKIN, id: 'candlewick_pumpkin', name: 'Candlewick Pumpkin', art: '🕯️', extra: true, set: 'Harvest Moon', cost: 2, attack: 1, health: 4,
+    shell: { size: 1 },
+    text: 'Shell. At the end of your turn, restore 2 Health to the Plant inside it.',
+    target: SHELL_TARGET,
+    triggers: [SHELL_ARRIVAL, { ...MY_TURN_END, effects: [{ op: 'shellBuff', target: 'self', heal: 2 }] }],
+  },
+  {
+    ...P, id: 'harvest_scarecrow', name: 'Harvest Scarecrow', art: '🎃', extra: true, set: 'Harvest Moon', cost: 3, attack: 3, health: 3,
+    text: 'Whenever a friendly Plant bursts out of a Pumpkin, give it Rush.',
+    triggers: [{ on: 'shellBurst', filter: { player: 'friendly' }, effects: [{ op: 'buff', target: 'eventSource', keywords: ['Rush'] }] }],
+  },
+  {
+    ...S, id: 'rotting_carve', name: 'Rotting Carve', art: '🔪', extra: true, set: 'Harvest Moon', cost: 3,
+    text: 'Destroy a friendly Pumpkin. The Plants inside burst out with +3/+3 and each deals damage equal to its Attack to a random enemy.',
+    target: FRIENDLY_PUMPKIN,
+    effects: [{ op: 'carvePumpkin', target: 'chosen', attack: 3, health: 3 }],
+  },
+  {
+    ...PUMPKIN, id: 'moonlit_gourd_choir', name: 'Moonlit Gourd Choir', art: '🎶', extra: true, set: 'Harvest Moon', cost: 5, attack: 2, health: 8, keywords: ['Taunt'],
+    shell: { size: 1 },
+    text: 'Taunt. Shell. Your other Pumpkins have +1/+1.',
+    target: SHELL_TARGET, triggers: [SHELL_ARRIVAL],
+    aura: { target: { minions: { side: 'friendly', tribe: 'Pumpkin', excludeSelf: true } }, attack: 1, health: 1 },
+  },
+
   // ---- Tokens ----
   { ...P, id: 'flytrap_sprout', name: 'Flytrap Sprout', art: '🪴', token: true, cost: 1, attack: 1, health: 2, keywords: ['Devour'], text: 'Devour.' },
+  { ...PUMPKIN, id: 'pumpkin_sprout', name: 'Pumpkin Sprout', art: '🎃', token: true, cost: 1, attack: 0, health: 3, shell: { size: 1 }, text: 'Shell.' },
   { ...SEEDLING, id: 'seedling', name: 'Seedling', art: '🌱', token: true, cost: 0, attack: 0, health: 1, text: '' },
   {
     ...SEEDLING, id: 'seedling_of_growth', name: 'Seedling', art: '🌱', token: true, cost: 0, attack: 0, health: 1,
@@ -362,6 +421,22 @@ export const PLANT_CARDS = [
     triggers: [
       { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [{ op: 'buff', target: 'eventSource', keywords: ['Frozen'] }] },
       { on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'devourFrozen', maxHealth: 4 }] },
+    ],
+  },
+  {
+    ...PUMPKIN, id: 'the_great_pumpkin', name: 'The Great Pumpkin, Keeper of the Patch', art: '🎃', extra: true, set: 'Harvest Moon', cost: 8, attack: 4, health: 12, keywords: ['Taunt'],
+    shell: { size: 3, growth: 2 },
+    text: 'Taunt. Shell, holding up to 3: Arrival: put up to 3 other friendly Plants inside. Plants inside gain +2/+2 each turn. When it dies, they all burst out.',
+    target: SHELL_TARGET,
+    triggers: [{ on: 'battlecry', effects: [{ op: 'shellIn', target: 'chosen', count: 3 }] }],
+  },
+  {
+    ...P, id: 'hallowroot_the_headless_harvester', name: 'Hallowroot, the Headless Harvester', art: '🎃', extra: true, set: 'Harvest Moon', cost: 6, attack: 6, health: 5, keywords: ['Rush'],
+    text: 'Rush. Arrival: Take a Plant out of a friendly Pumpkin, gain its Attack and Health, and put a Seedling inside in its place. After this attacks, give a random friendly Plant +2/+2.',
+    target: { ...FRIENDLY_PUMPKIN, holding: true },
+    triggers: [
+      { on: 'battlecry', effects: [{ op: 'harvestShell', target: 'chosen' }] },
+      { on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'buff', target: { randomOf: ALL_FRIENDLY_PLANTS }, attack: 2, health: 2 }] },
     ],
   },
 ];

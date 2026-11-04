@@ -14,7 +14,7 @@ import {
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
   traceFx, allKeywords,
 } from './core.js';
-import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
+import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -818,7 +818,10 @@ const STEPS = {
     const killerMinion = new Map(dead.map((m) => [m.uid, findCharacter(state, m.lastDamagedBy)?.kind === 'minion']));
     for (const m of dead) {
       const board = state.players[m.controller].board;
-      board.splice(board.indexOf(m), 1);
+      const at = board.indexOf(m);
+      board.splice(at, 1);
+      // Plants (Harvest Moon): whatever the Pumpkin held bursts out where it stood.
+      burstShell(state, m, at);
       // Unique minions (the Queen) can never come back once they have died.
       if (getCard(m.cardId).unique) (state.players[m.owner].uniquesDead ??= []).push(m.cardId);
       // Divine (The Holy Pyre): a minion dying in Holy Flame is Reduced to Ash — removed like Obliterate.
@@ -1110,6 +1113,8 @@ const STEPS = {
     for (const x of state.players) x.zombieDeathsThisTurn = 0;
     // Ultraterrestrials: Displaced minions due back now return.
     processBeyond(state, p);
+    // Plants (Harvest Moon): Plants inside Pumpkins grow.
+    growShells(state, p);
     // Sand Sharks: Burrowed minions Surface.
     for (const m of [...pl.board]) if (m.burrowed) surfaceMinion(state, m);
     // Aliens (Hive Brood): Chestbursters grow, and Evolve when they're ready.
