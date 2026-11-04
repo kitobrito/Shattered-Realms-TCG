@@ -5712,3 +5712,6 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
   font-size: calc(var(--hero, 120px) * 0.12); color: #eaffff; background: radial-gradient(circle at 40% 35%, #6a7ab8, #2a2f5a 60%, #10132a);
   border: 2px solid #9fe8ff; box-shadow: 0 0 12px #5ae8ff, 0 0 2px #000; pointer-events: auto; animation: storm-pulse 2.4s ease-in-out infinite; }
 @keyframes storm-pulse { 0%, 100% { box-shadow: 0 0 10px #5ae8ff, 0 0 2px #000; } 50% { box-shadow: 0 0 20px #bff8ff, 0 0 2px #000; } }
+
+.signin-own-page { margin-top: 10px; font-size: 13px; line-height: 1.45; opacity: 0.9; text-align: center; }
+.signin-own-page-link { display: inline-block; margin: 6px 0 2px; padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255, 215, 140, 0.7); color: #ffe7b0; font-weight: 700; text-decoration: none; background: rgba(60, 35, 10, 0.55); }
