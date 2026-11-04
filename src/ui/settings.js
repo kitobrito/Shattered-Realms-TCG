@@ -8,7 +8,7 @@ import { journeyDone, restartJourney, unlockEverything } from './journey.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false, orientation: 'landscape' };
+const DEFAULTS = { volume: 80, music: 50, effects: 100, voices: 100, ambience: 40, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false, orientation: 'landscape' };
 // Extra speed-up just for the AI's turns (on top of Game speed).
 export const AI_SPEEDS = { same: 1, fast: 0.55, turbo: 0.3 };
 
@@ -65,6 +65,7 @@ function save(settings) {
 export function applySettings(settings = getSettings()) {
   sound.setVolume(settings.volume / 100);
   setMusicVolume(settings.volume / 100, settings.music / 100);
+  sound.setLevels({ effects: settings.effects / 100, voices: settings.voices / 100, ambience: settings.ambience / 100 });
   fx.setSpeed(SPEEDS[settings.speed] ?? 1, settings.reducedMotion);
   document.body.classList.toggle('reduced-motion', settings.reducedMotion);
   document.body.classList.toggle('colorblind', settings.colorBlind);
@@ -95,6 +96,12 @@ export function openSettings() {
         <input type="range" min="0" max="100" step="5" value="${st.volume}" data-set="volume"><b>${st.volume}%</b></label>
       <label class="set-row"><span>Music</span>
         <input type="range" min="0" max="100" step="5" value="${st.music}" data-set="music"><b>${st.music}%</b></label>
+      <label class="set-row"><span>Effects</span>
+        <input type="range" min="0" max="100" step="5" value="${st.effects}" data-set="effects"><b>${st.effects}%</b></label>
+      <label class="set-row"><span>Voices</span>
+        <input type="range" min="0" max="100" step="5" value="${st.voices}" data-set="voices"><b>${st.voices}%</b></label>
+      <label class="set-row"><span>Ambience</span>
+        <input type="range" min="0" max="100" step="5" value="${st.ambience}" data-set="ambience"><b>${st.ambience}%</b></label>
       <div class="set-row set-difficulty">${difficultySliderHTML(st.difficulty)}</div>
       <div class="set-row"><span>Game speed</span>
         <div class="seg">${Object.keys(SPEEDS).map((k) => `<button data-speed="${k}" class="${st.speed === k ? 'on' : ''}">${k === 'turbo' ? 'Very fast' : k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
@@ -127,13 +134,14 @@ export function openSettings() {
     const t = e.target;
     if (t.dataset.set === 'volume') { update({ volume: Number(t.value) }); t.nextElementSibling.textContent = `${t.value}%`; }
     if (t.dataset.set === 'music') { update({ music: Number(t.value) }); t.nextElementSibling.textContent = `${t.value}%`; }
+    if (['effects', 'voices', 'ambience'].includes(t.dataset.set)) { update({ [t.dataset.set]: Number(t.value) }); t.nextElementSibling.textContent = `${t.value}%`; }
   });
   el.addEventListener('change', (e) => {
     const t = e.target;
     if (t.type === 'checkbox') update({ [t.dataset.set]: t.checked });
     if (t.dataset.set === 'classicCards') document.dispatchEvent(new Event('cardstyle')); // redraw every card
     if (t.dataset.set === 'basicBoard') document.dispatchEvent(new Event('boardstyle')); // redraw the board
-    if (t.dataset.set === 'volume') sound.play('click'); // a sample at the new volume
+    if (t.dataset.set === 'volume' || t.dataset.set === 'effects') sound.play('click'); // a sample at the new volume
   });
   el.addEventListener('click', (e) => {
     const ai = e.target.closest('[data-aispeed]');
