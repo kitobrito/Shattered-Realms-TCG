@@ -42,6 +42,12 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 'expand': 0}  # pale lavender stone
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 HINTS = {
+    # Harvest Moon: the gourd stack, not the jack-o'-lantern beside it.
+    'harvest-moon-land/gourds': {'bg': [[126, 384, 216, 482]]},
+    # Cordyceps Bloom: the glowing orange-gold cordyceps stalks (colour cut: the model sees only a tip or two).
+    'cordyceps-bloom-land/stalksBL': {'method': 'hsv', 'hsv': [[8, 34, 110, 255, 120, 255]], 'close': 2, 'grow': 1, 'expand': 0},
+    'cordyceps-bloom-land/stalksBR': {'method': 'hsv', 'hsv': [[8, 34, 110, 255, 120, 255]], 'close': 2, 'grow': 1, 'expand': 0},
+    'cordyceps-bloom-portrait/stalksB': {'method': 'hsv', 'hsv': [[8, 34, 110, 255, 120, 255]], 'close': 2, 'grow': 1, 'expand': 0},
     # Ice Age: the spears lying by the fire pits (thin: outlined, snapped to the paint).
     'ice-age-land/spear': {'method': 'poly', 'polys': [[[222, 451], [222, 466], [210, 481], [200, 486], [190, 494], [146, 544], [133, 557], [126, 553], [127, 547], [137, 538], [183, 488], [193, 477], [196, 468], [208, 458]]]},
     'ice-age-portrait/spear': {'method': 'poly', 'polys': [[[125, 272], [122, 284], [112, 295], [80, 328], [76, 337], [71, 335], [72, 327], [103, 294], [111, 283], [118, 276]]]},

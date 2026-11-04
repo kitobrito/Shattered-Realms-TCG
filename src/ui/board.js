@@ -7,9 +7,10 @@ import { actingPlayer } from '../engine/engine.js';
 import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
-import { BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
+import { ALT_BOARDS, BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { hasBoardFx } from './circle-fx.js';
 import { getSettings } from './settings.js';
+import { setComplete } from './unlocks.js';
 import { isMuted, play as playSound } from './sound.js';
 import { artOf, minionArtOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
@@ -583,7 +584,15 @@ function gameOverHTML(s, me, stats, ctx = {}) {
 // Painted boards are a 16:9 stage; on tall, narrow screens (phones held upright)
 // it would be a thin strip, so those keep the drawn table instead.
 // The board a player's matches are played on: their first realm's, or the Basic board (Settings).
-export const boardFaction = (faction) => (getSettings().basicBoard ? 'Basic' : faction);
+// A realm with an unlocked alternate board (ALT_BOARDS) plays on the one picked for it in the
+// collection's board picker (settings.boards: { faction: board id }).
+export const boardUnlocked = (b) => setComplete(b.set);
+export function chosenBoard(faction) {
+  const pick = getSettings().boards?.[faction];
+  const alt = (ALT_BOARDS[faction] ?? []).find((b) => b.id === pick);
+  return alt && boardUnlocked(alt) ? alt.id : faction;
+}
+export const boardFaction = (faction) => (getSettings().basicBoard ? 'Basic' : chosenBoard(faction));
 // Whose realm's battlefield the match is fought on. Two people (online or Hot Seat) share one board,
 // picked at random from both players' realms when the game is made (engine boardRealm). Against the AI
 // you fight on your own first realm's board.

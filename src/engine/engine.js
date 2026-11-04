@@ -182,7 +182,9 @@ function mulligan(state, { player: p, replace }) {
 function canAttack(c) {
   if (c.kind === 'minion' && getCard(c.cardId).cantAttack) return false; // The Living Hive
   if (effectiveAttack(c) <= 0 || hasKeyword(c, 'Frozen') || c.cantAttackThisTurn || c.encased > 0) return false;
-  if (c.attacksThisTurn >= (hasKeyword(c, 'Twin Strike') ? 2 : 1) + (c.bonusAttacks ?? 0)) return false;
+  // attacksPerTurn: a minion that attacks more than once each turn by itself (the Three-Headed Necrohydra).
+  const perTurn = (c.kind === 'minion' && !c.textLost && getCard(c.cardId).attacksPerTurn) || (hasKeyword(c, 'Twin Strike') ? 2 : 1);
+  if (c.attacksThisTurn >= perTurn + (c.bonusAttacks ?? 0)) return false;
   // Frenzy of the Pack: a Shark that just arrived may still attack Marked Prey.
   if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush') && !c.preyRush) return false;
   return true;
@@ -847,7 +849,7 @@ const STEPS = {
       const event = {
         type: 'minionDied', source: m.uid, player: m.controller, cardId: m.cardId,
         killer: m.lastDamagedBy, killerPlayer: m.lastDamagedByController, killerMinion: killerMinion.get(m.uid), byBurn: !!m.diedToBurn,
-        dead: { kind: 'minion', controller: m.controller, prey: !!m.prey, tribes: [...m.tribes], cardId: m.cardId, storedCost: m.storedCost, upgrades: m.upgrades ?? 0, irradiated: radiationOf(m) > 0, implanted: m.implanted ?? null },
+        dead: { kind: 'minion', controller: m.controller, prey: !!m.prey, tribes: [...m.tribes], cardId: m.cardId, storedCost: m.storedCost, upgrades: m.upgrades ?? 0, irradiated: radiationOf(m) > 0, implanted: m.implanted ?? null, infected: m.infected ?? null },
       };
       // Poisonous: the enemy minion that killed it dies too.
       const killer = findCharacter(state, m.lastDamagedBy);

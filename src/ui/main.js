@@ -8,7 +8,7 @@ import { costOf, effectiveAttack, findCharacter, hasKeyword, manaFor, startFxTra
 import * as kfx from './keyword-fx.js';
 import { ART, HERO_ART } from '../cards/art-manifest.js';
 import { artSrc, ensureArt } from './art-packs.js';
-import { boardArtFor } from '../cards/board-art.js';
+import { ALT_BOARDS, BOARD_ART, boardArtFor } from '../cards/board-art.js';
 import { AI_SPEEDS, applySettings, closeSettings, difficultySliderHTML, getSettings, openSettings, setSetting } from './settings.js';
 import { clearTips, HOWTO_PAGES, howToOpened, howToPlayHTML, markHowToOpened, tip } from './tutorial.js';
 import { guideActed, guideAllows, guideEnemyAction, guideOn, markTutorialDone, startGuide, stopGuide, TUTORIAL, tutorialDone, updateGuide } from './guide.js';
@@ -17,7 +17,7 @@ import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, hasCard, restoreCustomCards } from '../engine/registry.js';
 import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
-import { boardFaction, boardHTML, boardRealmOf, descentCalloutHTML, handIsOpen, layoutHands, setHandDocks, setHandOpen, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
+import { boardFaction, boardUnlocked, chosenBoard, boardHTML, boardRealmOf, descentCalloutHTML, handIsOpen, layoutHands, setHandDocks, setHandOpen, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { boardReact, canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startBoardFx } from './circle-fx.js';
 import * as drag from './drag.js';
@@ -34,7 +34,7 @@ import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
-import { awardUnlocks, isLocked, lockedCount, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
+import { awardUnlocks, isLocked, lockedCount, setProgress, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
@@ -2724,7 +2724,27 @@ function galleryCards(f) {
 
 // The collection is a book: one faction per page, tabs down the side.
 let bookPage = null;
+let boardsOpen = false; // the collection's board picker for the open realm
 let bookTurned = false; // play the page-turn only when the page changes
+
+// The board picker: a realm's own board plus its unlockable alternates (ALT_BOARDS). An alternate
+// unlocks once every card of its mini-set is unlocked; the pick is saved per realm (settings.boards).
+function boardPickerHTML(f) {
+  const current = chosenBoard(f);
+  const opts = [{ id: f, name: `${f} (original)`, blurb: 'The realm\'s own battlefield.', open: true }, ...ALT_BOARDS[f].map((b) => {
+    const pr = setProgress(b.set);
+    return { id: b.id, name: b.id, blurb: b.blurb, open: boardUnlocked(b), need: `Unlock all ${pr.total} ${b.set} cards (${pr.have}/${pr.total})` };
+  })];
+  return `<div class="overlay board-pick-overlay"><div class="guide-backdrop" data-act="closeBoards"></div>
+    <div class="board-pick"><header><h3>${esc(f)} Boards</h3><button class="ghost" data-act="closeBoards" aria-label="Close">✕</button></header>
+      <div class="board-pick-list">${opts.map((o) => `
+        <button class="board-opt ${o.id === current ? 'on' : ''} ${o.open ? '' : 'locked'}" ${o.open ? `data-pick-board="${esc(o.id)}"` : 'disabled'}>
+          <span class="board-thumb" style="background-image:url('${new URL(BOARD_ART[o.id], document.baseURI).href}')">${o.open ? '' : '<i>🔒</i>'}</span>
+          <b>${esc(o.name)}</b><small>${esc(o.open ? o.blurb : o.need)}</small>${o.id === current ? '<em>In use</em>' : ''}
+        </button>`).join('')}</div>
+      <p class="sub board-pick-note">Your matches with ${esc(f)} as your first realm are played on the board you pick here.</p>
+    </div></div>`;
+}
 
 // The collection's set filter: every card, the original set, or the faction's expansion.
 let bookSet = 'all';
@@ -2798,7 +2818,7 @@ function renderGallery() {
   const f = bookPage;
   const scrollY = app.scrollTop;
   const [have, total] = collectionProgress(factions);
-  const banner = f === 'Fusion' ? 'art/ui/menu-bg.jpg' : boardArtFor(f);
+  const banner = f === 'Fusion' ? 'art/ui/menu-bg.jpg' : boardArtFor(chosenBoard(f));
   const stats = f === 'Fusion'
     ? [`${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells`, 'one per faction pair', '3 uses each']
     : hasExtras(f) ? [`${FACTION_POOLS[f].length} cards`, `${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new`, `Deck uses ${FACTION_DECKS[f].length}`]
@@ -2825,13 +2845,15 @@ function renderGallery() {
           <div class="c2-bar">
             ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All Cards'], ['core', 'Original Set'], ['exp', EXPANSION_NAMES[f]], ...miniSets(f).map((n) => [`set:${n}`, n])].map(([k, label]) =>
               `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${esc(label)}</button>`).join('')}</nav>` : '<span></span>'}
+            ${ALT_BOARDS[f] ? `<button class="ghost c2-boards" data-act="boards" title="Choose the board this realm plays on">🖼️ <span>Boards</span></button>` : ''}
             <label class="c2-sort"><span>Sort:</span><select data-sort aria-label="Sort cards">${SORTS.map(([k, label]) => `<option value="${k}" ${bookSort === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
           </div>
           ${pagerHTML(`gal:${f}:${bookSet}:${bookSort}`, sortCards(setCards(f)).map(galleryCardHTML).join(''), { chain: true, cls: 'pg-rich' })}
         </section>`}
       </div>
     </div>
-    ${zoomId ? zoomHTML(getCard(zoomId)) : ''}`;
+    ${zoomId ? zoomHTML(getCard(zoomId)) : ''}
+    ${boardsOpen && ALT_BOARDS[f] && !searching ? boardPickerHTML(f) : ''}`;
   bookTurned = false;
   app.scrollTop = scrollY;
   // Upright phones: the realm strip scrolls sideways; keep the open realm in view.
@@ -3648,6 +3670,13 @@ app.addEventListener('click', (e) => {
   }
   const ch = e.target.closest('[data-howto]');
   if (ch && screen === 'howto') { howtoPage = Number(ch.dataset.howto); sound.play('draw'); return render(); }
+  const boardBtn = e.target.closest('[data-pick-board]');
+  if (boardBtn && screen === 'gallery') {
+    const f = bookPage, id = boardBtn.dataset.pickBoard;
+    setSetting({ boards: { ...(getSettings().boards ?? {}), [f]: id === f ? null : id } });
+    sound.play('click');
+    return render();
+  }
   const setBtn = e.target.closest('[data-bookset]');
   if (setBtn && screen === 'gallery') { bookSet = setBtn.dataset.bookset; sound.play('draw'); afterRender.push(() => mfx.dealIn(app.querySelector('.pager'))); return render(); }
   const btab = e.target.closest('[data-btab]');
@@ -3748,6 +3777,8 @@ function onButton(name) {
       return render();
     }
     case 'closeRecap': recap = null; return render();
+    case 'boards': sound.play('click'); boardsOpen = true; return render();
+    case 'closeBoards': boardsOpen = false; return render();
     case 'closeZoom': zoomId = null; zoomArt = false; zoomBeast = false; return render();
     case 'zoomFlip': zoomBeast = !zoomBeast; zoomAnim = { flip: true }; return render();
     case 'zoomArt': zoomArt = true; return render();
@@ -3889,7 +3920,7 @@ function onButton(name) {
 
 document.addEventListener('keydown', (e) => {
   if ((screen === 'gallery' || screen === 'builder' || screen === 'menu') && zoomId) {
-    if (e.key === 'Escape') onButton(zoomArt ? 'closeArt' : 'closeZoom');
+    if (e.key === 'Escape') onButton(boardsOpen ? 'closeBoards' : zoomArt ? 'closeArt' : 'closeZoom');
     if (e.key === 'ArrowLeft') onButton('zoomPrev');
     if (e.key === 'ArrowRight') onButton('zoomNext');
   }

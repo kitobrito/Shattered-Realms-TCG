@@ -2026,6 +2026,162 @@ export const BOARD_FX = {
   },
 
   // ---- Basic: a quiet hilltop at golden hour that belongs to no realm ------------------------
+  // ---- Harvest Moon (Plants alternate board): a haunted pumpkin patch at night -----------------
+  // Every corner prop is cut out (tools/board-objects.py) and moves on its own loop: lanterns swing
+  // from their hooks, the scarecrow sways, the crow pecks, the gourd stack wobbles. Jack-o'-lantern
+  // and candle light flickers over them; leaves and fog drift. The soil in the middle never moves.
+  'harvest-moon-land': {
+    wind: { dir: 1, every: [6, 10], speed: [120, 180], width: [160, 260], lean: 0.25 },
+    layers: [
+      { id: 'moonGlow', type: 'glow', points: [[510, 0, 170]], color: [255, 170, 60], anim: 'pulse', period: 7, alpha: [0.08, 0.2], kickDur: 3 },
+      { id: 'lanternL', type: 'echo', box: [40, 18, 92, 100], feather: 4, motion: { kind: 'rock', amp: 2.2, period: 3.7, pivot: [65, 20], kickAmp: 6 } },
+      { id: 'lanternR', type: 'echo', box: [974, 24, 1020, 100], feather: 4, motion: { kind: 'rock', amp: 2, period: 4.3, pivot: [996, 26], kickAmp: 6 } },
+      { id: 'lanternB', type: 'echo', box: [902, 398, 990, 530], feather: 4, motion: { kind: 'rock', amp: 1.6, period: 5.1, pivot: [946, 400], kickAmp: 5 } },
+      { id: 'scarecrow', type: 'echo', box: [884, 8, 1002, 170], feather: 5, motion: { kind: 'rock', amp: 1.1, period: 6.2, pivot: [935, 168], kickAmp: 3.5 } },
+      { id: 'crow', type: 'echo', box: [852, 18, 904, 66], feather: 4, autoKick: [4, 8], motion: { kind: 'bob', amp: 0, kickAmp: 2.2, period: 0.25 } },
+      { id: 'gourds', type: 'echo', box: [20, 396, 176, 552], feather: 5, autoKick: [9, 15], motion: { kind: 'rock', amp: 0.4, period: 5.5, pivot: [92, 490], kickAmp: 2.5 } },
+      { id: 'jackTL', type: 'echo', box: [126, 50, 244, 154], feather: 5, motion: { kind: 'breathe', amp: 0.8, period: 3.1, pivot: [185, 150], kickAmp: 3 } },
+      { id: 'jackTR', type: 'echo', box: [798, 94, 890, 178], feather: 5, motion: { kind: 'breathe', amp: 0.7, period: 3.6, pivot: [845, 175], kickAmp: 3 } },
+      { id: 'jackBL', type: 'echo', box: [120, 386, 214, 478], feather: 5, motion: { kind: 'breathe', amp: 0.7, period: 2.8, pivot: [168, 476], kickAmp: 3 } },
+      { id: 'jackBR', type: 'echo', box: [826, 384, 920, 480], feather: 5, motion: { kind: 'breathe', amp: 0.8, period: 3.3, pivot: [873, 478], kickAmp: 3 } },
+      { id: 'jackGlow', type: 'glow', points: [[185, 112, 30], [845, 140, 26], [785, 130, 14], [167, 440, 26], [874, 440, 26], [512, 92, 46], [512, 486, 50]], color: [255, 150, 40], anim: 'flicker', speed: 0.5, alpha: [0.08, 0.3], kickDur: 2 },
+      { id: 'candles', type: 'glow', points: [[251, 104, 10], [154, 138, 10], [229, 418, 10], [815, 408, 10], [66, 62, 12], [996, 62, 12], [946, 470, 14]], color: [255, 200, 110], anim: 'flicker', alpha: [0.3, 0.85], kickDur: 2 },
+      { id: 'cflames', type: 'flames', points: [[251, 106, 3, 7], [154, 140, 3, 7], [229, 420, 3, 7], [815, 410, 3, 7]], tongues: 2, alpha: 0.85 },
+      { id: 'leaves', type: 'particles', kind: 'petal', area: [0, -20, 1024, 572], rate: 0.8, max: 12, color: [220, 90, 30], size: [1.6, 2.6], life: [7, 11], speed: 0.6 },
+      { id: 'bats', type: 'flyers', area: [300, 0, 760, 60], every: [6, 12], speed: [50, 90], size: [5, 8], color: [20, 10, 30] },
+      { id: 'embers', type: 'particles', kind: 'ember', from: [[185, 80, 20], [512, 60, 30], [873, 410, 20]], rate: 0.6, max: 6, color: [255, 170, 60], size: [0.8, 1.4], life: [2, 4] },
+      { type: 'fog', area: [-80, 420, 1104, 600], count: 10, size: [90, 160], speed: 4, color: [170, 180, 230], alpha: 0.1 },
+    ],
+    pokes: [
+      { area: [36, 14, 96, 104], sound: 'clink', kick: ['lanternL'], flare: [255, 200, 110], glyph: '🏮' },
+      { area: [848, 6, 1022, 172], sound: 'flutter', kick: ['scarecrow', 'crow', 'lanternR'], flare: [255, 210, 150], glyph: '🐦' },
+      { area: [16, 380, 250, 556], sound: 'knock', kick: ['gourds', 'jackBL'], flare: [255, 150, 40], glyph: '🎃' },
+      { area: [800, 380, 1000, 540], sound: 'clink', kick: ['lanternB', 'jackBR'], flare: [255, 200, 110], glyph: '🏮' },
+      { area: [120, 46, 250, 158], sound: 'whoosh', kick: ['jackTL', 'jackGlow'], flare: [255, 150, 40], glyph: '🎃' },
+      { area: [380, 0, 640, 40], sound: 'screech', kick: ['moonGlow', 'bats'], flare: [255, 170, 60], glyph: '🦇' },
+    ],
+  },
+  'harvest-moon-portrait': {
+    wind: { dir: 1, every: [6, 10], speed: [100, 150], width: [140, 220], lean: 0.12 },
+    layers: [
+      { id: 'moonGlow', type: 'glow', points: [[225, 10, 120]], color: [255, 170, 60], anim: 'pulse', period: 7, alpha: [0.08, 0.2], kickDur: 3 },
+      { id: 'lanternL', type: 'echo', box: [22, 8, 64, 82], feather: 4, motion: { kind: 'rock', amp: 2.2, period: 3.7, pivot: [42, 10], kickAmp: 6 } },
+      { id: 'lanternR', type: 'echo', box: [424, 18, 458, 78], feather: 4, motion: { kind: 'rock', amp: 2, period: 4.3, pivot: [441, 20], kickAmp: 6 } },
+      { id: 'lanternB', type: 'echo', box: [352, 872, 424, 982], feather: 4, motion: { kind: 'rock', amp: 1.6, period: 5.1, pivot: [388, 874], kickAmp: 5 } },
+      { id: 'scarecrow', type: 'echo', box: [366, 36, 436, 160], feather: 5, motion: { kind: 'rock', amp: 1.1, period: 6.2, pivot: [398, 158], kickAmp: 3.5 } },
+      { id: 'crow', type: 'echo', box: [342, 46, 380, 84], feather: 4, autoKick: [4, 8], motion: { kind: 'bob', amp: 0, kickAmp: 2, period: 0.25 } },
+      { id: 'gourds', type: 'echo', box: [18, 852, 168, 1004], feather: 5, autoKick: [9, 15], motion: { kind: 'rock', amp: 0.3, period: 5.5, pivot: [90, 1002], kickAmp: 2 } },
+      { id: 'jackTL', type: 'echo', box: [24, 124, 116, 202], feather: 5, motion: { kind: 'breathe', amp: 0.8, period: 3.1, pivot: [70, 200], kickAmp: 3 } },
+      { id: 'jackTR', type: 'echo', box: [376, 160, 448, 232], feather: 5, motion: { kind: 'breathe', amp: 0.7, period: 3.6, pivot: [412, 230], kickAmp: 3 } },
+      { id: 'jackBL', type: 'echo', box: [6, 656, 92, 738], feather: 5, motion: { kind: 'breathe', amp: 0.7, period: 2.8, pivot: [49, 736], kickAmp: 3 } },
+      { id: 'jackBR', type: 'echo', box: [378, 656, 456, 734], feather: 5, motion: { kind: 'breathe', amp: 0.8, period: 3.3, pivot: [417, 732], kickAmp: 3 } },
+      { id: 'jackGlow', type: 'glow', points: [[70, 170, 26], [412, 200, 22], [49, 705, 24], [417, 700, 22], [228, 170, 40], [228, 800, 44]], color: [255, 150, 40], anim: 'flicker', speed: 0.5, alpha: [0.08, 0.3], kickDur: 2 },
+      { id: 'candles', type: 'glow', points: [[126, 176, 9], [98, 690, 9], [370, 684, 9], [42, 48, 10], [441, 52, 10], [388, 930, 12]], color: [255, 200, 110], anim: 'flicker', alpha: [0.3, 0.85], kickDur: 2 },
+      { id: 'leaves', type: 'particles', kind: 'petal', area: [0, -20, 459, 1024], rate: 0.7, max: 10, color: [220, 90, 30], size: [1.4, 2.4], life: [7, 11], speed: 0.6 },
+      { id: 'bats', type: 'flyers', area: [100, 0, 360, 60], every: [6, 12], speed: [40, 70], size: [4, 7], color: [20, 10, 30] },
+      { type: 'fog', area: [-60, 800, 520, 1050], count: 8, size: [70, 130], speed: 4, color: [170, 180, 230], alpha: 0.1 },
+    ],
+    pokes: [
+      { area: [16, 4, 70, 88], sound: 'clink', kick: ['lanternL'], flare: [255, 200, 110], glyph: '🏮' },
+      { area: [336, 30, 459, 166], sound: 'flutter', kick: ['scarecrow', 'crow', 'lanternR'], flare: [255, 210, 150], glyph: '🐦' },
+      { area: [12, 846, 176, 1010], sound: 'knock', kick: ['gourds'], flare: [255, 150, 40], glyph: '🎃' },
+      { area: [340, 864, 440, 990], sound: 'clink', kick: ['lanternB'], flare: [255, 200, 110], glyph: '🏮' },
+    ],
+  },
+
+  // ---- Cordyceps Outbreak (Zombies alternate board): an overgrown street after the fall -------
+  'cordyceps-outbreak-land': {
+    wind: { dir: -1, every: [7, 12], speed: [110, 170], width: [160, 260], lean: 0.2 },
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[300, 0, 18, 560, 90], [560, 0, 12, 560, 70], [880, 0, -14, 520, 90]], color: [240, 240, 200], alpha: [0.04, 0.13], period: 9 },
+      { id: 'cart', type: 'echo', box: [116, 40, 282, 184], feather: 5, autoKick: [10, 18], motion: { kind: 'rock', amp: 0.4, period: 6.5, pivot: [190, 180], kickAmp: 2.4 } },
+      { id: 'lamp', type: 'echo', box: [736, 38, 900, 178], feather: 5, autoKick: [7, 13], motion: { kind: 'rock', amp: 0, period: 0.3, pivot: [790, 130], kickAmp: 2 } },
+      { id: 'lampGlow', type: 'glow', points: [[780, 128, 30]], color: [255, 240, 170], anim: 'flicker', speed: 0.9, alpha: [0, 0.55], kickDur: 2 },
+      { id: 'barrel', type: 'echo', box: [66, 392, 178, 484], feather: 5, motion: { kind: 'rock', amp: 0.6, period: 4.4, pivot: [120, 482], kickAmp: 3 } },
+      { id: 'barrelGlow', type: 'glow', points: [[118, 436, 34]], color: [210, 255, 60], anim: 'pulse', period: 2.6, alpha: [0.05, 0.25], kickDur: 2 },
+      { id: 'mask', type: 'echo', box: [852, 424, 958, 538], feather: 5, autoKick: [8, 14], motion: { kind: 'bob', amp: 0.4, kickAmp: 2.2, period: 4.8 } },
+      { id: 'manholeTop', type: 'glow', points: [[510, 85, 60]], color: [255, 230, 150], anim: 'pulse', period: 5, alpha: [0.03, 0.12], kickDur: 2 },
+      { id: 'cracks', type: 'glow', points: [[580, 410, 30], [540, 520, 30], [420, 520, 30]], color: [230, 255, 120], anim: 'pulse', period: 3.2, alpha: [0.04, 0.2], kickDur: 2 },
+      { id: 'spores', type: 'particles', kind: 'mote', area: [120, 120, 900, 460], rate: 3, max: 30, color: [255, 220, 130], size: [0.6, 1.3], life: [3, 6], alpha: 0.8, speed: 0.6 },
+      { id: 'leak', type: 'particles', kind: 'mote', from: [[150, 410, 14]], rate: 2, max: 14, color: [220, 255, 90], size: [0.8, 1.6], life: [2, 4], speed: 0.8 },
+      { type: 'fog', area: [-80, 380, 1104, 600], count: 9, size: [90, 160], speed: 3, color: [190, 200, 170], alpha: 0.08 },
+    ],
+    pokes: [
+      { area: [110, 34, 290, 190], sound: 'clink', kick: ['cart'], flare: [230, 230, 200], glyph: '🛒' },
+      { area: [728, 34, 906, 184], sound: 'zap', kick: ['lamp', 'lampGlow'], flare: [255, 240, 170], glyph: '💡' },
+      { area: [60, 386, 186, 492], sound: 'drip', kick: ['barrel', 'barrelGlow'], flare: [210, 255, 60], glyph: '☣️', burst: { layer: 'leak', n: 10, at: [150, 410], spread: 16 } },
+      { area: [846, 418, 964, 544], sound: 'whoosh', kick: ['mask'], flare: [230, 230, 200], glyph: '😷' },
+    ],
+  },
+  'cordyceps-outbreak-portrait': {
+    wind: { dir: -1, every: [7, 12], speed: [90, 140], width: [140, 220], lean: 0.1 },
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[200, 0, 14, 900, 90], [330, 0, -10, 900, 70]], color: [240, 240, 200], alpha: [0.04, 0.13], period: 9 },
+      { id: 'cart', type: 'echo', box: [48, 10, 136, 176], feather: 5, autoKick: [10, 18], motion: { kind: 'rock', amp: 0.4, period: 6.5, pivot: [92, 172], kickAmp: 2.4 } },
+      { id: 'lamp', type: 'echo', box: [344, 60, 420, 152], feather: 5, autoKick: [7, 13], motion: { kind: 'rock', amp: 0, period: 0.3, pivot: [378, 108], kickAmp: 2 } },
+      { id: 'lampGlow', type: 'glow', points: [[372, 106, 24]], color: [255, 240, 170], anim: 'flicker', speed: 0.9, alpha: [0, 0.55], kickDur: 2 },
+      { id: 'barrel', type: 'echo', box: [40, 852, 144, 968], feather: 5, motion: { kind: 'rock', amp: 0.6, period: 4.4, pivot: [92, 966], kickAmp: 3 } },
+      { id: 'barrelGlow', type: 'glow', points: [[100, 890, 32]], color: [210, 255, 60], anim: 'pulse', period: 2.6, alpha: [0.05, 0.25], kickDur: 2 },
+      { id: 'mask', type: 'echo', box: [346, 890, 414, 968], feather: 5, autoKick: [8, 14], motion: { kind: 'bob', amp: 0.4, kickAmp: 2, period: 4.8 } },
+      { id: 'cracks', type: 'glow', points: [[230, 850, 50]], color: [230, 255, 120], anim: 'pulse', period: 3.2, alpha: [0.04, 0.2], kickDur: 2 },
+      { id: 'spores', type: 'particles', kind: 'mote', area: [60, 180, 400, 840], rate: 3, max: 28, color: [255, 220, 130], size: [0.6, 1.2], life: [3, 6], alpha: 0.8, speed: 0.6 },
+      { id: 'leak', type: 'particles', kind: 'mote', from: [[110, 880, 14]], rate: 2, max: 12, color: [220, 255, 90], size: [0.8, 1.5], life: [2, 4], speed: 0.8 },
+    ],
+    pokes: [
+      { area: [40, 4, 144, 184], sound: 'clink', kick: ['cart'], flare: [230, 230, 200], glyph: '🛒' },
+      { area: [336, 54, 426, 160], sound: 'zap', kick: ['lamp', 'lampGlow'], flare: [255, 240, 170], glyph: '💡' },
+      { area: [34, 846, 150, 974], sound: 'drip', kick: ['barrel', 'barrelGlow'], flare: [210, 255, 60], glyph: '☣️', burst: { layer: 'leak', n: 10, at: [110, 880], spread: 14 } },
+      { area: [340, 884, 420, 974], sound: 'whoosh', kick: ['mask'], flare: [230, 230, 200], glyph: '😷' },
+    ],
+  },
+
+  // ---- Cordyceps Bloom (Fungus alternate board): a greenhouse taken over by mycelium ----------
+  'cordyceps-bloom-land': {
+    wind: { dir: 1, every: [6, 10], speed: [110, 170], width: [160, 260], lean: 0.25 },
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[240, 0, 16, 520, 100], [720, 0, -12, 520, 90]], color: [255, 240, 170], alpha: [0.05, 0.15], period: 8 },
+      { id: 'mycelium', type: 'glow', points: [[512, 290, 160], [330, 260, 90], [700, 270, 90], [512, 420, 70]], color: [230, 255, 140], anim: 'pulse', period: 4.2, alpha: [0.03, 0.12], kickDur: 3 },
+      { id: 'stalksTL', type: 'echo', box: [18, 8, 152, 154], feather: 5, motion: { kind: 'rock', amp: 1.2, period: 4.6, pivot: [80, 150], kickAmp: 3.5 } },
+      { id: 'stalksBL', type: 'echo', box: [196, 462, 352, 572], feather: 5, motion: { kind: 'rock', amp: 1, period: 5.3, pivot: [272, 570], kickAmp: 3 } },
+      { id: 'stalksBR', type: 'echo', box: [612, 462, 762, 572], feather: 5, motion: { kind: 'rock', amp: 1, period: 4.1, pivot: [688, 570], kickAmp: 3 } },
+      { id: 'pot', type: 'echo', box: [886, 10, 998, 162], feather: 5, autoKick: [9, 15], motion: { kind: 'rock', amp: 0.3, period: 6, pivot: [940, 160], kickAmp: 2.2 } },
+      { id: 'puffball', type: 'echo', box: [30, 440, 132, 534], feather: 5, motion: { kind: 'breathe', amp: 1.6, period: 3.4, pivot: [80, 530], kickAmp: 5 } },
+      { id: 'flask', type: 'echo', box: [892, 408, 1002, 542], feather: 5, autoKick: [8, 14], motion: { kind: 'rock', amp: 0.3, period: 5, pivot: [946, 540], kickAmp: 2 } },
+      { id: 'tips', type: 'glow', points: [[44, 40, 12], [74, 30, 12], [104, 44, 12], [232, 486, 14], [262, 476, 12], [326, 476, 12], [640, 480, 12], [718, 482, 12]], color: [255, 200, 70], anim: 'flicker', speed: 0.35, alpha: [0.15, 0.55], kickDur: 2 },
+      { id: 'teal', type: 'glow', points: [[680, 60, 26], [842, 186, 26]], color: [90, 240, 220], anim: 'pulse', period: 3.8, alpha: [0.06, 0.25], kickDur: 2 },
+      { id: 'puff', type: 'particles', kind: 'smoke', from: [[110, 440, 20]], rate: 1.2, max: 10, color: [240, 220, 120], size: [4, 8], life: [2, 4] },
+      { id: 'spores', type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 4, max: 40, color: [255, 220, 120], size: [0.6, 1.3], life: [3, 6], alpha: 0.8, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [14, 4, 158, 160], sound: 'rustle', kick: ['stalksTL', 'tips'], flare: [255, 200, 70], glyph: '🍄' },
+      { area: [880, 4, 1004, 168], sound: 'knock', kick: ['pot'], flare: [255, 210, 140], glyph: '🪴' },
+      { area: [24, 400, 210, 540], sound: 'whoosh', kick: ['puffball'], flare: [240, 220, 120], glyph: '💨', burst: { layer: 'puff', n: 8, at: [110, 450], spread: 24 } },
+      { area: [886, 402, 1008, 548], sound: 'clink', kick: ['flask'], flare: [180, 255, 200], glyph: '⚗️' },
+      { area: [190, 456, 770, 572], sound: 'rustle', kick: ['stalksBL', 'stalksBR'], flare: [255, 200, 70] },
+    ],
+  },
+  'cordyceps-bloom-portrait': {
+    wind: { dir: 1, every: [6, 10], speed: [90, 140], width: [140, 220], lean: 0.12 },
+    layers: [
+      { id: 'rays', type: 'rays', beams: [[160, 0, 12, 900, 90], [340, 0, -8, 900, 70]], color: [255, 240, 170], alpha: [0.05, 0.15], period: 8 },
+      { id: 'mycelium', type: 'glow', points: [[230, 480, 140], [230, 650, 90]], color: [230, 255, 140], anim: 'pulse', period: 4.2, alpha: [0.03, 0.12], kickDur: 3 },
+      { id: 'stalksTL', type: 'echo', box: [6, 28, 112, 206], feather: 5, motion: { kind: 'rock', amp: 1.2, period: 4.6, pivot: [60, 204], kickAmp: 3.5 } },
+      { id: 'stalksB', type: 'echo', box: [96, 948, 184, 1024], feather: 5, motion: { kind: 'rock', amp: 1, period: 5.3, pivot: [140, 1022], kickAmp: 3 } },
+      { id: 'pot', type: 'echo', box: [338, 78, 424, 182], feather: 5, autoKick: [9, 15], motion: { kind: 'rock', amp: 0.3, period: 6, pivot: [380, 180], kickAmp: 2.2 } },
+      { id: 'puffball', type: 'echo', box: [20, 880, 110, 966], feather: 5, motion: { kind: 'breathe', amp: 1.6, period: 3.4, pivot: [64, 962], kickAmp: 5 } },
+      { id: 'flask', type: 'echo', box: [350, 840, 424, 982], feather: 5, autoKick: [8, 14], motion: { kind: 'rock', amp: 0.3, period: 5, pivot: [386, 980], kickAmp: 2 } },
+      { id: 'tips', type: 'glow', points: [[62, 46, 10], [96, 74, 10], [30, 80, 10], [130, 960, 10], [160, 980, 10]], color: [255, 200, 70], anim: 'flicker', speed: 0.35, alpha: [0.15, 0.55], kickDur: 2 },
+      { id: 'puff', type: 'particles', kind: 'smoke', from: [[90, 870, 18]], rate: 1.2, max: 10, color: [240, 220, 120], size: [4, 8], life: [2, 4] },
+      { id: 'spores', type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 4, max: 36, color: [255, 220, 120], size: [0.6, 1.2], life: [3, 6], alpha: 0.8, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [2, 22, 118, 212], sound: 'rustle', kick: ['stalksTL', 'tips'], flare: [255, 200, 70], glyph: '🍄' },
+      { area: [330, 72, 430, 188], sound: 'knock', kick: ['pot'], flare: [255, 210, 140], glyph: '🪴' },
+      { area: [14, 840, 160, 972], sound: 'whoosh', kick: ['puffball'], flare: [240, 220, 120], glyph: '💨', burst: { layer: 'puff', n: 8, at: [90, 880], spread: 20 } },
+      { area: [344, 834, 430, 988], sound: 'clink', kick: ['flask'], flare: [180, 255, 200], glyph: '⚗️' },
+    ],
+  },
+
   'basic-land': {
     wind: { dir: 1, every: [5, 9], speed: [150, 220], width: [180, 280], lean: 0.3 },
     layers: [

@@ -27,6 +27,7 @@ export function minionPasses(m, f) {
   if (f.hasUpgrade && !(m.upgrades > 0)) return false;   // Robots
   if (f.minUpgrades != null && (m.upgrades ?? 0) < f.minUpgrades) return false;
   if (f.hasWeapon && !m.weapon) return false;
+  if (f.infected != null && (m.infected != null) !== f.infected) return false; // Zombies/Fungus (Cordyceps): Infected minions
   if (f.holding != null && ((m.shell?.length ?? 0) > 0) !== f.holding) return false; // Harvest Moon: a Pumpkin with a Plant inside
   if (f.keyword && !hasKeyword(m, f.keyword)) return false;
   if (f.holyFlame != null && (m.holyFlame > 0) !== f.holyFlame) return false; // Divine (The Holy Pyre)
@@ -176,6 +177,11 @@ export function matchFilter(state, filter, ctx) {
     // Bees: the trap's owner has their Queen Underground (Shifting Tunnels).
     if (key === 'queenUnderground') {
       if (!!state.players[ctx.controller].queenUnderground !== want) return false;
+      continue;
+    }
+    // Fungus (Cordyceps Bloom): the minion that died was Infected by the listener's player (Hyphae Weaver).
+    if (key === 'deadInfectedByMe') {
+      if ((ev.dead?.infected === ctx.controller) !== want) return false;
       continue;
     }
     // Aliens (Hive Brood): the minion that died was Implanted (Hive Brute).
