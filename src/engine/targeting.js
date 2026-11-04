@@ -139,6 +139,13 @@ export function resolveSelector(state, sel, ctx) {
   }
   // { costliest: minion filter } — the matching minion with the highest Mana Cost (a random one on
   // a tie). Aliens (The Qu, Shapers of Worlds).
+  // { strongest: minion filter } — the matching minion with the highest Attack (random on a tie). Qu Archivist.
+  if (sel.strongest) {
+    const pool = minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.strongest, ctx) && m.health > 0 && !m.destroyed);
+    if (!pool.length) return [];
+    const top = Math.max(...pool.map((m) => effectiveAttack(m)));
+    return [pickRandom(state, pool.filter((m) => effectiveAttack(m) === top)).uid];
+  }
   if (sel.costliest) {
     const pool = minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.costliest, ctx));
     if (!pool.length) return [];

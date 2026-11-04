@@ -18,7 +18,9 @@ for (const f of PLAYABLE_FACTIONS) {
     if (ds[0].deck.some((id) => getCard(id).extra)) return 'Classic holds expansion cards';
     if (ds.length < 2) return null; // no expansion yet (Void)
     const ex = ds[1].deck;
-    const missing = expansionCards(f).filter((id) => !ex.includes(id) && !getCard(id).deckRule);
+    // Every expansion card when they all fit; past that, every card of the main expansion (mini-sets fill what's left).
+    const all = expansionCards(f).filter((id) => !getCard(id).deckRule);
+    const missing = all.filter((id) => !ex.includes(id) && (all.length <= ex.length || !getCard(id).set));
     if (missing.length) return `Expansion deck is missing ${missing.join(', ')}`;
   });
 }
