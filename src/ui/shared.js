@@ -124,7 +124,9 @@ export function cardTerms(card) {
     // Trigger abilities are written as labels ("Summon: …"); the bare word
     // "Summon a Seedling" is just a verb.
     const label = ['Arrival', 'Summon', 'Exit'].includes(term);
-    if (new RegExp(label ? `\\b${term}:` : `\\b${term}s?\\b`, 'i').test(card.text)) terms.add(term);
+    // "Rage Runner" names a token, not the Rage keyword.
+    const text = term === 'Rage' ? (card.text ?? '').replace(/Rage Runners?/g, '') : card.text;
+    if (new RegExp(label ? `\\b${term}:` : `\\b${term}s?\\b`, 'i').test(text)) terms.add(term);
   }
   return [...terms].filter((t) => KEYWORD_TEXT[t]);
 }
