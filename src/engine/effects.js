@@ -19,7 +19,7 @@ function exitOnLeave(state, m) {
 
 import {
   addToHand, allKeywords, dealDamage, drawCards, effectiveAttack, emit, findCharacter, hasKeyword, heal, heroOf,
-  hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion,
+  hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion, createMinion,
   applyBurn, burnCards, hasTribe, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
   corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
@@ -109,6 +109,7 @@ export function displaceMinion(state, m, opts) {
   const i = pl.board.indexOf(m);
   if (i < 0) return false;
   pl.board.splice(i, 1);
+  burstShell(state, m, i); // Harvest Moon: whatever it held bursts out where it stood
   // Temporary effects end when it leaves (this-turn Attack, Health and keywords).
   m.tempAttack = 0; m.tempKeywords = []; m.prey = false;
   if (m.tempHealth > 0) { m.maxHealth -= m.tempHealth; m.health = Math.min(m.health, m.maxHealth); }
@@ -335,6 +336,90 @@ export function processBeyond(state, p) {
   }
 }
 
+// ---- Plants (Harvest Moon): Shell ---------------------------------------------------
+// A Pumpkin with Shell holds friendly Plants inside it (m.shell). A held Plant is off the board:
+// it can't attack, be attacked or targeted, doesn't use a board slot, and its abilities stop.
+// It grows at the start of its controller's turn and bursts back out where the Pumpkin stood
+// when the Pumpkin dies or leaves the board. card.shell: { size = 1, growth = 1 }.
+export const shellOf = (m) => (m?.kind === 'minion' && !m.textLost ? getCard(m.cardId).shell ?? null : null);
+export const shellHeld = (m) => m?.shell ?? [];
+export const shellRoom = (m) => { const sh = shellOf(m); return sh ? (sh.size ?? 1) - shellHeld(m).length : 0; };
+
+function clearTemps(m) {
+  m.tempAttack = 0; m.tempKeywords = []; m.prey = false;
+  if (m.tempHealth > 0) { m.maxHealth -= m.tempHealth; m.health = Math.min(m.health, m.maxHealth); }
+  m.tempHealth = 0;
+}
+
+// Moves friendly minion m into the pumpkin's Shell. Returns true if it went in.
+export function tuckIntoShell(state, pumpkin, m) {
+  if (!pumpkin || !m || m.kind !== 'minion' || m === pumpkin || shellRoom(pumpkin) <= 0) return false;
+  if (m.controller !== pumpkin.controller || m.health <= 0 || m.destroyed) return false;
+  const board = state.players[m.controller].board;
+  const i = board.indexOf(m);
+  if (i < 0 || !board.includes(pumpkin)) return false;
+  board.splice(i, 1);
+  clearTemps(m);
+  // Its own held Plants (a Pumpkin inside a Pumpkin) burst out first, where it stood.
+  burstShell(state, m, i);
+  (pumpkin.shell ??= []).push(m);
+  log(state, `🎃 ${nameOf(state, m)} hides inside ${nameOf(state, pumpkin)}.`);
+  emit(state, { type: 'shellTucked', source: m.uid, target: pumpkin.uid, player: m.controller });
+  return true;
+}
+
+// Creates a new minion straight inside the pumpkin's Shell (Pumpkin Patch, Hallowroot).
+export function spawnIntoShell(state, pumpkin, cardId) {
+  if (!pumpkin || shellRoom(pumpkin) <= 0) return null;
+  const m = createMinion(state, cardId, pumpkin.controller);
+  (pumpkin.shell ??= []).push(m);
+  log(state, `🎃 A ${getCard(cardId).name} grows inside ${nameOf(state, pumpkin)}.`);
+  emit(state, { type: 'shellTucked', source: m.uid, target: pumpkin.uid, player: m.controller });
+  return m;
+}
+
+// Everything inside bursts out at board position `at` (where the Pumpkin was), left to right.
+// A Plant with no room on its side's board is crushed (it goes to the Graveyard, no Exit).
+export function burstShell(state, pumpkin, at = null, opts = {}) {
+  const held = shellHeld(pumpkin);
+  if (!held.length) return [];
+  pumpkin.shell = [];
+  const out = [];
+  let pos = at;
+  for (const m of held) {
+    const pl = state.players[m.controller];
+    if (pl.board.length >= state.rules.maxBoardSize) {
+      log(state, `${nameOf(state, m)} has no room to burst out and is crushed.`);
+      state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner, died: true });
+      continue;
+    }
+    const sameSide = pumpkin.controller === m.controller;
+    const p = sameSide && pos != null ? Math.min(pos, pl.board.length) : pl.board.length;
+    pl.board.splice(p, 0, m);
+    if (sameSide && pos != null) pos = p + 1;
+    if (opts.attack) m.attack += opts.attack;
+    if (opts.health) { m.maxHealth += opts.health; m.health += opts.health; }
+    out.push(m);
+    log(state, `🎃 ${nameOf(state, m)} bursts out of ${nameOf(state, pumpkin)}${opts.attack || opts.health ? ` (+${opts.attack ?? 0}/+${opts.health ?? 0})` : ''}!`);
+    traceFx(state, { type: 'shellBurst', source: pumpkin.uid, target: m.uid });
+    emit(state, { type: 'shellBurst', source: m.uid, from: pumpkin.uid, player: m.controller });
+  }
+  return out;
+}
+
+// Start of player p's turn: Plants inside p's Pumpkins grow and are ready to fight when they come out.
+export function growShells(state, p) {
+  for (const pumpkin of state.players[p].board) {
+    const sh = shellOf(pumpkin);
+    for (const m of shellHeld(pumpkin)) {
+      const g = sh?.growth ?? 1;
+      if (g) { m.attack += g; m.maxHealth += g; m.health += g; }
+      m.sick = false; m.attacksThisTurn = 0;
+      if (g) log(state, `🌱 ${nameOf(state, m)} grows inside ${nameOf(state, pumpkin)} (+${g}/+${g}).`);
+    }
+  }
+}
+
 const cardMatches = (card, f = {}) =>
   (!f.type || card.type === f.type) &&
   (!f.upgrade || !!card.upgrade) &&
@@ -366,6 +451,8 @@ export function checkCondition(state, cond, ctx) {
   if (cond.handAtLeast != null) return state.players[ctx.controller].hand.length >= cond.handAtLeast;
   // { enemyHandEmpty: true } — Ashen Curse.
   if (cond.enemyHandEmpty != null) return (state.players[opponentOf(ctx.controller)].hand.length === 0) === cond.enemyHandEmpty;
+  // Harvest Moon: { selfHolding } — this Pumpkin has something inside it.
+  if (cond.selfHolding != null) return (shellHeld(findCharacter(state, ctx.self)).length > 0) === cond.selfHolding;
   if (cond.controls) {
     const f = cond.controls;
     // min: how many such minions (Omega Assembly); minUpgrades / hasWeapon: Robots.
@@ -1229,8 +1316,10 @@ export const EFFECT_OPS = {
       self.health += m.health;
       self.maxHealth += m.health;
       for (const k of allKeywords(m)) addKeyword(self, k, false, state);
-      board.splice(board.indexOf(m), 1);
+      const at = board.indexOf(m);
+      board.splice(at, 1);
       state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner });
+      burstShell(state, m, at);
     }
     if (others.length) log(state, `${nameOf(state, self)} absorbs ${others.length} minion${others.length === 1 ? '' : 's'} (${self.attack}/${self.health}).`);
   },
@@ -1275,7 +1364,9 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (m) => {
       if (m.kind !== 'minion') return;
       const pl = state.players[m.controller];
-      pl.board.splice(pl.board.indexOf(m), 1);
+      const at = pl.board.indexOf(m);
+      pl.board.splice(at, 1);
+      burstShell(state, m, at);
       pl.limbo ??= [];
       pl.limbo.push({ minion: m, returnAt: ctx.controller, attack: e.attack ?? 0, health: e.health ?? 0 });
       log(state, `${nameOf(state, m)} jumps into sub-space.`);
@@ -1287,8 +1378,10 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (m) => {
       if (m.kind !== 'minion') return;
       const board = state.players[m.controller].board;
-      board.splice(board.indexOf(m), 1);
+      const at = board.indexOf(m);
+      board.splice(at, 1);
       log(state, `${nameOf(state, m)} is Abducted!`);
+      burstShell(state, m, at);
       addToHand(state, ctx.controller, m.cardId);
     });
   },
@@ -1815,14 +1908,91 @@ export const EFFECT_OPS = {
     });
   },
 
+  // ---- Plants (Harvest Moon): Shell ops ----
+  // { target?, count? } — put the chosen friendly Plant (then random others, up to `count`) inside self's Shell.
+  shellIn(state, e, ctx) {
+    const pumpkin = findCharacter(state, ctx.self);
+    if (!pumpkin || !shellOf(pumpkin)) return;
+    const want = e.count ?? 1;
+    let n = 0;
+    const chosen = e.target ? resolveSelector(state, e.target, ctx).map((id) => findCharacter(state, id)) : [];
+    for (const m of chosen) if (n < want && minionPasses(m, { tribe: 'Plant', notTribe: 'Pumpkin' }) && tuckIntoShell(state, pumpkin, m)) n += 1;
+    while (n < want && shellRoom(pumpkin) > 0) {
+      const pool = state.players[pumpkin.controller].board.filter((m) => m !== pumpkin && m.health > 0 && !m.destroyed && minionPasses(m, { tribe: 'Plant', notTribe: 'Pumpkin' }));
+      const m = pickRandom(state, pool);
+      if (!m || !tuckIntoShell(state, pumpkin, m)) break;
+      n += 1;
+    }
+  },
+
+  // { target, cardId } — a new minion grows straight inside the target Pumpkin's Shell.
+  shellSpawn(state, e, ctx) {
+    for (const id of resolveSelector(state, e.target, ctx)) spawnIntoShell(state, findCharacter(state, id), e.cardId);
+  },
+
+  // { target, attack?, health?, heal? } — the Plants inside the target Pumpkins get a buff / healing.
+  shellBuff(state, e, ctx) {
+    for (const id of resolveSelector(state, e.target, ctx)) {
+      const pumpkin = findCharacter(state, id);
+      for (const m of shellHeld(pumpkin)) {
+        if (e.attack) m.attack += e.attack;
+        if (e.health) { m.maxHealth += e.health; m.health += e.health; }
+        if (e.heal && m.health < m.maxHealth) {
+          const h = Math.min(e.heal, m.maxHealth - m.health);
+          m.health += h;
+          log(state, `🕯 ${nameOf(state, m)} is healed for ${h} inside ${nameOf(state, pumpkin)}.`);
+        }
+        if (e.attack || e.health) log(state, `${nameOf(state, m)} gains +${e.attack ?? 0}/+${e.health ?? 0} inside ${nameOf(state, pumpkin)}.`);
+      }
+    }
+  },
+
+  // Rotting Carve: { target, attack, health } — break the friendly Pumpkin open: its Plants burst out
+  // with the bonus, the Pumpkin is destroyed, and each Plant deals damage equal to its Attack to a random enemy.
+  carvePumpkin(state, e, ctx) {
+    for (const id of resolveSelector(state, e.target, ctx)) {
+      const pumpkin = findCharacter(state, id);
+      if (!pumpkin || pumpkin.kind !== 'minion') continue;
+      const board = state.players[pumpkin.controller].board;
+      const out = burstShell(state, pumpkin, board.indexOf(pumpkin) + 1, { attack: e.attack ?? 0, health: e.health ?? 0 });
+      pumpkin.destroyed = true;
+      pumpkin.lastDamagedBy = ctx.self;
+      pumpkin.lastDamagedByController = ctx.controller;
+      for (const m of out) {
+        const foes = [heroOf(state, opponentOf(m.controller)), ...state.players[opponentOf(m.controller)].board.filter((x) => x.health > 0 && !x.destroyed)];
+        const t = pickRandom(state, foes);
+        if (t) dealDamage(state, m.uid, t.uid, effectiveAttack(m));
+      }
+    }
+  },
+
+  // Hallowroot: { target } — take one Plant out of the friendly Pumpkin, gain its Attack and Health,
+  // and put a Seedling inside in its place.
+  harvestShell(state, e, ctx) {
+    const self = findCharacter(state, ctx.self);
+    for (const id of resolveSelector(state, e.target, ctx)) {
+      const pumpkin = findCharacter(state, id);
+      const held = shellHeld(pumpkin);
+      if (!self || !held.length) continue;
+      const m = held.shift();
+      self.attack += effectiveAttack(m);
+      self.maxHealth += m.health; self.health += m.health;
+      state.players[m.owner].graveyard.push({ uid: m.uid, cardId: m.cardId, owner: m.owner });
+      log(state, `${nameOf(state, self)} reaps ${nameOf(state, m)} from ${nameOf(state, pumpkin)} (+${effectiveAttack(m)}/+${m.health}).`);
+      spawnIntoShell(state, pumpkin, e.cardId ?? 'seedling');
+    }
+  },
+
   // { target, costChange? } — return a minion to its owner's hand.
   returnToHand(state, e, ctx) {
     each(state, e.target, ctx, (m) => {
       if (m.kind !== 'minion') return;
       exitOnLeave(state, m);
       const board = state.players[m.controller].board;
-      board.splice(board.indexOf(m), 1);
+      const at = board.indexOf(m);
+      board.splice(at, 1);
       log(state, `${nameOf(state, m)} returns to ${state.players[m.owner].name}'s hand.`);
+      burstShell(state, m, at);
       addToHand(state, m.owner, m.cardId, e.costChange ? { costMod: e.costChange } : {});
     });
   },
@@ -1858,6 +2028,8 @@ export const EFFECT_OPS = {
         tribes: [...(card.tribes ?? [])], faction: card.faction,
       });
       if (bonus) { m.maxHealth += bonus; m.health += bonus; }
+      // Harvest Moon: a Pumpkin turned into something without a Shell lets its Plants out.
+      if (!card.shell && m.shell?.length) { const b = state.players[m.controller].board; burstShell(state, m, b.indexOf(m) + 1); }
     });
   },
 

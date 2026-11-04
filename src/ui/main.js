@@ -2731,8 +2731,11 @@ let bookSet = 'all';
 const setCards = (f) => {
   const cards = galleryCards(f);
   if (!EXPANSION_NAMES[f] || bookSet === 'all') return cards;
-  return cards.filter((c) => !c.token && !c.heroSpell && (bookSet === 'exp') === !!c.extra);
+  // A later mini-set (cards with `set`, e.g. the Plants' Harvest Moon) gets its own button.
+  if (bookSet.startsWith('set:')) return cards.some((c) => c.set === bookSet.slice(4)) ? cards.filter((c) => !c.token && c.set === bookSet.slice(4)) : cards;
+  return cards.filter((c) => !c.token && !c.heroSpell && !c.set && (bookSet === 'exp') === !!c.extra);
 };
+const miniSets = (f) => [...new Set(galleryCards(f).filter((c) => c.set && !c.token).map((c) => c.set))];
 // Collection search (cards/card-search.js): while there is a query, the page shows the matching
 // cards from every realm instead of one realm's page. The quick filters toggle a word in the query.
 let gallerySearch = '';
@@ -2820,7 +2823,7 @@ function renderGallery() {
             <div><h3>${esc(f)}</h3><span class="sub c2-stats">${stats.map((x) => `<span>${esc(x)}</span>`).join('<i>•</i>')}</span></div>
           </header>
           <div class="c2-bar">
-            ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All Cards'], ['core', 'Original Set'], ['exp', EXPANSION_NAMES[f]]].map(([k, label]) =>
+            ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All Cards'], ['core', 'Original Set'], ['exp', EXPANSION_NAMES[f]], ...miniSets(f).map((n) => [`set:${n}`, n])].map(([k, label]) =>
               `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${esc(label)}</button>`).join('')}</nav>` : '<span></span>'}
             <label class="c2-sort"><span>Sort:</span><select data-sort aria-label="Sort cards">${SORTS.map(([k, label]) => `<option value="${k}" ${bookSort === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
           </div>

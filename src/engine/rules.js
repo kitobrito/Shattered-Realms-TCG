@@ -73,6 +73,7 @@ export const KEYWORD_TEXT = {
   Venomous: 'Kills any enemy minion it attacks.',
   Rage: 'Whenever this takes damage and survives, it gains +1 Attack.',
   Devour: 'Whenever this destroys an enemy minion, it gains +1/+1.',
+  Shell: "Arrival: put another friendly Plant inside this Pumpkin. Inside, it can't attack, be attacked or targeted and takes no board space, and it gains +1/+1 at the start of your turn. It bursts out where the Pumpkin stood when the Pumpkin dies or leaves the board.",
   Burrow: "Goes underground: it has Stealth until the start of your next turn, then it Surfaces. A minion with Burrow arrives Burrowed.",
   Surface: 'Happens when this comes back up from Burrow (at the start of your turn, or sooner if a card Surfaces it).',
   Remake: "The Qu rewrite a minion's body: it Transforms into a random Remade human (Gravital, Swimmer, Loper, Worm Person, Snake Person or Colonial), each weak and badly built in its own way.",
@@ -152,6 +153,8 @@ export const BOARD_EVENTS = [
   'minionWouldDie', // Traps only: checked before a minion dies (Experimental Containment)
   'cardDrawn',        // a card was drawn (before any Mushrooms on it burst)
   'mushroomTriggered', // Mushrooms on a drawn card burst: { player: drawer, amount }
+  'shellBurst',       // Plants (Harvest Moon): a Plant burst out of a Pumpkin ({ source: the Plant, from: the Pumpkin, player })
+  'shellTucked',      // Plants (Harvest Moon): a Plant went inside a Pumpkin ({ source, target: the Pumpkin, player })
   'devoured',         // Plants: a minion with Devour destroyed an enemy minion: { source: the devourer, player }
   'minionBurrowed',   // Sand Sharks: a minion Burrowed ({ source, player })
   'minionSurfaced',   // Sand Sharks: a Burrowed minion Surfaced ({ source, player })

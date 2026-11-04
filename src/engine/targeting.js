@@ -27,6 +27,7 @@ export function minionPasses(m, f) {
   if (f.hasUpgrade && !(m.upgrades > 0)) return false;   // Robots
   if (f.minUpgrades != null && (m.upgrades ?? 0) < f.minUpgrades) return false;
   if (f.hasWeapon && !m.weapon) return false;
+  if (f.holding != null && ((m.shell?.length ?? 0) > 0) !== f.holding) return false; // Harvest Moon: a Pumpkin with a Plant inside
   if (f.keyword && !hasKeyword(m, f.keyword)) return false;
   if (f.holyFlame != null && (m.holyFlame > 0) !== f.holyFlame) return false; // Divine (The Holy Pyre)
   if (f.hasRelic != null && !!m.relic !== f.hasRelic) return false; // Ghosts (Cursed Armory)

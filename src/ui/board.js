@@ -199,6 +199,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
         // Ohmra counts up to her unleash at 10 (the badge shows how close she is, even at 0).
         ? `<span class="volt-badge ohmra${m.volts >= 7 ? ' full' : ''}" title="${m.volts ?? 0} of 10 Volts: at 10 or more she unleashes them all as a Chain that never gets weaker">⚡${m.volts ?? 0}/10</span>`
         : m.volts > 0 ? `<span class="volt-badge${m.volts >= 5 ? ' full' : ''}" title="${m.volts} Volt${m.volts === 1 ? '' : 's'}: it Discharges them as a Chain when it dies (or when a card makes it)">⚡${m.volts}</span>` : ''}
+      ${m.shell?.length ? `<span class="shell-badge" title="${esc(m.shell.map((h) => `${getCard(h.cardId).name} ${h.attack}/${h.health}`).join(', '))} inside: grows each turn, bursts out when this Pumpkin dies or leaves">🌱${m.shell.length > 1 ? `×${m.shell.length}` : ` ${m.shell[0].attack}/${m.shell[0].health}`}</span>` : ''}
       ${m.conductive ? '<i class="ov-wet" title="Conductive: a Chain jumps off it at full power this turn"></i>' : ''}
       ${m.infected != null ? '<i class="ov-infect"><b></b><b></b><b></b><b></b></i>' : ''}
       ${m.implanted != null ? '<i class="ov-implant"><b></b></i>' : ''}
