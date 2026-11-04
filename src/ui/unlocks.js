@@ -23,6 +23,13 @@ export function setProgress(set) {
   return { have: cards.filter((c) => have.has(c.id)).length, total: cards.length };
 }
 export const setComplete = (set) => { const p = setProgress(set); return p.total > 0 && p.have === p.total; };
+// An alternate board's unlock progress: its mini-set, or (expansion: true) the faction's main expansion.
+export function boardProgress(b, faction) {
+  if (b.set) return setProgress(b.set);
+  const cards = extras().filter((c) => c.faction === faction && !c.set);
+  const have = saved();
+  return { have: cards.filter((c) => have.has(c.id)).length, total: cards.length };
+}
 export const lockedCount = (faction) => extras().filter((c) => (!faction || c.faction === faction) && !saved().has(c.id)).length;
 
 // Unlock up to n locked cards from the factions the player won with, taking turns between

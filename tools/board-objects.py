@@ -42,6 +42,8 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 'expand': 0}  # pale lavender stone
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 HINTS = {
+    # The Rage Outbreak: the infected, not the wrecked cars beside them.
+    'rage-outbreak-portrait/pack1': {'bg': [[344, 712, 364, 770]]},
     # Harvest Moon: the gourd stack, not the jack-o'-lantern beside it.
     'harvest-moon-land/gourds': {'bg': [[126, 384, 216, 482]]},
     # Cordyceps Bloom: the glowing orange-gold cordyceps stalks (colour cut: the model sees only a tip or two).

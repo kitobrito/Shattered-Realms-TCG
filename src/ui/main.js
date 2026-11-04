@@ -34,7 +34,7 @@ import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
-import { awardUnlocks, isLocked, lockedCount, setProgress, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
+import { awardUnlocks, boardProgress, isLocked, lockedCount, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
@@ -2732,8 +2732,8 @@ let bookTurned = false; // play the page-turn only when the page changes
 function boardPickerHTML(f) {
   const current = chosenBoard(f);
   const opts = [{ id: f, name: `${f} (original)`, blurb: 'The realm\'s own battlefield.', open: true }, ...ALT_BOARDS[f].map((b) => {
-    const pr = setProgress(b.set);
-    return { id: b.id, name: b.id, blurb: b.blurb, open: boardUnlocked(b), need: `Unlock all ${pr.total} ${b.set} cards (${pr.have}/${pr.total})` };
+    const pr = boardProgress(b, f);
+    return { id: b.id, name: b.id, blurb: b.blurb, open: boardUnlocked(b, f), need: `Unlock all ${pr.total} ${b.set ?? EXPANSION_NAMES[f]} cards (${pr.have}/${pr.total})` };
   })];
   return `<div class="overlay board-pick-overlay"><div class="guide-backdrop" data-act="closeBoards"></div>
     <div class="board-pick"><header><h3>${esc(f)} Boards</h3><button class="ghost" data-act="closeBoards" aria-label="Close">✕</button></header>
