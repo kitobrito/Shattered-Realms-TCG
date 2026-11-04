@@ -1723,6 +1723,15 @@ function acctFormHTML() {
 // "Remember me" keeps them signed in next time. If the server can't be reached, they can play
 // offline for now and are asked again the next time they open the game.
 const OFFLINE_KEY = 'shattered-offline';
+// The game's own page (served by the game server). Saved sign-ins persist there, unlike inside
+// itch.io's embed on phones: Safari and other mobile browsers keep a cross-site frame's storage
+// only until the page is closed.
+const GAME_PAGE = 'https://shattered-realms.onrender.com/';
+const forgetfulFrame = () => {
+  let framed = false;
+  try { framed = window.self !== window.top; } catch { framed = true; }
+  return framed && matchMedia('(pointer: coarse)').matches;
+};
 const HAD_ACCOUNT_KEY = 'shattered-had-account';
 const needsSignIn = () => {
   if (!BUILD.online || srv.hasSavedLogin()) return false;
@@ -1745,6 +1754,8 @@ function renderSignIn() {
         ${acctFormHTML()}
         <p class="sub signin-why">Your account keeps your rank and lets you play online against anyone.</p>
         ${offline ? '<button data-act="playOffline" class="ghost">Play offline for now</button>' : ''}
+        ${forgetfulFrame() ? `<p class="sub signin-own-page">On a phone browser the game runs inside the itch.io page, and phone browsers wipe what it saves when you leave, so you have to sign in again each time.
+          <a class="signin-own-page-link" href="${GAME_PAGE}" target="_blank" rel="noopener">Open the game on its own page</a> to stay signed in (add it to your Home Screen for one-tap play).</p>` : ''}
       </section>
     </div>`;
   app.querySelector('#acct-pass')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitAccount(); });
