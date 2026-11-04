@@ -388,12 +388,12 @@ export const FUNGUS_CARDS = [
     aura: { target: { minions: { side: 'enemy', infected: true } }, attack: -1 },
   },
   {
-    ...F, id: 'mycelia_the_hive_mind', name: 'Mycelia, the Hive Mind', art: '🍄', extra: true, set: 'Cordyceps Bloom', cost: 7, attack: 5, health: 7,
+    ...F, id: 'mycelia_the_hive_mind', legendFrame: 'cordyceps', name: 'Mycelia, the Hive Mind', art: '🍄', extra: true, set: 'Cordyceps Bloom', cost: 7, attack: 5, health: 7,
     text: 'Arrival: Infect all enemy minions. While you control her, your Infections raise a 3/4 Clicker instead of a Rage Runner.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'infect', target: { minions: { side: 'enemy', alive: true } } }] }],
   },
   {
-    ...F, id: 'ophio_the_cordyceps_crown', name: 'Ophio, the Cordyceps Crown', art: '👑', extra: true, set: 'Cordyceps Bloom', cost: 8, attack: 6, health: 8,
+    ...F, id: 'ophio_the_cordyceps_crown', legendFrame: 'cordyceps', name: 'Ophio, the Cordyceps Crown', art: '👑', extra: true, set: 'Cordyceps Bloom', cost: 8, attack: 6, health: 8,
     text: 'Arrival: Spend all your Corpses. For each, summon a random cordyceps Zombie (Cordyceps Runner, Spore Stalker, Clicker, Spore Shambler or Cordyceps Bloater).',
     triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', upTo: 99, each: [{ op: 'summon', pool: ['cordyceps_runner', 'spore_stalker', 'clicker', 'spore_shambler', 'cordyceps_bloater'] }] }] }],
   },

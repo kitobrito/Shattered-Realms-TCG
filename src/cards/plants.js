@@ -424,14 +424,14 @@ export const PLANT_CARDS = [
     ],
   },
   {
-    ...PUMPKIN, id: 'the_great_pumpkin', name: 'The Great Pumpkin, Keeper of the Patch', art: '🎃', extra: true, set: 'Harvest Moon', cost: 8, attack: 4, health: 12, keywords: ['Taunt'],
+    ...PUMPKIN, id: 'the_great_pumpkin', legendFrame: 'harvest-moon', name: 'The Great Pumpkin, Keeper of the Patch', art: '🎃', extra: true, set: 'Harvest Moon', cost: 8, attack: 4, health: 12, keywords: ['Taunt'],
     shell: { size: 3, growth: 2 },
     text: 'Taunt. Shell, holding up to 3: Arrival: put up to 3 other friendly Plants inside. Plants inside gain +2/+2 each turn. When it dies, they all burst out.',
     target: SHELL_TARGET,
     triggers: [{ on: 'battlecry', effects: [{ op: 'shellIn', target: 'chosen', count: 3 }] }],
   },
   {
-    ...P, id: 'hallowroot_the_headless_harvester', name: 'Hallowroot, the Headless Harvester', art: '🎃', extra: true, set: 'Harvest Moon', cost: 6, attack: 6, health: 5, keywords: ['Rush'],
+    ...P, id: 'hallowroot_the_headless_harvester', legendFrame: 'harvest-moon', name: 'Hallowroot, the Headless Harvester', art: '🎃', extra: true, set: 'Harvest Moon', cost: 6, attack: 6, health: 5, keywords: ['Rush'],
     text: 'Rush. Arrival: Take a Plant out of a friendly Pumpkin, gain its Attack and Health, and put a Seedling inside in its place. After this attacks, give a random friendly Plant +2/+2.',
     target: { ...FRIENDLY_PUMPKIN, holding: true },
     triggers: [

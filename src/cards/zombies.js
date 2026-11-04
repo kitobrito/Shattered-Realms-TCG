@@ -337,7 +337,7 @@ export const ZOMBIE_CARDS = [
     triggers: [{ on: 'damageDealt', filter: { target: 'self' }, effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 1 }] }],
   },
   {
-    ...Z, tribes: ['Zombie', 'Fungus'], id: 'the_rat_king', name: 'The Rat King', art: '👑', extra: true, set: 'Cordyceps Outbreak', cost: 8, attack: 7, health: 7, keywords: ['Taunt'],
+    ...Z, tribes: ['Zombie', 'Fungus'], id: 'the_rat_king', legendFrame: 'cordyceps', name: 'The Rat King', art: '👑', extra: true, set: 'Cordyceps Outbreak', cost: 8, attack: 7, health: 7, keywords: ['Taunt'],
     text: 'Taunt. Exit: It splits apart: summon a Cordyceps Bloater, a Clicker and a Cordyceps Runner.',
     triggers: [{ on: 'deathrattle', effects: [
       { op: 'summon', cardId: 'cordyceps_bloater' }, { op: 'summon', cardId: 'clicker' }, { op: 'summon', cardId: 'cordyceps_runner' },
