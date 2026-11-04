@@ -1,17 +1,26 @@
-// Sound effects, synthesized with the Web Audio API (no audio files).
-// Each effect is one entry in SOUNDS; to use a real recording later, replace
-// the entry with a function that plays an <audio> element.
+// Sound effects. Recorded clips (sfx.js) play first where a realm or event has one; the
+// rest, and anything not loaded yet, are synthesized with the Web Audio API below.
+import * as sfx from './sfx.js';
 
 const MUTE_KEY = 'faction-ccg-mute';
 let ctx = null;
 let muted = (() => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } })();
 
 let volume = 0.8; // Settings → Volume (0..1)
-export const setVolume = (v) => { volume = Math.max(0, Math.min(1, v)); };
+let effectsLevel = 1; // Settings → Effects (0..1), scales the synthesized sounds too
+export const setVolume = (v) => { volume = Math.max(0, Math.min(1, v)); sfx.setLevels(volume, {}, muted); };
+export function setLevels({ effects = 1, voices = 1, ambience = 0.4 } = {}) {
+  effectsLevel = Math.max(0, Math.min(1, effects));
+  sfx.setLevels(volume, { effects: effectsLevel, voices, ambience }, muted);
+}
+export const voice = (faction, kind) => { audio(); return sfx.voice(faction, kind); };
+export const ambience = (realm) => sfx.ambience(realm);
+export const preloadVoices = (factions) => sfx.preloadVoices(factions);
 export const isMuted = () => muted;
 export function toggleMute() {
   muted = !muted;
   try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch { /* storage unavailable */ }
+  sfx.setLevels(volume, {}, muted);
   return muted;
 }
 
@@ -21,6 +30,7 @@ function audio() {
   try {
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
+    sfx.attach(ctx);
     return ctx;
   } catch { return null; }
 }
@@ -33,7 +43,7 @@ function tone(ac, { freq = 440, to = freq, type = 'sine', dur = 0.15, gain = 0.2
   osc.type = type;
   osc.frequency.setValueAtTime(freq, t);
   osc.frequency.exponentialRampToValueAtTime(Math.max(1, to), t + dur);
-  g.gain.setValueAtTime(Math.max(0.0001, gain * volume), t);
+  g.gain.setValueAtTime(Math.max(0.0001, gain * volume * effectsLevel), t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   osc.connect(g).connect(ac.destination);
   osc.start(t);
@@ -53,7 +63,7 @@ function noise(ac, { dur = 0.12, gain = 0.25, freq = 1200, q = 1, delay = 0, typ
   f.frequency.value = freq;
   f.Q.value = q;
   const g = ac.createGain();
-  g.gain.setValueAtTime(Math.max(0.0001, gain * volume), t);
+  g.gain.setValueAtTime(Math.max(0.0001, gain * volume * effectsLevel), t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(f).connect(g).connect(ac.destination);
   src.start(t);
@@ -150,5 +160,20 @@ export function play(name) {
   lastPlayed.set(name, now);
   if (haptics && HAPTICS[name] && canVibrate()) { try { navigator.vibrate(HAPTICS[name]); } catch { /* not allowed here */ } }
   const ac = audio();
-  if (ac && SOUNDS[name]) SOUNDS[name](ac);
+  if (!ac) return;
+  if (sfx.playEvent(name) && !sfx.LAYER.has(name)) return;
+  if (SOUNDS[name]) SOUNDS[name](ac);
+}
+
+// Realm flavour on top of the usual sounds: 'arrive', 'die', 'attack', 'hurt' or 'spell'.
+// Returns true when the realm has a recording for it.
+export function realm(kind, faction) {
+  if (!faction) return false;
+  const name = `${kind}:${faction}`;
+  if (!sfx.hasEvent(name)) return false;
+  const now = performance.now();
+  if (now - (lastPlayed.get(name) ?? -1e9) < 120) return true;
+  lastPlayed.set(name, now);
+  if (!audio()) return false;
+  return sfx.playEvent(name);
 }

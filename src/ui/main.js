@@ -782,6 +782,7 @@ async function act(action, meta = {}) {
     if (action.type === 'attack') {
       sound.play('attack');
       const striker = findCharacter(s, action.attacker);
+      if (striker?.kind === 'minion') sound.realm('attack', getCard(striker.cardId)?.faction);
       lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {
         power: striker ? effectiveAttack(striker) : 2, color: fx.factionColor(before.srcFaction), table: app.querySelector('.arena'),
         style: striker?.kind === 'minion' ? before.srcFaction : null,
@@ -799,7 +800,7 @@ async function act(action, meta = {}) {
       sound.play('quickPlay');
       const who = action.player === viewer && game.mode !== 'hotseat' ? 'You' : s.players[action.player].name;
       await fx.banner(`⚡ QUICK PLAY! <small>${esc(who)}</small>`, 'quickplay');
-      sound.play(playedCard.type === 'minion' ? 'cardPlay' : 'spell');
+      playCardSound(playedCard, before.srcFaction, action.player);
       await revealPlayed(playedCard.id, { label: `⚡ ${who === 'You' ? 'Your' : `${who}'s`} Quick Play`, duration: 2600, cls: 'fx-reveal qp-reveal' });
       const target = action.target != null ? charEl(action.target) : null;
       const from = charEl(s.players[action.player].hero.uid);
@@ -820,7 +821,7 @@ async function act(action, meta = {}) {
       // A Fusion: the two realms' crests rush together and the Fusion is born (longer the first time).
       await fusionCinematic(playedCard, action.player);
     } else if (playedCard) {
-      sound.play(playedCard.type === 'minion' ? 'cardPlay' : playedCard.type === 'trap' ? 'trapSet' : 'spell');
+      playCardSound(playedCard, before.srcFaction, action.player);
       const hidden = playedCard.type === 'trap' && action.player !== viewer;
       // Spells from the hand get a flourish: the card spins to the middle, bursts, and the magic flies on.
       const flourish = playedCard.type === 'spell' && action.type === 'play';
@@ -1143,7 +1144,10 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     }
   }
   if (killed) sound.play('bigHit');
-  if (died) setTimeout(() => sound.play('death'), killed ? 180 : 120);
+  if (died) {
+    const fallen = [...oldMinions.keys()].find((uid) => !charEl(uid) && before.factionOf.has(uid));
+    setTimeout(() => { sound.play('death'); sound.realm('die', before.factionOf.get(fallen)); }, killed ? 180 : 120);
+  }
 
   // Minions that come back their own way (Reborn, Haunt, a Chestburster) skip the normal drop-in.
   const trace = before.trace ?? [];
@@ -1152,6 +1156,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   // New minions drop in; moved ones glide (FLIP). Expensive ones make an entrance.
   let summoned = false;
   let bigEntrance = false;
+  let arrived = null; // the card that just landed (for its realm's sound)
   const moving = new Set();
   for (const el of app.querySelectorAll('.minion[data-char]')) {
     const key = `c${el.dataset.char}`;
@@ -1161,12 +1166,17 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       const card = m && getCard(m.cardId);
       if (before.beyond.has(m?.uid)) { jobs.push(fx.portalIn(el, card?.faction)); continue; }
       if (ownEntrance.has(m?.uid)) continue;
+      arrived = card ?? arrived;
       if (card && card.cost >= 7) { bigEntrance = true; jobs.push(fx.entrance(el, esc(card.name), card.faction)); }
       else jobs.push(fx.arrival(el, card?.faction, app.querySelector('.arena')));
     }
     else if (Number(el.dataset.char) !== action.attacker) moving.add(key);
   }
-  if (summoned) sound.play(bigEntrance ? 'bigHit' : 'minionLand');
+  if (summoned) {
+    sound.play(bigEntrance ? 'bigHit' : 'minionLand');
+    sound.realm('arrive', arrived?.faction);
+    if (arrived && (arrived.legendary || arrived.cost >= 8)) setTimeout(() => sound.play('legendary'), 250);
+  }
   if (bigEntrance) jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, 10));
   jobs.push(fx.flip(app, rects, moving));
 
@@ -1191,6 +1201,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
         // Bigger hits shake harder and throw more debris.
         hurt = true;
         biggest = Math.max(biggest, -delta + (c.kind === 'hero' ? 1 : 0));
+        if (c.kind === 'minion') sound.realm('hurt', getCard(c.cardId)?.faction);
         if (c.kind === 'hero') {
           jobs.push(fx.shake(el, 4 + -delta * 1.5));
           jobs.push(fx.heroHit(el.querySelector('.portrait-img') ?? el));
@@ -1432,6 +1443,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     if (!heroesShattered) {
       const losers = s.players.filter((pl) => s.winner == null || pl.index !== s.winner);
       sound.play('heroExplode');
+      losers.forEach((pl) => sound.voice(pl.factions[0], 'death'));
       await Promise.all(losers.map((pl) => fx.heroExplode(charEl(pl.hero.uid))));
       heroesShattered = true;
     }
@@ -1447,6 +1459,32 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
 }
 
 // "Why can't I do that?": a shake, a buzz and a short reason.
+// A card's own sound when played: its realm's element for spells (fire, ice, water…), and a
+// "yes!" from its hero when a legendary or 7+ Mana card comes down.
+function playCardSound(card, faction, player) {
+  if (!(card.type === 'spell' && sound.realm('spell', card.faction ?? faction))) {
+    sound.play(card.type === 'minion' ? 'cardPlay' : card.type === 'trap' ? 'trapSet' : 'spell');
+  }
+  if ((card.legendary || card.cost >= 7) && !(card.type === 'trap' && player !== viewer)) {
+    const who = game?.state?.players[player];
+    if (who) setTimeout(() => sound.voice(who.factions[0], 'yes'), 450);
+  }
+}
+
+// Per match: the board's ambience, and both heroes greet each other at the start.
+let greetedGame = null;
+function matchSounds() {
+  const s = game?.state;
+  if (screen !== 'game' || !s) { sound.ambience(null); return; }
+  sound.ambience(boardRealmOf(s, viewer, game.mode));
+  if (greetedGame === game) return;
+  greetedGame = game;
+  const [me, them] = [s.players[viewer], s.players[1 - viewer]];
+  sound.preloadVoices([me.factions[0], them.factions[0]]);
+  setTimeout(() => { if (greetedGame === game && screen === 'game') sound.voice(me.factions[0], 'greet'); }, 1400);
+  setTimeout(() => { if (greetedGame === game && screen === 'game') sound.voice(them.factions[0], 'greet'); }, 3600);
+}
+
 function deny(el, kind, uid) {
   const s = game?.state;
   if (!s) return;
@@ -1475,6 +1513,7 @@ function deny(el, kind, uid) {
     else msg = 'Nothing to attack';
   }
   sound.play('deny');
+  sound.voice(pl.factions[0], 'no');
   fx.shake(el, 6);
   flash(msg);
 }
@@ -1588,6 +1627,7 @@ async function concede(remoteLoser = null) {
   animating = true;
   render();
   sound.play('heroExplode');
+  sound.voice(s.players[loser].factions[0], 'death');
   try { await fx.heroExplode(charEl(s.players[loser].hero.uid)); } catch { /* animation only */ }
   heroesShattered = true;
   animating = false;
@@ -3186,6 +3226,7 @@ function render() {
   else renderGame();
   restoreInputs?.();
   music(screen === 'game' ? 'battle' : 'menu');
+  matchSounds();
   const fitting = FIT_SCREENS.has(screen) && landscape();
   app.classList.toggle('fit-screen', fitting);
   // Upright phones keep the scrolling layouts.
