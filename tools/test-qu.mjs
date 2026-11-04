@@ -5,6 +5,7 @@ import { buildDeck } from '../src/cards/index.js';
 import { addToHand, hasKeyword, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame, getLegalActions } from '../src/engine/engine.js';
 import { getCard } from '../src/engine/registry.js';
+import { REMADE_FORMS } from '../src/engine/rules.js';
 import { ART } from '../src/cards/art-manifest.js';
 import { existsSync } from 'node:fs';
 
@@ -38,7 +39,7 @@ function play(p, inst, target, target2, react) {
   settle(react);
 }
 
-const REMADE = ['remade_gravital', 'remade_swimmer', 'remade_loper', 'remade_worm_person', 'remade_snake_person', 'remade_colonial'];
+const REMADE = REMADE_FORMS;
 const isRemade = (m) => REMADE.includes(m.cardId);
 function attack(p, attacker, defender, react) {
   applyAction(s, { type: 'attack', player: p, attacker, defender });
@@ -103,7 +104,7 @@ test('The Qu, Shapers of Worlds: Arrival Remake + end of turn Remakes the pricie
   if (!isRemade(big)) return `costliest not Remade: ${big.cardId}`;
   if (isRemade(mid)) return 'Remade more than one';
 });
-test('Remade forms behave: Gravital cannot attack; Snake Person arrives Frozen and thaws; Colonial burns', () => {
+test('Remade forms behave: Gravital cannot attack; Snake Person arrives Frozen and thaws; Colonial eats Corpses', () => {
   const g = put(1, 'vampire_gargoyle'), sn = put(1, 'vampire_gargoyle'), co = put(1, 'vampire_gargoyle');
   for (const [m, f] of [[g, 'remade_gravital'], [sn, 'remade_snake_person'], [co, 'remade_colonial']]) {
     const sp = give(0, 'the_remaking'); pl(0).mana.current = 10;
@@ -118,7 +119,29 @@ test('Remade forms behave: Gravital cannot attack; Snake Person arrives Frozen a
   applyAction(s, { type: 'endTurn', player: 1 }); settle();
   applyAction(s, { type: 'endTurn', player: 0 }); settle();
   if (hasKeyword(sn, 'Frozen')) return 'snake never thawed';
-  if (co.health >= 3 && pl(1).board.includes(co)) return `colonial at ${co.health}`;
+  if (atk.includes(co.uid)) return 'Colonial can attack';
+  pl(0).corpses = 3; pl(1).corpses = 1;
+  applyAction(s, { type: 'endTurn', player: s.activePlayer }); settle();
+  if (pl(0).corpses !== 2 || pl(1).corpses !== 0) return `corpses ${pl(0).corpses}/${pl(1).corpses}`;
+});
+test('New Remade: Blind Folk is Blind, Bone Crusher cannot attack Heroes, Parasite feeds on its own side', () => {
+  const bf = put(1, 'remade_blind_folk'), bc = put(1, 'remade_bone_crusher'), pa = put(1, 'remade_parasite');
+  if (!hasKeyword(bf, 'Blind')) return 'blind folk not Blind';
+  put(0, 'vampire_gargoyle');
+  applyAction(s, { type: 'endTurn', player: 0 }); settle();
+  const hero = pl(0).hero.uid;
+  if (getLegalActions(s).some((a) => a.type === 'attack' && a.attacker === bc.uid && a.defender === hero)) return 'bone crusher can hit the Hero';
+  if (!getLegalActions(s).some((a) => a.type === 'attack' && a.attacker === bc.uid)) return 'bone crusher cannot attack at all';
+  const before = [bf, bc].map((m) => m.health).join(',');
+  applyAction(s, { type: 'endTurn', player: 1 }); settle();
+  const after = [bf, bc].map((m) => m.health).join(',');
+  if (pa.maxHealth !== 3) return `parasite ${pa.health}/${pa.maxHealth}`;
+  if (before === after) return 'parasite fed on nobody';
+  if (pl(0).board.some((m) => m.health < m.maxHealth)) return 'parasite fed on the enemy';
+});
+test('Every Remade form has art', () => {
+  const missing = REMADE_FORMS.filter((id) => !ART[id]);
+  if (missing.length) return `no art: ${missing}`;
 });
 test('Remake picks only Remade forms, and a Remade minion becomes a different one', () => {
   const e = put(1, 'vampire_gargoyle');
