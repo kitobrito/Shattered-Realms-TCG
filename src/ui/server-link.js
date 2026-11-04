@@ -74,9 +74,9 @@ export function connect() {
   sock.onmessage = (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
-    if (msg.t === 'welcome') { setToken(msg.token); user = msg.you; try { localStorage.setItem(NAME_KEY, msg.you?.name ?? ''); } catch { /* storage unavailable */ } }
+    if (msg.t === 'welcome') { setToken(msg.token); user = msg.you; try { localStorage.setItem(NAME_KEY, msg.you?.name ?? ''); } catch { /* storage unavailable */ } setAdmin(!!msg.you?.admin); }
     if (msg.t === 'authError' && msg.expired) setToken(null);
-    if (msg.t === 'loggedOut' || msg.t === 'replaced' || msg.t === 'accountDeleted') { user = null; if (msg.t !== 'replaced') setToken(null); }
+    if (msg.t === 'loggedOut' || msg.t === 'replaced' || msg.t === 'accountDeleted') { user = null; if (msg.t !== 'replaced') { setToken(null); setAdmin(false); } }
     if (msg.t === 'replaced') wanted = false;
     if ((msg.t === 'me' || msg.t === 'result') && msg.you) user = msg.you;
     handlers.data?.(msg);
@@ -108,7 +108,9 @@ export function send(msg) {
 
 export function register(name, password) { send({ t: 'register', v: PROTOCOL, name, password }); }
 export function login(name, password) { send({ t: 'login', v: PROTOCOL, name, password }); }
-export function logout() { send({ t: 'logout', token: token() }); setToken(null); user = null; }
+export function logout() { send({ t: 'logout', token: token() }); setToken(null); setAdmin(false); user = null; }
+// An admin account has every card and board unlocked (unlocks.js reads this flag).
+function setAdmin(on) { try { if (on) localStorage.setItem('shattered-admin', '1'); else localStorage.removeItem('shattered-admin'); } catch { /* storage unavailable */ } }
 
 // Leave the current game or queue but keep the account connection.
 export function leave() { if (isOpen()) send({ t: 'cancel' }); outbox = outbox.filter((m) => m.t !== 'act'); }

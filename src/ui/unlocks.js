@@ -9,7 +9,10 @@ import { cardHTML, esc } from './shared.js';
 const KEY = 'shattered-unlocks';
 export const UNLOCKS_PER_WIN = 2;
 
+// Signed in as an admin (server-link.js): everything counts as unlocked.
+const isAdmin = () => { try { return localStorage.getItem('shattered-admin') === '1'; } catch { return false; } };
 function saved() {
+  if (isAdmin()) return new Set(allCards().filter((c) => c.extra).map((c) => c.id));
   try { return new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]')); } catch { return new Set(); }
 }
 // alwaysUnlocked: an expansion card everyone already has (the plain T. Rex, moved out of the original set).
