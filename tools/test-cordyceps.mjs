@@ -3,7 +3,7 @@
 
 import { LEGENDARY, buildDeck } from '../src/cards/index.js';
 import { resolveEffect } from '../src/engine/effects.js';
-import { addToHand, costOf, effectiveAttack, hasKeyword, heal, radiationOf, summonMinion } from '../src/engine/core.js';
+import { addToHand, tagsOf, costOf, effectiveAttack, hasKeyword, heal, radiationOf, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame, getLegalActions } from '../src/engine/engine.js';
 import { getCard } from '../src/engine/registry.js';
 import { ART, CLICKER_ART } from '../src/cards/art-manifest.js';
@@ -237,6 +237,22 @@ test('Every new card has art, is an unlockable extra in its mini-set; legendarie
   for (const id of ['necrohydra', 'the_rat_king', 'mycelia_the_hive_mind', 'ophio_the_cordyceps_crown']) if (!LEGENDARY.has(id)) return `${id} not legendary`;
   if (Object.keys(CLICKER_ART).length !== 20) return `${Object.keys(CLICKER_ART).length} clicker looks`;
   for (const p of [...Object.values(CLICKER_ART), ...[...z, ...f].map((id) => ART[id])]) if (!existsSync(new URL(`../${p}`, import.meta.url))) return `missing file ${p}`;
+});
+
+test('The cordyceps Zombies are Zombie + Fungus and Dark (Necrohydra stays Zombie + Beast)', () => {
+  for (const id of ['cordyceps_runner', 'spore_stalker', 'clicker', 'spore_shambler', 'cordyceps_bloater', 'the_rat_king']) {
+    const m = put(0, id);
+    if (m.tribes.join('+') !== 'Zombie+Fungus') return `${id}: ${m.tribes}`;
+    if (!tagsOf(m).includes('Dark')) return `${id} not Dark`;
+  }
+  if (getCard('necrohydra').tribes.join('+') !== 'Zombie+Beast') return 'necrohydra changed';
+});
+
+test('A cordyceps Zombie that dies leaves exactly one Corpse', () => {
+  const r = put(0, 'cordyceps_runner');
+  const c0 = pl(0).corpses ?? 0;
+  kill(r);
+  if ((pl(0).corpses ?? 0) !== c0 + 1) return `corpses ${c0} -> ${pl(0).corpses}`;
 });
 
 test('No two cards in the game share an id', () => {

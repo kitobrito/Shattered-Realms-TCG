@@ -2026,6 +2026,52 @@ export const BOARD_FX = {
   },
 
   // ---- Basic: a quiet hilltop at golden hour that belongs to no realm ------------------------
+  // ---- The Rage Outbreak (Zombies alternate board): an abandoned city street, days after the outbreak ----
+  // Each infected is cut out (tools/board-objects.py) and runs in place on its own rhythm; the one on
+  // the wrecked car claws at it; the biohazard sign swings; the police car's lights strobe. The street,
+  // the bus and the blood stay still.
+  'rage-outbreak-land': {
+    wind: { dir: 1, every: [7, 12], speed: [120, 180], width: [160, 260], lean: 0.2 },
+    layers: [
+      { id: 'runner1', type: 'echo', box: [166, 92, 244, 220], feather: 3, motion: { kind: 'bob', amp: 1.4, period: 0.46, kickAmp: 4 } },
+      { id: 'runner2', type: 'echo', box: [88, 292, 164, 436], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.52, kickAmp: 4 } },
+      { id: 'climber', type: 'echo', box: [652, 28, 728, 124], feather: 3, motion: { kind: 'rock', amp: 2.2, period: 0.9, pivot: [690, 120], kickAmp: 5 } },
+      { id: 'pack1', type: 'echo', box: [810, 246, 920, 450], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.47, kickAmp: 4 } },
+      { id: 'pack3', type: 'echo', box: [898, 332, 990, 458], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.55, kickAmp: 4 } },
+      { id: 'sign', type: 'echo', box: [788, 32, 846, 84], feather: 3, motion: { kind: 'rock', amp: 2.4, period: 3.3, pivot: [814, 34], kickAmp: 7 } },
+      { id: 'sirenRed', type: 'glow', points: [[800, 488, 24]], color: [255, 40, 40], anim: 'pulse', period: 0.8, alpha: [0, 0.75], kickDur: 2 },
+      { id: 'sirenBlue', type: 'glow', points: [[832, 486, 24]], color: [60, 120, 255], anim: 'pulse', period: 0.66, alpha: [0, 0.75], kickDur: 2 },
+      { id: 'blood', type: 'particles', kind: 'glint', area: [160, 120, 860, 470], rate: 1.5, max: 8, color: [255, 120, 120], size: [0.8, 1.3], life: [0.4, 0.8] },
+      { id: 'ash', type: 'particles', kind: 'ash', area: [0, -20, 1024, 572], rate: 1.2, max: 16, color: [90, 90, 95], size: [1, 1.8], life: [6, 10], speed: 0.5 },
+      { type: 'fog', area: [-80, 0, 1104, 140], count: 8, size: [90, 160], speed: 3, color: [120, 120, 130], alpha: 0.08 },
+    ],
+    pokes: [
+      { area: [160, 86, 250, 226], sound: 'growl', kick: ['runner1'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [82, 286, 170, 442], sound: 'growl', kick: ['runner2'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [644, 22, 736, 130], sound: 'knock', kick: ['climber'], flare: [255, 80, 80] },
+      { area: [806, 242, 996, 464], sound: 'screech', kick: ['pack1', 'pack3'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [782, 26, 852, 90], sound: 'clink', kick: ['sign'], flare: [255, 230, 120], glyph: '☣️' },
+      { area: [696, 462, 920, 572], sound: 'beep', kick: ['sirenRed', 'sirenBlue'], flare: [80, 140, 255], glyph: '🚨' },
+    ],
+  },
+  'rage-outbreak-portrait': {
+    wind: { dir: 1, every: [7, 12], speed: [100, 150], width: [140, 220], lean: 0.1 },
+    layers: [
+      { id: 'runner1', type: 'echo', box: [52, 142, 104, 250], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.46, kickAmp: 4 } },
+      { id: 'runner2', type: 'echo', box: [6, 298, 68, 412], feather: 3, motion: { kind: 'bob', amp: 1.2, period: 0.52, kickAmp: 4 } },
+      { id: 'pack1', type: 'echo', box: [346, 666, 436, 804], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.47, kickAmp: 4 } },
+      { id: 'sirenRed', type: 'glow', points: [[402, 884, 18]], color: [255, 40, 40], anim: 'pulse', period: 0.8, alpha: [0, 0.75], kickDur: 2 },
+      { id: 'sirenBlue', type: 'glow', points: [[428, 882, 18]], color: [60, 120, 255], anim: 'pulse', period: 0.66, alpha: [0, 0.75], kickDur: 2 },
+      { id: 'ash', type: 'particles', kind: 'ash', area: [0, -20, 459, 1024], rate: 1, max: 14, color: [90, 90, 95], size: [1, 1.6], life: [6, 10], speed: 0.5 },
+    ],
+    pokes: [
+      { area: [46, 136, 110, 256], sound: 'growl', kick: ['runner1'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [0, 292, 74, 418], sound: 'growl', kick: ['runner2'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [342, 662, 440, 808], sound: 'screech', kick: ['pack1'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [318, 848, 459, 1000], sound: 'beep', kick: ['sirenRed', 'sirenBlue'], flare: [80, 140, 255], glyph: '🚨' },
+    ],
+  },
+
   // ---- Harvest Moon (Plants alternate board): a haunted pumpkin patch at night -----------------
   // Every corner prop is cut out (tools/board-objects.py) and moves on its own loop: lanterns swing
   // from their hooks, the scarecrow sways, the crow pecks, the gourd stack wobbles. Jack-o'-lantern
