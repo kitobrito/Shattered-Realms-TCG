@@ -114,6 +114,7 @@ export function openSettings() {
       ${journeyDone()
     ? '<div class="set-row"><span>New-player path</span><button class="ghost journey-replay">Replay it</button><i>Start over as a new player: choose 3 starter realms, starter decks first. Your decks and unlocked cards stay.</i></div>'
     : '<div class="set-row"><span>New-player path</span><button class="ghost journey-skip">Unlock everything</button><i>All realms, two-faction decks, traps and Quick Plays now</i></div>'}
+      <p class="set-credits">Tutorial music: “Heartbeat” by Alexander Nakarada (CreatorChords), licensed under CC BY 4.0.</p>
       <button class="settings-close">Done</button>
     </div>`;
   document.body.appendChild(el);
