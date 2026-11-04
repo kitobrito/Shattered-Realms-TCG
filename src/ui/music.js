@@ -8,6 +8,9 @@ import { isMuted } from './sound.js';
 const TRACKS = {
   menu: 'art/music/mysterious-majesty.mp3',   // "Mysterious Majesty"
   battle: 'art/music/pulse-of-the-realm.mp3', // "Pulse of the Realm"
+  // The guided tutorial match: "Heartbeat" by Alexander Nakarada (CreatorChords),
+  // licensed CC BY 4.0 -- credited in Settings.
+  tutorial: 'art/music/heartbeat.mp3',
 };
 const FADE_MS = 1200;
 
@@ -56,7 +59,7 @@ function apply() {
   }
 }
 
-// Which music to play now ('menu', 'battle' or null for silence).
+// Which music to play now ('menu', 'battle', 'tutorial' or null for silence).
 export function music(name) {
   if (name === wanted) return;
   wanted = name;

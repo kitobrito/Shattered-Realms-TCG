@@ -5712,3 +5712,11 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
   font-size: calc(var(--hero, 120px) * 0.12); color: #eaffff; background: radial-gradient(circle at 40% 35%, #6a7ab8, #2a2f5a 60%, #10132a);
   border: 2px solid #9fe8ff; box-shadow: 0 0 12px #5ae8ff, 0 0 2px #000; pointer-events: auto; animation: storm-pulse 2.4s ease-in-out infinite; }
 @keyframes storm-pulse { 0%, 100% { box-shadow: 0 0 10px #5ae8ff, 0 0 2px #000; } 50% { box-shadow: 0 0 20px #bff8ff, 0 0 2px #000; } }
+
+.settings-panel .set-credits {
+  margin: 14px 0 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.6;
+  text-align: center;
+}

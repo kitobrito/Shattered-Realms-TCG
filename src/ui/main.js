@@ -3185,7 +3185,7 @@ function render() {
   else if (screen === 'howto') { app.innerHTML = howToPlayHTML(KEYWORD_TEXT, howtoPage); showMenuBackdrop(true); }
   else renderGame();
   restoreInputs?.();
-  music(screen === 'game' ? 'battle' : 'menu');
+  music(screen === 'game' ? (game?.tutorial ? 'tutorial' : 'battle') : 'menu');
   const fitting = FIT_SCREENS.has(screen) && landscape();
   app.classList.toggle('fit-screen', fitting);
   // Upright phones keep the scrolling layouts.
