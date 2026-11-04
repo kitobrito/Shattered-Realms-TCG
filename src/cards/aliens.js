@@ -357,7 +357,7 @@ export const ALIEN_CARDS = [
     ] }],
   },
   {
-    ...M, id: 'the_qu_shapers_of_worlds', name: 'The Qu, Shapers of Worlds', art: '🪽', extra: true, cost: 9, attack: 6, health: 8, keywords: ['Evade'],
+    ...M, id: 'the_qu_shapers_of_worlds', legendFrame: 'qu', name: 'The Qu, Shapers of Worlds', art: '🪽', extra: true, cost: 9, attack: 6, health: 8, keywords: ['Evade'],
     text: 'Evade. Arrival: Remake an enemy minion. At the end of your turn, Remake the most expensive enemy minion.',
     target: ENEMY_MINION,
     triggers: [
@@ -429,7 +429,7 @@ export const ALIEN_CARDS = [
     triggers: [{ on: 'battlecry', effects: [SILENCE({ minions: { side: 'enemy' } }), { op: 'remake', target: { strongest: { side: 'enemy' } } }] }],
   },
   {
-    ...M, id: 'hush_the_silent_choir', name: 'Hush, the Silent Choir', art: '🎶', extra: true, set: 'The Silent Choir', cost: 8, attack: 6, health: 6,
+    ...M, id: 'hush_the_silent_choir', legendFrame: 'qu', name: 'Hush, the Silent Choir', art: '🎶', extra: true, set: 'The Silent Choir', cost: 8, attack: 6, health: 6,
     text: 'Enemy minions are Silenced when they arrive. At the end of your turn, Remake a random Silenced enemy minion.',
     triggers: [
       { on: 'minionSummoned', filter: { player: 'enemy' }, effects: [SILENCE('eventSource')] },
