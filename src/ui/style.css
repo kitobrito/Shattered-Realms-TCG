@@ -5559,8 +5559,14 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
   .coll2 .c2-medal { width: 64px; }
   .coll2 .page-title h3 { font-size: 30px; }
   .coll2 .c2-stats { font-size: 13px; }
-  .coll2 .c2-bar { flex-wrap: wrap; }
-  .coll2 .c2-bar .set-filter { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
+  .coll2 .c2-bar { flex-wrap: wrap; min-width: 0; }
+  /* The set buttons scroll sideways inside the page instead of widening it (realms with an
+     expansion and mini-sets have more buttons than fit across a phone). */
+  .coll2 .book-body, .coll2 .book-page, .coll2 .book-page > * { min-width: 0; }
+  .coll2 .book-page { max-width: calc(100% + 32px); }
+  .coll2 .book-page > *:not(.c2-banner) { max-width: 100%; }
+  .coll2 .c2-bar .set-filter { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .coll2 .c2-bar .set-filter::-webkit-scrollbar { display: none; }
   .coll2 .set-filter button { padding: 6px 14px !important; font-size: 13px !important; white-space: nowrap; }
 }
 /* Phones held sideways: a slim crest rail, no logo, room for the search box */
