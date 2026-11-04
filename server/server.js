@@ -56,10 +56,13 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   const games = new Map();   // account key → game
   const loginTries = new Map(); // ip → [times]
 
+  // Admin accounts (every card and board unlocked on any device they sign in from). Names,
+  // comma-separated, from ADMIN_NAMES; the game's owner, Kito, by default.
+  const ADMINS = new Set(String(process.env.ADMIN_NAMES ?? 'Kito').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean));
   // What a player sees about themselves.
   async function youOf(acc) {
     return {
-      name: acc.name, ...rankView(acc.ladder), rating: acc.rating,
+      name: acc.name, admin: ADMINS.has(acc.key), ...rankView(acc.ladder), rating: acc.rating,
       wins: acc.wins, losses: acc.losses, rankedWins: acc.rankedWins, rankedLosses: acc.rankedLosses,
       place: await store.place(acc),
     };

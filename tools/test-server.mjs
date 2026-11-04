@@ -147,6 +147,12 @@ await test('Sign-up gives a token and a fresh Iron 5 account', () => {
   if (!alice.token || alice.you.label !== 'Iron 5' || alice.you.rp !== 0 || alice.you.wins !== 0) return JSON.stringify(alice.you);
 });
 
+await test('The Kito account is an admin (every unlock); other accounts are not', async () => {
+  const kito = await signUp('Kito');
+  if (kito.you.admin !== true) return `kito admin ${kito.you.admin}`;
+  if (alice.you.admin !== false) return `alice admin ${alice.you.admin}`;
+});
+
 await test('Names are unique (any capitals)', async () => {
   const c = client();
   await c.send({ t: 'register', v: 2, name: 'alice', password: 'password123' });
