@@ -1667,10 +1667,14 @@ export const EFFECT_OPS = {
     for (let i = 0; i < count; i++) {
       // distinct: never the same card twice (Sanguine Recollection).
       if (e.distinct && !fixed && !pool.length) break;
-      const cardId = fixed ?? pickRandom(state, pool);
+      let cardId = fixed ?? pickRandom(state, pool);
+      // replaceIfControls: { cardId, with } — summon `with` instead while you control that card
+      // (Mycelia, the Hive Mind: Infections raise Clickers instead of Rage Runners).
+      const swap = e.replaceIfControls && state.players[p].board.some((x) => x.cardId === e.replaceIfControls.cardId && x.health > 0 && !x.destroyed);
+      if (swap) cardId = e.replaceIfControls.with;
       if (e.distinct && !fixed) pool = pool.filter((id) => id !== cardId);
       // bonusIfControls: { cardId, attack, health } — bigger while you control that card (The Outbreak).
-      const bonus = e.bonusIfControls && state.players[p].board.some((x) => x.cardId === e.bonusIfControls.cardId && x.health > 0 && !x.destroyed) ? e.bonusIfControls : null;
+      const bonus = !swap && e.bonusIfControls && state.players[p].board.some((x) => x.cardId === e.bonusIfControls.cardId && x.health > 0 && !x.destroyed) ? e.bonusIfControls : null;
       const base = bonus ? getCard(cardId) : null;
       const m = summonMinion(state, p, cardId, { attack: bonus ? base.attack + bonus.attack : e.attack, health: bonus ? base.health + bonus.health : e.health, keywords: e.keywords });
       if (m) ctx.summoned = m.uid;
@@ -2108,7 +2112,7 @@ export const EFFECT_OPS = {
       m.infected = ctx.controller;
       m.grantedTriggers ??= [];
       m.grantedTriggers.push({ on: 'deathrattle', controller: ctx.controller, infection: true,
-        effects: [{ op: 'summon', cardId: 'rage_runner', lookOfDead: true, bonusIfControls: { cardId: 'the_outbreak', attack: 2, health: 2 } }] });
+        effects: [{ op: 'summon', cardId: 'rage_runner', lookOfDead: true, bonusIfControls: { cardId: 'the_outbreak', attack: 2, health: 2 }, replaceIfControls: { cardId: 'mycelia_the_hive_mind', with: 'clicker' } }] });
       log(state, `🦠 ${nameOf(state, m)} is Infected.`);
       emit(state, { type: 'infected', target: m.uid, player: m.controller, by: ctx.controller });
     });

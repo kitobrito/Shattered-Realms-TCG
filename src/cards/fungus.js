@@ -340,4 +340,61 @@ export const FUNGUS_CARDS = [
     text: 'Poisonous. Arrival: Place 4 Mushrooms in the enemy deck. While she lives, your Mushrooms deal double damage.',
     triggers: [{ on: 'battlecry', effects: [{ op: 'placeMushrooms', count: 4 }] }],
   },
+  // ---- Cordyceps Bloom mini-set (unlockable) ----
+  // The fungus behind the cordyceps Zombies: spread Infect, earn and spend Corpses (shared with
+  // Zombies), lead Zombies, and raise the Cordyceps Outbreak's infected.
+  {
+    ...S, id: 'spore_drift', name: 'Spore Drift', art: '🌫️', extra: true, set: 'Cordyceps Bloom', cost: 1,
+    text: 'Infect an enemy minion. Place a Mushroom in the enemy deck.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'infect', target: 'chosen' }, shrooms(1)],
+  },
+  {
+    ...F, id: 'cordyceps_sprout', name: 'Cordyceps Sprout', art: '🍄', extra: true, set: 'Cordyceps Bloom', cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Infect a random enemy minion.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'infect', target: { randomOf: { minions: { side: 'enemy', alive: true, infected: false } } } }] }],
+  },
+  {
+    ...F, id: 'fruiting_body', name: 'Fruiting Body', art: '🟡', extra: true, set: 'Cordyceps Bloom', cost: 2, attack: 0, health: 4, keywords: ['Taunt'],
+    text: 'Taunt. Exit: Infect all enemy minions.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'infect', target: { minions: { side: 'enemy', alive: true } } }] }],
+  },
+  {
+    ...F, id: 'hyphae_weaver', name: 'Hyphae Weaver', art: '🕸️', extra: true, set: 'Cordyceps Bloom', cost: 3, attack: 2, health: 4,
+    text: 'Whenever an enemy minion you Infected dies, gain a Corpse.',
+    triggers: [{ on: 'minionDied', filter: { deadInfectedByMe: true }, effects: [{ op: 'addCorpses', count: 1 }] }],
+  },
+  {
+    ...F, id: 'mind_thread_stalk', name: 'Mind-Thread Stalk', art: '🧵', extra: true, set: 'Cordyceps Bloom', cost: 3, attack: 3, health: 3,
+    text: 'Your Zombies have +1/+1.',
+    aura: { target: { minions: { side: 'friendly', tribe: 'Zombie' } }, attack: 1, health: 1 },
+  },
+  {
+    ...S, id: 'spore_bloom', name: 'Spore Bloom', art: '🌼', extra: true, set: 'Cordyceps Bloom', cost: 3,
+    text: 'Deal 2 damage to all Infected enemy minions, then Infect all other enemy minions.',
+    effects: [
+      { op: 'damage', target: { minions: { side: 'enemy', infected: true } }, amount: 2 },
+      { op: 'infect', target: { minions: { side: 'enemy', alive: true } } },
+    ],
+  },
+  {
+    ...F, id: 'host_puppeteer', name: 'Host Puppeteer', art: '🎭', extra: true, set: 'Cordyceps Bloom', cost: 4, attack: 3, health: 5,
+    text: 'At the end of your turn, spend a Corpse to summon a 2/1 Cordyceps Runner with Rush.',
+    triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'consumeCorpses', count: 1, effects: [{ op: 'summon', cardId: 'cordyceps_runner' }], otherwise: [] }] }],
+  },
+  {
+    ...F, id: 'rotting_overgrowth', name: 'Rotting Overgrowth', art: '🌳', extra: true, set: 'Cordyceps Bloom', cost: 5, attack: 4, health: 6, keywords: ['Taunt'],
+    text: 'Taunt. Infected enemy minions have -1 Attack.',
+    aura: { target: { minions: { side: 'enemy', infected: true } }, attack: -1 },
+  },
+  {
+    ...F, id: 'mycelia_the_hive_mind', name: 'Mycelia, the Hive Mind', art: '🍄', extra: true, set: 'Cordyceps Bloom', cost: 7, attack: 5, health: 7,
+    text: 'Arrival: Infect all enemy minions. While you control her, your Infections raise a 3/4 Clicker instead of a Rage Runner.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'infect', target: { minions: { side: 'enemy', alive: true } } }] }],
+  },
+  {
+    ...F, id: 'ophio_the_cordyceps_crown', name: 'Ophio, the Cordyceps Crown', art: '👑', extra: true, set: 'Cordyceps Bloom', cost: 8, attack: 6, health: 8,
+    text: 'Arrival: Spend all your Corpses. For each, summon a random cordyceps Zombie (Cordyceps Runner, Spore Stalker, Clicker, Spore Shambler or Cordyceps Bloater).',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'consumeCorpses', upTo: 99, each: [{ op: 'summon', pool: ['cordyceps_runner', 'spore_stalker', 'clicker', 'spore_shambler', 'cordyceps_bloater'] }] }] }],
+  },
 ];

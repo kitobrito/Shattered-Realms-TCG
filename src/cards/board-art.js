@@ -21,6 +21,10 @@ export const BOARD_ART = {
   Void: 'art/boards-v2/void.jpg',
   'Ice Age': 'art/boards-v2/ice-age.jpg',
   Eels: 'art/boards-v2/eels.jpg',
+  // Unlockable alternate boards (ALT_BOARDS below): keyed by the board's own name.
+  'Harvest Moon': 'art/boards-v2/harvest-moon.jpg',
+  'Cordyceps Outbreak': 'art/boards-v2/cordyceps-outbreak.jpg',
+  'Cordyceps Bloom': 'art/boards-v2/cordyceps-bloom.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
 };
@@ -37,6 +41,14 @@ export const BOARD_ANIM = {};
 // drawn wider than ~2600 real pixels.
 import { BUILD } from '../build.js';
 import { BOARD_CUTS } from './board-cuts.js';
+
+// Alternate boards a faction can switch to (the board picker in the collection). Each unlocks once
+// every card of its mini-set (`set`) is unlocked.
+export const ALT_BOARDS = {
+  Plants: [{ id: 'Harvest Moon', set: 'Harvest Moon', blurb: 'A haunted pumpkin patch under the harvest moon.' }],
+  Zombies: [{ id: 'Cordyceps Outbreak', set: 'Cordyceps Outbreak', blurb: 'An overgrown city street, decades after the fungus won.' }],
+  Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
+};
 
 // A realm board's file name ('ice-age'), which also names its living effects (board-fx-defs.js).
 export const boardKey = (faction) => BOARD_ART[faction]?.split('/').pop().replace(/\.jpg$/, '') ?? null;
@@ -67,6 +79,9 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  'Harvest Moon': { src: 'art/boards-portrait/harvest-moon.jpg', opp: [192, 130, 267, 207, 'arch'], me: [183, 757, 276, 839, 'circle'], field: [223, 741], props: [] },
+  'Cordyceps Outbreak': { src: 'art/boards-portrait/cordyceps-outbreak.jpg', opp: [184, 70, 274, 158, 'arch'], me: [187, 866, 272, 950, 'circle'], field: [174, 850], props: [] },
+  'Cordyceps Bloom': { src: 'art/boards-portrait/cordyceps-bloom.jpg', opp: [184, 155, 275, 264, 'arch'], me: [180, 751, 281, 830, 'circle'], field: [280, 735], props: [] },
   Basic: { src: 'art/boards-portrait/basic.jpg', opp: [201, 30, 259, 98, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [120, 790], frame: 'stone', props: [] },
   // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
   // Eels: a glowing flooded cave; the game draws copper frames over the water.
@@ -96,6 +111,9 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
+  'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
+  'Cordyceps Bloom': { src: 'art/boards-v2/cordyceps-bloom.jpg', opp: [467, 35, 558, 142], me: [462, 434, 561, 533], field: [130, 156, 895, 422], props: [] },
   Basic: { src: 'art/boards-v2/basic.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
   Eels: { src: 'art/boards-v2/eels.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'copper', props: [] },
   'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'bone', props: [] },

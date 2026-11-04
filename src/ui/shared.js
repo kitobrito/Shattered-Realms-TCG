@@ -1,7 +1,7 @@
 // Rendering helpers shared by every screen: card markup, the big card,
 // keyword glossary, art lookup and text fitting.
 
-import { ART, FUSION_HERO_ART, HERO_ART, RAGE_RUNNER_ART } from '../cards/art-manifest.js';
+import { ART, CLICKER_ART, FUSION_HERO_ART, HERO_ART, RAGE_RUNNER_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
 import { getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
@@ -56,7 +56,8 @@ const artFocus = (card) => (ART_FOCUS_Y[card.id] ? ` style="object-position: 50%
 // Image for a card; Hybrids and other created cards use their source card's art.
 export const artOf = (card) => { const path = ART[card.id] ?? (card.artFrom ? ART[card.artFrom] : undefined); return path && artSrc(path); };
 // A minion on the board: a Rage Runner wears the look of the faction it burst out of.
-export const minionArtOf = (m, card) => (card.id === 'rage_runner' && RAGE_RUNNER_ART[m.lookFaction] ? artSrc(RAGE_RUNNER_ART[m.lookFaction]) : artOf(card));
+const LOOK_ART = { rage_runner: RAGE_RUNNER_ART, clicker: CLICKER_ART };
+export const minionArtOf = (m, card) => (LOOK_ART[card.id]?.[m.lookFaction] ? artSrc(LOOK_ART[card.id][m.lookFaction]) : artOf(card));
 
 // Hero portrait for a faction (designer-provided art), if there is one yet.
 export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[faction]);

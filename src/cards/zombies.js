@@ -302,6 +302,48 @@ export const ZOMBIE_CARDS = [
     keywords: ['Taunt', 'Thick Fur', 'Reborn'], text: 'Taunt. Thick Fur. Reborn.',
   },
 
+  // ---- Cordyceps Outbreak mini-set (unlockable) ----
+  // The fungal infected, from fresh Runner to the fused Rat King. They combo with the Fungus
+  // Cordyceps Bloom cards (Infect, shared Corpses, Mind-Thread Stalk, Ophio, Mycelia).
+  {
+    ...Z, id: 'necrohydra', name: 'The Three-Headed Necrohydra', art: '🐉', extra: true, set: 'Cordyceps Outbreak', tribes: ['Zombie', 'Beast'],
+    cost: 9, attack: 6, health: 9, keywords: ['Reborn'], attacksPerTurn: 3,
+    text: 'Reborn. Can attack three times each turn (once per head). After it attacks a minion, that minion Burns for 1.',
+    triggers: [{ on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'applyBurn', target: 'eventTarget', amount: 1, if: { subject: 'eventTarget', alive: true } }] }],
+  },
+  {
+    ...Z, id: 'cordyceps_runner', name: 'Cordyceps Runner', art: '🏃', extra: true, set: 'Cordyceps Outbreak', cost: 1, attack: 2, health: 1, keywords: ['Rush'],
+    text: 'Rush.',
+  },
+  {
+    ...Z, id: 'spore_stalker', name: 'Spore Stalker', art: '🍄', extra: true, set: 'Cordyceps Outbreak', cost: 2, attack: 3, health: 2, keywords: ['Stealth'],
+    text: 'Stealth. Arrival: Infect an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [infect('chosen')] }],
+  },
+  {
+    ...Z, id: 'clicker', name: 'Clicker', art: '🍄', extra: true, set: 'Cordyceps Outbreak', cost: 3, attack: 3, health: 4, keywords: ['Elusive'],
+    text: "Elusive. It hunts by sound: whenever an enemy minion attacks, deal 1 damage to it.",
+    triggers: [{ on: 'attackDeclared', filter: { source: 'enemyMinion' }, effects: [{ op: 'damage', target: 'eventSource', amount: 1 }] }],
+  },
+  {
+    ...Z, id: 'spore_shambler', name: 'Spore Shambler', art: '🍄', extra: true, set: 'Cordyceps Outbreak', cost: 5, attack: 4, health: 6,
+    text: 'Exit: Deal 2 damage to all enemy minions, then Infect them.',
+    triggers: [{ on: 'deathrattle', effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }, infect({ minions: { side: 'enemy', alive: true } })] }],
+  },
+  {
+    ...Z, id: 'cordyceps_bloater', name: 'Cordyceps Bloater', art: '🍄', extra: true, set: 'Cordyceps Outbreak', cost: 6, attack: 4, health: 9, keywords: ['Taunt'],
+    text: 'Taunt. Whenever this takes damage, its spore sacs burst: deal 1 damage to all enemy minions.',
+    triggers: [{ on: 'damageDealt', filter: { target: 'self' }, effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 1 }] }],
+  },
+  {
+    ...Z, id: 'the_rat_king', name: 'The Rat King', art: '👑', extra: true, set: 'Cordyceps Outbreak', cost: 8, attack: 7, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Exit: It splits apart: summon a Cordyceps Bloater, a Clicker and a Cordyceps Runner.',
+    triggers: [{ on: 'deathrattle', effects: [
+      { op: 'summon', cardId: 'cordyceps_bloater' }, { op: 'summon', cardId: 'clicker' }, { op: 'summon', cardId: 'cordyceps_runner' },
+    ] }],
+  },
+
   // ---- Tokens ----
   { ...Z, id: 'zombie', name: 'Zombie', art: '🧟', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...Z, tribes: ['Infected', 'Human'], id: 'rage_runner', name: 'Rage Runner', art: '😡', token: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'], text: 'Rush. Risen from an Infected minion.' },

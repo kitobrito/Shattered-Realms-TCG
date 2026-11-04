@@ -16,6 +16,13 @@ function saved() {
 const extras = () => allCards().filter((c) => c.extra && !c.token && !c.custom && !c.alwaysUnlocked);
 
 export const isLocked = (id) => !!getCard(id)?.extra && !getCard(id).alwaysUnlocked && !saved().has(id);
+// A mini-set's unlock progress (the Harvest Moon / Cordyceps boards unlock when it is complete).
+export function setProgress(set) {
+  const cards = extras().filter((c) => c.set === set);
+  const have = saved();
+  return { have: cards.filter((c) => have.has(c.id)).length, total: cards.length };
+}
+export const setComplete = (set) => { const p = setProgress(set); return p.total > 0 && p.have === p.total; };
 export const lockedCount = (faction) => extras().filter((c) => (!faction || c.faction === faction) && !saved().has(c.id)).length;
 
 // Unlock up to n locked cards from the factions the player won with, taking turns between
