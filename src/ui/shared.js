@@ -202,7 +202,7 @@ function sigilHTML(card) {
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes',
-  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age']);
+  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
@@ -211,8 +211,8 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   const legend = !!card.legendary;
   // Each faction's legendary minions have their own painted frame (Dragons and fusions use the gold one).
   const own = legend && type === 'minion' && !card.fusion && LEGEND_FRAMES.has(card.faction);
-  // ?v=2: the Zombies frame was replaced; the tag makes browsers fetch the fixed picture.
-  const frameSrc = own ? `art/frames/legendary-minion-${fslug(card.faction)}.webp?v=2`
+  // ?v=3: new frames for Acidic, Radioactive, Dinosaurs, Sharks, Eels, Vampires and Demons; the tag makes browsers fetch them.
+  const frameSrc = own ? `art/frames/legendary-minion-${fslug(card.faction)}.webp?v=3`
     : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
   return `
     <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>
