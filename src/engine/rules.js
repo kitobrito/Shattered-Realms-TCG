@@ -36,7 +36,8 @@ export const POSITIVE_KEYWORDS = [
 //   Recoil    takes half (rounded down) of the damage it deals
 //   Burned    loses 1 Health at the end of its controller's turn
 // Aliens (The Qu): what Remake turns a minion into (the Remade human tokens in aliens.js).
-export const REMADE_FORMS = ['remade_gravital', 'remade_swimmer', 'remade_loper', 'remade_worm_person', 'remade_snake_person', 'remade_colonial'];
+export const REMADE_FORMS = ['remade_gravital', 'remade_swimmer', 'remade_loper', 'remade_worm_person', 'remade_snake_person', 'remade_colonial',
+  'remade_blind_folk', 'remade_bone_crusher', 'remade_parasite'];
 export const NEGATIVE_KEYWORDS = ['Silenced', 'Frozen', 'Blind', 'Recoil', 'Burned'];
 
 export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward', 'Rage', 'Devour', 'Burrow', 'Acid Hide', 'Thick Fur', 'Hardy', ...NEGATIVE_KEYWORDS];
@@ -76,7 +77,7 @@ export const KEYWORD_TEXT = {
   Shell: "Arrival: put another friendly Plant inside this Pumpkin. Inside, it can't attack, be attacked or targeted and takes no board space, and it gains +1/+1 at the start of your turn. It bursts out where the Pumpkin stood when the Pumpkin dies or leaves the board.",
   Burrow: "Goes underground: it has Stealth until the start of your next turn, then it Surfaces. A minion with Burrow arrives Burrowed.",
   Surface: 'Happens when this comes back up from Burrow (at the start of your turn, or sooner if a card Surfaces it).',
-  Remake: "The Qu rewrite a minion's body: it Transforms into a random Remade human (Gravital, Swimmer, Loper, Worm Person, Snake Person or Colonial), each weak and badly built in its own way.",
+  Remake: "The Qu rewrite a minion's body: it Transforms into a random Remade human (Gravital, Swimmer, Loper, Worm Person, Snake Person, Colonial, Blind Folk, Bone Crusher or Parasite), each weak and badly built in its own way.",
   Implant: 'Puts a parasite in an enemy minion. When that minion dies, a 1/1 Chestburster bursts out on your side.',
   Chestburster: "A weak 1/1 newborn that remembers the minion it burst from. After 2 of your turns it Evolves into that realm's Xeno.",
   Evolve: "A Chestburster turns into a stronger Xeno shaped by the realm of the minion it burst from (a Vampire's makes a Xeno Nosferatu, a Robot's a Xeno Mech...).",

@@ -2177,6 +2177,16 @@ export const EFFECT_OPS = {
     log(state, `🪦 A Corpse is left on ${pl.name}'s side.`);
   },
 
+  // { count } — the Colonial filter-feeds: each player loses up to `count` Corpses.
+  eatCorpses(state, e) {
+    for (const pl of state.players) {
+      const n = Math.min(e.count ?? 1, pl.corpses ?? 0);
+      if (!n) continue;
+      pl.corpses -= n;
+      log(state, `🧽 A Colonial eats ${n} of ${pl.name}'s Corpse${n === 1 ? '' : 's'}.`);
+    }
+  },
+
   // { target, keyword, attack, attackIfHas } — Zombie Surge: those without the keyword
   // gain it and `attack` this turn; those that already had it gain `attackIfHas` instead.
   surge(state, e, ctx) {
