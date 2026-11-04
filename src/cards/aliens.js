@@ -7,6 +7,8 @@ const S = { faction: 'Aliens', type: 'spell' };
 const T = { faction: 'Aliens', type: 'trap' };
 
 const ENEMY_MINION = { type: 'minion', side: 'enemy' };
+// Silence: the minion loses every other keyword (rules.js Silenced).
+const SILENCE = (target) => ({ op: 'buff', target, keywords: ['Silenced'] });
 const FRIENDLY_MINION = { type: 'minion', side: 'friendly' };
 const RANDOM_FRIENDLY = { randomOf: { minions: { side: 'friendly' } } };
 const MY_TURN_END = { on: 'endOfTurn', filter: { player: 'friendly' } };
@@ -373,6 +375,66 @@ export const ALIEN_CARDS = [
     ...S, id: 'the_great_remaking', name: 'The Great Remaking', art: '🌍', extra: true, cost: 8,
     text: 'Remake all enemy minions.',
     effects: [{ op: 'remake', target: { minions: { side: 'enemy' } } }],
+  },
+  // ---- The Qu: Silence and Remake ----
+  // The Qu strip an enemy's gifts first (Silence), then rewrite its body (Remake). They never
+  // Silence the Remade on purpose: that would take away the drawbacks the Qu built into them.
+  {
+    ...M, id: 'qu_hushwing', name: 'Qu Hushwing', art: '🤫', extra: true, set: 'The Silent Choir', cost: 2, attack: 2, health: 2,
+    text: 'Arrival: Silence an enemy minion.',
+    target: ENEMY_MINION,
+    triggers: [{ on: 'battlecry', effects: [SILENCE('chosen')] }],
+  },
+  {
+    ...S, id: 'sterile_hum', name: 'Sterile Hum', art: '〰️', extra: true, set: 'The Silent Choir', cost: 1,
+    text: 'Silence an enemy minion. If it was already Silenced, Remake it instead.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'remake', target: 'chosen', if: { subject: 'chosen', keyword: 'Silenced' }, else: [SILENCE('chosen')] }],
+  },
+  {
+    ...M, id: 'qu_mute_weaver', name: 'Qu Mute-Weaver', art: '🕸️', extra: true, set: 'The Silent Choir', cost: 3, attack: 2, health: 4,
+    text: 'Whenever an enemy minion is Silenced, deal 1 damage to it.',
+    triggers: [{ on: 'keywordGained', filter: { keyword: 'Silenced', player: 'enemy' }, effects: [{ op: 'damage', target: 'eventTarget', amount: 1 }] }],
+  },
+  {
+    ...S, id: 'unwriting', name: 'Unwriting', art: '📜', extra: true, set: 'The Silent Choir', cost: 3,
+    text: 'Silence all enemy minions that cost (3) or less.',
+    effects: [SILENCE({ minions: { side: 'enemy', maxCost: 3 } })],
+  },
+  {
+    ...M, id: 'qu_flesh_scribe', name: 'Qu Flesh-Scribe', art: '✒️', extra: true, set: 'The Silent Choir', cost: 4, attack: 3, health: 4,
+    text: 'Arrival: Remake a Silenced enemy minion. Draw a card.',
+    target: { type: 'minion', side: 'enemy', keyword: 'Silenced' },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'remake', target: 'chosen' }, { op: 'draw', count: 1 }] }],
+  },
+  {
+    ...M, id: 'qu_gene_warden', name: 'Qu Gene-Warden', art: '🛡️', extra: true, set: 'The Silent Choir', cost: 5, attack: 4, health: 5, keywords: ['Taunt'],
+    text: 'Taunt. Silenced enemy minions have -1 Attack.',
+    aura: { target: { minions: { side: 'enemy', keyword: 'Silenced' } }, attack: -1 },
+  },
+  {
+    ...T, id: 'quiet_laboratory', name: 'Quiet Laboratory', art: '🔇', extra: true, set: 'The Silent Choir', cost: 2,
+    text: 'When your opponent plays a minion, Silence it.',
+    trap: { on: 'cardPlayed', filter: { player: 'enemy', cardType: 'minion' }, effects: [SILENCE('eventSource')] },
+  },
+  {
+    ...S, id: 'erase_and_rewrite', name: 'Erase and Rewrite', art: '🧬', extra: true, set: 'The Silent Choir', cost: 5,
+    text: 'Silence an enemy minion, then Remake it. You choose what it becomes.',
+    target: ENEMY_MINION,
+    effects: [SILENCE('chosen'), { op: 'chooseRemake', target: 'chosen' }],
+  },
+  {
+    ...M, id: 'qu_archivist', name: 'Qu Archivist', art: '🏺', extra: true, set: 'The Silent Choir', cost: 6, attack: 5, health: 5,
+    text: 'Arrival: Silence all enemy minions, then Remake the one with the highest Attack.',
+    triggers: [{ on: 'battlecry', effects: [SILENCE({ minions: { side: 'enemy' } }), { op: 'remake', target: { strongest: { side: 'enemy' } } }] }],
+  },
+  {
+    ...M, id: 'hush_the_silent_choir', name: 'Hush, the Silent Choir', art: '🎶', extra: true, set: 'The Silent Choir', cost: 8, attack: 6, health: 6,
+    text: 'Enemy minions are Silenced when they arrive. At the end of your turn, Remake a random Silenced enemy minion.',
+    triggers: [
+      { on: 'minionSummoned', filter: { player: 'enemy' }, effects: [SILENCE('eventSource')] },
+      { ...MY_TURN_END, effects: [{ op: 'remake', target: { randomOf: { minions: { side: 'enemy', keyword: 'Silenced', alive: true } } } }] },
+    ],
   },
   {
     ...T, id: 'sentence_of_the_qu', name: 'Sentence of the Qu', art: '⚖️', extra: true, cost: 3,

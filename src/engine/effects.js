@@ -543,13 +543,14 @@ export function checkCondition(state, cond, ctx) {
 export function addKeyword(c, k, temporary = false, state = null, lingerUntil = null) {
   // Ice Age: Thick Fur can't be Frozen.
   if (k === 'Frozen' && hasKeyword(c, 'Thick Fur')) return;
+  // Checked first: Silence clears the keyword list, so a second Silence must not count as new.
+  const isNew = !hasKeyword(c, k);
   if (k === 'Silenced') {
     if (c.encased > 0) delete c.encased; // Frozen in Time: silence breaks the ice (no Breaks free)
     if (c.volts) c.volts = 0; // Eels: Silence drains its Volts
     for (const old of allKeywords(c)) state ? loseKeyword(state, c, old) : null;
     c.keywords = []; c.tempKeywords = []; c.lingerKeywords = [];
   }
-  const isNew = !hasKeyword(c, k);
   if (lingerUntil != null) {
     c.lingerKeywords ??= [];
     c.lingerKeywords.push({ k, until: lingerUntil });

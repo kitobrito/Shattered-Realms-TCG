@@ -105,6 +105,7 @@ export const LEGENDARY = new Set([
   'the_slayer_hornet',
   'drosera_the_dewtrap_queen',
   'the_great_pumpkin',
+  'hush_the_silent_choir',
   'necrohydra',
   'the_rat_king',
   'mycelia_the_hive_mind',
