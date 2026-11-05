@@ -140,6 +140,16 @@ export function evaluate(s, me, W = BASE_WEIGHTS) {
     if (x.controller === me) score += v; else score -= v * W.oppBoard;
   }
 
+  // A Hero Weapon is damage banked over its Durability (a Wand's hits come back free, and its spell
+  // rides on every attack); without this the AI never arms its Hero (Witches, Robots, Ghosts).
+  const weaponValue = (h) => {
+    const w = h.weapon;
+    if (!w) return 0;
+    const hits = Math.min(w.durability, 3);
+    return (w.attack + (h.auraAttack ?? 0)) * hits * 0.8 + (w.wand ? hits * 0.6 : 0)
+      + (h.grantedTriggers ?? []).filter((t) => t.weapon).length * hits * 0.9 + (w.keywords?.length ?? 0) * 1.5;
+  };
+  score += weaponValue(my.hero) - weaponValue(opp.hero) * W.oppBoard;
   score += my.hand.length * W.hand - opp.hand.length * W.oppHand;
   score += my.traps.length * W.trap - opp.traps.length * W.oppTrap;
   score += my.mana.bonusNextTurn * W.bonusMana;

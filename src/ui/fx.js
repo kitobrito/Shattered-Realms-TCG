@@ -505,6 +505,7 @@ const PARTICLES = {
   Void: { cls: 'voidmote', gravity: -0.15 },
   'Ice Age': { cls: 'snowflake', gravity: 0.25, spin: true },
   Eels: { cls: 'voltspark', gravity: 0.1 },
+  Witches: { cls: 'hexrune', gravity: -0.25, spin: true },
 };
 export function particles(rect, faction, power = 1) {
   const kind = PARTICLES[faction] ?? { cls: 'spark', gravity: 0.3 };
@@ -708,7 +709,7 @@ export function flashScreen(color = '#ff7a3a') {
 
 // ---- Spells ------------------------------------------------------------------
 
-const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff', Eels: '#5ae8ff' };
+const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff', Eels: '#5ae8ff', Witches: '#10b981' };
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
@@ -987,7 +988,94 @@ export async function burnCard(html, pileRect) {
 }
 
 // Building blocks shared with keyword-fx.js.
-export { addFx, box, center, done, drain, fling, glowBall, ring, bigGlyph, column, slashes };
+export { addFx, box, center, done, drain, fling, glowBall, ring, bigGlyph, column, slashes, hexSmoke, cauldronBubbles };
+
+// ---- Witches ---------------------------------------------------------------------------
+// Palette: deep violet #2b0938, emerald #10b981, eldritch magenta #d946ef, spectral white highlights.
+// Smoke in three stages: a tight violet puff (0-25%), a wide green bloom (25-60%), then it thins
+// away while ember dots trail upward.
+function hexSmoke(c, size, { delay = 0 } = {}) {
+  const jobs = [];
+  for (let i = 0; i < 3; i++) {
+    const s = size * (0.55 + i * 0.25);
+    const el = addFx('fx-hex-smoke', { ...box({ x: c.x + (i - 1) * size * 0.12, y: c.y - i * size * 0.06 }, s), animationDelay: '0ms' });
+    jobs.push(done(el, animate(el, [
+      { transform: 'scale(0.35)', opacity: 0 },
+      { transform: 'scale(0.8)', opacity: 0.75, offset: 0.25 },
+      { transform: 'scale(1.15) translateY(-6%)', opacity: 0.45, offset: 0.6 },
+      { transform: 'scale(1.4) translateY(-14%)', opacity: 0 },
+    ], { duration: 900 + i * 120, delay: delay + i * 70, easing: 'cubic-bezier(.2,.7,.3,1)' })));
+  }
+  for (let i = 0; i < 7; i++) {
+    const el = addFx('fx-hex-ember', { left: `${c.x + (Math.random() - 0.5) * size * 0.6}px`, top: `${c.y + (Math.random() - 0.2) * size * 0.3}px` });
+    jobs.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%)', opacity: 0 },
+      { transform: `translate(-50%, calc(-50% - ${size * 0.2}px))`, opacity: 1, offset: 0.3 },
+      { transform: `translate(calc(-50% + ${(Math.random() - 0.5) * 20}px), calc(-50% - ${size * (0.6 + Math.random() * 0.3)}px))`, opacity: 0 },
+    ], { duration: 1000 + Math.random() * 400, delay: delay + 200 + i * 40, easing: 'ease-out' })));
+  }
+  return Promise.all(jobs);
+}
+// Cauldron bubbles: 2x2 bubbles rise off the spot and pop into four diagonal one-pixel fragments.
+function cauldronBubbles(c, size, count = 8, { delay = 0 } = {}) {
+  const jobs = [];
+  for (let i = 0; i < count; i++) {
+    const x = c.x + (Math.random() - 0.5) * size * 0.7;
+    const y = c.y + (Math.random() - 0.3) * size * 0.3;
+    const rise = size * (0.25 + Math.random() * 0.35);
+    const t = 380 + Math.random() * 260;
+    const at = delay + i * 45;
+    const b = addFx('fx-hex-bubble', { left: `${x}px`, top: `${y}px` });
+    jobs.push(done(b, animate(b, [{ transform: 'translate(-50%, -50%) scale(0.6)', opacity: 0.2 }, { transform: `translate(-50%, calc(-50% - ${rise}px)) scale(1.2)`, opacity: 1 }],
+      { duration: t, delay: at, easing: 'cubic-bezier(.3,.6,.5,1)' })).then(() => {
+      for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        const f = addFx('fx-hex-frag', { left: `${x}px`, top: `${y - rise}px` });
+        done(f, animate(f, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${dx * 7}px), calc(-50% + ${dy * 7}px))`, opacity: 0 }], { duration: 220, easing: 'ease-out' }));
+      }
+    }));
+  }
+  return Promise.all(jobs);
+}
+// The Witches' hit: the cauldron blast. Core flash, radial shockwave (with a small table shake for
+// big hits), magenta rune sparks and popping bubbles.
+function cauldronBlast(c, rect, size, dmg = 1) {
+  const jobs = [
+    glowBall(c, size * 0.85, '#b9ffdf', '#10b98188', { duration: 460 }),
+    ring(c, size * 0.8, '#d946ef', { width: 4, to: 1.5, duration: 480 }),
+    ring(c, size * 0.8, '#10b981', { width: 2, to: 1.9, duration: 620, delay: 90 }),
+    cauldronBubbles(c, size, 6 + Math.min(dmg, 6)),
+    particles(rect, 'Witches', Math.min(dmg + 2, 8)),
+  ];
+  if (dmg >= 4) { const arena = document.querySelector('.arena'); if (arena) jobs.push(screenShake(arena, Math.min(4 + dmg, 12))); }
+  return Promise.all(jobs);
+}
+// A Wand attack: the Hero fires a bolt from afar (no lunge, nothing hits back). The bolt is an
+// emerald core in a magenta halo with a trail of spectral sparks; it lands as a cauldron blast.
+export async function wandBolt(fromEl, toEl, power = 1) {
+  if (!fromEl || !toEl) return;
+  const a = center(fromEl.getBoundingClientRect());
+  const tr = toEl.getBoundingClientRect();
+  const b = center(tr);
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const lift = Math.min(90, Math.hypot(dx, dy) * 0.18);
+  const bolt = addFx('fx-wand-bolt', { left: `${a.x}px`, top: `${a.y}px` });
+  const trail = [];
+  const fly = animate(bolt, [
+    { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 0 },
+    { transform: `translate(calc(-50% + ${dx * 0.5}px), calc(-50% + ${dy * 0.5 - lift}px)) scale(1)`, opacity: 1, offset: 0.5 },
+    { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.2)`, opacity: 1 },
+  ], { duration: 340, easing: 'cubic-bezier(.4,0,.8,.6)' });
+  for (let i = 1; i <= 6; i++) {
+    const k = i / 7;
+    const x = a.x + dx * k, y = a.y + dy * k - lift * 4 * k * (1 - k);
+    const sp = addFx('fx-wand-spark', { left: `${x}px`, top: `${y}px` });
+    trail.push(done(sp, animate(sp, [{ transform: 'translate(-50%, -50%) scale(0)', opacity: 0 }, { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0.2 }, { transform: 'translate(-50%, calc(-50% - 10px)) scale(0.4)', opacity: 0 }],
+      { duration: 420, delay: 340 * k })));
+  }
+  await done(bolt, fly);
+  await cauldronBlast(b, tr, Math.max(tr.width, tr.height) * 0.9, power);
+  await Promise.all(trail);
+}
 
 // ---- Deaths, by faction --------------------------------------------------------------
 
@@ -1031,6 +1119,8 @@ export function deathFx(rect, faction) {
     case 'Ice Age': { particles(rect, 'Ice Age', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.05, '#c8f0ff', { width: 4, to: 1.4, duration: 600 }); break; }
     // Eels: a last crackle of sparks and a blue-white ring of static.
     case 'Eels': { particles(rect, 'Eels', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.05, '#5ae8ff', { width: 4, to: 1.5, duration: 560 }); break; }
+    // Witches: unwritten in a puff of violet smoke, runes scattering upward.
+    case 'Witches': { particles(rect, 'Witches', 12); const c = center(rect); hexSmoke(c, Math.max(rect.width, rect.height)); ring(c, Math.max(rect.width, rect.height) * 1.05, '#d946ef', { width: 3, to: 1.4, duration: 600 }); break; }
     case 'Lycanthropes': particles(rect, 'Lycanthropes', 12); fling(rect, '🐾', 3, { rise: 0.8, spread: 0.9 }); break;
     case 'Ghosts': particles(rect, 'Ghosts', 12); fling(rect, '👻', 1, { rise: 1.4, spread: 0.2, size: 26, duration: 1300 }); break;
     case 'Robots': particles(rect, 'Robots', 14); fling(rect, '⚙️', 3, { rise: 0.5, spread: 0.9 }); fling(rect, '🔩', 2, { rise: 0.4 }); break;
@@ -1061,6 +1151,7 @@ const KILL_COLOR = {
   Void: ['#9a6aff', '#1a0a2e'],
   'Ice Age': ['#c8f0ff', '#5a8aaa'],
   Eels: ['#5ae8ff', '#ffe84a'],
+  Witches: ['#d946ef', '#10b981'],
 };
 
 function addFx(cls, style) {
@@ -1712,6 +1803,8 @@ const HITS = {
   Ultraterrestrials: ({ c, size }) => ring(c, size * 0.9, '#b48cff', { width: 2, to: 0.4, duration: 480 }),
   Void: ({ c, rect, size }) => { particles(rect, 'Void', 6); return ring(c, size * 1.1, '#9a6aff', { width: 3, from: 1.2, to: 0.3, duration: 440 }); },
   Eels: ({ c, rect }) => { particles(rect, 'Eels', 5); return zapAcross(c, rect, '#5ae8ff'); },
+  // Witches: an eldritch cauldron blast — an emerald core, a magenta shockwave, bubbles that rise and pop.
+  Witches: ({ c, rect, size, dmg }) => cauldronBlast(c, rect, size, dmg),
   'Ice Age': ({ c, rect, size }) => { particles(rect, 'Ice Age', 5); return ring(c, size * 0.95, '#9fe0ff', { width: 3, to: 1.3, duration: 460 }); },
   Lycanthropes: ({ c, rect, size }) => { fling(rect, '🐾', 2, { rise: 0.5, spread: 0.8, size: 14 }); return ring(c, size * 0.85, '#c8d8ff', { width: 3, to: 1.3, duration: 460 }); },
   Ghosts: ({ c, size }) => ring(c, size * 0.85, '#8ff0ff', { width: 3, to: 1.35, duration: 520 }),

@@ -336,7 +336,7 @@ export const ALIEN_CARDS = [
   { ...XENO, id: 'woolly_xeno', name: 'Woolly Xeno', attack: 3, health: 5, keywords: ['Thick Fur'], text: 'Thick Fur. (Evolved from an Ice Age minion.)' },
   { ...XENO, id: 'xeno_voltwyrm', name: 'Xeno Voltwyrm', attack: 3, health: 4, triggers: [{ on: 'battlecry', effects: [{ op: 'chain', amount: 2 }] }], text: 'Arrival: Chain 2. (Evolved from an Eels minion.)' },
   { ...XENO, id: 'xeno_hexmorph', name: 'Xeno Hexmorph', attack: 3, health: 4, target: { type: 'minion', side: 'enemy' },
-    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: 'chosen', keywords: ['Silenced'] }] }], text: 'Arrival: Silence an enemy minion. (Evolved from a Witch minion.)' },
+    triggers: [{ on: 'summon', effects: [{ op: 'buff', target: 'chosen', keywords: ['Silenced'] }] }], text: 'When it Evolves: permanently Silence a random enemy minion. (Evolved from a Witch minion.)' },
   { ...XENO, id: 'xeno_drone', name: 'Xeno Drone', attack: 2, health: 3, text: '(Evolved from a minion with no realm.)' },
 
   // ---- Tokens ----

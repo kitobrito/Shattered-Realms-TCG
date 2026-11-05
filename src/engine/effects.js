@@ -562,7 +562,8 @@ export function addKeyword(c, k, temporary = false, state = null, lingerUntil = 
     const list = temporary ? c.tempKeywords : c.keywords;
     if (!list.includes(k)) list.push(k);
   }
-  if (isNew && state) emit(state, { type: 'keywordGained', target: c.uid, player: c.controller, keyword: k });
+  if (isNew && state) emit(state, { type: 'keywordGained', target: c.uid, player: c.controller, keyword: k,
+    ...(k === 'Silenced' && state.players[1 - c.controller]?.factions?.includes('Witches') ? { hex: true } : {}) });
 }
 
 function randomKeywords(state, pool, have, n) {

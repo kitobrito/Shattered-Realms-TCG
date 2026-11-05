@@ -29,7 +29,7 @@ export const POSITIVE_KEYWORDS = [
 ];
 
 // Negative keywords (statuses):
-//   Silenced  all its other keywords are removed
+//   Silenced  all its other keywords are removed, permanently (it can't gain new ones)
 //   Frozen    cannot attack; thaws after missing its controller's next turn,
 //             unless the card says otherwise ("Root" was renamed Freeze)
 //   Blind     attacks hit a random character, friend or foe
@@ -90,7 +90,7 @@ export const KEYWORD_TEXT = {
   'Twin Strike': 'Can attack twice each turn.',
   Reborn: 'The first time this dies, it returns with 1 Health.',
   Overheal: 'Healing at full Health raises maximum Health instead.',
-  Silenced: 'All its other keywords are removed.',
+  Silenced: "All its other keywords are removed and it can't gain new ones. Lasts for the rest of the game.",
   Frozen: "Can't attack. Thaws after missing its controller's next turn.",
   Freeze: "The target can't attack until it has missed its controller's next turn.",
   Blind: 'Its attacks hit a random character, friend or foe.',

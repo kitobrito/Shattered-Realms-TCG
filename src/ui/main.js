@@ -782,7 +782,9 @@ async function act(action, meta = {}) {
     if (action.type === 'attack') {
       sound.play('attack');
       const striker = findCharacter(s, action.attacker);
-      lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {
+      // Witches: a Hero with a Wand fires from afar — a bolt, not a lunge.
+      if (striker?.kind === 'hero' && striker.weapon?.wand) { sound.play('zap'); await fx.wandBolt(charEl(action.attacker), charEl(action.defender), effectiveAttack(striker)); }
+      else lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {
         power: striker ? effectiveAttack(striker) : 2, color: fx.factionColor(before.srcFaction), table: app.querySelector('.arena'),
         style: striker?.kind === 'minion' ? before.srcFaction : null,
       });
@@ -953,7 +955,13 @@ function keywordTraceFx(trace, rects, oldMinions, action) {
         if (e.keyword === 'Spell Ward') jobs.push(kfx.spellWard(rectOf(t)));
         else if (e.keyword === 'Evade') jobs.push(kfx.evade(el(t), rectOf(t)));
         break;
-      case 'keywordGained': if (e.keyword === 'Silenced') jobs.push(kfx.silenced(el(t), rectOf(t))); break;
+      case 'keywordGained':
+        if (e.keyword === 'Silenced' && e.hex) { sound.play('chime'); jobs.push(kfx.hexCurse(el(t), rectOf(t))); boardReact('hex'); }
+        else if (e.keyword === 'Silenced') jobs.push(kfx.silenced(el(t), rectOf(t)));
+        break;
+      // Witches: an enemy spell Countered; a Hero Silenced (no Hero Spell next turn).
+      case 'countered': if (once('counter')) { sound.play('deny'); jobs.push(kfx.countered(app.querySelector('.arena')?.getBoundingClientRect() ?? null)); boardReact('hex'); } break;
+      case 'heroSilenced': sound.play('deny'); jobs.push(kfx.heroSilenced(el(t), rectOf(t))); boardReact('hex'); break;
       case 'blind': jobs.push(kfx.blindSwerve(oldRect(e.source), oldRect(e.aimed), oldRect(e.target))); break;
       case 'minionReborn': jobs.push(kfx.reborn(el(e.source), rectOf(e.source))); break;
       case 'minionHaunted': jobs.push(kfx.haunted(el(e.source))); break;

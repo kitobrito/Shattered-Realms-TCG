@@ -167,7 +167,9 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
   const { incomplete } = validateCard(card);
   const label = card.fusion ? `Fusion · ${card.fusion.join(' + ')}` : card.heroSpell ? 'Hero Spell' : card.quickPlay ? 'Spell ⚡'
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
-    : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap' : 'Spell';
+    : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap'
+    // Hero Weapons are spells that arm your Hero: Witches' Wands say so, other weapons (Robots, the Broom) say Weapon.
+    : card.wand ? 'Wand' : card.heroWeapon ? 'Weapon' : 'Spell';
   const faction = fslug(card.faction);
   if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver });
   return `
