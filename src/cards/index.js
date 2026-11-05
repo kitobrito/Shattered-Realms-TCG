@@ -110,6 +110,7 @@ export const LEGENDARY = new Set([
   // Witches: their Legendaries are Weapons.
   'vesper_the_coven_mothers_wand',
   'the_witching_hour_broom',
+  'mirror_hex',
   'necrohydra',
   'the_rat_king',
   'mycelia_the_hive_mind',

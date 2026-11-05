@@ -46,12 +46,13 @@ function test(name, fn) {
 }
 
 // ---- The faction ----
-test('Witches: a 30-card deck with 11 minions, 2 Legendary Weapons and no legendary minions', () => {
+test('Witches: a 30-card deck with 11 minions, 2 Legendary Weapons, 1 Legendary Trap and no legendary minions', () => {
   const deck = FACTION_DECKS.Witches.map(getCard);
   if (deck.length !== 30) return `${deck.length} cards`;
   if (deck.filter((c) => c.type === 'minion').length !== 11) return 'minion count';
   const legends = deck.filter((c) => LEGENDARY.has(c.id));
-  if (legends.length !== 2 || legends.some((c) => c.type !== 'spell' || !c.heroWeapon)) return legends.map((c) => c.id).join(',');
+  const weapons = legends.filter((c) => c.type === 'spell' && c.heroWeapon), traps = legends.filter((c) => c.type === 'trap');
+  if (weapons.length !== 2 || traps.length !== 1 || legends.length !== 3) return legends.map((c) => c.id).join(',');
 });
 test('every Witch card, fusion, hero, fusion hero, back, board, Rage Runner, Clicker and Xeno has art', () => {
   const missing = [];
@@ -184,10 +185,15 @@ test('Spell Snare counters only spells that cost (2) or less', () => {
   play(1, give(1, 'fireball'), hero(0).uid);
   if (hero(0).health !== hp || pl(0).traps.length) return 'snare missed a 2-cost';
 });
-test('Mirror Hex counters the spell and gives the Witch a copy', () => {
+test('Mirror Hex (Legendary): counters, the copy costs (0), and the enemy Hero is Silenced', () => {
   play(0, give(0, 'mirror_hex')); endTurn(0);
   play(1, give(1, 'fireball'), hero(0).uid);
-  if (!pl(0).hand.some((c) => c.cardId === 'fireball')) return 'no copy';
+  const copy = pl(0).hand.find((c) => c.cardId === 'fireball');
+  if (!copy) return 'no copy';
+  if (costOf(s, copy) !== 0) return `copy costs ${costOf(s, copy)}`;
+  endTurn(1); endTurn(0);
+  if (canHeroSpell(1, pl(1).heroSpells[0].cardId)) return 'enemy hero spell not locked';
+  if (!getCard('mirror_hex').legendary) return 'not legendary';
 });
 test('Nullify (Quick Play) counters a 4+ cost enemy spell, and is not offered for a cheap one', () => {
   endTurn(0);

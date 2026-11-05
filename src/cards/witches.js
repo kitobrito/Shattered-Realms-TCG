@@ -207,9 +207,10 @@ export const WITCH_CARDS = [
     trap: { on: 'cardPlayed', filter: ENEMY_SPELL, counters: true, effects: [{ op: 'counterSpell' }, { op: 'draw', count: 1 }] },
   },
   {
-    ...T, id: 'mirror_hex', name: 'Mirror Hex', art: '🪞', cost: 4,
-    text: 'When your opponent casts a spell card, Counter it and add a copy of it to your hand.',
-    trap: { on: 'cardPlayed', filter: ENEMY_SPELL, counters: true, effects: [{ op: 'counterSpell', copy: true }] },
+    // The Witches' Legendary Trap (it wears their legendary trap frame).
+    ...T, id: 'mirror_hex', name: 'Mirror Hex', art: '🪞', cost: 5,
+    text: 'When your opponent casts a spell card, Counter it and add a copy of it to your hand. It costs (0). Silence the enemy Hero until the end of their next turn.',
+    trap: { on: 'cardPlayed', filter: ENEMY_SPELL, counters: true, effects: [{ op: 'counterSpell', copy: true, copyCostMod: -99 }, { op: 'silenceHero' }] },
   },
 
   // ---- Tokens ----

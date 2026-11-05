@@ -2814,7 +2814,8 @@ export const EFFECT_OPS = {
     state.queue = state.queue.filter((s) => !(s.kind === 'effect' && s.ctx?.self === ev.source));
     log(state, `🔮 ${getCard(ev.cardId)?.name ?? 'The spell'} is countered!`);
     traceFx(state, { type: 'countered', player: ev.player, cardId: ev.cardId });
-    if (e.copy && ev.cardId) addToHand(state, ctx.controller, ev.cardId);
+    // copyCostMod: the copy is cheaper (Mirror Hex: costMod -99 makes it free).
+    if (e.copy && ev.cardId) addToHand(state, ctx.controller, ev.cardId, e.copyCostMod ? { costMod: e.copyCostMod } : {});
   },
   // The card that opened this event goes to your hand as a copy (Grimoire Thief).
   copyEventCard(state, e, ctx) {
