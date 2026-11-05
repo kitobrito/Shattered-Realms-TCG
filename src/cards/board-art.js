@@ -29,6 +29,12 @@ export const BOARD_ART = {
   'Cordyceps Outbreak': 'art/boards-v2/cordyceps-outbreak.jpg',
   'Cordyceps Bloom': 'art/boards-v2/cordyceps-bloom.jpg',
   'The Shifting Dunes': 'art/boards-v2/sand-sharks.jpg',
+  'The Bone Crater': 'art/boards-v2/dino-graveyard.jpg',
+  'The Fallout Vault': 'art/boards-v2/radioactive-vault.jpg',
+  'The Blood Bar': 'art/boards-v2/vampire-blood-bar.jpg',
+  'The Haunted Set': 'art/boards-v2/ghost-haunted-tv.jpg',
+  'The Skinwalker Cave': 'art/boards-v2/lycan-skinwalker.jpg',
+  'The Hornet Hollow': 'art/boards-v2/bees-hornet-nest.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
@@ -59,6 +65,13 @@ export const ALT_BOARDS = {
   // The old Aliens board: unlocked by the Hive Brood cards (the Xenomorphs), not the Qu cards.
   Aliens: [{ id: 'The Xeno Hive', cards: ['facehugger_swarmling', 'ovomorph_clutch', 'parasite_carrier', 'acid_blood_drone', 'hive_stalker', 'brood_tender', 'hive_brute', 'xeno_runner', 'hive_warrior', 'praetorian_guard', 'hive_queen_xaral', 'gestation', 'it_bursts_out', 'acid_blood_spray', 'egg_chamber'], blurb: 'The xenomorph hive: resin walls and egg clusters.' }],
   Acidic: [{ id: 'The Sewage Works', expansion: true, blurb: 'A flooded sewage plant: glowing acid, skeletal fish and rats, and one very lucky frog.' }],
+  // Unlocked by each realm's expansion cards.
+  Dinosaurs: [{ id: 'The Bone Crater', expansion: true, blurb: 'A long-cold meteor crater ringed with giant fossil skeletons.' }],
+  Radioactive: [{ id: 'The Fallout Vault', expansion: true, blurb: 'An atomic-age shelter vault leaking glowing green goo.' }],
+  Vampires: [{ id: 'The Blood Bar', expansion: true, blurb: 'A gothic vampire lounge built around a pool of blood.' }],
+  Ghosts: [{ id: 'The Haunted Set', expansion: true, blurb: 'A living room taken over by a poltergeist and a haunted TV.' }],
+  Lycanthropes: [{ id: 'The Skinwalker Cave', expansion: true, blurb: 'A moonlit cave lair where something is changing shape.' }],
+  Bees: [{ id: 'The Hornet Hollow', expansion: true, blurb: 'A vast underground hornet nest glowing with nectar.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -123,6 +136,12 @@ export const PORTRAIT_BOARDS = {
   Aliens: { src: 'art/boards-portrait/aliens-ufo.jpg', opp: [167, 36, 292, 150, 'circle'], me: [168, 794, 292, 918, 'circle'], field: [180, 785], props: [] },
   'The Xeno Hive': { src: 'art/boards-portrait/aliens.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 790, 261, 860, 'circle'], field: [120, 775], frame: 'chitin', props: [] },
   'The Shifting Dunes': { src: 'art/boards-portrait/sand-sharks.jpg', opp: [189, 33, 270, 126, 'arch'], me: [187, 743, 273, 829, 'circle'], field: [140, 735], props: [] },
+  'The Bone Crater': { src: 'art/boards-portrait/dino-graveyard.jpg', opp: [170, 24, 289, 129, 'arch'], me: [179, 783, 281, 885, 'circle'], field: [141, 773], props: [] },
+  'The Fallout Vault': { src: 'art/boards-portrait/radioactive-vault.jpg', opp: [169, 105, 291, 236, 'arch'], me: [160, 800, 299, 939, 'circle'], field: [248, 790], props: [] },
+  'The Blood Bar': { src: 'art/boards-portrait/vampire-blood-bar.jpg', opp: [174, 46, 282, 157, 'arch'], me: [179, 878, 282, 982, 'circle'], field: [169, 868], props: [] },
+  'The Haunted Set': { src: 'art/boards-portrait/ghost-haunted-tv.jpg', opp: [183, 57, 284, 178, 'arch'], me: [175, 838, 284, 941, 'circle'], field: [190, 828], props: [] },
+  'The Skinwalker Cave': { src: 'art/boards-portrait/lycan-skinwalker.jpg', opp: [170, 108, 290, 212, 'arch'], me: [169, 806, 290, 942, 'circle'], field: [224, 796], props: [] },
+  'The Hornet Hollow': { src: 'art/boards-portrait/bees-hornet-nest.jpg', opp: [181, 50, 279, 162, 'arch'], me: [175, 851, 285, 960, 'circle'], field: [174, 841], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -159,6 +178,12 @@ export const LANDSCAPE_BOARDS = {
   Aliens: { src: 'art/boards-v2/aliens-ufo.jpg', opp: [465, 27, 562, 141], me: [463, 439, 561, 538], field: [160, 150, 870, 420], props: [] },
   'The Xeno Hive': { src: 'art/boards-v2/aliens.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'chitin', props: [] },
   'The Shifting Dunes': { src: 'art/boards-v2/sand-sharks.jpg', opp: [467, 34, 557, 138], me: [459, 430, 565, 536], field: [150, 150, 880, 415], props: [] },
+  'The Bone Crater': { src: 'art/boards-v2/dino-graveyard.jpg', opp: [446, 22, 575, 133], me: [455, 433, 570, 548], field: [150, 145, 880, 419], props: [] },
+  'The Fallout Vault': { src: 'art/boards-v2/radioactive-vault.jpg', opp: [451, 26, 571, 146], me: [441, 438, 580, 571], field: [150, 158, 880, 424], props: [] },
+  'The Blood Bar': { src: 'art/boards-v2/vampire-blood-bar.jpg', opp: [459, 36, 566, 130], me: [458, 436, 566, 543], field: [150, 142, 880, 422], props: [] },
+  'The Haunted Set': { src: 'art/boards-v2/ghost-haunted-tv.jpg', opp: [472, 43, 553, 143], me: [456, 437, 561, 540], field: [150, 155, 880, 423], props: [] },
+  'The Skinwalker Cave': { src: 'art/boards-v2/lycan-skinwalker.jpg', opp: [456, 56, 568, 162], me: [440, 418, 585, 552], field: [150, 174, 880, 404], props: [] },
+  'The Hornet Hollow': { src: 'art/boards-v2/bees-hornet-nest.jpg', opp: [462, 36, 562, 147], me: [454, 428, 567, 537], field: [150, 159, 880, 414], props: [] },
 };
 
 
