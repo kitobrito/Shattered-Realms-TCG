@@ -27,6 +27,7 @@ export const BOARD_ART = {
   'The Rage Outbreak': 'art/boards-v2/rage-outbreak.jpg',
   'Cordyceps Outbreak': 'art/boards-v2/cordyceps-outbreak.jpg',
   'Cordyceps Bloom': 'art/boards-v2/cordyceps-bloom.jpg',
+  'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
 };
@@ -51,6 +52,7 @@ export const ALT_BOARDS = {
   Plants: [{ id: 'Harvest Moon', set: 'Harvest Moon', blurb: 'A haunted pumpkin patch under the harvest moon.' }],
   Zombies: [{ id: 'The Rage Outbreak', expansion: true, blurb: 'A blood-soaked city street, days after the Rage got out.' },
     { id: 'Cordyceps Outbreak', set: 'Cordyceps Outbreak', blurb: 'An overgrown city street, decades after the fungus won.' }],
+  Acidic: [{ id: 'The Sewage Works', expansion: true, blurb: 'A flooded sewage plant: glowing acid, skeletal fish and rats, and one very lucky frog.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -87,6 +89,7 @@ export const PORTRAIT_BOARDS = {
   'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'iron', props: [] },
   'Harvest Moon': { src: 'art/boards-portrait/harvest-moon.jpg', opp: [192, 130, 267, 207, 'arch'], me: [183, 757, 276, 839, 'circle'], field: [223, 741], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-portrait/cordyceps-outbreak.jpg', opp: [184, 70, 274, 158, 'arch'], me: [187, 866, 272, 950, 'circle'], field: [174, 850], props: [] },
+  'The Sewage Works': { src: 'art/boards-portrait/acidic-sewer.jpg', opp: [179, 51, 281, 173, 'arch'], me: [162, 848, 298, 968, 'circle'], field: [185, 835], props: [] },
   'Cordyceps Bloom': { src: 'art/boards-portrait/cordyceps-bloom.jpg', opp: [184, 155, 275, 264, 'arch'], me: [180, 751, 281, 830, 'circle'], field: [280, 735], props: [] },
   Basic: { src: 'art/boards-portrait/basic.jpg', opp: [201, 30, 259, 98, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [120, 790], frame: 'stone', props: [] },
   // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
@@ -122,6 +125,7 @@ export const LANDSCAPE_BOARDS = {
   'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'iron', props: [] },
   'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
+  'The Sewage Works': { src: 'art/boards-v2/acidic-sewer.jpg', opp: [449, 34, 567, 146], me: [449, 412, 575, 539], field: [150, 155, 880, 405], props: [] },
   'Cordyceps Bloom': { src: 'art/boards-v2/cordyceps-bloom.jpg', opp: [467, 35, 558, 142], me: [462, 434, 561, 533], field: [130, 156, 895, 422], props: [] },
   Basic: { src: 'art/boards-v2/basic.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
   Witches: { src: 'art/boards-v2/witches.jpg', opp: [467, 39, 560, 144], me: [459, 427, 565, 537], field: [150, 165, 875, 415], props: [] },
