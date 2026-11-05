@@ -1057,6 +1057,12 @@ function keywordTraceFx(trace, rects, oldMinions, action) {
         break;
       // Witches: an enemy spell Countered; a Hero Silenced (no Hero Spell next turn).
       case 'countered': if (once('counter')) { sound.play('deny'); jobs.push(kfx.countered(app.querySelector('.arena')?.getBoundingClientRect() ?? null)); boardReact('hex'); } break;
+      // Witches (Spellbound): pages fly into the Spellbook; a finished book is announced; companions grow.
+      case 'pagesWritten': if (once(`pg${e.pages}`)) jobs.push(fx.popGlyph(rectOf(t), '📜', Math.min(3, e.amount ?? 1))); break;
+      case 'bookComplete': sound.play('chime'); boardReact('hex'); jobs.push(fx.banner('📖 SPELLBOOK COMPLETE', 'quickplay')); break;
+      case 'mastery': jobs.push(fx.popGlyph(rectOf(t), e.kind === 'darkArts' ? '🩸' : e.kind === 'beastTamer' ? '🐾' : '📖', 3)); break;
+      case 'inscribed': jobs.push(fx.popGlyph(rectOf(t), '📜', 2)); break;
+      case 'grew': jobs.push(fx.popGlyph(rectOf(t), '❄️', 3)); break;
       case 'heroSilenced': sound.play('deny'); jobs.push(kfx.heroSilenced(el(t), rectOf(t))); boardReact('hex'); break;
       case 'blind': jobs.push(kfx.blindSwerve(oldRect(e.source), oldRect(e.aimed), oldRect(e.target))); break;
       case 'minionReborn': jobs.push(kfx.reborn(el(e.source), rectOf(e.source))); break;

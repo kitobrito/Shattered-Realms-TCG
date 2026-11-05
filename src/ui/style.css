@@ -5785,6 +5785,18 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
   animation: witchflame 2.8s ease-in-out infinite, witchwisps 5.5s linear infinite; animation-delay: var(--idle, 0s); }
 body.reduced-motion .arena .minion.f-witches .m-art::before { animation: none; }
 
+/* ---- Witches (Spellbound): Spellbook badge on the Hero and the Wand's Rune Slots ---- */
+.hero-book { position: absolute; left: -6%; top: 8%; z-index: 3; display: grid; place-items: center; width: 2.1em; height: 2.1em; border-radius: 50%;
+  font-size: calc(var(--hero, 80px) * 0.16); background: conic-gradient(#10b981 var(--fill, 0%), #2b0938 0); box-shadow: 0 0 0 2px #0b0610, 0 0 10px #10b98166; }
+.hero-book b { position: absolute; bottom: -0.35em; right: -0.35em; font: 900 0.7em/1 Cinzel, Georgia, serif; color: #eafff5; background: #2b0938; border-radius: 0.6em; padding: 0.1em 0.3em; box-shadow: 0 0 0 1px #10b981; }
+.hero-book.done { background: radial-gradient(circle, #d946ef, #2b0938 70%); box-shadow: 0 0 0 2px #0b0610, 0 0 14px #d946ef; animation: book-done 2.4s ease-in-out infinite; }
+@keyframes book-done { 50% { box-shadow: 0 0 0 2px #0b0610, 0 0 22px #d946ef; } }
+.weapon-badge .w-runes { position: absolute; left: 50%; bottom: -0.9em; transform: translateX(-50%); display: flex; gap: 2px; }
+.weapon-badge .w-rune { width: 1.05em; height: 1.05em; border-radius: 50%; display: grid; place-items: center; font-size: 0.62em; font-style: normal; background: #2b0938; box-shadow: 0 0 0 1px #10b981; }
+.weapon-badge .w-rune.inscr { box-shadow: 0 0 0 1px #d946ef; }
+.weapon-badge .w-rune.empty { background: #0b0610aa; box-shadow: 0 0 0 1px #6b5a7a; }
+body.reduced-motion .hero-book.done { animation: none; }
+
 /* The pre-match screen: choose the AI opponent (or Random), or both hot seat players' realms. */
 .match-setup-overlay { z-index: 60; background: #000a; }
 .match-setup { position: relative; width: min(980px, 94vw); max-height: 92vh; overflow: auto; padding: clamp(14px, 2.4vh, 24px) clamp(14px, 2vw, 26px); border-radius: 18px;

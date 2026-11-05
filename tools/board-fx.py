@@ -123,6 +123,8 @@ RULES = {
     'puddle': lambda h, s, v: (1 - ramp(s, 0.15, 0.3)) * ramp(v, 0.42, 0.62),
     # glowing things in general
     # Eels: the glowing cyan water, and the yellow lightning markings on the eels.
+    # Sharks (The Shifting Dunes): the pale turquoise oasis pool.
+    'oasis': lambda h, s, v: hue_near(h, 170, 25) * ramp(s, 0.15, 0.3) * ramp(v, 0.42, 0.62),
     'eelwater': lambda h, s, v: hue_near(h, 188, 22) * ramp(s, 0.35, 0.6) * ramp(v, 0.5, 0.78),
     'eelmark': lambda h, s, v: hue_near(h, 58, 18) * ramp(s, 0.45, 0.7) * ramp(v, 0.55, 0.85),
     'bright': lambda h, s, v: ramp(v, 0.75, 0.95),

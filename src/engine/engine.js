@@ -556,6 +556,13 @@ function declareAttack(state, { player: p, attacker, defender }) {
     { kind: 'deaths' },
     { kind: 'event', event: { type: 'afterAttack', source: attacker, target: defender, player: p } },
   );
+  // Witches (Spellbound): a Wand's runes fire before the hit (curses, inscribed spells) and after it.
+  if (a.kind === 'hero' && a.weapon?.wand && a.weapon.runes?.length) {
+    const rctx = { self: a.uid, controller: p, event: { target: defender, source: attacker } };
+    const at = state.queue.findIndex((s) => s.kind === 'combat' && s.attacker === attacker);
+    if (at >= 0) state.queue.splice(at, 0, { kind: 'effect', effect: { op: 'wandRunes', phase: 'before' }, ctx: rctx }, { kind: 'deaths' });
+    state.queue.push({ kind: 'effect', effect: { op: 'wandRunes', phase: 'after' }, ctx: rctx }, { kind: 'deaths' });
+  }
   // Robots (Arsenal Protocol): a Hero attacking with a Weapon wears it down by 1 Durability.
   if (a.kind === 'hero' && a.weapon) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon' }, ctx: { self: a.uid, controller: p } });
 }
@@ -588,6 +595,8 @@ function applyAuras(state) {
         if (aura.attack) bonusAtk.set(id, (bonusAtk.get(id) ?? 0) + aura.attack);
         // attackPerDepth: +N Attack for each circle the battle has sunk (Baphomet).
         if (aura.attackPerDepth) bonusAtk.set(id, (bonusAtk.get(id) ?? 0) + aura.attackPerDepth * descentDepth(state));
+        // Witches (Spellbound): +1 Attack per N pages of its owner's Spellbook, up to a cap (Spellbook Sentinel).
+        if (aura.attackPerPages) bonusAtk.set(id, (bonusAtk.get(id) ?? 0) + Math.min(aura.attackPerPages.max ?? 99, Math.floor((state.players[s.controller].spellbook?.pages ?? 0) / aura.attackPerPages.per)));
         if (aura.keywords) bonusKw.set(id, [...(bonusKw.get(id) ?? []), ...aura.keywords]);
       }
     }
@@ -619,9 +628,12 @@ function applyAuras(state) {
   // Weaponsmith Unit: your Hero's Weapon has +1 Attack per such minion (only while it holds one).
   for (const pl of state.players) {
     const smiths = pl.board.filter((m) => getCard(m.cardId).heroWeaponAura && m.health > 0 && !m.destroyed).length;
-    pl.hero.auraAttack = pl.hero.weapon ? smiths : 0;
-    // Witches: keywords a Weapon gives the Hero while it's held (The Witching Hour Broom: Twin Strike).
-    if (pl.hero.weapon?.keywords?.length) pl.hero.auraKeywords = [...pl.hero.weapon.keywords];
+    const darkArts = pl.hero.weapon?.wand && pl.spellbook?.mastery === 'darkArts';
+    pl.hero.auraAttack = pl.hero.weapon ? smiths + (darkArts ? 2 : 0) : 0;
+    // Witches: keywords a Weapon gives the Hero while it's held (The Witching Hour Broom: Twin Strike;
+    // the Twin Bolt enchantment; Dark Arts: Lifesteal on Wands).
+    const wk = [...(pl.hero.weapon?.keywords ?? []), ...(pl.hero.weapon?.runes?.some((r) => r.id === 'twinBolt') ? ['Twin Strike'] : []), ...(darkArts ? ['Lifesteal'] : [])];
+    if (wk.length) pl.hero.auraKeywords = [...new Set(wk)];
     else if (pl.hero.auraKeywords) delete pl.hero.auraKeywords;
   }
   for (const m of minionsInOrder(state)) {

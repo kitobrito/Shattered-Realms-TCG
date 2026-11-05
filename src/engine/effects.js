@@ -2674,6 +2674,15 @@ export const EFFECT_OPS = {
     hero.weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
       // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
       ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
+    // Witches (Spellbound): Rune Slots (Apprentice 1, most Wands 2, legendary 3), a built-in enchantment,
+    // and runes carried over from the last Wand once the Spellbook is half written.
+    if (hero.weapon.wand) {
+      hero.weapon.slots = e.slots ?? wcard?.runeSlots ?? 2;
+      hero.weapon.runes = [];
+      if (e.enchant ?? wcard?.enchant) hero.weapon.runes.push({ kind: 'ench', id: e.enchant ?? wcard.enchant });
+      const stash = state.players[ctx.controller].spellbook?.stash;
+      if (stash?.length) { for (const r of stash) addRune(state, hero, r); state.players[ctx.controller].spellbook.stash = null; log(state, `📖 The enchantments carry over to the ${hero.weapon.name}.`); }
+    }
     hero.attack = (hero.attack ?? 0) + e.attack;
     for (const t of e.triggers ?? []) (hero.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, weapon: true });
     log(state, `${nameOf(state, hero)} equips ${e.name} (${e.attack}/${e.durability}).`);
@@ -2841,11 +2850,182 @@ export const EFFECT_OPS = {
     log(state, `${pl.name}'s spells cost (${e.amount}) more next turn.`);
   },
 
+
+  // ---- Witches (Spellbound): the Spellbook, Rune Slots, Wandweaving, Inscribe, Masteries ----
+  // { amount, wandAmount?, scribe? } — write pages in your Spellbook. A scribe (scribe: true) writes
+  // only while it isn't Silenced. wandAmount: pages written instead while your Hero holds a Wand.
+  writePages(state, e, ctx) {
+    if (e.scribe) { const me = findCharacter(state, ctx.self); if (!me || me.health <= 0 || hasKeyword(me, 'Silenced')) return; }
+    const pl = state.players[ctx.controller];
+    const n = e.wandAmount && pl.hero.weapon?.wand ? e.wandAmount : (e.amount ?? 1);
+    writeSpellbook(state, ctx.controller, n);
+  },
+  // Wandweave: equip an Apprentice Wand if your Hero has none, then choose 1 of 3 enchantments
+  // for it (random from WAND_ENCHANTS). Writes 1 page once chosen.
+  wandweave(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    if (!hero.weapon?.wand) EFFECT_OPS.equipHeroWeapon(state, { cardId: 'apprentice_wand', name: 'Apprentice Wand', attack: 1, durability: 2, wand: true }, ctx);
+    const pool = shuffle(state, Object.keys(WAND_ENCHANTS).slice()).slice(0, e.choices ?? 3);
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Wandweave: choose an enchantment for your Wand', resolve: 'effects', ctx,
+      options: pool.map((k) => ({ label: `${WAND_ENCHANTS[k].name}: ${WAND_ENCHANTS[k].text}`, effects: [{ op: 'addEnchant', kind: k }, { op: 'writePages', amount: 1 }] })),
+    };
+  },
+  // { kind } — put an enchantment on your Wand (it takes a Rune Slot).
+  addEnchant(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    if (addRune(state, hero, { kind: 'ench', id: e.kind })) log(state, `🪄 ${nameOf(state, hero)}'s ${hero.weapon.name} is enchanted with ${WAND_ENCHANTS[e.kind].name}.`);
+  },
+  // Inscribe: choose a spell from your hand to attach to your Wand (pay its cost, unless inscribing is free).
+  inscribe(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const hero = pl.hero;
+    if (!hero.weapon?.wand) { log(state, 'There is no Wand to Inscribe.'); return; }
+    const free = inscribeIsFree(pl);
+    const spells = pl.hand.filter((c) => inscribable(getCard(c.cardId)) && (free || getCard(c.cardId).cost <= pl.mana.current));
+    if (!spells.length) { log(state, 'No spell in hand can be Inscribed.'); return; }
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Inscribe a spell onto your Wand', resolve: 'effects', ctx,
+      options: [...spells.map((c) => ({ cardId: c.cardId, label: getCard(c.cardId).name, effects: [{ op: 'inscribeCard', uid: c.uid }] })),
+        { label: 'Keep them in your hand', effects: [] }],
+    };
+  },
+  // { uid } — the chosen hand card goes onto the Wand.
+  inscribeCard(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    const i = pl.hand.findIndex((c) => c.uid === e.uid);
+    if (i < 0 || !pl.hero.weapon?.wand) return;
+    const card = getCard(pl.hand[i].cardId);
+    if (!inscribeIsFree(pl)) {
+      if (card.cost > pl.mana.current) return;
+      pl.mana.current -= card.cost;
+    }
+    const [inst] = pl.hand.splice(i, 1);
+    addRune(state, pl.hero, { kind: 'inscr', cardId: inst.cardId });
+    log(state, `📜 ${pl.name} Inscribes ${card.name} onto the ${pl.hero.weapon.name}.`);
+    traceFx(state, { type: 'inscribed', target: pl.hero.uid, cardId: inst.cardId });
+    emit(state, { type: 'spellInscribed', player: ctx.controller, cardId: inst.cardId });
+    writeSpellbook(state, ctx.controller, 1);
+  },
+  // Rune Carver: the Wand gains a Rune Slot.
+  addRuneSlot(state, e, ctx) {
+    const w = heroOf(state, ctx.controller).weapon;
+    if (!w?.wand) return;
+    w.slots = (w.slots ?? 2) + (e.amount ?? 1);
+    log(state, `${w.name} gains a Rune Slot (${w.slots}).`);
+  },
+  // A Wand attack's runes. phase 'before' (the target is still there): Rabbitcurse, Hushing,
+  // Spellstrike and inscribed spells; phase 'after': Hexfire, Arcane Echo, Frostbite, Mana Siphon.
+  wandRunes(state, e, ctx) {
+    const hero = heroOf(state, ctx.controller);
+    const w = hero.weapon;
+    if (!w?.wand || !w.runes?.length) return;
+    const target = ctx.event?.target;
+    const times = state.players[ctx.controller].wandEcho ? 2 : 1;
+    for (let k = 0; k < times; k++) for (const r of [...w.runes]) {
+      const t = findCharacter(state, target);
+      const live = t && t.health > 0 && !t.destroyed;
+      if (e.phase === 'before') {
+        if (r.kind === 'inscr') {
+          const reps = getCard(w.cardId)?.doubleInscribed ? 2 : 1;
+          for (let j = 0; j < reps; j++) castSpellAt(state, r.cardId, target, ctx.controller);
+        } else if (r.id === 'rabbitcurse' && live && t.kind === 'minion') {
+          EFFECT_OPS.transform(state, { target: { uid: t.uid }, into: 'witch_rabbit' }, ctx);
+        } else if (r.id === 'hushing' && live && t.kind === 'minion') {
+          addKeyword(t, 'Silenced', false, state);
+        } else if (r.id === 'spellstrike') {
+          const pl = state.players[ctx.controller];
+          const ok = pl.hand.filter((c) => inscribable(getCard(c.cardId)) && getCard(c.cardId).cost <= pl.mana.current);
+          const pick = pickRandom(state, ok);
+          if (pick) {
+            pl.hand.splice(pl.hand.indexOf(pick), 1); pl.graveyard.push(pick);
+            pl.mana.current -= getCard(pick.cardId).cost;
+            castSpellAt(state, pick.cardId, target, ctx.controller);
+          }
+        }
+      } else if (r.kind === 'ench') {
+        if (r.id === 'hexfire') {
+          if (live && t.kind === 'minion') {
+            const row = state.players[t.controller].board, i = row.indexOf(t);
+            for (const m of [row[i - 1], t, row[i + 1]].filter(Boolean)) dealDamage(state, hero.uid, m.uid, 1);
+          }
+        } else if (r.id === 'arcaneEcho') {
+          const foes = [heroOf(state, opponentOf(ctx.controller)), ...state.players[opponentOf(ctx.controller)].board].filter((c) => c.health > 0 && !c.destroyed);
+          const hit = pickRandom(state, foes);
+          if (hit) dealDamage(state, hero.uid, hit.uid, 2);
+        } else if (r.id === 'frostbite') {
+          if (live) addKeyword(t, 'Frozen', false, state);
+        } else if (r.id === 'manaSiphon') {
+          EFFECT_OPS.gainMana(state, { amount: 1 }, ctx);
+        }
+      }
+    }
+  },
+  // { kind } — the finished Spellbook's Mastery (Dark Arts, Living Grimoire, Beast-Tamer).
+  setMastery(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    (pl.spellbook ??= { pages: 0 }).mastery = e.kind;
+    log(state, `📖 ${pl.name} masters ${MASTERY_NAMES[e.kind]}!`);
+    traceFx(state, { type: 'mastery', target: pl.hero.uid, kind: e.kind });
+    if (e.kind === 'beastTamer') {
+      state.pending = {
+        type: 'choice', player: ctx.controller, prompt: 'Beast-Tamer: choose your companion', resolve: 'effects', ctx,
+        options: ['frisk_baby', 'spindex_the_giant_spider', 'toby_the_black_panther'].map((id) => ({ cardId: id, label: getCard(id).name, effects: [{ op: 'summon', cardId: id }] })),
+      };
+    }
+  },
+  // Frisk grows a stage, keeping his damage. { into }
+  growInto(state, e, ctx) {
+    const m = findCharacter(state, ctx.self);
+    if (!m || m.kind !== 'minion' || m.health <= 0) return;
+    const hurt = Math.max(0, m.maxHealth - m.health);
+    EFFECT_OPS.transform(state, { target: { uid: m.uid }, into: e.into }, ctx);
+    m.health = Math.max(1, m.health - hurt);
+    traceFx(state, { type: 'grew', target: m.uid });
+  },
+  // Spindex: remember the Health of what it attacks; if that dies, heal a third of it and hatch a Baby Spider.
+  spindexMark(state, e, ctx) {
+    const me = findCharacter(state, ctx.self), t = findCharacter(state, ctx.event?.target);
+    if (me && t?.kind === 'minion') me.preyMaxHealth = t.maxHealth;
+  },
+  spindexFeast(state, e, ctx) {
+    const me = findCharacter(state, ctx.self);
+    if (!me || !me.preyMaxHealth) return;
+    const t = findCharacter(state, ctx.event?.target);
+    const killed = !t || t.health <= 0 || t.destroyed;
+    const hp = me.preyMaxHealth; me.preyMaxHealth = 0;
+    if (!killed) return;
+    heal(state, me.uid, Math.ceil(hp / 3), { source: me.uid });
+    EFFECT_OPS.summon(state, { cardId: 'baby_spider' }, ctx);
+  },
+  // Toby: Silence the target first; an already-Silenced target is destroyed and Toby takes no damage.
+  tobyPounce(state, e, ctx) {
+    const t = findCharacter(state, ctx.event?.target);
+    if (!t || t.kind !== 'minion') return;
+    if (hasKeyword(t, 'Silenced')) {
+      t.destroyed = true;
+      log(state, `🐆 Toby tears through the Silenced ${nameOf(state, t)}.`);
+      EFFECT_OPS.stopAttack(state, {}, ctx);
+    } else addKeyword(t, 'Silenced', false, state);
+  },
+
   // After your Hero attacks with a Weapon: it loses 1 Durability (engine declareAttack).
   wearHeroWeapon(state, e, ctx) {
     const hero = heroOf(state, ctx.controller);
     if (!hero.weapon) return;
     hero.weapon.durability -= 1;
+    // Witches: Ward of Binding (a Trap) saves a Wand that would break.
+    if (hero.weapon.durability <= 0 && hero.weapon.wand) {
+      const pl = state.players[ctx.controller];
+      const trap = pl.traps.find((t) => getCard(t.cardId).trap?.on === 'wandWouldBreak');
+      if (trap) {
+        pl.traps.splice(pl.traps.indexOf(trap), 1); pl.graveyard.push(trap);
+        hero.weapon.durability = 1;
+        log(state, `Trap revealed: ${getCard(trap.cardId).name}! The ${hero.weapon.name} holds together.`);
+        emit(state, { type: 'trapTriggered', player: ctx.controller, cardId: trap.cardId });
+        return;
+      }
+    }
     if (hero.weapon.durability <= 0) dropHeroWeapon(state, hero, 'breaks');
   },
 
@@ -2866,6 +3046,73 @@ export const EFFECT_OPS = {
     log(state, `Extinction is delayed by ${e.turns} turns.`);
   },
 };
+
+
+// ---- Witches (Spellbound) helpers ----
+export const SPELLBOOK_PAGES = 10;
+export const SPELLBOOK_CARRY = 5;
+export const WAND_ENCHANTS = {
+  rabbitcurse: { name: 'Rabbitcurse', text: 'every minion your Wand hits becomes a 1/1 Rabbit' },
+  hexfire: { name: 'Hexfire', text: 'after you attack a minion, it and the minions next to it take 1 damage' },
+  arcaneEcho: { name: 'Arcane Echo', text: 'after you attack, deal 2 damage to a random enemy' },
+  spellstrike: { name: 'Spellstrike', text: 'when you attack, cast a random spell from your hand you can afford at the target' },
+  frostbite: { name: 'Frostbite', text: 'Freeze whatever your Wand hits' },
+  hushing: { name: 'Hushing', text: 'permanently Silence any minion your Wand hits, before the hit' },
+  manaSiphon: { name: 'Mana Siphon', text: 'gain 1 Mana after you attack' },
+  twinBolt: { name: 'Twin Bolt', text: 'your Hero can attack twice each turn' },
+};
+export const MASTERY_NAMES = { darkArts: 'Dark Arts', livingGrimoire: 'Living Grimoire', beastTamer: 'Beast-Tamer' };
+const inscribable = (card) => card?.type === 'spell' && !card.heroSpell && !card.heroWeapon && !card.target2;
+const inscribeIsFree = (pl) => pl.spellbook?.mastery === 'livingGrimoire' || !!getCard(pl.hero.weapon?.cardId)?.freeInscribe;
+// A rune on the Wand; past its Rune Slots, the oldest is pushed out.
+function addRune(state, hero, rune) {
+  const w = hero.weapon;
+  if (!w?.wand) return false;
+  (w.runes ??= []).push(rune);
+  while (w.runes.length > (w.slots ?? 2)) {
+    const out = w.runes.shift();
+    log(state, `${out.kind === 'ench' ? WAND_ENCHANTS[out.id].name : getCard(out.cardId).name} fades from the ${w.name}.`);
+  }
+  return true;
+}
+// An inscribed (or Spellstruck) spell is cast for free: at the Wand's target if it can be, else a random valid one.
+function castSpellAt(state, cardId, target, p) {
+  const card = getCard(cardId);
+  const ctx = { self: state.nextUid++, controller: p, cardId };
+  if (card.target) {
+    const valid = targetCandidates(state, card.target, p, null, true);
+    ctx.chosen = valid.includes(target) ? target : pickRandom(state, valid) ?? null;
+    if (ctx.chosen == null && card.effects.some((x) => x.target === 'chosen')) { log(state, `${card.name} has no target.`); return; }
+  }
+  log(state, `📜 The Wand casts ${card.name}.`);
+  traceFx(state, { type: 'inscribedCast', target: ctx.chosen ?? null, cardId, player: p });
+  for (const x of card.effects) resolveEffect(state, x, ctx);
+}
+// Write pages; at 5 the Wand's enchantments start carrying over, at 10 the book is finished:
+// Wandcraft becomes Wandweaving and the player chooses a Mastery.
+function writeSpellbook(state, p, n) {
+  const pl = state.players[p];
+  const book = (pl.spellbook ??= { pages: 0 });
+  if (book.done || n <= 0) return;
+  const before = book.pages;
+  book.pages = Math.min(SPELLBOOK_PAGES, before + n);
+  log(state, `📖 ${pl.name}'s Spellbook: ${book.pages}/${SPELLBOOK_PAGES} pages.`);
+  traceFx(state, { type: 'pagesWritten', target: pl.hero.uid, pages: book.pages, amount: book.pages - before });
+  if (before < SPELLBOOK_CARRY && book.pages >= SPELLBOOK_CARRY) log(state, `📖 Half written: ${pl.name}'s Wand enchantments now carry over to the next Wand.`);
+  if (book.pages < SPELLBOOK_PAGES) return;
+  book.done = true;
+  const hs = pl.heroSpells.find((h) => h.cardId === 'wandcraft');
+  if (hs) hs.cardId = 'wandweaving';
+  else if (!pl.heroSpells.some((h) => h.cardId === 'wandweaving')) pl.heroSpells.push({ cardId: 'wandweaving', uses: 0 });
+  log(state, `📖 ${pl.name}'s Spellbook is complete! Wandcraft becomes Wandweaving.`);
+  traceFx(state, { type: 'bookComplete', target: pl.hero.uid, player: p });
+  const ctx = { self: pl.hero.uid, controller: p };
+  state.pending = {
+    type: 'choice', player: p, prompt: 'Your Spellbook is complete: choose a Mastery', resolve: 'effects', ctx,
+    options: [['mastery_dark_arts', 'darkArts'], ['mastery_living_grimoire', 'livingGrimoire'], ['mastery_beast_tamer', 'beastTamer']]
+      .map(([id, kind]) => ({ cardId: id, label: getCard(id).name, effects: [{ op: 'setMastery', kind }] })),
+  };
+}
 
 export function resolveEffect(state, effect, ctx) {
   // perTurnLimit: this effect happens at most N times per turn for its card (Ash Collector).
@@ -2893,6 +3140,13 @@ export function dropHeroWeapon(state, hero, how = 'breaks') {
   if (!w) return;
   hero.attack = Math.max(0, (hero.attack ?? 0) - w.attack);
   hero.grantedTriggers = (hero.grantedTriggers ?? []).filter((t) => !t.weapon);
+  // Witches (Spellbound): a half-written Spellbook keeps the Wand's enchantments for the next Wand;
+  // with Living Grimoire, its inscribed spells too.
+  const book = state.players[hero.controller]?.spellbook;
+  if (w.wand && w.runes?.length && book && book.pages >= SPELLBOOK_CARRY) {
+    const keep = w.runes.filter((r) => r.kind === 'ench' || book.mastery === 'livingGrimoire');
+    if (keep.length) book.stash = keep;
+  }
   hero.weapon = null;
   if (how === 'moves') return;
   log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : how === 'melts' ? `🧪 ${nameOf(state, hero)}'s ${w.name} melts away.` : `${nameOf(state, hero)} drops the ${w.name}.`);

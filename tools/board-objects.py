@@ -41,6 +41,7 @@ MANIFEST = os.path.join(ROOT, 'src', 'cards', 'board-objects.js')
 #   thr:  matte threshold (default 0.5);  grow: px to grow the cut;  max_hole, min_area
 SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 'expand': 0}  # pale lavender stone
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
+BONE_CUT = {'within': {'method': 'hsv', 'hsv': [[0, 180, 0, 115, 115, 255], [0, 180, 0, 255, 0, 50]], 'close': 2, 'grow': 1, 'expand': 0}}
 HINTS = {
     # The Rage Outbreak: the infected, not the wrecked cars beside them.
     'rage-outbreak-portrait/pack1': {'bg': [[344, 712, 364, 770]]},
@@ -49,6 +50,17 @@ HINTS = {
     'witches-land/broom': {'method': 'poly', 'polys': [[[718, 0], [728, 0], [709, 56], [716, 62], [716, 82], [712, 105], [708, 128], [700, 140], [682, 142], [662, 138], [664, 124], [680, 104], [694, 84], [697, 62], [706, 56]]]},
     'witches-portrait/broom': {'method': 'poly', 'polys': [[[349, 212], [355, 214], [343, 292], [345, 300], [346, 320], [344, 345], [330, 348], [316, 345], [318, 325], [326, 308], [332, 298], [337, 292]]]},
     'witches-portrait/raven': {'within': {'method': 'hsv', 'hsv': [[95, 160, 0, 255, 0, 150], [0, 180, 0, 55, 0, 95]], 'close': 2, 'expand': 0}},
+    # The Sewage Works: skeletal rats and fish are pale bone on brick, pipe and acid (a colour cut keeps only the bones);
+    # the planks stop short of the barrels beside them.
+    'acidic-sewer-land/rat1': BONE_CUT,
+    'acidic-sewer-land/rat2': BONE_CUT,
+    'acidic-sewer-land/rat4': BONE_CUT,
+    'acidic-sewer-land/rat5': BONE_CUT,
+    'acidic-sewer-portrait/rat1': BONE_CUT,
+    'acidic-sewer-portrait/rat2': BONE_CUT,
+    'acidic-sewer-portrait/rat5': BONE_CUT,
+    'acidic-sewer-land/plank1': {'keep': [[314, 334, 444, 360]]},
+    'acidic-sewer-portrait/plank1': {'keep': [[202, 230, 272, 278]]},
     # Harvest Moon: the gourd stack, not the jack-o'-lantern beside it.
     'harvest-moon-land/gourds': {'bg': [[126, 384, 216, 482]]},
     # Cordyceps Bloom: the glowing orange-gold cordyceps stalks (colour cut: the model sees only a tip or two).

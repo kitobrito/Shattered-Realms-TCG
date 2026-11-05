@@ -36,6 +36,11 @@ const AFTER_ATTACK = { on: 'afterAttack', filter: { source: 'self' } };
 const HUSH_ON_HIT = [{ ...ON_ATTACK_MINION, effects: [SILENCE('eventTarget')] }];
 const HUSH_TEXT = '"Whenever your Hero attacks a minion, permanently Silence it first."';
 const MY_TURN_END = { on: 'endOfTurn', filter: { player: 'friendly' } };
+const MY_TURN_START = { on: 'startOfTurn', filter: { player: 'friendly' } };
+// Spellbound: the expansion's set name, a Scribe's page-writing, Frisk's freezing bite.
+const SB = 'Spellbound';
+const SCRIBE = (extra = {}) => ({ op: 'writePages', amount: 1, scribe: true, ...extra });
+const FRISK_FREEZE = { on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'buff', target: 'eventTarget', keywords: ['Frozen'] }] };
 
 export const WITCH_CARDS = [
   // ---- Hero Spell ----
@@ -213,7 +218,134 @@ export const WITCH_CARDS = [
     trap: { on: 'cardPlayed', filter: ENEMY_SPELL, counters: true, effects: [{ op: 'counterSpell', copy: true, copyCostMod: -99 }, { op: 'silenceHero' }] },
   },
 
+  // ---- Spellbound expansion (unlockable): the Spellbook, Scribes, Wandweaving and Inscribe ----
+  // Scribes write a page of the Spellbook at the end of each of your turns while they live (and aren't
+  // Silenced). At 10 pages Wandcraft becomes Wandweaving and you choose a Mastery (effects.js writeSpellbook).
+  {
+    ...FAMILIAR, tribes: ['Familiar', 'Scribe'], id: 'quill_familiar', name: 'Quill Familiar', art: '🪶', extra: true, set: SB, cost: 1, attack: 1, health: 1, keywords: ['Stealth'],
+    text: 'Stealth. Scribe: at the end of your turn, write 1 page in your Spellbook.',
+    triggers: [{ ...MY_TURN_END, effects: [SCRIBE()] }],
+  },
+  {
+    ...WITCH, tribes: ['Witch', 'Scribe'], id: 'ink_stained_scribe', name: 'Ink-Stained Scribe', art: '🖋️', extra: true, set: SB, cost: 2, attack: 1, health: 4,
+    text: 'Scribe: at the end of your turn, write 1 page in your Spellbook.',
+    triggers: [{ ...MY_TURN_END, effects: [SCRIBE()] }],
+  },
+  {
+    ...FAMILIAR, tribes: ['Familiar', 'Scribe'], id: 'library_owl', name: 'Library Owl', art: '🦉', extra: true, set: SB, cost: 2, attack: 2, health: 2,
+    text: 'Scribe: at the end of your turn, write 1 page. Whenever you Inscribe a spell, draw a spell.',
+    triggers: [{ ...MY_TURN_END, effects: [SCRIBE()] }, { on: 'spellInscribed', filter: { player: 'friendly' }, effects: [{ op: 'draw', count: 1, filter: { type: 'spell' } }] }],
+  },
+  {
+    ...WITCH, tribes: ['Witch', 'Scribe'], id: 'chronicler_of_the_coven', name: 'Chronicler of the Coven', art: '📜', extra: true, set: SB, cost: 3, attack: 2, health: 5,
+    text: 'Scribe: at the end of your turn, write 1 page, or 2 if your Hero holds a Wand.',
+    triggers: [{ ...MY_TURN_END, effects: [SCRIBE({ wandAmount: 2 })] }],
+  },
+  {
+    ...WITCH, tribes: ['Witch', 'Scribe'], id: 'keeper_of_the_archive', name: 'Keeper of the Archive', art: '🗝️', extra: true, set: SB, cost: 5, attack: 3, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Scribe: at the end of your turn, write 1 page. Your other Scribes have Elusive.',
+    triggers: [{ ...MY_TURN_END, effects: [SCRIBE()] }],
+    aura: { target: { minions: { side: 'friendly', tribe: 'Scribe', excludeSelf: true } }, keywords: ['Elusive'] },
+  },
+  {
+    ...S, id: 'wandweavers_primer', name: "Wandweaver's Primer", art: '📘', extra: true, set: SB, cost: 1,
+    text: 'Write 2 pages in your Spellbook. Draw a card.',
+    effects: [{ op: 'writePages', amount: 2 }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...WITCH, id: 'spellwright_apprentice', name: 'Spellwright Apprentice', art: '✨', extra: true, set: SB, cost: 1, attack: 1, health: 2,
+    text: 'Arrival: Wandweave.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'wandweave' }] }],
+  },
+  {
+    ...S, id: 'inscribing_quill', name: 'Inscribing Quill', art: '🖊️', extra: true, set: SB, cost: 1,
+    text: 'Inscribe a spell from your hand onto your Wand. Draw a card.',
+    effects: [{ op: 'inscribe' }, { op: 'draw', count: 1 }],
+  },
+  {
+    ...S, id: 'rabbit_hex', name: 'Rabbit Hex', art: '🐇', extra: true, set: SB, cost: 2,
+    text: 'Transform an enemy minion into a 1/1 Rabbit.',
+    target: ENEMY_MINION,
+    effects: [{ op: 'transform', target: 'chosen', into: 'witch_rabbit' }],
+  },
+  {
+    ...WITCH, id: 'rune_carver', name: 'Rune Carver', art: '🪓', extra: true, set: SB, cost: 2, attack: 2, health: 3,
+    text: 'Arrival: Your Wand gains +1 Rune Slot.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'addRuneSlot' }] }],
+  },
+  {
+    ...T, id: 'ward_of_binding', name: 'Ward of Binding', art: '⛓️', extra: true, set: SB, cost: 2,
+    text: 'When your Wand would break, it keeps 1 Durability and everything on it.',
+    // The save itself happens in effects.js wearHeroWeapon (the Wand's last Durability is kept).
+    trap: { on: 'wandWouldBreak', effects: [{ op: 'writePages', amount: 0 }] },
+  },
+  {
+    ...S, id: 'wand_of_echoes', name: 'Wand of Echoes', art: '🔔', extra: true, set: SB, cost: 3, wand: true, heroWeapon: { attack: 2, durability: 2 }, runeSlots: 2, enchant: 'arcaneEcho',
+    text: 'Equip a 2/2 Wand with 2 Rune Slots, already enchanted with Arcane Echo: "After you attack, deal 2 damage to a random enemy."',
+    effects: [wand('wand_of_echoes', 'Wand of Echoes', 2, 2)],
+  },
+  {
+    ...WITCH, tribes: ['Construct'], id: 'spellbook_sentinel', name: 'Spellbook Sentinel', art: '📚', extra: true, set: SB, cost: 4, attack: 3, health: 6, keywords: ['Taunt'],
+    text: 'Taunt. Has +1 Attack for every 2 pages in your Spellbook.',
+    aura: { target: 'self', attackPerPages: { per: 2, max: 5 } },
+  },
+  {
+    ...S, id: 'the_thousand_spell_wand', name: 'The Thousand-Spell Wand', art: '🪄', extra: true, set: SB, cost: 7, wand: true, heroWeapon: { attack: 3, durability: 4 }, runeSlots: 3, freeInscribe: true, doubleInscribed: true,
+    text: 'Equip a 3/4 Wand with 3 Rune Slots: "Inscribing is free. Whenever your Hero attacks, each inscribed spell is cast twice."',
+    effects: [wand('the_thousand_spell_wand', 'The Thousand-Spell Wand', 3, 4)],
+  },
+  {
+    ...S, id: 'the_headmistresss_grimoire', name: "The Headmistress's Grimoire", art: '📕', extra: true, set: SB, cost: 6,
+    text: 'Write 4 pages in your Spellbook, then Wandweave twice.',
+    effects: [{ op: 'writePages', amount: 4 }, { op: 'wandweave' }, { op: 'wandweave' }],
+  },
+
+  // ---- Spellbound: the new Hero Spell, the Masteries and the Beast-Tamer companions ----
+  {
+    ...S, id: 'wandweaving', name: 'Wandweaving', art: '🪄', heroSpell: true, altHeroSpell: true, cost: 2,
+    text: 'Wandweave: choose 1 of 3 enchantments for your Wand. (Replaces Wandcraft once your Spellbook is complete.)',
+    effects: [{ op: 'wandweave' }],
+  },
+  { ...S, id: 'mastery_dark_arts', name: 'Dark Arts', art: '🩸', token: true, cost: 0, text: 'Mastery: your Wands deal +2 damage and have Lifesteal.', effects: [{ op: 'setMastery', kind: 'darkArts' }] },
+  { ...S, id: 'mastery_living_grimoire', name: 'Living Grimoire', art: '📖', token: true, cost: 0, text: 'Mastery: Inscribing is free, and inscribed spells survive when your Wand breaks.', effects: [{ op: 'setMastery', kind: 'livingGrimoire' }] },
+  { ...S, id: 'mastery_beast_tamer', name: 'Beast-Tamer', art: '🐾', token: true, cost: 0, text: 'Mastery: summon a companion of your choice: Frisk, Spindex or Toby.', effects: [{ op: 'setMastery', kind: 'beastTamer' }] },
+  {
+    faction: 'Witches', type: 'minion', tribes: ['Dragon', 'Familiar'], id: 'frisk_baby', name: 'Frisk, the Baby Snow Dragon', art: '🐉', token: true, cost: 3, attack: 3, health: 3,
+    text: 'Grows at the start of your turn (3/3, 6/6, 9/9, then a 12/12 adult). Freezes any enemy he attacks.',
+    triggers: [{ ...MY_TURN_START, effects: [{ op: 'growInto', into: 'frisk_juvenile' }] }, FRISK_FREEZE],
+  },
+  {
+    faction: 'Witches', type: 'minion', tribes: ['Dragon', 'Familiar'], id: 'frisk_juvenile', name: 'Frisk, the Juvenile Snow Dragon', art: '🐉', token: true, cost: 6, attack: 6, health: 6, formLabel: 'Juvenile',
+    text: 'Grows at the start of your turn (next: 9/9 Young). Freezes any enemy he attacks.',
+    triggers: [{ ...MY_TURN_START, effects: [{ op: 'growInto', into: 'frisk_young' }] }, FRISK_FREEZE],
+  },
+  {
+    faction: 'Witches', type: 'minion', tribes: ['Dragon', 'Familiar'], id: 'frisk_young', name: 'Frisk, the Young Snow Dragon', art: '🐉', token: true, cost: 9, attack: 9, health: 9, formLabel: 'Young',
+    text: 'Grows at the start of your turn (next: a 12/12 Adult). Freezes any enemy he attacks.',
+    triggers: [{ ...MY_TURN_START, effects: [{ op: 'growInto', into: 'frisk_adult' }] }, FRISK_FREEZE],
+  },
+  {
+    faction: 'Witches', type: 'minion', tribes: ['Dragon', 'Familiar'], id: 'frisk_adult', name: 'Frisk, the Snow Dragon', art: '🐉', token: true, cost: 10, attack: 12, health: 12, formLabel: 'Adult',
+    text: 'Freezes any enemy he attacks.',
+    triggers: [FRISK_FREEZE],
+  },
+  {
+    faction: 'Witches', type: 'minion', tribes: ['Beast', 'Familiar'], id: 'spindex_the_giant_spider', name: 'Spindex, the Giant Spider', art: '🕷️', token: true, cost: 6, attack: 2, health: 8, keywords: ['Venomous'],
+    text: 'Venomous. Whenever Spindex kills an enemy minion, restore a third of its Health to Spindex (rounded up) and summon a 1/1 Baby Spider.',
+    triggers: [
+      { on: 'attackDeclared', filter: { source: 'self' }, effects: [{ op: 'spindexMark' }] },
+      { on: 'afterAttack', filter: { source: 'self' }, effects: [{ op: 'spindexFeast' }] },
+    ],
+  },
+  {
+    faction: 'Witches', type: 'minion', tribes: ['Beast', 'Familiar'], id: 'toby_the_black_panther', name: 'Toby, the Black Panther', art: '🐆', token: true, cost: 6, attack: 6, health: 5, keywords: ['Stealth', 'Rush'],
+    text: 'Stealth. Rush. Whenever Toby attacks a minion, permanently Silence it first. If it was already Silenced, destroy it and Toby takes no damage.',
+    triggers: [{ on: 'attackDeclared', filter: { source: 'self', target: { side: 'enemy' } }, effects: [{ op: 'tobyPounce' }] }],
+  },
+  { faction: 'Witches', type: 'minion', tribes: ['Beast'], id: 'witch_rabbit', name: 'Rabbit', art: '🐇', token: true, cost: 1, attack: 1, health: 1, text: 'It used to be something much scarier.' },
+  { faction: 'Witches', type: 'minion', tribes: ['Beast'], id: 'baby_spider', name: 'Baby Spider', art: '🕷️', token: true, cost: 1, attack: 1, health: 1, text: 'Hatched by Spindex.' },
+
   // ---- Tokens ----
-  { ...S, id: 'apprentice_wand', name: 'Apprentice Wand', art: '🪄', token: true, cost: 2, wand: true, heroWeapon: { attack: 1, durability: 2 }, text: 'A 1/2 Wand from Wandcraft.', effects: [wand('apprentice_wand', 'Apprentice Wand', 1, 2)] },
+  { ...S, id: 'apprentice_wand', name: 'Apprentice Wand', art: '🪄', token: true, cost: 2, wand: true, runeSlots: 1, heroWeapon: { attack: 1, durability: 2 }, text: 'A 1/2 Wand from Wandcraft.', effects: [wand('apprentice_wand', 'Apprentice Wand', 1, 2)] },
   { ...S, id: 'willow_wand', name: 'Willow Wand', art: '🌿', token: true, cost: 2, wand: true, heroWeapon: { attack: 2, durability: 2 }, text: `A 2/2 Wand from Wandwright: ${HUSH_TEXT}`, effects: [wand('willow_wand', 'Willow Wand', 2, 2, HUSH_ON_HIT)] },
 ];

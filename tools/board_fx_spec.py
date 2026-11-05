@@ -41,6 +41,22 @@ SPEC = {
         'hands': ['ochre', [[384, 592, 459, 640], [368, 940, 440, 990]], {'grow': 1, 'blur': 0.8, 'show': [0, 255, 0]}],
         'rock': ['stone', [[372, 584, 459, 664], [356, 930, 448, 1010]], {'exclude': [[384, 592, 459, 640], [368, 940, 440, 990]], 'show': [120, 120, 255]}],
     },
+    # ---- Sharks (unlockable): The Shifting Dunes ----
+    'sand-sharks-land': {'oasis': ['oasis', [[875, 284, 1024, 360]], {'blur': 0.8, 'show': [0, 200, 255]}]},
+    'sand-sharks-portrait': {'oasis': ['oasis', [[348, 778, 459, 848]], {'blur': 0.8, 'show': [0, 200, 255]}]},
+    # ---- Acidic (unlockable): The Sewage Works, a flooded sewage plant ----
+    'acidic-sewer-land': {
+        # The acid channel (flow, sheen, bubbles and ripples stay on these pixels).
+        'acid': ['acid', [[165, 250, 960, 470]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        # The acid pouring out of the broken pipe: light runs down it.
+        'fall': ['acidglow', [[150, 180, 268, 300]], {'blur': 0.6, 'show': [255, 255, 0]}],
+        # The glowing acid seeping through the cracked bricks in the bottom corners and the ledge spills.
+        'seep': ['acidglow', [[40, 470, 125, 572], [905, 488, 1000, 572], [655, 150, 725, 195], [820, 200, 870, 245]], {'grow': 1, 'blur': 0.6, 'show': [255, 0, 255]}],
+    },
+    'acidic-sewer-portrait': {
+        'acid': ['acid', [[70, 210, 400, 862]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
+        'fall': ['acidglow', [[68, 150, 162, 300]], {'blur': 0.6, 'show': [255, 255, 0]}],
+    },
     # ---- Acidic: an acid cavern ----
     'acidic-land': {
         'pools': ['acid', FULL_L, {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
