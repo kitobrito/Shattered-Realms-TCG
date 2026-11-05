@@ -137,11 +137,11 @@ HINTS = {
     'ultraterrestrials-portrait/hourglass': {'method': 'poly', 'refine': 2, 'polys': [[[29, 58], [50, 45], [90, 36], [106, 36], [110, 45], [103, 55], [115, 85], [127, 115], [134, 138], [132, 150], [115, 158], [90, 160], [80, 155], [77, 140], [65, 120], [55, 95], [45, 70], [30, 65]]]},
     'ultraterrestrials-land/tri1': {'method': 'poly', 'polys': [[[477, 70], [445, 136], [521, 138]]], 'holes': [[[481, 93], [461, 120], [499, 119]]]},
     **{f'ultraterrestrials-{k}': SHIMMER for k in ('land/tri3', 'land/tri4', 'land/tri5', 'land/tri7', 'portrait/tri1', 'portrait/tri2', 'portrait/tri3', 'portrait/tri4')},
-    # Void: the galaxies (ellipses, they turn in their own plane), the moon with its rock, small free rocks.
-    'void-land/galaxy': {'method': 'poly', 'ellipses': [[912, 478, 86, 40, -35]]},
-    'void-land/galaxy2': {'method': 'poly', 'ellipses': [[258, 32, 38, 16, -18]]},
-    'void-land/galaxy3': {'method': 'poly', 'ellipses': [[265, 512, 40, 18, -25]]},
-    'void-portrait/galaxy': {'method': 'poly', 'ellipses': [[370, 935, 96, 45, -38]]},
+    # Void: the galaxies (ellipses on their measured slant, tools/check-galaxy-spin.py; they turn in their own plane), the moon with its rock, small free rocks.
+    'void-land/galaxy': {'method': 'poly', 'ellipses': [[915, 476, 84, 46, -35]]},
+    'void-land/galaxy2': {'method': 'poly', 'ellipses': [[258, 33, 38, 15, -23]]},
+    'void-land/galaxy3': {'method': 'poly', 'ellipses': [[268, 512, 40, 18, 32]]},
+    'void-portrait/galaxy': {'method': 'poly', 'ellipses': [[372, 925, 96, 48, -38]]},
     'void-land/moonRock': {'method': 'poly', 'refine': 3, 'polys': [[[75, 415], [95, 405], [110, 407], [98, 420], [90, 440], [95, 455], [150, 452], [160, 460], [185, 475], [183, 500], [165, 520], [130, 540], [100, 545], [75, 530], [60, 505], [50, 480], [58, 465], [75, 458], [72, 440]]]},
     'void-land/rock4': {'method': 'poly', 'polys': [[[758, 486], [765, 475], [800, 467], [803, 474], [790, 490], [770, 496]]]},
     'void-land/rock5': {'method': 'poly', 'ellipses': [[566, 18, 7, 5]]},
