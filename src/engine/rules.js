@@ -131,7 +131,7 @@ export const KEYWORD_TEXT = {
   Wandweave: 'Witches: choose 1 of 3 enchantments for your Wand (you get an Apprentice Wand first if you have none). Writes a page.',
   Inscribe: 'Witches: attach a spell from your hand to your Wand (you pay its cost). Every time your Wand attacks, it casts that spell for free at the target. Writes a page.',
   'Rune Slots': 'Witches: how many enchantments and inscribed spells a Wand holds (Apprentice Wand 1, most Wands 2). A new one pushes out the oldest.',
-  Mastery: 'Witches: chosen when your Spellbook is complete. Dark Arts: Wands deal +3 damage and have Lifesteal. Living Grimoire: Inscribing is free and inscribed spells survive when the Wand breaks. Beast-Tamer: summon a companion (Frisk, Spindex or Toby).',
+  Mastery: 'Witches: chosen when your Spellbook is complete. Dark Arts: Wands deal +2 damage and have Lifesteal. Living Grimoire: Inscribing is free and inscribed spells survive when the Wand breaks. Beast-Tamer: summon a companion (Frisk, Spindex or Toby).',
   Discharge: 'Eels: a minion spends all its Volts at once to fire a Chain of that strength.',
   Chain: "Eels: Chain X deals X damage to an enemy, then jumps to the nearest enemy minion it hasn't hit, 1 weaker each jump. If it still has power after every enemy minion was hit, the rest hits the enemy Hero. It skips Stealth, Burrowed and Thawing minions.",
   Conductive: "Eels: until the end of the turn, a Chain that jumps off this minion doesn't get weaker.",

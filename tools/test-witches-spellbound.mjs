@@ -142,15 +142,16 @@ test('Ward of Binding: the Wand keeps 1 Durability instead of breaking', () => {
   if (!hero(0).weapon || hero(0).weapon.durability !== 1) return JSON.stringify(hero(0).weapon);
   if (pl(0).traps.length) return 'trap not used';
 });
-test('Dark Arts: Wands deal +3 damage and have Lifesteal', () => {
+test('Dark Arts: Wands deal +2 damage and have Lifesteal', () => {
   pl(0).spellbook = { pages: 9 };
   play(0, give(0, 'wandweavers_primer'), null, byLabel('Dark Arts'));
   applyAction(s, { type: 'heroSpell', player: 0, card: 'wandweaving' }); settle();
   hero(0).health = 20;
+  if (hero(0).auraAttack !== 2) return `bonus ${hero(0).auraAttack}`;
   const hp = hero(1).health;
   attack(0, hero(0).uid, hero(1).uid);
   const dealt = hp - hero(1).health;
-  if (dealt < 4) return `dealt ${dealt}`;
+  if (dealt < 3) return `dealt ${dealt}`;
   if (hero(0).health !== 20 + dealt) return `healed to ${hero(0).health}`;
 });
 test('Living Grimoire: Inscribing is free and inscribed spells survive the Wand breaking', () => {

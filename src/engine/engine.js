@@ -629,7 +629,7 @@ function applyAuras(state) {
   for (const pl of state.players) {
     const smiths = pl.board.filter((m) => getCard(m.cardId).heroWeaponAura && m.health > 0 && !m.destroyed).length;
     const darkArts = pl.hero.weapon?.wand && pl.spellbook?.mastery === 'darkArts';
-    pl.hero.auraAttack = pl.hero.weapon ? smiths + (darkArts ? 3 : 0) : 0;
+    pl.hero.auraAttack = pl.hero.weapon ? smiths + (darkArts ? 2 : 0) : 0;
     // Witches: keywords a Weapon gives the Hero while it's held (The Witching Hour Broom: Twin Strike;
     // the Twin Bolt enchantment; Dark Arts: Lifesteal on Wands).
     const wk = [...(pl.hero.weapon?.keywords ?? []), ...(pl.hero.weapon?.runes?.some((r) => r.id === 'twinBolt') ? ['Twin Strike'] : []), ...(darkArts ? ['Lifesteal'] : [])];

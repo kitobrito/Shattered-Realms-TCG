@@ -306,7 +306,7 @@ export const WITCH_CARDS = [
     text: 'Wandweave: choose 1 of 3 enchantments for your Wand. (Replaces Wandcraft once your Spellbook is complete.)',
     effects: [{ op: 'wandweave' }],
   },
-  { ...S, id: 'mastery_dark_arts', name: 'Dark Arts', art: '🩸', token: true, cost: 0, text: 'Mastery: your Wands deal +3 damage and have Lifesteal.', effects: [{ op: 'setMastery', kind: 'darkArts' }] },
+  { ...S, id: 'mastery_dark_arts', name: 'Dark Arts', art: '🩸', token: true, cost: 0, text: 'Mastery: your Wands deal +2 damage and have Lifesteal.', effects: [{ op: 'setMastery', kind: 'darkArts' }] },
   { ...S, id: 'mastery_living_grimoire', name: 'Living Grimoire', art: '📖', token: true, cost: 0, text: 'Mastery: Inscribing is free, and inscribed spells survive when your Wand breaks.', effects: [{ op: 'setMastery', kind: 'livingGrimoire' }] },
   { ...S, id: 'mastery_beast_tamer', name: 'Beast-Tamer', art: '🐾', token: true, cost: 0, text: 'Mastery: summon a companion of your choice: Frisk, Spindex or Toby.', effects: [{ op: 'setMastery', kind: 'beastTamer' }] },
   {
