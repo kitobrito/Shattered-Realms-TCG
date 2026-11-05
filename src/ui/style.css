@@ -643,6 +643,19 @@ body.in-game { overflow: hidden; }
 .fx-banner.trap span { font-size: clamp(22px, 3.2cqw, 44px); background: linear-gradient(#f2e2ff, #a46bff 60%, #3a1066); -webkit-background-clip: text; background-clip: text; }
 .fx-flash { position: fixed; inset: 0; mix-blend-mode: screen; }
 .fx-reveal { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); }
+.fx-spotlight { position: fixed; inset: 0; pointer-events: none; z-index: 1002; }
+.fx-spotlight .spot-dim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8, 4, 16, 0.6), rgba(8, 4, 16, 0.35) 34%, transparent 52%); }
+.fx-spotlight .spot-card { position: absolute; left: 22%; top: 50%; transform: translate(-50%, -50%); pointer-events: auto; cursor: pointer; }
+.fx-spotlight .spot-inner { display: flex; flex-direction: column; align-items: center; }
+.fx-spotlight .big-card { --h: min(74vh, 38vw); filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.7)); }
+.fx-spotlight .spot-label { margin-bottom: 1.2vh; padding: 4px 18px; border-radius: 999px; background: linear-gradient(90deg, #5a1424, #c0394f, #5a1424); color: #fff4e6;
+  font-family: var(--font-title); font-weight: 900; font-size: clamp(14px, 2.6vh, 30px); letter-spacing: 0.04em; white-space: nowrap; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
+/* Upright phones: the enemy's row is at the top, so the card sits low and to the left. */
+@media (orientation: portrait) {
+  .fx-spotlight .spot-dim { background: linear-gradient(0deg, rgba(8, 4, 16, 0.6), rgba(8, 4, 16, 0.3) 45%, transparent 60%); }
+  .fx-spotlight .spot-card { left: 38%; top: auto; bottom: 2vh; transform: translateX(-50%); }
+  .fx-spotlight .big-card { --h: min(52vh, 100vw); }
+}
 .fx-reveal .big-card, #preview .big-card { --h: min(50cqh, 70cqw); }
 
 /* Hover preview */
@@ -5783,3 +5796,38 @@ body.reduced-motion .arena .minion.f-witches .m-art::before { animation: none; }
 .weapon-badge .w-rune.inscr { box-shadow: 0 0 0 1px #d946ef; }
 .weapon-badge .w-rune.empty { background: #0b0610aa; box-shadow: 0 0 0 1px #6b5a7a; }
 body.reduced-motion .hero-book.done { animation: none; }
+
+/* The pre-match screen: choose the AI opponent (or Random), or both hot seat players' realms. */
+.match-setup-overlay { z-index: 60; background: #000a; }
+.match-setup { position: relative; width: min(980px, 94vw); max-height: 92vh; overflow: auto; padding: clamp(14px, 2.4vh, 24px) clamp(14px, 2vw, 26px); border-radius: 18px;
+  background: linear-gradient(180deg, #1c1534, #0d0a1b); border: 2px solid #b08a4a; box-shadow: 0 20px 60px #000c, inset 0 0 0 1px #ffffff10; display: flex; flex-direction: column; gap: 10px; }
+.match-setup.ai { width: min(760px, 94vw); }
+.match-setup h2 { margin: 0; text-align: center; font-family: var(--font-title); color: #ffd98a; font-size: clamp(20px, 3.4vh, 32px); letter-spacing: 0.04em; }
+.match-setup > .sub { margin: 0; text-align: center; }
+.ms-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ms-side { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 12px; background: #ffffff08; border: 1px solid #ffffff14; min-width: 0; }
+.ms-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ms-head span { font-family: var(--font-title); font-weight: 900; color: #cdb9ff; text-transform: uppercase; letter-spacing: 0.08em; font-size: 13px; }
+.ms-head b { color: #fff3d6; font-size: 14px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+.ms-realm { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px !important; border-radius: 10px; background: #0007 !important;
+  border: 2px solid transparent !important; color: #e8dcff; min-width: 0 !important; width: 100%; height: auto !important; margin: 0 !important; box-shadow: none !important; }
+.ms-realm small { font-size: 11px; line-height: 1.1; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-realm.on { border-color: var(--fc, #ffd25a) !important; background: color-mix(in srgb, var(--fc, #ffd25a) 28%, #0008) !important; color: #fff; }
+.ms-medal { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; border: 2px solid var(--fc, #8a6cff); display: grid; place-items: center; background: #120d22; }
+.ms-medal img { width: 100%; height: 100%; object-fit: cover; }
+.ms-random .ms-medal { border-color: #ffd25a; }
+.ms-random .ms-medal b { font-size: 26px; color: #ffd25a; font-family: var(--font-title); }
+.ms-random.on { border-color: #ffd25a !important; background: #ffd25a33 !important; }
+.ms-realm .m2-check { position: absolute; top: 2px; right: 4px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 11px; background: #ffd25a; color: #2a1804; }
+.ms-diff .difficulty-slider { margin: 0 auto; max-width: 520px; }
+.ms-foot { display: flex; justify-content: center; gap: 10px; margin-top: 4px; position: sticky; bottom: calc(-1 * clamp(14px, 2.4vh, 24px)); padding: 8px 0; background: linear-gradient(transparent, #0d0a1b 30%); }
+.ms-foot button { min-width: 120px; }
+.ms-start { min-width: 200px !important; font-size: 18px !important; font-family: var(--font-title); }
+.ms-start:disabled { opacity: 0.55; filter: grayscale(0.6); }
+@media (max-width: 700px) {
+  .ms-cols { grid-template-columns: 1fr; }
+  .ms-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+  .ms-medal { width: 38px; height: 38px; }
+  .ms-realm small { font-size: 10px; }
+}

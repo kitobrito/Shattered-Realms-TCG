@@ -223,6 +223,68 @@ function randomPick() {
   return out;
 }
 
+// The pre-match screen: Play vs AI chooses the AI's realms (or Random); Hot seat chooses both
+// players' realms. The choices are remembered per format (one or two factions).
+let matchSetup = null; // { mode: 'ai' | 'hotseat', p1: [...], p2: [...] | null (null = Random) }
+const SETUP_KEYS = { ai: 'rivalPick', hotseat: 'seat2Pick' };
+function savedSetupPick(mode) {
+  const list = getSettings()[SETUP_KEYS[mode]]?.[format];
+  const open = availableFactions();
+  return Array.isArray(list) && list.length === pickNeeded() && list.every((f) => open.includes(f)) ? list : null;
+}
+function openMatchSetup(mode) {
+  applyJourney();
+  matchSetup = { mode, p1: [...picked], p2: savedSetupPick(mode) };
+  sound.play('click');
+  return render();
+}
+function setupToggle(side, f) {
+  const key = side === 1 ? 'p1' : 'p2';
+  const cur = matchSetup[key] ?? [];
+  matchSetup[key] = cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f].slice(-pickNeeded());
+  if (side === 2 && !matchSetup.p2.length) matchSetup.p2 = null;
+}
+function matchSetupHTML() {
+  const { mode, p1, p2 } = matchSetup;
+  const n = pickNeeded();
+  const open = availableFactions();
+  const word = n === 1 ? 'realm' : `${n} realms`;
+  const grid = (side, list, random) => `<div class="ms-grid">
+    ${random ? `<button class="ms-realm ms-random ${list ? '' : 'on'}" data-setup-random="${side}"><span class="ms-medal"><b>?</b></span><small>Random</small></button>` : ''}
+    ${open.map((f) => { const on = (list ?? []).includes(f); const art = heroArtOf(f);
+      return `<button class="ms-realm ${on ? 'on' : ''}" data-setup-side="${side}" data-setup-realm="${esc(f)}" style="--fc:${fx.factionColor(f)}"><span class="ms-medal">${art ? `<img src="${art}" alt="" draggable="false">` : ''}</span><small>${esc(f)}</small>${on ? '<i class="m2-check">✓</i>' : ''}</button>`; }).join('')}</div>`;
+  const label = (list, random) => (list?.length ? list.map(esc).join(' + ') : random ? 'Random' : `Pick ${word}`);
+  const p1ok = p1.length === n;
+  const p2ok = !p2 || p2.length === n;
+  const body = mode === 'ai'
+    ? `<h2>Choose your opponent</h2>
+       <p class="sub">You play <b>${label(p1)}</b>. Pick the ${word} the AI plays, or leave it on Random.</p>
+       <div class="ms-side"><div class="ms-head"><span>AI opponent</span><b>${label(p2, true)}</b></div>${grid(2, p2, true)}</div>
+       <div class="ms-diff">${difficultySliderHTML()}</div>`
+    : `<h2>Hot seat</h2>
+       <p class="sub">Two players, one screen. Choose the ${word} each player uses.</p>
+       <div class="ms-cols">
+         <div class="ms-side"><div class="ms-head"><span>Player 1</span><b>${label(p1)}</b></div>${grid(1, p1, false)}</div>
+         <div class="ms-side"><div class="ms-head"><span>Player 2</span><b>${label(p2, true)}</b></div>${grid(2, p2, true)}</div>
+       </div>`;
+  const ready = p1ok && p2ok;
+  const why = !p1ok ? `Player 1: pick ${word}` : !p2ok ? `${mode === 'ai' ? 'Opponent' : 'Player 2'}: pick ${word}` : '';
+  return `<div class="overlay match-setup-overlay"><div class="guide-backdrop" data-act="setupClose"></div>
+    <div class="match-setup ${mode}"><button class="ghost guide-close" data-act="setupClose" aria-label="Close">✕</button>${body}
+      <div class="ms-foot"><button class="ghost" data-act="setupClose">Back</button><button class="gold ms-start" data-act="setupStart" ${ready ? '' : 'disabled'}>${ready ? (mode === 'ai' ? 'Fight!' : 'Start match') : why}</button></div>
+    </div></div>`;
+}
+function startMatchSetup() {
+  const { mode, p1, p2 } = matchSetup;
+  if (p1.length !== pickNeeded() || (p2 && p2.length !== pickNeeded())) return;
+  const keep = { ...(getSettings()[SETUP_KEYS[mode]] ?? {}), [format]: p2 };
+  setSetting({ [SETUP_KEYS[mode]]: keep });
+  matchSetup = null;
+  if (mode === 'hotseat') { picked = [...p1]; pickCleared = false; }
+  sound.play('versus');
+  return startGame(mode, picked, p2 ? [...p2] : randomPick());
+}
+
 function startGame(mode, factions = picked, rivalFactions = randomPick()) {
   if (needsFirstPick()) return render(); // choose your first realms first
   applyJourney();
@@ -677,6 +739,38 @@ async function revealPlayed(cardId, { label = '', duration = 2600, cls = 'fx-rev
   holder.remove();
 }
 
+// The opponent's card from the hand: shown big and readable on the left for a full 3 seconds, whatever
+// the game or AI speed (only the zoom in and out speed up). The game carries on beside it, so you see
+// where the card lands; the next spotlight waits for this one. Tapping the card closes it early.
+const SPOTLIGHT_MS = 3000;
+let spotActive = Promise.resolve();
+async function spotlightCard(cardId, label) {
+  await spotActive;
+  const holder = document.createElement('div');
+  holder.className = 'fx-spotlight';
+  holder.innerHTML = `<div class="spot-dim"></div><div class="spot-card"><div class="spot-inner">${label ? `<div class="spot-label">${esc(label)}</div>` : ''}${bigCardHTML(getCard(cardId))}</div></div>`;
+  fx.layer().appendChild(holder);
+  fitAllText(holder);
+  const card = holder.querySelector('.spot-inner');
+  const dim = holder.querySelector('.spot-dim');
+  fx.animate(dim, [{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
+  await fx.animate(card, [{ opacity: 0, transform: 'translateX(-30%) scale(0.6)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.3,1.15)' });
+  spotActive = (async () => {
+    // The hold is real time (not scaled by the speed settings); a hidden tab skips it.
+    if (!document.hidden) {
+      await new Promise((done) => {
+        const t = setTimeout(done, SPOTLIGHT_MS);
+        card.addEventListener('pointerdown', () => { clearTimeout(t); done(); }, { once: true });
+      });
+    }
+    await Promise.all([
+      fx.animate(card, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(0.85)' }], { duration: 260 }),
+      fx.animate(dim, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 }),
+    ]);
+    holder.remove();
+  })();
+}
+
 // Starting Hand: the swapped cards fly back to the deck, then the replacements fly in
 // and land in their slots (worked out on a copy of the game: the engine is deterministic).
 async function animateMulligan(s, action) {
@@ -802,7 +896,8 @@ async function act(action, meta = {}) {
       const who = action.player === viewer && game.mode !== 'hotseat' ? 'You' : s.players[action.player].name;
       await fx.banner(`⚡ QUICK PLAY! <small>${esc(who)}</small>`, 'quickplay');
       sound.play(playedCard.type === 'minion' ? 'cardPlay' : 'spell');
-      await revealPlayed(playedCard.id, { label: `⚡ ${who === 'You' ? 'Your' : `${who}'s`} Quick Play`, duration: 2600, cls: 'fx-reveal qp-reveal' });
+      if (action.player !== viewer && game.mode !== 'hotseat') await spotlightCard(playedCard.id, `⚡ ${who}'s Quick Play`);
+      else await revealPlayed(playedCard.id, { label: `⚡ ${who === 'You' ? 'Your' : `${who}'s`} Quick Play`, duration: 2600, cls: 'fx-reveal qp-reveal' });
       const target = action.target != null ? charEl(action.target) : null;
       const from = charEl(s.players[action.player].hero.uid);
       if (target && from) await fx.bolt(from, target, fx.factionColor(before.srcFaction));
@@ -828,7 +923,8 @@ async function act(action, meta = {}) {
       const flourish = playedCard.type === 'spell' && action.type === 'play';
       const spellTarget = action.target != null ? charEl(action.target) : null;
       if (action.player !== viewer && !hidden) {
-        await revealPlayed(playedCard.id);
+        if (action.type === 'play') await spotlightCard(playedCard.id, `${s.players[action.player].name} played`);
+        else await revealPlayed(playedCard.id);
         if (flourish) await fx.castFlourish(null, null, before.srcFaction, spellTarget);
       } else if (flourish) {
         const from = meta.from && document.body.contains(meta.from) ? meta.from.getBoundingClientRect() : null;
@@ -1314,7 +1410,9 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     const hand = s.players[viewer].hand;
     const items = shown.map((el) => ({ el, html: bigCardHTML(getCard(hand.find((c) => c.uid === Number(el.dataset.hand)).cardId)) }));
     const top = pile.querySelector('.pile span:last-child') ?? pile;
-    jobs.push(fx.drawShow(items, top.getBoundingClientRect(), back).then(() => { for (const el of shown) el.style.visibility = ''; }));
+    // Upright phones: the enemy's card spotlight shares the space, so the draw waits for it to close.
+    const clear = window.matchMedia?.('(orientation: portrait)').matches ? spotActive : null;
+    jobs.push(Promise.resolve(clear).then(() => fx.drawShow(items, top.getBoundingClientRect(), back)).then(() => { for (const el of shown) el.style.visibility = ''; }));
   }
   if (fresh.length) sound.play('draw');
   // The opponent's new cards: a glowing card back flies into their hand, and a label says so.
@@ -2439,7 +2537,8 @@ function renderMenu() {
       <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p></div></div>` : ''}
     ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
-    ${needsFirstPick() ? firstPickHTML() : ''}`;
+    ${needsFirstPick() ? firstPickHTML() : ''}
+    ${matchSetup && !needsFirstPick() ? matchSetupHTML() : ''}`;
   const listEl = app.querySelector('.m2-list');
   if (listEl) listEl.scrollTop = listScroll;
   // Phones: bring each strip's picked realm into view.
@@ -3587,6 +3686,14 @@ app.addEventListener('click', (e) => {
   if (pgBtn) return pageTurn(pgBtn.closest('.pager'), Number(pgBtn.dataset.page));
   const dot = e.target.closest('[data-goto]');
   if (dot) { const pg = dot.closest('.pager'); const d = Number(dot.dataset.goto) - pageOf(pg.dataset.pager); return d && pageTurn(pg, d); }
+  // The pre-match screen's realm buttons.
+  const setupBtn = matchSetup && e.target.closest('[data-setup-realm],[data-setup-random]');
+  if (setupBtn) {
+    if (setupBtn.dataset.setupRandom) matchSetup.p2 = null;
+    else setupToggle(Number(setupBtn.dataset.setupSide), setupBtn.dataset.setupRealm);
+    sound.play('click');
+    return render();
+  }
   const btn = e.target.closest('[data-act]');
   if (btn && !((btn.classList.contains('zoom-overlay') || btn.classList.contains('replace-pop')) && e.target.closest('[data-stop]'))) return onButton(btn.dataset.act);
   // Swapping a locked card in the deck builder for one you own (one copy at a time).
@@ -3766,15 +3873,23 @@ function onButton(name) {
   const s = game?.state;
   switch (name) {
     case 'ai': {
+      // From the menu: choose the AI opponent first (the pre-match screen).
+      if (screen === 'menu' && !needsFirstPick() && picked.length === pickNeeded()) return openMatchSetup('ai');
       sound.play('click');
-      if (screen !== 'menu' || needsFirstPick() || picked.length !== pickNeeded()) return startGame('ai');
-      if (playLaunching) return;
+      return startGame('ai');
+    }
+    case 'hotseat':
+      if (screen === 'menu' && !needsFirstPick()) return openMatchSetup('hotseat');
+      sound.play('click'); return startGame('hotseat');
+    case 'setupClose': matchSetup = null; sound.play('click'); return render();
+    case 'setupStart': {
+      if (!matchSetup || playLaunching) return;
+      if (matchSetup.mode !== 'ai') return startMatchSetup();
       playLaunching = true;
-      const wait = mfx.playBurst(app.querySelector('.ts-play'));
-      setTimeout(() => { playLaunching = false; if (screen === 'menu') startGame('ai'); }, wait);
+      const wait = mfx.playBurst(app.querySelector('.ms-start'));
+      setTimeout(() => { playLaunching = false; if (screen === 'menu' && matchSetup) startMatchSetup(); }, wait);
       return;
     }
-    case 'hotseat': sound.play('click'); return startGame('hotseat');
     case 'continue': game = loadSaved(); return game ? enterGame() : render();
     case 'guide': guideOpen = true; return render();
     case 'closeGuide': guideOpen = false; return render();
