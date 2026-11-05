@@ -80,7 +80,7 @@ export const playerPortraitHTML = (factions) => {
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${fslug(faction)}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
