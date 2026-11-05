@@ -131,6 +131,11 @@ export const STANDARD_CUTS = {
     'false_calm', 'instinctive_defense', 'reflexive_shift', 'back_to_reason',
   ],
   // Keeps: a low curve of chargers and Chain spells, topped by The Thunderhead and the Leviathan.
+  // Keeps: the Wands, the Counters and the big Silences; cuts the slower Traps and spells.
+  Witches: [
+    'academy_initiate', 'black_cat_familiar', 'grimoire_thief', 'crossroads_witch', 'wand_of_binding',
+    'grim_toll', 'forbidden_grimoire', 'tongue_binding_curse', 'curse_of_the_withered_hand', 'mirror_hex',
+  ],
   Eels: [
     'elver_swarm', 'volt_leech', 'tidal_generator', 'voltage_matriarch', 'megavolt_eel',
     'storm_drain', 'overcharge', 'reef_blackout', 'short_circuit', 'lightning_rod',

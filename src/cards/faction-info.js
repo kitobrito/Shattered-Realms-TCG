@@ -114,6 +114,13 @@ export const FACTION_INFO = {
     mechanic: 'Volts: a minion stores up to 5. Discharge spends them all as a Chain. Chain X: X damage, then it jumps to the nearest enemy minion, 1 weaker each jump; what is left hits the Hero. A minion that dies with Volts Discharges half of them at a random enemy. Conductive: a Chain jumps off it at full power.',
     style: 'Control · Burst',
   },
+  Witches: {
+    summary: 'A dark coven of wand duellists: arm your Hero with Wands, Silence everything, and Counter the enemy\'s spells.',
+    strengths: ['Shuts down spell-heavy decks with Counters and spell taxes', 'Silence strips Taunt, Evade and every other keyword', 'Wands hit from afar: your Hero takes no damage back'],
+    weaknesses: ['Few minions to hold the board', 'Counters do nothing against minion-heavy decks', 'Losing your Wand leaves you with little pressure'],
+    mechanic: 'Wandcraft: equip a 1/2 Apprentice Wand (or give your Wand +1 Durability). Wand: your Hero attacks from afar and takes no damage back. Counter: an enemy spell card is spent with no effect. Silence the enemy Hero: no Hero Spell on their next turn.',
+    style: 'Control · Anti-spell',
+  },
   'Ice Age': {
     summary: 'Hardy beasts and neanderthal tribes that wall up, shrug off punishment and outlast the long winter.',
     strengths: ['Huge Health and Taunt walls', 'The Great Freeze stops the enemy cold', 'Healing that keeps the herd standing'],
@@ -348,7 +355,7 @@ export const DECK_TYPES = [
   { name: 'Swarm', blurb: 'Flood the board with many small minions.', factions: ['Zombies', 'Plants', 'Bees'] },
   { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs'] },
   { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials', 'Lycanthropes'] },
-  { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts', 'Eels'] },
+  { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts', 'Eels', 'Witches'] },
   { name: 'Attrition', blurb: 'Protect, outlast and wear them down.', factions: ['Divine', 'Fungus', 'Acidic', 'Ice Age'] },
 ];
 

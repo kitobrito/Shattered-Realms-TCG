@@ -428,7 +428,8 @@ const cardMatches = (card, f = {}) =>
   (!f.tribes || f.tribes.some((t) => hasTribe(card.tribes, t))) &&
   (!f.faction || card.faction === f.faction) &&
   (!f.cardId || card.id === f.cardId) &&
-  (!f.thawing || !!card.thawing);
+  (!f.thawing || !!card.thawing) &&
+  (!f.wand || !!card.wand); // Witches: a Wand card (Forbidden Grimoire)
 
 // ---- Conditions -----------------------------------------------------------
 // { controls: { tribe?, cardId?, excludeSelf? } }  — you control a matching minion
@@ -442,6 +443,8 @@ export function checkCondition(state, cond, ctx) {
   // { eventTargetGone } — the attacked character is dead or already off the board (Power Fist).
   if (cond.eventTargetGone != null) { const t = findCharacter(state, ctx.event?.target); return (!t || t.health <= 0 || !!t.destroyed) === cond.eventTargetGone; }
   if (cond.heroHasWeapon != null) return !!heroOf(state, ctx.controller).weapon === cond.heroHasWeapon;
+  // Witches: { heroHasWand } — your Hero holds a Wand (Wandcraft, Black Cat Familiar).
+  if (cond.heroHasWand != null) return !!heroOf(state, ctx.controller).weapon?.wand === cond.heroHasWand;
   // { eventDeadFaction } — the minion that just died was from this faction (Graceful Return).
   if (cond.eventDeadFaction) return !!ctx.event?.dead?.cardId && getCard(ctx.event.dead.cardId).faction === cond.eventDeadFaction;
   // Ice Age: { enemyFrozen } — an enemy minion is Frozen (Dire Wolf).
@@ -2666,7 +2669,10 @@ export const EFFECT_OPS = {
     const hero = heroOf(state, ctx.controller);
     if (e.ifNoWeapon && hero.weapon) return;
     if (hero.weapon) dropHeroWeapon(state, hero, 'drops');
-    hero.weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability };
+    const wcard = getCard(e.cardId ?? ctx.cardId);
+    hero.weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
+      // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
+      ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
     hero.attack = (hero.attack ?? 0) + e.attack;
     for (const t of e.triggers ?? []) (hero.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, weapon: true });
     log(state, `${nameOf(state, hero)} equips ${e.name} (${e.attack}/${e.durability}).`);
@@ -2794,6 +2800,43 @@ export const EFFECT_OPS = {
     if (!w || !getCard(w.cardId)?.relic) return;
     dropHeroWeapon(state, hero, 'moves');
     EFFECT_OPS.equipRelic(state, { target: e.target, cardId: w.cardId }, ctx);
+  },
+
+  // ---- Witches (The Coven): anti-spell ----
+  // Counter the spell card that opened this window: none of its effects happen (it is still cast and
+  // spent). { copy?: add a copy of it to your hand } — traps on cardPlayed (Counter-Hex, Mirror Hex)
+  // and Quick Plays in the cardPlayed window (Nullify).
+  counterSpell(state, e, ctx) {
+    const ev = ctx.event;
+    if (!ev || ev.cardType !== 'spell' || ev.countered) return;
+    ev.countered = true;
+    state.queue = state.queue.filter((s) => !(s.kind === 'effect' && s.ctx?.self === ev.source));
+    log(state, `🔮 ${getCard(ev.cardId)?.name ?? 'The spell'} is countered!`);
+    traceFx(state, { type: 'countered', player: ev.player, cardId: ev.cardId });
+    if (e.copy && ev.cardId) addToHand(state, ctx.controller, ev.cardId);
+  },
+  // The card that opened this event goes to your hand as a copy (Grimoire Thief).
+  copyEventCard(state, e, ctx) {
+    const id = ctx.event?.cardId;
+    if (id && !getCard(id)?.token) addToHand(state, ctx.controller, id);
+  },
+  // Silence the enemy Hero: their Hero Spell can't be used until the end of their next turn
+  // (the cooldown ticks down at the start of each of their turns: engine startTurn).
+  silenceHero(state, e, ctx) {
+    const pl = state.players[e.side === 'friendly' ? ctx.controller : opponentOf(ctx.controller)];
+    // Before a player's first turn the cooldown doesn't tick (engine startTurn), so 1 is enough then.
+    const cd = pl.turnsTaken >= 1 ? 2 : 1;
+    for (const hs of pl.heroSpells) hs.cooldown = Math.max(hs.cooldown ?? 0, cd);
+    log(state, `🤐 ${pl.name}'s Hero is Silenced: no Hero Spell next turn.`);
+    traceFx(state, { type: 'heroSilenced', target: pl.hero.uid });
+  },
+  // { amount } — the opponent's spell cards cost (amount) more on their next turn (Grim Toll).
+  spellTax(state, e, ctx) {
+    const p = opponentOf(ctx.controller);
+    const turn = state.activePlayer === p ? state.turn : state.turn + 1;
+    const pl = state.players[p];
+    pl.spellTax = { amount: (pl.spellTax?.turn === turn ? pl.spellTax.amount : 0) + e.amount, turn };
+    log(state, `${pl.name}'s spells cost (${e.amount}) more next turn.`);
   },
 
   // After your Hero attacks with a Weapon: it loses 1 Durability (engine declareAttack).

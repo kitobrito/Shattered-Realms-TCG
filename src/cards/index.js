@@ -26,13 +26,14 @@ import { LYCANTHROPE_CARDS } from './lycanthropes.js';
 import { VOID_CARDS } from './void.js';
 import { ICE_AGE_CARDS } from './ice-age.js';
 import { EEL_CARDS } from './eels.js';
+import { WITCH_CARDS } from './witches.js';
 import { NEUTRAL_CARDS } from './neutral.js';
 import { PLANT_CARDS } from './plants.js';
 import { STANDARD_CUTS, STANDARD_DUPLICATES } from './standard-cuts.js';
 import { isComplete } from './validate.js';
 import { VAMPIRE_CARDS } from './vampires.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...FUSION_CARDS]);
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
 // gold legendary frame (shared.js). A Lycanthrope's Beast Form is legendary with it.
@@ -106,6 +107,9 @@ export const LEGENDARY = new Set([
   'drosera_the_dewtrap_queen',
   'the_great_pumpkin',
   'hush_the_silent_choir',
+  // Witches: their Legendaries are Weapons.
+  'vesper_the_coven_mothers_wand',
+  'the_witching_hour_broom',
   'necrohydra',
   'the_rat_king',
   'mycelia_the_hive_mind',
