@@ -688,7 +688,7 @@ function descentHTML(d) {
 }
 
 export const descentCalloutHTML = () => `<div class="descent-callout" data-act="descentInfo"><b>${icon('flame')} The Descent</b>
-  <p>A Demon is in this battle. Each round it sinks one circle deeper into Hell, from Limbo down to Treachery, and each circle changes the rules for <b>both players</b>.</p><u>Tap to learn more</u></div>`;
+  <p>A Demon is in this battle. From round 2, each round it sinks one circle deeper into Hell, from Limbo down to Treachery, and each circle changes the rules for <b>both players</b>.</p><u>Tap to learn more</u></div>`;
 
 // The Descent explained: what it is, how fast it sinks, and all nine circles.
 function descentPanelHTML(s) {
@@ -696,8 +696,8 @@ function descentPanelHTML(s) {
   const c = CIRCLES[d.depth - 1];
   return `<div class="overlay descent-info" data-act="closeDescent"><div class="panel descent-panel" data-act="descentPanel">
     <h2>${icon('flame')} The Descent</h2>
-    <p class="dp-lead">A Demon is in this battle, so it sinks through Dante's nine <b>Circles of Hell</b>, one circle each round. Each circle changes the rules for <b>both players</b>.</p>
-    <p class="dp-need">Round 1 is Limbo and round 9 is Treachery, the frozen bottom of Hell. Baphomet drags the battle one circle further.
+    <p class="dp-lead">A Demon is in this battle, so from round 2 it sinks through Dante's nine <b>Circles of Hell</b>, one circle each round. Each circle changes the rules for <b>both players</b>.</p>
+    <p class="dp-need">Round 1 is fought on the realms' own boards; round 2 is Limbo and round 10 is Treachery, the frozen bottom of Hell. Baphomet drags the battle one circle further.
       ${CIRCLES[d.depth] ? `Next round: <b>${esc(CIRCLES[d.depth].name)}</b>.` : 'You are at the bottom of Hell.'}</p>
     <ol class="dp-circles">${CIRCLES.map((x) => `<li class="${x.n < d.depth ? 'past' : ''} ${x.n === d.depth ? 'now' : ''}"><i>${ROMAN[x.n - 1]}</i><b>${esc(x.name)}</b><span>${esc(x.text)}</span>${x.n === d.depth ? '<em>You are here</em>' : ''}</li>`).join('')}</ol>
     <p class="sub">${c ? `Only the current circle's rule is active: ${esc(c.name)}.` : 'The battle is still at the gates. Only the current circle\'s rule is ever active.'} Baphomet, Lilith and Satan grow stronger the deeper you go.</p>

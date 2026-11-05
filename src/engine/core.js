@@ -177,7 +177,7 @@ export function initDescent(state) {
   return state.descent;
 }
 // Sink the battle n circles deeper (to the Ninth at most). Each round sinks one (startTurn),
-// so round 1 is Limbo and round 9 is Treachery; Baphomet sinks one extra.
+// from round 2, so round 2 is Limbo and round 10 is Treachery; Baphomet sinks one extra.
 export function sinkCircles(state, n = 1) {
   const d = initDescent(state);
   for (let i = 0; d && i < n && d.depth < CIRCLES.length; i++) {

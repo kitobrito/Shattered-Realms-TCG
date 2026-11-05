@@ -264,7 +264,7 @@ export const DEFAULT_RULES = {
 
 // ---- Demons: The Descent (Circles of Hell) ----------------------------------------
 // While a Demon player is in the match, the battle sinks through Dante's nine circles, one
-// each round: round 1 is Limbo, round 9 is Treachery (Baphomet sinks one extra). Only the
+// each round from round 2: round 2 is Limbo, round 10 is Treachery (Baphomet sinks one extra). Only the
 // current circle's rule is in force, and it applies to BOTH players. Both boards change.
 export const CIRCLES = [
   { n: 1, ordinal: 'First', name: 'Limbo', text: 'Hero Spells cost 1 more.' },

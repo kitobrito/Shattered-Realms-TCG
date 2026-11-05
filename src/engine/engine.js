@@ -1176,10 +1176,11 @@ const STEPS = {
       if (m.exhausted) { m.cantAttackThisTurn = true; m.exhausted = false; }
     }
     log(state, `— Turn ${state.turn}: ${pl.name} (${pl.mana.current} Mana) —`);
-    // The Descent: each round the battle sinks one circle deeper (round 1 is Limbo).
+    // The Descent: from round 2 on, each round the battle sinks one circle deeper (round 1 is
+    // still fought on the realms' own boards; round 2 is Limbo).
     if (state.descent) {
-      state.descent.lead ??= p;
-      if (state.descent.lead === p) sinkCircles(state, 1);
+      if (state.descent.lead == null) state.descent.lead = p;
+      else if (state.descent.lead === p) sinkCircles(state, 1);
     }
     // The Third Circle (Gluttony): an extra card at the start of the turn.
     drawCards(state, p, descentDepth(state) === 3 ? 2 : 1);
