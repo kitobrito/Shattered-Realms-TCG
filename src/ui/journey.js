@@ -40,6 +40,10 @@ function load() {
   } catch { return { games: 0, done: true, seen: [] }; }
 }
 let state = load();
+// Admin accounts (server-link.js sets the flag on sign-in) skip the new-player path: every realm,
+// two-faction decks and full decks are open, like "Unlock everything".
+function isAdmin() { try { return localStorage.getItem('shattered-admin') === '1'; } catch { return false; } }
+function skipJourney() { return !!state?.done || isAdmin(); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* storage unavailable */ } };
 
 const order = () => {
@@ -48,21 +52,21 @@ const order = () => {
   return [...new Set([...first, ...rest])].filter((f) => PLAYABLE_FACTIONS.includes(f));
 };
 // A brand-new player hasn't chosen their first realms yet.
-export const needsFirstPick = () => !state.done && !state.chosen;
+export const needsFirstPick = () => !skipJourney() && !state.chosen;
 export function chooseFirstRealms(factions) {
   state.chosen = factions.slice(0, FIRST_PICKS);
   save();
 }
 
-export const journeyDone = () => !!state.done;
+export const journeyDone = () => skipJourney();
 export const gamesPlayed = () => state.games;
 // Simple starter decks (both sides) while the player is brand new.
-export const starterMode = () => !state.done && state.games < REACTIVE_AT;
-export const pairUnlocked = () => state.done || state.games >= FUSION_AT;
+export const starterMode = () => !skipJourney() && state.games < REACTIVE_AT;
+export const pairUnlocked = () => skipJourney() || state.games >= FUSION_AT;
 
 // The realms you can pick right now.
 export function availableFactions() {
-  if (state.done) return PLAYABLE_FACTIONS;
+  if (skipJourney()) return PLAYABLE_FACTIONS;
   const extra = state.games <= FUSION_AT ? 0 : (state.games - FUSION_AT) * PER_MATCH;
   const open = new Set(order().slice(0, FIRST_PICKS + extra));
   return PLAYABLE_FACTIONS.filter((f) => open.has(f));
@@ -98,7 +102,7 @@ export function starterDeck(faction) {
 
 // A finished match moves you along. Returns what just opened up (for the pop-up), or null.
 export function recordMatch() {
-  if (state.done) return null;
+  if (skipJourney()) return null;
   const before = { reactive: state.games >= REACTIVE_AT, pair: pairUnlocked(), realms: availableFactions() };
   state.games += 1;
   const realms = availableFactions().filter((f) => !before.realms.includes(f));
@@ -112,7 +116,7 @@ export function recordMatch() {
 
 // What the menu says about your progress (null once everything is open).
 export function progressLine() {
-  if (state.done) return null;
+  if (skipJourney()) return null;
   if (state.games < REACTIVE_AT) return `Starter decks · ${REACTIVE_AT - state.games} more ${REACTIVE_AT - state.games === 1 ? 'match' : 'matches'} until traps and Quick Plays join your deck`;
   if (!pairUnlocked()) return `${FUSION_AT - state.games} more ${FUSION_AT - state.games === 1 ? 'match' : 'matches'} until you can combine two realms and unleash a Fusion`;
   return `${availableFactions().length} of ${PLAYABLE_FACTIONS.length} realms open · ${PER_MATCH} more after every match`;
