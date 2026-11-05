@@ -1576,6 +1576,134 @@ export const BOARD_FX = {
     ],
   },
 
+  // ---- Witches: the coven's hidden ritual chamber (fire, cauldron, candles, cat and raven) ------
+  'witches-land': {
+    wind: { dir: 1, every: [8, 14], speed: [90, 140], width: [180, 280], lean: 0.2 },
+    layers: [
+      // Ground: the ritual circle breathes green and wisps rise off it.
+      { id: 'circle', type: 'glow', points: [[512, 285, 175]], color: [90, 255, 140], anim: 'pulse', period: 7, alpha: [0.04, 0.14], kickDur: 2.5 },
+      { id: 'circleCore', type: 'glow', points: [[512, 285, 60]], color: [140, 255, 190], anim: 'pulse', period: 4.6, alpha: [0.02, 0.1], kickDur: 2 },
+      { id: 'circleWisps', type: 'particles', kind: 'wisp', area: [380, 180, 650, 400], rate: 0.6, max: 7, color: [140, 255, 180], size: [2.5, 5], life: [3, 5], alpha: 0.22 },
+      // The hearth: fire licks the cauldron; the brew glows and bubbles; green steam curls up; embers rise.
+      { id: 'fire', type: 'glow', points: [[200, 150, 40], [175, 160, 18], [228, 158, 18]], color: [255, 140, 40], anim: 'flicker', speed: 5, alpha: [0.35, 0.8], kickDur: 2 },
+      { id: 'fireFlames', type: 'flames', points: [[178, 168, 7, 14], [200, 164, 8, 17], [224, 168, 7, 14]], tongues: 3, alpha: 0.85 },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [165, 120, 240, 160], rate: 1.6, max: 8, color: [255, 170, 60], size: [0.8, 1.6], life: [0.8, 1.6], speed: 0.6 },
+      { id: 'brew', type: 'glow', points: [[190, 68, 46]], color: [90, 255, 140], anim: 'pulse', period: 2.2, alpha: [0.15, 0.42], kickDur: 2 },
+      { id: 'bubbles', type: 'particles', kind: 'bubble', area: [150, 58, 230, 78], rate: 3, max: 10, color: [150, 255, 120], size: [1.2, 2.4], life: [0.5, 1.1], speed: 0.6 },
+      { id: 'steam', type: 'particles', kind: 'smoke', from: [[190, 52, 22]], rate: 1.4, max: 9, color: [190, 255, 200], size: [6, 12], life: [2.5, 4], alpha: 0.2 },
+      // The spellbook's pages lift now and then.
+      { id: 'book', type: 'echo', box: [14, 184, 188, 300], feather: 6, autoKick: [11, 19], motion: { kind: 'rock', amp: 0, kickAmp: 1, period: 0.4, pivot: [100, 298] } },
+      { id: 'pages', type: 'particles', kind: 'petal', from: [[100, 230, 50]], rate: 0, max: 5, color: [235, 225, 195], size: [2, 3], life: [2.5, 4], speed: 0.7 },
+      // The hero frames: moon and runes pulse out of step; candles round your frame flicker.
+      { id: 'moon', type: 'glow', points: [[513, 14, 18]], color: [170, 255, 170], anim: 'pulse', period: 5.4, alpha: [0.15, 0.45], kickDur: 2 },
+      { id: 'archRunes', type: 'glow', points: [[445.4, 85.9, 5.5], [453.4, 67.3, 5.5], [466.5, 51.7, 5.5], [483.4, 40.6, 5.5], [502.9, 34.7, 5.5], [523.1, 34.7, 5.5], [542.6, 40.6, 5.5], [559.5, 51.7, 5.5], [572.6, 67.3, 5.5], [580.6, 85.9, 5.5]], color: [90, 255, 140], anim: 'pulse', period: 3.3, alpha: [0.12, 0.5], kickDur: 2 },
+      { id: 'ringRunes', type: 'glow', points: [[578.0, 482.0, 4], [573.8, 505.1, 4], [561.9, 525.2, 4], [543.6, 540.0, 4], [521.3, 547.3, 4], [497.9, 546.5, 4], [476.2, 537.5, 4], [459.1, 521.4, 4], [448.6, 500.5, 4], [446.2, 477.1, 4], [452.0, 454.4, 4], [465.5, 435.2, 4], [484.8, 421.9, 4], [507.5, 416.2, 4], [530.8, 418.7, 4], [551.8, 429.3, 4], [567.7, 446.6, 4], [576.6, 468.3, 4]], color: [210, 220, 130], anim: 'pulse', period: 4.1, alpha: [0.06, 0.3], kickDur: 2 },
+      { id: 'candlesF', type: 'glow', points: [[435, 501, 10], [446, 519, 10], [457, 528, 10], [588, 501, 10], [577, 518, 10], [568, 521, 10]], color: [255, 190, 100], anim: 'flicker', speed: 3.6, alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'flamesF', type: 'flames', points: [[435, 504, 4, 9], [446, 522, 4, 9], [457, 531, 4, 9], [588, 504, 4, 9], [577, 521, 4, 9], [568, 524, 4, 9]], tongues: 2, alpha: 0.9 },
+      // Black candles by the broom, and the candelabra, each on their own clock; wax drips.
+      { id: 'candlesB', type: 'glow', points: [[744, 45, 10], [772, 20, 11], [790, 57, 10], [754, 77, 10], [766, 107, 10]], color: [255, 190, 100], anim: 'flicker', speed: 4.2, alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'flamesB', type: 'flames', points: [[744, 48, 4, 10], [772, 23, 4, 10], [790, 60, 4, 10], [754, 80, 4, 10], [766, 110, 4, 10]], tongues: 2, alpha: 0.9 },
+      { id: 'candela', type: 'glow', points: [[912, 120, 10], [944, 97, 11], [967, 132, 10]], color: [255, 190, 100], anim: 'flicker', alpha: [0.35, 0.85], kickDur: 2 },
+      { id: 'flamesC', type: 'flames', points: [[912, 123, 4, 10], [944, 100, 4, 10], [967, 135, 4, 10]], tongues: 2, alpha: 0.9 },
+      { id: 'wax', type: 'particles', kind: 'drip', from: [[754, 95, 3], [772, 60, 3], [944, 130, 3]], rate: 0.25, max: 3, color: [230, 225, 210], size: [1, 1.5], life: [3, 4], fall: 10, splash: false },
+      // The broom rocks against the pillar; the raven shifts its weight.
+      { id: 'broom', type: 'echo', box: [654, 0, 736, 146], feather: 6, motion: { kind: 'rock', amp: 0.6, period: 6.2, pivot: [700, 144], kickAmp: 2.4 } },
+      { id: 'raven', type: 'echo', box: [800, 14, 906, 100], feather: 6, autoKick: [8, 15], motion: { kind: 'rock', amp: 0, kickAmp: 3, period: 0.35, pivot: [852, 98] } },
+      // The wands glint; the cat breathes in its sleep, its green eyes glowing.
+      { id: 'wands', type: 'particles', kind: 'glint', area: [660, 492, 800, 570], rate: 0.7, max: 3, color: [200, 255, 210], size: [1, 1.8], life: [0.4, 0.8] },
+      { id: 'wands2', type: 'particles', kind: 'glint', area: [880, 286, 1000, 330], rate: 0.7, max: 3, color: [255, 230, 170], size: [1, 1.6], life: [0.4, 0.8] },
+      { id: 'cat', type: 'echo', box: [80, 422, 204, 510], feather: 6, motion: { kind: 'breathe', amp: 1.6, period: 3.8, kickAmp: 4 } },
+      { id: 'catEyes', type: 'glow', points: [[160, 476, 4], [177, 476, 4]], color: [120, 255, 140], anim: 'pulse', period: 4.4, alpha: [0.15, 0.6], kickDur: 1.5 },
+      // The crystal ball swirls; the potions glow at their own pace and bubble.
+      { id: 'ball', type: 'glow', points: [[897, 418, 44]], color: [200, 90, 255], anim: 'pulse', period: 3.4, alpha: [0.2, 0.5], kickDur: 2.5 },
+      { id: 'ballMotes', type: 'particles', kind: 'mote', area: [875, 396, 919, 440], rate: 2.2, max: 8, color: [235, 190, 255], size: [0.8, 1.6], life: [0.8, 1.6], speed: 0.6 },
+      { id: 'potionsG', type: 'glow', points: [[862, 521, 22], [989, 431, 16], [964, 232, 13]], color: [90, 255, 140], anim: 'pulse', period: 2.4, alpha: [0.1, 0.38], kickDur: 2 },
+      { id: 'potionsP', type: 'glow', points: [[924, 526, 20], [956, 466, 16]], color: [180, 110, 255], anim: 'pulse', period: 3, alpha: [0.1, 0.38], kickDur: 2 },
+      { id: 'potionsO', type: 'glow', points: [[984, 513, 18]], color: [255, 150, 60], anim: 'pulse', period: 3.6, alpha: [0.1, 0.38], kickDur: 2 },
+      { id: 'potionBub', type: 'particles', kind: 'bubble', area: [840, 430, 1000, 545], rate: 1, max: 6, color: [220, 220, 255], size: [0.8, 1.5], life: [0.6, 1.2], speed: 0.4 },
+      // Air: green wisps drift up, violet motes float, a low purple mist hangs over the floor.
+      { id: 'wisps', type: 'particles', kind: 'wisp', area: [0, 0, 1024, 572], rate: 1, max: 10, color: [150, 255, 190], size: [2.5, 5], life: [3, 5.5], alpha: 0.16 },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 1.2, max: 14, color: [220, 170, 255], size: [0.8, 1.6], life: [3, 6], speed: 0.5 },
+      { type: 'fog', area: [-80, 400, 1104, 600], count: 10, size: [90, 160], speed: 3.5, color: [110, 50, 150], alpha: 0.08 },
+    ],
+    pokes: [
+      { area: [125, 30, 275, 200], sound: 'bloop', kick: ['brew', 'fire'], flare: [90, 255, 140], glyph: '🧪', burst: { layer: 'bubbles', n: 8, spread: 22 } },
+      { area: [12, 180, 190, 302], sound: 'flutter', kick: ['book'], flare: [235, 225, 195], glyph: '📖', burst: { layer: 'pages', n: 4, spread: 26 } },
+      { area: [650, 0, 800, 150], sound: 'whoosh', kick: ['broom', 'candlesB', 'flamesB'], flare: [90, 255, 140], glyph: '🧹' },
+      { area: [798, 10, 908, 102], sound: 'screech', kick: ['raven'], flare: [120, 110, 160], glyph: '🐦‍⬛' },
+      { area: [880, 80, 1000, 240], sound: 'whoosh', kick: ['candela', 'flamesC'], flare: [255, 190, 100], glyph: '🕯️' },
+      { area: [20, 400, 255, 560], sound: 'rustle', kick: ['cat', 'catEyes'], flare: [200, 90, 255], glyph: '🐈‍⬛' },
+      { area: [850, 372, 945, 470], sound: 'chime', kick: ['ball'], flare: [200, 90, 255], glyph: '🔮', burst: { layer: 'ballMotes', n: 8, spread: 16 } },
+      { area: [830, 410, 1010, 572], sound: 'clink', kick: ['potionsG', 'potionsP', 'potionsO'], flare: [200, 90, 255], glyph: '⚗️', burst: { layer: 'potionBub', n: 5, spread: 20 } },
+      { area: [400, 175, 625, 400], sound: 'chime', kick: ['circle', 'circleCore'], flare: [90, 255, 140], burst: { layer: 'circleWisps', n: 6, spread: 60 } },
+    ],
+    reactions: {
+      hex: { kick: ['circle', 'circleCore', 'archRunes', 'ringRunes', 'brew', 'catEyes'], burst: [{ layer: 'circleWisps', n: 6 }, { layer: 'bubbles', n: 6 }] },
+    },
+  },
+  'witches-portrait': {
+    wind: { dir: 1, every: [8, 14], speed: [80, 120], width: [160, 240], lean: 0.1 },
+    layers: [
+      // Ground: the ritual circle breathes green and wisps rise off it.
+      { id: 'circle', type: 'glow', points: [[230, 540, 130]], color: [90, 255, 140], anim: 'pulse', period: 7, alpha: [0.04, 0.14], kickDur: 2.5 },
+      { id: 'circleCore', type: 'glow', points: [[230, 540, 45]], color: [140, 255, 190], anim: 'pulse', period: 4.6, alpha: [0.02, 0.1], kickDur: 2 },
+      { id: 'circleWisps', type: 'particles', kind: 'wisp', area: [130, 440, 330, 640], rate: 0.6, max: 7, color: [140, 255, 180], size: [2, 4], life: [3, 5], alpha: 0.22 },
+      // The hearth: fire licks the cauldron; the brew glows and bubbles; green steam curls up; embers rise.
+      { id: 'fire', type: 'glow', points: [[112, 356, 28], [95, 362, 12], [130, 362, 12]], color: [255, 140, 40], anim: 'flicker', speed: 5, alpha: [0.35, 0.8], kickDur: 2 },
+      { id: 'fireFlames', type: 'flames', points: [[98, 370, 5, 10], [113, 367, 6, 12], [128, 370, 5, 10]], tongues: 3, alpha: 0.85 },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [90, 335, 135, 362], rate: 1.6, max: 8, color: [255, 170, 60], size: [0.8, 1.6], life: [0.8, 1.6], speed: 0.6 },
+      { id: 'brew', type: 'glow', points: [[100, 307, 30]], color: [90, 255, 140], anim: 'pulse', period: 2.2, alpha: [0.15, 0.42], kickDur: 2 },
+      { id: 'bubbles', type: 'particles', kind: 'bubble', area: [78, 300, 122, 314], rate: 3, max: 10, color: [150, 255, 120], size: [1, 2], life: [0.5, 1.1], speed: 0.6 },
+      { id: 'steam', type: 'particles', kind: 'smoke', from: [[100, 292, 16]], rate: 1.4, max: 9, color: [190, 255, 200], size: [5, 10], life: [2.5, 4], alpha: 0.2 },
+      // The spellbook's pages lift now and then.
+      { id: 'book', type: 'echo', box: [6, 386, 120, 492], feather: 6, autoKick: [11, 19], motion: { kind: 'rock', amp: 0, kickAmp: 1, period: 0.4, pivot: [62, 490] } },
+      { id: 'pages', type: 'particles', kind: 'petal', from: [[62, 430, 34]], rate: 0, max: 5, color: [235, 225, 195], size: [2, 3], life: [2.5, 4], speed: 0.7 },
+      // The hero frames: moon and runes pulse out of step; candles round your frame flicker.
+      { id: 'moon', type: 'glow', points: [[234, 240, 15]], color: [170, 255, 170], anim: 'pulse', period: 5.4, alpha: [0.15, 0.45], kickDur: 2 },
+      { id: 'archRunes', type: 'glow', points: [[185.7, 287.1, 4.5], [192.4, 272.2, 4.5], [203.6, 260.3, 4.5], [217.9, 252.7, 4.5], [234.0, 250.0, 4.5], [250.1, 252.7, 4.5], [264.4, 260.3, 4.5], [275.6, 272.2, 4.5], [282.3, 287.1, 4.5]], color: [90, 255, 140], anim: 'pulse', period: 3.3, alpha: [0.12, 0.5], kickDur: 2 },
+      { id: 'ringRunes', type: 'glow', points: [[292.0, 935.0, 3.5], [287.0, 959.4, 3.5], [272.8, 979.9, 3.5], [251.6, 993.1, 3.5], [227.0, 996.9, 3.5], [202.8, 990.7, 3.5], [183.1, 975.5, 3.5], [170.9, 953.7, 3.5], [168.3, 928.9, 3.5], [175.7, 905.1, 3.5], [191.8, 886.1, 3.5], [214.2, 875.1, 3.5], [239.1, 873.7, 3.5], [262.5, 882.2, 3.5], [280.7, 899.3, 3.5], [290.6, 922.1, 3.5]], color: [210, 220, 130], anim: 'pulse', period: 4.1, alpha: [0.06, 0.3], kickDur: 2 },
+      { id: 'candlesF', type: 'glow', points: [[151, 946, 8], [165, 964, 8], [175, 974, 8], [305, 949, 8], [292, 971, 8], [288, 975, 8]], color: [255, 190, 100], anim: 'flicker', speed: 3.6, alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'flamesF', type: 'flames', points: [[151, 949, 3.5, 8], [165, 967, 3.5, 8], [175, 977, 3.5, 8], [305, 952, 3.5, 8], [292, 974, 3.5, 8], [288, 978, 3.5, 8]], tongues: 2, alpha: 0.9 },
+      // Black candles by the broom, and the candelabra, each on their own clock; wax drips.
+      { id: 'candlesB', type: 'glow', points: [[370, 262, 8], [358, 283, 8], [386, 290, 8], [362, 302, 8]], color: [255, 190, 100], anim: 'flicker', speed: 4.2, alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'flamesB', type: 'flames', points: [[370, 265, 3.5, 8], [358, 286, 3.5, 8], [386, 293, 3.5, 8], [362, 305, 3.5, 8]], tongues: 2, alpha: 0.9 },
+      { id: 'candela', type: 'glow', points: [[405, 390, 8], [425, 381, 9], [440, 397, 8]], color: [255, 190, 100], anim: 'flicker', alpha: [0.35, 0.85], kickDur: 2 },
+      { id: 'flamesC', type: 'flames', points: [[405, 393, 3.5, 8], [425, 384, 3.5, 8], [440, 400, 3.5, 8]], tongues: 2, alpha: 0.9 },
+      { id: 'wax', type: 'particles', kind: 'drip', from: [[362, 320, 3], [370, 280, 3], [425, 400, 3]], rate: 0.25, max: 3, color: [230, 225, 210], size: [1, 1.5], life: [3, 4], fall: 10, splash: false },
+      // The broom rocks against the pillar; the raven shifts its weight.
+      { id: 'broom', type: 'echo', box: [306, 206, 364, 352], feather: 6, motion: { kind: 'rock', amp: 0.6, period: 6.2, pivot: [330, 350], kickAmp: 2.4 } },
+      { id: 'raven', type: 'echo', box: [370, 296, 459, 362], feather: 6, autoKick: [8, 15], motion: { kind: 'rock', amp: 0, kickAmp: 3, period: 0.35, pivot: [412, 360] } },
+      // The wands glint; the cat breathes in its sleep, its green eyes glowing.
+      { id: 'wands', type: 'particles', kind: 'glint', area: [280, 700, 390, 780], rate: 0.7, max: 3, color: [200, 255, 210], size: [1, 1.8], life: [0.4, 0.8] },
+      { id: 'wands2', type: 'particles', kind: 'glint', area: [10, 740, 135, 814], rate: 0.7, max: 3, color: [255, 230, 170], size: [1, 1.6], life: [0.4, 0.8] },
+      { id: 'catEyes', type: 'glow', points: [[47, 663, 3], [56, 663, 3]], color: [120, 255, 140], anim: 'pulse', period: 4.4, alpha: [0.15, 0.6], kickDur: 1.5 },
+      // The crystal ball swirls; the potions glow at their own pace and bubble.
+      { id: 'ball', type: 'glow', points: [[437, 630, 30]], color: [200, 90, 255], anim: 'pulse', period: 3.4, alpha: [0.2, 0.5], kickDur: 2.5 },
+      { id: 'ballMotes', type: 'particles', kind: 'mote', area: [421, 614, 453, 646], rate: 2.2, max: 8, color: [235, 190, 255], size: [0.8, 1.6], life: [0.8, 1.6], speed: 0.6 },
+      { id: 'potionsG', type: 'glow', points: [[420, 705, 16], [440, 465, 11]], color: [90, 255, 140], anim: 'pulse', period: 2.4, alpha: [0.1, 0.38], kickDur: 2 },
+      { id: 'potionsP', type: 'glow', points: [[455, 712, 14]], color: [180, 110, 255], anim: 'pulse', period: 3, alpha: [0.1, 0.38], kickDur: 2 },
+      { id: 'potionBub', type: 'particles', kind: 'bubble', area: [405, 690, 459, 725], rate: 1, max: 6, color: [220, 220, 255], size: [0.8, 1.5], life: [0.6, 1.2], speed: 0.4 },
+      // Air: green wisps drift up, violet motes float, a low purple mist hangs over the floor.
+      { id: 'wisps', type: 'particles', kind: 'wisp', area: [0, 200, 459, 1024], rate: 1, max: 10, color: [150, 255, 190], size: [2, 4], life: [3, 5.5], alpha: 0.16 },
+      { type: 'particles', kind: 'mote', area: [0, 200, 459, 1024], rate: 1.2, max: 14, color: [220, 170, 255], size: [0.8, 1.6], life: [3, 6], speed: 0.5 },
+      { type: 'fog', area: [-80, 760, 540, 1024], count: 10, size: [80, 140], speed: 3.5, color: [110, 50, 150], alpha: 0.08 },
+    ],
+    pokes: [
+      { area: [60, 270, 150, 380], sound: 'bloop', kick: ['brew', 'fire'], flare: [90, 255, 140], glyph: '🧪', burst: { layer: 'bubbles', n: 8, spread: 22 } },
+      { area: [4, 384, 122, 494], sound: 'flutter', kick: ['book'], flare: [235, 225, 195], glyph: '📖', burst: { layer: 'pages', n: 4, spread: 26 } },
+      { area: [300, 200, 395, 352], sound: 'whoosh', kick: ['broom', 'candlesB', 'flamesB'], flare: [90, 255, 140], glyph: '🧹' },
+      { area: [368, 292, 459, 366], sound: 'screech', kick: ['raven'], flare: [120, 110, 160], glyph: '🐦‍⬛' },
+      { area: [390, 365, 459, 465], sound: 'whoosh', kick: ['candela', 'flamesC'], flare: [255, 190, 100], glyph: '🕯️' },
+      { area: [0, 610, 100, 700], sound: 'rustle', kick: ['catEyes'], flare: [200, 90, 255], glyph: '🐈‍⬛' },
+      { area: [405, 595, 459, 665], sound: 'chime', kick: ['ball'], flare: [200, 90, 255], glyph: '🔮', burst: { layer: 'ballMotes', n: 8, spread: 16 } },
+      { area: [400, 680, 459, 735], sound: 'clink', kick: ['potionsG', 'potionsP'], flare: [200, 90, 255], glyph: '⚗️', burst: { layer: 'potionBub', n: 5, spread: 20 } },
+      { area: [120, 430, 340, 650], sound: 'chime', kick: ['circle', 'circleCore'], flare: [90, 255, 140], burst: { layer: 'circleWisps', n: 6, spread: 60 } },
+    ],
+    reactions: {
+      hex: { kick: ['circle', 'circleCore', 'archRunes', 'ringRunes', 'brew', 'catEyes'], burst: [{ layer: 'circleWisps', n: 6 }, { layer: 'bubbles', n: 6 }] },
+    },
+  },
+
   // ==== The Circles of Hell (Demons' Descent), rebuilt for the new paintings ====================
   // ---- I · Limbo: a grey ashen plain, ruins in the mist, lost souls wandering. ----
   'circle1-land': {

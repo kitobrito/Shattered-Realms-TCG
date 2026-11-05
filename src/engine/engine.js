@@ -620,6 +620,9 @@ function applyAuras(state) {
   for (const pl of state.players) {
     const smiths = pl.board.filter((m) => getCard(m.cardId).heroWeaponAura && m.health > 0 && !m.destroyed).length;
     pl.hero.auraAttack = pl.hero.weapon ? smiths : 0;
+    // Witches: keywords a Weapon gives the Hero while it's held (The Witching Hour Broom: Twin Strike).
+    if (pl.hero.weapon?.keywords?.length) pl.hero.auraKeywords = [...pl.hero.weapon.keywords];
+    else if (pl.hero.auraKeywords) delete pl.hero.auraKeywords;
   }
   for (const m of minionsInOrder(state)) {
     const d = (bonus.get(m.uid) ?? 0) - m.auraHealth;
@@ -763,9 +766,11 @@ const STEPS = {
     const huntDmg = huntDamage(state, a, d, aDmg);
     const wasPrey = d.kind === 'minion' && d.prey;
     const dealt = dealDamage(state, a.uid, d.uid, huntDmg);
-    dealDamage(state, d.uid, a.uid, dDmg);
+    // Witches: a Hero attacking with a Wand fires from afar and takes no damage back.
+    const fromAfar = a.kind === 'hero' && !!a.weapon?.wand;
+    if (!fromAfar) dealDamage(state, d.uid, a.uid, dDmg);
     // Acidic (Half-Digested): Acid Hide melts whatever attacks it.
-    acidHideTouch(state, d, a);
+    if (!fromAfar) acidHideTouch(state, d, a);
     // Scarred Leviathan: damage to Marked Prey heals your Hero by as much.
     if (wasPrey && dealt > 0 && a.kind === 'minion' && getCard(a.cardId).leechPrey) heal(state, heroOf(state, a.controller).uid, dealt, { source: a.uid });
     // Great White: killing Marked Prey lets it attack again this turn (once).

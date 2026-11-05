@@ -44,6 +44,11 @@ CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120,
 HINTS = {
     # The Rage Outbreak: the infected, not the wrecked cars beside them.
     'rage-outbreak-portrait/pack1': {'bg': [[344, 712, 364, 770]]},
+    # Witches: the brooms against the pillars (outlined: the model can't find them); the phone board's raven
+    # stands on a book pile the model takes with it, so a colour rule keeps only the bird.
+    'witches-land/broom': {'method': 'poly', 'polys': [[[718, 0], [728, 0], [709, 56], [716, 62], [716, 82], [712, 105], [708, 128], [700, 140], [682, 142], [662, 138], [664, 124], [680, 104], [694, 84], [697, 62], [706, 56]]]},
+    'witches-portrait/broom': {'method': 'poly', 'polys': [[[349, 212], [355, 214], [343, 292], [345, 300], [346, 320], [344, 345], [330, 348], [316, 345], [318, 325], [326, 308], [332, 298], [337, 292]]]},
+    'witches-portrait/raven': {'within': {'method': 'hsv', 'hsv': [[95, 160, 0, 255, 0, 150], [0, 180, 0, 55, 0, 95]], 'close': 2, 'expand': 0}},
     # Harvest Moon: the gourd stack, not the jack-o'-lantern beside it.
     'harvest-moon-land/gourds': {'bg': [[126, 384, 216, 482]]},
     # Cordyceps Bloom: the glowing orange-gold cordyceps stalks (colour cut: the model sees only a tip or two).

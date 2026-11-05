@@ -74,6 +74,8 @@ export function dispatchEvent(state, event) {
       if (!t || t.on !== event.type) continue;
       const ctx = { self: trap.uid, controller: p, event, cardId: trap.cardId };
       if (!matchFilter(state, t.filter, ctx)) continue;
+      // Witches: only one Trap counters a given spell; another counter Trap stays hidden for the next one.
+      if (t.counters) { if (event.counterClaimed) continue; event.counterClaimed = true; }
       pl.traps.splice(pl.traps.indexOf(trap), 1);
       pl.graveyard.push(trap);
       log(state, `Trap revealed: ${card.name}!`);

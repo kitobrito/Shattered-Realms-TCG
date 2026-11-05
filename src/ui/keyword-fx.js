@@ -2,7 +2,7 @@
 // engine's fx trace, see core.js traceFx). Each runs wind-up → action → impact → recovery and cleans
 // up after itself (every element goes through done()/remove). Rects come from the board as it was
 // (a minion that died is animated where it stood) or as it is now (a minion that just arrived).
-import { addFx, animate, bigGlyph, box, center, column, done, drain, fling, glowBall, layer, ring, screenShake, slashes, wait } from './fx.js';
+import { addFx, animate, bigGlyph, box, cauldronBubbles, center, column, done, drain, fling, glowBall, hexSmoke, layer, ring, screenShake, slashes, wait } from './fx.js';
 
 const sizeOf = (r) => Math.max(r.width, r.height);
 // Glyph size: a share of the minion, but never too small to read on a phone.
@@ -529,3 +529,96 @@ export async function chainBolt(fromRect, hits, { delay = 0 } = {}) {
 }
 
 export { layer };
+
+// ---- Witches ---------------------------------------------------------------------------
+const RUNES = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᛁ', 'ᛉ', 'ᛟ'];
+// Runes peel off the card's border one by one (wind-up), spiral in while they burn magenta to
+// emerald (action), and the card is sealed grey in a puff of violet smoke (impact, recovery).
+function runeSwirl(rect, { count = 12, inward = true, duration = 720, delay = 0 } = {}) {
+  const c = center(rect);
+  const jobs = [];
+  for (let i = 0; i < count; i++) {
+    const t = i / count;
+    // Start on the card's border, walking round it.
+    const side = Math.floor(t * 4), u = (t * 4) % 1;
+    const sx = [rect.left + u * rect.width, rect.right, rect.right - u * rect.width, rect.left][side];
+    const sy = [rect.top, rect.top + u * rect.height, rect.bottom, rect.bottom - u * rect.height][side];
+    const el = addFx('fx-hex-rune', { left: `${sx}px`, top: `${sy}px`, fontSize: `${Math.max(18, sizeOf(rect) * 0.22)}px` });
+    el.textContent = RUNES[i % RUNES.length];
+    const ex = inward ? c.x - sx : (sx - c.x) * 0.6, ey = inward ? c.y - sy : (sy - c.y) * 0.6 - sizeOf(rect) * 0.3;
+    const mx = ex * 0.5 + (ey * 0.35), my = ey * 0.5 - (ex * 0.35); // a curve, not a straight line
+    jobs.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%) scale(0.4) rotate(0deg)', opacity: 0, color: '#d946ef' },
+      { transform: 'translate(-50%, -50%) scale(1.1) rotate(20deg)', opacity: 1, offset: 0.2, color: '#d946ef' },
+      { transform: `translate(calc(-50% + ${mx}px), calc(-50% + ${my}px)) scale(1) rotate(160deg)`, opacity: 1, offset: 0.6, color: '#7dffcf' },
+      { transform: `translate(calc(-50% + ${ex}px), calc(-50% + ${ey}px)) scale(0.3) rotate(300deg)`, opacity: 0, color: '#10b981' },
+    ], { duration, delay: delay + i * 30, easing: 'cubic-bezier(.4,.1,.5,1)' })));
+  }
+  return Promise.all(jobs);
+}
+export function hexCurse(el, rect) {
+  if (!rect) return Promise.resolve();
+  const c = center(rect);
+  return Promise.all([
+    el ? animate(el, [{ boxShadow: '0 0 0 0 #d946ef00' }, { boxShadow: '0 0 14px 3px #d946ef', offset: 0.25 }, { boxShadow: '0 0 0 0 #d946ef00' }], { duration: 700, fill: 'none' }) : null,
+    runeSwirl(rect, { count: 12, inward: true }),
+    wait(560).then(() => Promise.all([
+      hexSmoke(c, sizeOf(rect)),
+      ring(c, sizeOf(rect) * 1.3, '#2b0938', { width: 5, from: 1.3, to: 0.35, duration: 420 }),
+      tint(el, 'grayscale(1) brightness(0.75) sepia(0.25) hue-rotate(220deg)', 900),
+      bigGlyph({ x: c.x, y: c.y - rect.height * 0.05 }, '🔇', gsz(rect, 0.3), { duration: 760, delay: 160 }),
+    ])),
+  ]);
+}
+// Counter: the enemy spell's sigil appears over the board, a Witch's rune circle closes on it, and
+// it shatters into magenta glass while the circle flashes emerald.
+export function countered(rect) {
+  if (!rect) return Promise.resolve();
+  const c = center(rect);
+  const size = Math.min(rect.width, rect.height) * 0.55;
+  const circle = addFx('fx-counter-circle', box(c, size));
+  circle.innerHTML = `<span>${RUNES.join('')}</span>`;
+  const label = addFx('fx-counter-label', { left: `${c.x}px`, top: `${c.y}px`, fontSize: `${Math.max(18, size * 0.16)}px` });
+  label.textContent = 'COUNTERED';
+  const shards = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2, d = size * (0.5 + Math.random() * 0.4);
+    const sh = addFx('fx-counter-shard', { left: `${c.x}px`, top: `${c.y}px` });
+    shards.push(done(sh, animate(sh, [
+      { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1, offset: 0.05 },
+      { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) rotate(${(Math.random() - 0.5) * 540}deg)`, opacity: 0 },
+    ], { duration: 640, delay: 520, easing: 'cubic-bezier(.2,.7,.3,1)' })));
+  }
+  return Promise.all([
+    done(circle, animate(circle, [
+      { transform: 'scale(1.8) rotate(0deg)', opacity: 0 },
+      { transform: 'scale(1) rotate(90deg)', opacity: 1, offset: 0.4 },
+      { transform: 'scale(0.92) rotate(140deg)', opacity: 1, offset: 0.62, filter: 'brightness(2.4)' },
+      { transform: 'scale(1.25) rotate(170deg)', opacity: 0 },
+    ], { duration: 1200, easing: 'cubic-bezier(.2,.6,.3,1)' })),
+    done(label, animate(label, [
+      { transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1.15)', opacity: 1, offset: 0.5 },
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0.8 },
+      { transform: 'translate(-50%, -60%) scale(1)', opacity: 0 },
+    ], { duration: 1300 })),
+    glowBall(c, size * 1.1, '#d946ef', '#2b093888', { duration: 640, delay: 480 }),
+    ...shards,
+  ]);
+}
+// Silence the enemy Hero: chains of violet runes wrap the portrait and lock with an emerald seal.
+export function heroSilenced(el, rect) {
+  if (!rect) return Promise.resolve();
+  const c = center(rect);
+  return Promise.all([
+    runeSwirl(rect, { count: 10, inward: true, duration: 640 }),
+    wait(500).then(() => Promise.all([
+      ring(c, sizeOf(rect) * 1.15, '#d946ef', { width: 4, from: 1.4, to: 0.9, duration: 500 }),
+      ring(c, sizeOf(rect) * 1.15, '#10b981', { width: 2, from: 1.6, to: 1.05, duration: 560, delay: 80 }),
+      hexSmoke(c, sizeOf(rect) * 0.9),
+      tint(el, 'grayscale(0.8) brightness(0.8)', 900),
+      bigGlyph(c, '🤐', gsz(rect, 0.45), { duration: 900, delay: 120 }),
+    ])),
+  ]);
+}

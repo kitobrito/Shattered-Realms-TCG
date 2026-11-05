@@ -30,6 +30,7 @@ export function minionPasses(m, f) {
   if (f.infected != null && (m.infected != null) !== f.infected) return false; // Zombies/Fungus (Cordyceps): Infected minions
   if (f.holding != null && ((m.shell?.length ?? 0) > 0) !== f.holding) return false; // Harvest Moon: a Pumpkin with a Plant inside
   if (f.keyword && !hasKeyword(m, f.keyword)) return false;
+  if (f.notKeyword && hasKeyword(m, f.notKeyword)) return false; // Witches: not yet Silenced (Crossroads Witch)
   if (f.holyFlame != null && (m.holyFlame > 0) !== f.holyFlame) return false; // Divine (The Holy Pyre)
   if (f.hasRelic != null && !!m.relic !== f.hasRelic) return false; // Ghosts (Cursed Armory)
   if (f.heroOrTribe && !hasTribe(m.tribes, f.heroOrTribe)) return false; // a Hero (always allowed) or a minion of this tribe
@@ -278,6 +279,15 @@ export function matchFilter(state, filter, ctx) {
     if (key === 'by') {
       if (want === 'friendly' && ev.by !== ctx.controller) return false;
       if (want === 'enemy' && (ev.by == null || ev.by === ctx.controller)) return false;
+      continue;
+    }
+    // Witches: the played card costs (N) or less (Spell Snare); it was already countered (Nullify).
+    if (key === 'maxCost') {
+      if (!ev.cardId || (getCard(ev.cardId).cost ?? 0) > want) return false;
+      continue;
+    }
+    if (key === 'countered') {
+      if (!!ev.countered !== want) return false;
       continue;
     }
     if (key === 'minCost') {

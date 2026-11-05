@@ -21,6 +21,7 @@ export const BOARD_ART = {
   Void: 'art/boards-v2/void.jpg',
   'Ice Age': 'art/boards-v2/ice-age.jpg',
   Eels: 'art/boards-v2/eels.jpg',
+  Witches: 'art/boards-v2/witches.jpg',
   // Unlockable alternate boards (ALT_BOARDS below): keyed by the board's own name.
   'Harvest Moon': 'art/boards-v2/harvest-moon.jpg',
   'The Rage Outbreak': 'art/boards-v2/rage-outbreak.jpg',
@@ -90,6 +91,8 @@ export const PORTRAIT_BOARDS = {
   Basic: { src: 'art/boards-portrait/basic.jpg', opp: [201, 30, 259, 98, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [120, 790], frame: 'stone', props: [] },
   // Living board (board-fx-defs.js): its corners react on the canvas, and the game draws the hero frames.
   // Eels: a glowing flooded cave; the game draws copper frames over the water.
+  // Witches: a coven's ritual chamber; the arched and round hero frames are painted in.
+  Witches: { src: 'art/boards-portrait/witches.jpg', opp: [201, 255, 268, 332, 'arch'], me: [177, 883, 283, 987, 'circle'], field: [345, 870], props: [] },
   Eels: { src: 'art/boards-portrait/eels.jpg', opp: [201, 26, 259, 94, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [125, 790], frame: 'copper', props: [] },
   'Ice Age': { src: 'art/boards-portrait/ice-age.jpg', opp: [201, 34, 259, 102, 'arch'], me: [198, 806, 261, 876, 'circle'], field: [125, 790], frame: 'bone', props: [] },
   Void: { src: 'art/boards-portrait/void.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'void', props: [] },
@@ -121,6 +124,7 @@ export const LANDSCAPE_BOARDS = {
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
   'Cordyceps Bloom': { src: 'art/boards-v2/cordyceps-bloom.jpg', opp: [467, 35, 558, 142], me: [462, 434, 561, 533], field: [130, 156, 895, 422], props: [] },
   Basic: { src: 'art/boards-v2/basic.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
+  Witches: { src: 'art/boards-v2/witches.jpg', opp: [467, 39, 560, 144], me: [459, 427, 565, 537], field: [150, 165, 875, 415], props: [] },
   Eels: { src: 'art/boards-v2/eels.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'copper', props: [] },
   'Ice Age': { src: 'art/boards-v2/ice-age.jpg', opp: [471, 22, 553, 116], me: [468, 444, 556, 548], field: [110, 140, 915, 430], frame: 'bone', props: [] },
   Void: { src: 'art/boards-v2/void.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'void', props: [] },

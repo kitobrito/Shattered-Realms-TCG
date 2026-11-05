@@ -5,7 +5,7 @@ export const FACTIONS = [
   'Vampires', 'Demons', 'Divine', 'Dinosaurs', 'Robots', 'Aliens', 'Void', 'Bees',
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Lycanthropes', 'Aquatic', 'Radioactive', 'Old Gods',
-  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age', 'Eels',
+  'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age', 'Eels', 'Witches',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -29,7 +29,7 @@ export const POSITIVE_KEYWORDS = [
 ];
 
 // Negative keywords (statuses):
-//   Silenced  all its other keywords are removed
+//   Silenced  all its other keywords are removed, permanently (it can't gain new ones)
 //   Frozen    cannot attack; thaws after missing its controller's next turn,
 //             unless the card says otherwise ("Root" was renamed Freeze)
 //   Blind     attacks hit a random character, friend or foe
@@ -52,7 +52,7 @@ export const KEYWORD_TEXT = {
   Overheal: 'Healing a character already at full Health raises its maximum Health by the amount instead.',
   'Temporary Health': 'Extra Health that absorbs damage first and goes away when its time is up.',
   'Bonus Health': 'A permanent increase to maximum (and current) Health.',
-  Dark: 'A tag on Vampires, Zombies, Ghosts, Demons, Lycanthropes and the Void. Divine cards punish it.',
+  Dark: 'A tag on Vampires, Zombies, Ghosts, Demons, Lycanthropes, the Void and Witches. Divine cards punish it.',
   'Primal Mana': 'Gold Mana Crystals from Extinction Cycle. They can only pay for Dinosaur cards.',
   Burn: "At the end of its enemy's turn (the player who set it on fire), takes damage equal to its Burn value, then the value rises by 1. Lasts 2 turns. Applying Burn X sets the value to X, or adds X if it is already X or more (adding doesn't extend the 2 turns).",
   Burning: 'Has a Burn value (see Burn).',
@@ -90,7 +90,7 @@ export const KEYWORD_TEXT = {
   'Twin Strike': 'Can attack twice each turn.',
   Reborn: 'The first time this dies, it returns with 1 Health.',
   Overheal: 'Healing at full Health raises maximum Health instead.',
-  Silenced: 'All its other keywords are removed.',
+  Silenced: "All its other keywords are removed and it can't gain new ones. Lasts for the rest of the game.",
   Frozen: "Can't attack. Thaws after missing its controller's next turn.",
   Freeze: "The target can't attack until it has missed its controller's next turn.",
   Blind: 'Its attacks hit a random character, friend or foe.',
@@ -122,6 +122,10 @@ export const KEYWORD_TEXT = {
   Thawing: "Ice Age: arrives sealed in a block of ice for that many of its turns. Until it breaks free it can't attack or be attacked, takes no damage and its Taunt doesn't count. At the start of each of your turns the number drops by 1. Silence breaks the ice at once.",
   'Breaks free': 'Happens when a Thawing minion comes out of its ice.',
   Volts: 'Eels: stored electricity, shown on the minion (up to 5). A minion that dies with Volts Discharges half of them (rounded down) at a random enemy. Silence drains them.',
+  Wand: 'Witches: a Hero Weapon your Hero fires from afar. When your Hero attacks with a Wand it takes no damage back. Each attack uses 1 Durability.',
+  Counter: "Witches: the spell card is cast and spent, but none of its effects happen. Hero Spells can't be Countered. Only one Trap Counters each spell.",
+  'Silence their Hero': "Witches: that player can't use their Hero Spell until the end of their next turn.",
+  'Silence the enemy Hero': "Witches: your opponent can't use their Hero Spell until the end of their next turn.",
   Discharge: 'Eels: a minion spends all its Volts at once to fire a Chain of that strength.',
   Chain: "Eels: Chain X deals X damage to an enemy, then jumps to the nearest enemy minion it hasn't hit, 1 weaker each jump. If it still has power after every enemy minion was hit, the rest hits the enemy Hero. It skips Stealth, Burrowed and Thawing minions.",
   Conductive: "Eels: until the end of the turn, a Chain that jumps off this minion doesn't get weaker.",
@@ -215,6 +219,7 @@ export const FACTION_TAGS = {
   Demons: ['Dark'],
   Lycanthropes: ['Dark'],
   Void: ['Dark'],
+  Witches: ['Dark'],
 };
 
 export const DEFAULT_RULES = {

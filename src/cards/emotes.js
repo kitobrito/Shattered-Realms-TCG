@@ -53,6 +53,14 @@ export const EMOTES = {
     oops: "Oops. Slipped on the ice.",
     threaten: "Winter is long. We are patient.",
   },
+  Witches: {
+    greetings: "Blessed be. Shall we duel?",
+    wellPlayed: "Well played. The coven approves.",
+    thanks: "Thank you, sister.",
+    wow: "Now that's real magic!",
+    oops: "Oops. Wrong end of the wand.",
+    threaten: "Say your spell. I'll unsay it.",
+  },
   Eels: {
     greetings: "Bzzt! Hello there.",
     wellPlayed: "Well played. That was electric.",

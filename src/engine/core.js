@@ -156,6 +156,13 @@ export function costOf(state, inst) {
   if (depth === 4 && card.type === 'spell') aura -= 1;
   if (depth === 7 && card.type === 'minion' && card.faction === 'Demons') aura -= 2;
   if (card.costPerDepth) aura -= depth * card.costPerDepth;
+  // Witches: enemy minions that tax your spell cards (Coven Gatekeeper), and Grim Toll's one-turn tax.
+  if (card.type === 'spell' && state && !card.heroSpell) {
+    const foe = state.players[1 - inst.owner];
+    if (foe) aura += foe.board.filter((m) => m.health > 0 && !m.destroyed && !m.textLost && !(m.keywords ?? []).includes('Silenced')).reduce((t, m) => t + (getCard(m.cardId).enemySpellTax ?? 0), 0);
+    const tax = state.players[inst.owner]?.spellTax;
+    if (tax && tax.turn === state.turn) aura += tax.amount;
+  }
   return Math.max(inst.minCost ?? card.minCost ?? 0, card.cost + (inst.costMod ?? 0) + aura);
 }
 

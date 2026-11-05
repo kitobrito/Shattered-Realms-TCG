@@ -7,6 +7,7 @@ import { addToHand, tagsOf, costOf, effectiveAttack, hasKeyword, heal, radiation
 import { applyAction, createGame, getLegalActions } from '../src/engine/engine.js';
 import { getCard } from '../src/engine/registry.js';
 import { ART, CLICKER_ART } from '../src/cards/art-manifest.js';
+import { PLAYABLE_FACTIONS } from '../src/cards/index.js';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 
 let s;
@@ -235,7 +236,9 @@ test('Every new card has art, is an unlockable extra in its mini-set; legendarie
   bad.push(...[...z, ...f].filter((id) => !getCard(id).extra));
   if (bad.length) return `not in set: ${bad}`;
   for (const id of ['necrohydra', 'the_rat_king', 'mycelia_the_hive_mind', 'ophio_the_cordyceps_crown']) if (!LEGENDARY.has(id)) return `${id} not legendary`;
-  if (Object.keys(CLICKER_ART).length !== 20) return `${Object.keys(CLICKER_ART).length} clicker looks`;
+  // One Clicker look per realm (it grows as realms are added: the Witches made it 21).
+  const missingLook = PLAYABLE_FACTIONS.filter((x) => !CLICKER_ART[x]);
+  if (missingLook.length) return `no clicker look for ${missingLook.join(', ')}`;
   for (const p of [...Object.values(CLICKER_ART), ...[...z, ...f].map((id) => ART[id])]) if (!existsSync(new URL(`../${p}`, import.meta.url))) return `missing file ${p}`;
 });
 
