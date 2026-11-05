@@ -27,7 +27,8 @@ OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '
 # Art the game never loads (old boards, app-store icons).
 SKIP_ART = {'boards', 'boards-portrait-old', 'app'}
 # Folders holding card art, heroes and backs: these go into packs.
-NOT_PACKED = {'board-props', 'boards-portrait', 'boards-v2', 'fonts', 'frames', 'fx', 'music', 'ui'} | SKIP_ART
+# boards-fx (living boards' masks and cut-out atlases) is loaded by plain URL in circle-fx.js, so it ships as files.
+NOT_PACKED = {'board-props', 'boards-fx', 'boards-portrait', 'boards-v2', 'fonts', 'frames', 'fx', 'music', 'ui'} | SKIP_ART
 IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.webp')
 QUALITY = 72  # visually identical to the source JPGs at full size, under half the bytes
 PACK_LIMIT = 2 * 1024 * 1024  # start a new pack part past this many bytes (small parts: a card's art arrives sooner)

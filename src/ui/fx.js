@@ -335,7 +335,8 @@ export function shake(el, strength = 6) {
   return animate(el, [
     { transform: 'translate(0,0)' }, { transform: `translate(${-strength}px, 1px)` }, { transform: `translate(${strength}px, -1px)` },
     { transform: `translate(${-strength / 2}px, 0)` }, { transform: 'translate(0,0)' },
-  ], { duration: 280 });
+  // fill: 'none': once done, the element's own transform (a hand card's place in the fan) is back.
+  ], { duration: 280, fill: 'none' });
 }
 
 // "-3" / "+2" number bursting from a character (damage sits on a red splat, like Hearthstone).
