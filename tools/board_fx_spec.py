@@ -52,6 +52,8 @@ SPEC = {
     'vampire-blood-bar-portrait': {'pool': ['bloodpool', [[100, 255, 345, 795]], {'exclude': [[180, 180, 280, 290]], 'blur': 0.8, 'scale': 0.5, 'show': [255, 0, 0]}]},
     'ghost-haunted-tv-land': {'mist': ['mistblue', [[0, 0, 1024, 572]], {'exclude': [[440, 20, 600, 160], [425, 405, 625, 572], [95, 85, 285, 205], [260, 160, 770, 410]], 'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}]},
     'ghost-haunted-tv-portrait': {'mist': ['mistblue', [[0, 0, 459, 1024]], {'exclude': [[160, 30, 300, 200], [140, 810, 320, 990], [30, 80, 180, 200], [90, 410, 370, 610]], 'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}]},
+    'eels-power-line-river-land': {'river': ['shallows', [[60, 60, 960, 520]], {'exclude': [[455, 10, 570, 140], [450, 420, 575, 572]], 'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}]},
+    'eels-power-line-river-portrait': {'river': ['shallows', [[20, 90, 430, 960]], {'exclude': [[180, 10, 275, 115], [175, 890, 280, 1000]], 'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}]},
     'acidic-sewer-land': {
         # The acid channel (flow, sheen, bubbles and ripples stay on these pixels).
         'acid': ['acid', [[165, 250, 960, 470]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],
