@@ -2,7 +2,8 @@
 // Each board's own layout (hero frames, battlefield, corner props) is in LANDSCAPE_BOARDS below.
 export const BOARD_ART = {
   Vampires: 'art/boards-v2/vampires.jpg',
-  Aliens: 'art/boards-v2/aliens.jpg',
+  // Aliens: the UFO experiment lab (the old hive board is now an unlockable: 'The Xeno Hive').
+  Aliens: 'art/boards-v2/aliens-ufo.jpg',
   Dinosaurs: 'art/boards-v2/dinosaurs.jpg',
   Plants: 'art/boards-v2/plants.jpg',
   Fungus: 'art/boards-v2/fungus.jpg',
@@ -27,6 +28,8 @@ export const BOARD_ART = {
   'The Rage Outbreak': 'art/boards-v2/rage-outbreak.jpg',
   'Cordyceps Outbreak': 'art/boards-v2/cordyceps-outbreak.jpg',
   'Cordyceps Bloom': 'art/boards-v2/cordyceps-bloom.jpg',
+  'The Shifting Dunes': 'art/boards-v2/sand-sharks.jpg',
+  'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
@@ -52,6 +55,9 @@ export const ALT_BOARDS = {
   Plants: [{ id: 'Harvest Moon', set: 'Harvest Moon', blurb: 'A haunted pumpkin patch under the harvest moon.' }],
   Zombies: [{ id: 'The Rage Outbreak', expansion: true, blurb: 'A blood-soaked city street, days after the Rage got out.' },
     { id: 'Cordyceps Outbreak', set: 'Cordyceps Outbreak', blurb: 'An overgrown city street, decades after the fungus won.' }],
+  Sharks: [{ id: 'The Shifting Dunes', expansion: true, blurb: 'A scorching desert where sharks swim through the sand.' }],
+  // The old Aliens board: unlocked by the Hive Brood cards (the Xenomorphs), not the Qu cards.
+  Aliens: [{ id: 'The Xeno Hive', cards: ['facehugger_swarmling', 'ovomorph_clutch', 'parasite_carrier', 'acid_blood_drone', 'hive_stalker', 'brood_tender', 'hive_brute', 'xeno_runner', 'hive_warrior', 'praetorian_guard', 'hive_queen_xaral', 'gestation', 'it_bursts_out', 'acid_blood_spray', 'egg_chamber'], blurb: 'The xenomorph hive: resin walls and egg clusters.' }],
   Acidic: [{ id: 'The Sewage Works', expansion: true, blurb: 'A flooded sewage plant: glowing acid, skeletal fish and rats, and one very lucky frog.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
@@ -114,7 +120,9 @@ export const PORTRAIT_BOARDS = {
   Fungus: { src: 'art/boards-portrait/fungus.jpg', opp: [188, 29, 272, 119, 'arch'], me: [184, 771, 277, 864, 'circle'], field: [135, 755], props: [] },
   Plants: { src: 'art/boards-portrait/plants.jpg', opp: [186, 137, 274, 239, 'arch'], me: [178, 786, 281, 888, 'circle'], field: [255, 770], props: [] },
   Dinosaurs: { src: 'art/boards-portrait/dinosaurs.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'stone', props: [] },
-  Aliens: { src: 'art/boards-portrait/aliens.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 790, 261, 860, 'circle'], field: [120, 775], frame: 'chitin', props: [] },
+  Aliens: { src: 'art/boards-portrait/aliens-ufo.jpg', opp: [167, 36, 292, 150, 'circle'], me: [168, 794, 292, 918, 'circle'], field: [180, 785], props: [] },
+  'The Xeno Hive': { src: 'art/boards-portrait/aliens.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 790, 261, 860, 'circle'], field: [120, 775], frame: 'chitin', props: [] },
+  'The Shifting Dunes': { src: 'art/boards-portrait/sand-sharks.jpg', opp: [189, 33, 270, 126, 'arch'], me: [187, 743, 273, 829, 'circle'], field: [140, 735], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -148,7 +156,9 @@ export const LANDSCAPE_BOARDS = {
   Fungus: { src: 'art/boards-v2/fungus.jpg', opp: [465, 26, 559, 125], me: [456, 434, 569, 547], field: [120, 150, 900, 420], props: [] },
   Plants: { src: 'art/boards-v2/plants.jpg', opp: [469, 27, 557, 116], me: [462, 436, 562, 534], field: [150, 140, 880, 420], props: [] },
   Dinosaurs: { src: 'art/boards-v2/dinosaurs.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'stone', props: [] },
-  Aliens: { src: 'art/boards-v2/aliens.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'chitin', props: [] },
+  Aliens: { src: 'art/boards-v2/aliens-ufo.jpg', opp: [465, 27, 562, 141], me: [463, 439, 561, 538], field: [160, 150, 870, 420], props: [] },
+  'The Xeno Hive': { src: 'art/boards-v2/aliens.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'chitin', props: [] },
+  'The Shifting Dunes': { src: 'art/boards-v2/sand-sharks.jpg', opp: [467, 34, 557, 138], me: [459, 430, 565, 536], field: [150, 150, 880, 415], props: [] },
 };
 
 

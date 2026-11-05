@@ -399,6 +399,129 @@ export const BOARD_FX = {
   },
 
   // ---- Acidic: an acid cavern -------------------------------------------------------------
+  // ---- Sharks (unlockable): The Shifting Dunes, a desert where sharks swim through the sand ----------
+  // Fins cut through the dunes (each on its own clock) throwing sand behind them, wind carries sand
+  // across the board, the oasis shimmers and its palms sway, tumbleweeds rock, heat haze rises.
+  'sand-sharks-land': {
+    wind: { dir: 1, every: [4, 8], speed: [160, 240], width: [160, 260], lean: 0.35 },
+    layers: [
+      { type: 'fog', area: [-80, 120, 1104, 520], count: 8, size: [90, 170], speed: 6, color: [255, 220, 150], alpha: 0.06, blend: 'lighter' },
+      { id: 'oasis', type: 'mask', mask: 'oasis', anim: { kind: 'wave', along: 'x', band: 50, speed: 14 }, alpha: [0.05, 0.45], gain: 0.7, kickDur: 2 },
+      { id: 'oasisRipples', type: 'particles', kind: 'ripple', area: { mask: 'oasis' }, rate: 0.5, max: 3, color: [200, 255, 255], size: [5, 10], life: [1.8, 2.6], alpha: 0.3 },
+      { id: 'finA', type: 'echo', box: [258, 96, 320, 176], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.42, kickAmp: 6 } },
+      { id: 'finC', type: 'echo', box: [756, 214, 804, 292], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.37, kickAmp: 6 } },
+      { id: 'finD', type: 'echo', box: [206, 280, 270, 346], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.45, kickAmp: 6 } },
+      { id: 'finF', type: 'echo', box: [682, 358, 744, 442], feather: 5, motion: { kind: 'drift', amp: 3, speed: 0.4, kickAmp: 6 } },
+      { id: 'spray', type: 'particles', kind: 'smoke', from: [[262, 162, 10], [668, 96, 8], [760, 280, 10], [212, 334, 10], [312, 448, 10], [688, 430, 10]], rate: 4, max: 26, color: [230, 190, 120], size: [3, 6], life: [0.8, 1.6], alpha: 0.35, speed: 0.8 },
+      { id: 'tumble1', type: 'echo', box: [846, 482, 896, 528], feather: 4, motion: { kind: 'rock', amp: 4, period: 3.2, pivot: [871, 526], kickAmp: 12 } },
+      { id: 'tumble2', type: 'echo', box: [916, 500, 970, 556], feather: 4, motion: { kind: 'rock', amp: 4, period: 3.8, pivot: [943, 554], kickAmp: 12 } },
+      { id: 'statueGlint', type: 'particles', kind: 'glint', area: [835, 140, 935, 250], rate: 0.5, max: 2, color: [255, 255, 240], size: [1, 1.8], life: [0.4, 0.8] },
+      { id: 'shellGlint', type: 'particles', kind: 'glint', area: [785, 440, 850, 485], rate: 0.6, max: 2, color: [255, 250, 230], size: [1, 1.6], life: [0.4, 0.8] },
+      { id: 'sand', type: 'particles', kind: 'snow', area: [-40, 0, 1024, 572], rate: 6, max: 50, color: [230, 190, 120], size: [0.8, 1.6], life: [2.5, 4.5], drift: 38 },
+      { id: 'dust', type: 'fog', area: [-100, 0, 1124, 572], count: 6, size: [120, 220], speed: 16, color: [235, 200, 140], alpha: 0.05 },
+    ],
+    pokes: [
+      { area: [256, 94, 322, 178], sound: 'splash', kick: ['finA'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [262, 162], spread: 10 } },
+      { area: [754, 212, 806, 294], sound: 'splash', kick: ['finC'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [760, 280], spread: 10 } },
+      { area: [204, 278, 272, 348], sound: 'splash', kick: ['finD'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [212, 334], spread: 10 } },
+      { area: [680, 356, 746, 444], sound: 'splash', kick: ['finF'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [688, 430], spread: 10 } },
+      { area: [870, 280, 1024, 362], sound: 'splash', kick: ['oasis'], flare: [150, 230, 255], burst: { layer: 'oasisRipples', n: 3, spread: 30 } },
+      { area: [840, 476, 976, 560], sound: 'rustle', kick: ['tumble1', 'tumble2'], flare: [230, 190, 120] },
+      { area: [830, 135, 940, 255], sound: 'chime', kick: [], flare: [255, 240, 200], glyph: '🦈', burst: { layer: 'statueGlint', n: 4, spread: 30 } },
+    ],
+  },
+  'sand-sharks-portrait': {
+    wind: { dir: 1, every: [4, 8], speed: [110, 170], width: [140, 220], lean: 0.15 },
+    layers: [
+      { type: 'fog', area: [-80, 150, 540, 900], count: 8, size: [80, 150], speed: 6, color: [255, 220, 150], alpha: 0.06, blend: 'lighter' },
+      { id: 'oasis', type: 'mask', mask: 'oasis', anim: { kind: 'wave', along: 'x', band: 40, speed: 12 }, alpha: [0.05, 0.45], gain: 0.7, kickDur: 2 },
+      { id: 'oasisRipples', type: 'particles', kind: 'ripple', area: { mask: 'oasis' }, rate: 0.5, max: 3, color: [200, 255, 255], size: [4, 9], life: [1.8, 2.6], alpha: 0.3 },
+      { id: 'finB', type: 'echo', box: [393, 263, 427, 332], feather: 5, motion: { kind: 'drift', amp: 2.5, speed: 0.37, kickAmp: 5.0 } },
+      { id: 'finC', type: 'echo', box: [43, 513, 95, 567], feather: 5, motion: { kind: 'drift', amp: 2.5, speed: 0.45, kickAmp: 5.0 } },
+      { id: 'finE', type: 'echo', box: [326, 648, 376, 718], feather: 5, motion: { kind: 'drift', amp: 2.5, speed: 0.4, kickAmp: 5.0 } },
+      { id: 'spray', type: 'particles', kind: 'smoke', from: [[100, 148, 8], [395, 322, 8], [45, 558, 8], [90, 720, 8], [328, 708, 8]], rate: 3.5, max: 22, color: [230, 190, 120], size: [2.5, 5], life: [0.8, 1.6], alpha: 0.35, speed: 0.8 },
+      { id: 'palms', type: 'warp', box: [366, 715, 459, 852], base: 'bottom', amp: 1.4, period: 4.6, wave: 1.8 },
+      { id: 'tumble1', type: 'echo', box: [338, 952, 374, 988], feather: 4, motion: { kind: 'rock', amp: 4, period: 3.2, pivot: [356, 986], kickAmp: 12 } },
+      { id: 'tumble2', type: 'echo', box: [390, 970, 432, 1008], feather: 4, motion: { kind: 'rock', amp: 4, period: 3.8, pivot: [411, 1006], kickAmp: 12 } },
+      { id: 'statueGlint', type: 'particles', kind: 'glint', area: [355, 95, 432, 165], rate: 0.5, max: 2, color: [255, 255, 240], size: [1, 1.6], life: [0.4, 0.8] },
+      { id: 'sand', type: 'particles', kind: 'snow', area: [-30, 0, 459, 1024], rate: 5, max: 45, color: [230, 190, 120], size: [0.7, 1.4], life: [2.5, 4.5], drift: 30 },
+      { id: 'dust', type: 'fog', area: [-100, 0, 560, 1024], count: 6, size: [110, 200], speed: 14, color: [235, 200, 140], alpha: 0.05 },
+    ],
+    pokes: [
+      { area: [391, 261, 429, 334], sound: 'splash', kick: ['finB'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [395, 322], spread: 8 } },
+      { area: [41, 511, 97, 569], sound: 'splash', kick: ['finC'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [45, 558], spread: 8 } },
+      { area: [324, 646, 378, 720], sound: 'splash', kick: ['finE'], flare: [230, 190, 120], glyph: '🦈', burst: { layer: 'spray', n: 6, at: [328, 708], spread: 8 } },
+      { area: [348, 776, 459, 850], sound: 'splash', kick: ['oasis'], flare: [150, 230, 255], burst: { layer: 'oasisRipples', n: 3, spread: 25 } },
+      { area: [362, 712, 459, 856], sound: 'rustle', kick: ['palms'], flare: [150, 220, 120], glyph: '🌴' },
+      { area: [334, 948, 436, 1012], sound: 'rustle', kick: ['tumble1', 'tumble2'], flare: [230, 190, 120] },
+    ],
+  },
+
+  // ---- Aliens (default board): the UFO experiment lab --------------------------------------------
+  // The floor ring and tractor beams pulse, the tubes glow and bubble, screens flicker and blink, the
+  // scanner beam sweeps over the patient, stars twinkle past the portholes. The cow floats in its beam,
+  // the robot arm twitches, the clipboard scientist bobs; every gadget reacts to a tap.
+  'aliens-ufo-land': {
+    wind: null,
+    layers: [
+      { id: 'ring', type: 'glow', points: [[512, 290, 175]], color: [120, 255, 230], anim: 'pulse', period: 5.5, alpha: [0.04, 0.14], kickDur: 2.5 },
+      { id: 'ringCore', type: 'glow', points: [[512, 290, 70]], color: [170, 255, 240], anim: 'pulse', period: 3.6, alpha: [0.02, 0.08], kickDur: 2 },
+      { id: 'scan', type: 'glow', points: [[180, 110, 26], [200, 150, 20], [220, 180, 16]], color: [140, 255, 120], anim: 'pulse', period: 1.6, alpha: [0.1, 0.45], kickDur: 2 },
+      { id: 'tube', type: 'glow', points: [[712, 75, 50]], color: [100, 255, 120], anim: 'pulse', period: 3.2, alpha: [0.12, 0.35], kickDur: 2 },
+      { id: 'tubeBubbles', type: 'particles', kind: 'bubble', area: [672, 20, 756, 140], rate: 3, max: 12, color: [200, 255, 200], size: [1, 2], life: [0.8, 1.6], speed: 0.6 },
+      { id: 'beam', type: 'glow', points: [[870, 175, 85]], color: [90, 200, 255], anim: 'pulse', period: 2.8, alpha: [0.1, 0.3], kickDur: 2 },
+      { id: 'beamMotes', type: 'particles', kind: 'wisp', area: [800, 90, 960, 260], rate: 2.5, max: 14, color: [180, 230, 255], size: [1.5, 3], life: [1.5, 2.5], alpha: 0.5 },
+      { id: 'cow', type: 'echo', box: [798, 142, 908, 248], feather: 5, motion: { kind: 'bob', amp: 3, period: 3.4, kickAmp: 8 } },
+      { id: 'screens', type: 'glow', points: [[315, 30, 14], [352, 30, 14], [270, 85, 12], [52, 150, 14], [28, 230, 14], [122, 516, 16], [830, 515, 12], [900, 440, 14]], color: [120, 255, 170], anim: 'flicker', speed: 4, alpha: [0.08, 0.35], kickDur: 2 },
+      { id: 'lights', type: 'glow', points: [[330, 50, 3], [345, 50, 3], [360, 52, 3], [378, 48, 3], [115, 450, 3], [125, 460, 3], [135, 468, 3], [62, 236, 3], [940, 410, 3]], color: [255, 90, 120], anim: 'flicker', speed: 6, alpha: [0.1, 0.8], kickDur: 1.5 },
+      { id: 'jars', type: 'glow', points: [[625, 50, 16], [665, 65, 14], [712, 500, 16], [762, 492, 16]], color: [180, 120, 255], anim: 'pulse', period: 3.8, alpha: [0.06, 0.3], kickDur: 2 },
+      { id: 'arm', type: 'echo', box: [234, 432, 372, 562], feather: 5, autoKick: [5, 10], motion: { kind: 'rock', amp: 0.6, period: 2.6, pivot: [265, 555], kickAmp: 4 } },
+      { id: 'clipboard', type: 'echo', box: [744, 204, 812, 312], feather: 5, motion: { kind: 'bob', amp: 1, period: 2.2, kickAmp: 3 } },
+      { id: 'stars', type: 'particles', kind: 'glint', area: [945, 170, 1024, 370], rate: 1.6, max: 6, color: [255, 255, 255], size: [0.8, 1.6], life: [0.4, 0.9] },
+      { type: 'particles', kind: 'mote', area: [0, 0, 1024, 572], rate: 1.5, max: 16, color: [150, 255, 230], size: [0.6, 1.2], life: [3, 6], alpha: 0.5, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [796, 140, 910, 250], sound: 'groan', kick: ['cow', 'beam'], flare: [120, 210, 255], glyph: '🐄', burst: { layer: 'beamMotes', n: 8, spread: 40 } },
+      { area: [660, 0, 765, 155], sound: 'bloop', kick: ['tube'], flare: [120, 255, 140], burst: { layer: 'tubeBubbles', n: 10, spread: 30 } },
+      { area: [140, 60, 360, 270], sound: 'beam', kick: ['scan'], flare: [140, 255, 120], glyph: '🛸' },
+      { area: [232, 430, 374, 564], sound: 'grind', kick: ['arm'], flare: [190, 210, 230], glyph: '🦾' },
+      { area: [742, 202, 814, 314], sound: 'beep', kick: ['clipboard'], flare: [190, 210, 230], glyph: '📋' },
+      { area: [280, 0, 420, 95], sound: 'beep', kick: ['screens', 'lights'], flare: [120, 255, 170] },
+      { area: [940, 165, 1024, 375], sound: 'chime', kick: [], flare: [200, 220, 255], glyph: '🌍', burst: { layer: 'stars', n: 6, spread: 30 } },
+      { area: [380, 180, 650, 400], sound: 'beam', kick: ['ring', 'ringCore'], flare: [120, 255, 230] },
+    ],
+  },
+  'aliens-ufo-portrait': {
+    wind: null,
+    layers: [
+      { id: 'ring', type: 'glow', points: [[230, 515, 120]], color: [120, 255, 230], anim: 'pulse', period: 5.5, alpha: [0.04, 0.14], kickDur: 2.5 },
+      { id: 'ringCore', type: 'glow', points: [[230, 515, 50]], color: [170, 255, 240], anim: 'pulse', period: 3.6, alpha: [0.02, 0.08], kickDur: 2 },
+      { id: 'scan', type: 'glow', points: [[300, 212, 18], [285, 240, 14]], color: [140, 255, 120], anim: 'pulse', period: 1.6, alpha: [0.1, 0.45], kickDur: 2 },
+      { id: 'tube', type: 'glow', points: [[410, 510, 45]], color: [100, 255, 120], anim: 'pulse', period: 3.2, alpha: [0.12, 0.35], kickDur: 2 },
+      { id: 'tubeBubbles', type: 'particles', kind: 'bubble', area: [380, 430, 440, 590], rate: 3, max: 12, color: [200, 255, 200], size: [1, 2], life: [0.8, 1.6], speed: 0.6 },
+      { id: 'beam', type: 'glow', points: [[75, 700, 70]], color: [90, 200, 255], anim: 'pulse', period: 2.8, alpha: [0.1, 0.3], kickDur: 2 },
+      { id: 'beamMotes', type: 'particles', kind: 'wisp', area: [10, 620, 150, 790], rate: 2.5, max: 14, color: [180, 230, 255], size: [1.2, 2.6], life: [1.5, 2.5], alpha: 0.5 },
+      { id: 'cow', type: 'echo', box: [40, 668, 124, 750], feather: 4, motion: { kind: 'bob', amp: 2.5, period: 3.4, kickAmp: 7 } },
+      { id: 'screens', type: 'glow', points: [[82, 105, 16], [40, 160, 10], [20, 520, 12], [445, 190, 10], [45, 955, 14], [95, 985, 10]], color: [120, 255, 170], anim: 'flicker', speed: 4, alpha: [0.08, 0.35], kickDur: 2 },
+      { id: 'lights', type: 'glow', points: [[100, 135, 3], [110, 140, 3], [120, 145, 3], [30, 175, 3], [30, 470, 3], [42, 470, 3], [440, 240, 3], [5, 920, 3]], color: [255, 90, 120], anim: 'flicker', speed: 6, alpha: [0.1, 0.8], kickDur: 1.5 },
+      { id: 'jars', type: 'glow', points: [[372, 790, 14], [296, 968, 12], [425, 340, 12]], color: [180, 120, 255], anim: 'pulse', period: 3.8, alpha: [0.06, 0.3], kickDur: 2 },
+      { id: 'clipboard', type: 'echo', box: [122, 692, 164, 770], feather: 4, motion: { kind: 'bob', amp: 1, period: 2.2, kickAmp: 3 } },
+      { id: 'stars', type: 'particles', kind: 'glint', area: [365, 50, 445, 125], rate: 1.2, max: 4, color: [255, 255, 255], size: [0.7, 1.4], life: [0.4, 0.9] },
+      { id: 'stars2', type: 'particles', kind: 'glint', area: [355, 900, 445, 990], rate: 1.2, max: 4, color: [255, 255, 255], size: [0.7, 1.4], life: [0.4, 0.9] },
+      { type: 'particles', kind: 'mote', area: [0, 0, 459, 1024], rate: 1.5, max: 16, color: [150, 255, 230], size: [0.6, 1.1], life: [3, 6], alpha: 0.5, speed: 0.6 },
+    ],
+    pokes: [
+      { area: [38, 666, 126, 752], sound: 'groan', kick: ['cow', 'beam'], flare: [120, 210, 255], glyph: '🐄', burst: { layer: 'beamMotes', n: 8, spread: 30 } },
+      { area: [368, 408, 450, 606], sound: 'bloop', kick: ['tube'], flare: [120, 255, 140], burst: { layer: 'tubeBubbles', n: 10, spread: 24 } },
+      { area: [130, 175, 345, 335], sound: 'beam', kick: ['scan'], flare: [140, 255, 120], glyph: '🛸' },
+      { area: [296, 638, 442, 748], sound: 'grind', flare: [190, 210, 230], glyph: '🦾' },
+      { area: [120, 690, 166, 772], sound: 'beep', kick: ['clipboard'], flare: [190, 210, 230], glyph: '📋' },
+      { area: [10, 70, 130, 200], sound: 'beep', kick: ['screens', 'lights'], flare: [120, 255, 170] },
+      { area: [360, 45, 450, 130], sound: 'chime', kick: [], flare: [200, 220, 255], glyph: '🌍', burst: { layer: 'stars', n: 5, spread: 25 } },
+      { area: [130, 420, 330, 620], sound: 'beam', kick: ['ring', 'ringCore'], flare: [120, 255, 230] },
+    ],
+  },
+
   // ---- Acidic (unlockable): The Sewage Works, a flooded sewage plant --------------------------
   // Ground: the acid channel creeps, sheens and bubbles. Features: acid pours from the broken pipe and
   // splashes into the channel, light runs down the fall, gauges flicker, steam vents, slime drips.

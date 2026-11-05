@@ -29,6 +29,8 @@ export const setComplete = (set) => { const p = setProgress(set); return p.total
 // An alternate board's unlock progress: its mini-set, or (expansion: true) the faction's main expansion.
 export function boardProgress(b, faction) {
   if (b.set) return setProgress(b.set);
+  // cards: a board unlocked by a named list of cards (the Xeno Hive: the Hive Brood Xenomorphs).
+  if (b.cards) { const have = saved(); return { have: b.cards.filter((id) => have.has(id)).length, total: b.cards.length }; }
   const cards = extras().filter((c) => c.faction === faction && !c.set);
   const have = saved();
   return { have: cards.filter((c) => have.has(c.id)).length, total: cards.length };
