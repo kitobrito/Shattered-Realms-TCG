@@ -25,32 +25,37 @@ const refill = (p) => { pl(p).mana.current = 10; };
 function test(name, fn, factions) { fresh(...(factions ?? [])); try { const r = fn(); if (r) { failures++; console.log(`FAIL ${name}: ${r}`); } else { passed++; console.log(`ok   ${name}`); } } catch (e) { failures++; console.log(`FAIL ${name}: ${e.stack.split('\n')[0]}`); } }
 
 test('No Demon player: no Descent', () => { if (s.descent) return 'started'; sinkCircles(s, 3); if (s.descent) return 'started late'; endTurn(); if (s.descent) return 'started on a turn'; }, [['Robots', 'Ghosts'], ['Vampires', 'Bees']]);
-test('A Demon player: round 1 is the First Circle, Limbo', () => {
-  if (!s.descent || s.descent.depth !== 1) return JSON.stringify(s.descent);
+test('A Demon player: round 1 stays on the realm boards, round 2 is the First Circle, Limbo', () => {
+  if (!s.descent || s.descent.depth !== 0) return `round 1: ${JSON.stringify(s.descent)}`;
+  endTurn(); // B's turn: still round 1
+  if (s.descent.depth !== 0) return `round 1, B: ${s.descent.depth}`;
+  endTurn(); // A again: round 2
+  if (s.descent.depth !== 1) return `round 2: ${s.descent.depth}`;
   if (!s.log.some((l) => l.msg.includes('First Circle: Limbo'))) return 'no log line';
 });
 test('One circle per round, not per turn', () => {
-  endTurn(); // B's turn: still round 1
+  endTurn(); endTurn(); // round 2
+  endTurn(); // B's turn: still round 2
   if (s.descent.depth !== 1) return `after B: ${s.descent.depth}`;
-  endTurn(); // A again: round 2
-  if (s.descent.depth !== 2) return `round 2: ${s.descent.depth}`;
+  endTurn(); // A again: round 3
+  if (s.descent.depth !== 2) return `round 3: ${s.descent.depth}`;
   endTurn(); endTurn();
-  if (s.descent.depth !== 3) return `round 3: ${s.descent.depth}`;
+  if (s.descent.depth !== 3) return `round 4: ${s.descent.depth}`;
 });
 test('Health paid and minion deaths no longer sink the battle', () => {
   loseHealth(s, pl(0).hero.uid, 5);
   const a = blank(0, 1, 1), b = blank(1, 1, 1);
   a.destroyed = true; b.destroyed = true;
   endTurn();
-  if (s.descent.depth !== 1) return `depth ${s.descent.depth}`;
+  if (s.descent.depth !== 0) return `depth ${s.descent.depth}`;
 });
 test('Two Demon players: still one circle a round', () => {
-  for (let i = 0; i < 4; i++) endTurn();
+  for (let i = 0; i < 6; i++) endTurn();
   if (s.descent.depth !== 3) return `depth ${s.descent.depth}`;
 }, [['Demons', 'Vampires'], ['Demons', 'Ghosts']]);
-test('Round 9 is Treachery, and nine circles at most', () => {
-  for (let i = 0; i < 16; i++) endTurn();
-  if (s.descent.depth !== 9) return `round 9: ${s.descent.depth}`;
+test('Round 10 is Treachery, and nine circles at most', () => {
+  for (let i = 0; i < 18; i++) endTurn();
+  if (s.descent.depth !== 9) return `round 10: ${s.descent.depth}`;
   for (let i = 0; i < 6; i++) endTurn();
   if (s.descent.depth !== 9) return `past the bottom: ${s.descent.depth}`;
   if (!s.log.some((l) => l.msg.includes('Ninth Circle: Treachery'))) return 'no log line';

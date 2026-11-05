@@ -54,6 +54,14 @@ SPEC = {
     'ghost-haunted-tv-portrait': {'mist': ['mistblue', [[0, 0, 459, 1024]], {'exclude': [[160, 30, 300, 200], [140, 810, 320, 990], [30, 80, 180, 200], [90, 410, 370, 610]], 'blur': 1, 'scale': 0.5, 'show': [0, 200, 255]}]},
     'eels-power-line-river-land': {'river': ['shallows', [[60, 60, 960, 520]], {'exclude': [[455, 10, 570, 140], [450, 420, 575, 572]], 'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}]},
     'eels-power-line-river-portrait': {'river': ['shallows', [[20, 90, 430, 960]], {'exclude': [[180, 10, 275, 115], [175, 890, 280, 1000]], 'blur': 0.8, 'scale': 0.5, 'show': [0, 200, 255]}]},
+    'demons-heaven-siege-land': {
+        'hellfire': ['lava', [[250, 290, 1024, 572]], {'exclude': [[450, 425, 580, 555], [688, 368, 792, 502], [588, 398, 672, 492], [573, 278, 692, 388], [798, 398, 882, 492], [858, 438, 962, 542]], 'blur': 0.6, 'show': [255, 120, 0]}],
+        'cracks': ['lavahot', [[320, 100, 780, 210], [280, 280, 620, 470]], {'grow': 1, 'blur': 0.5, 'show': [255, 255, 0]}],
+    },
+    'demons-heaven-siege-portrait': {
+        'hellfire': ['lava', [[0, 600, 459, 1024]], {'exclude': [[176, 728, 290, 845], [338, 648, 442, 772], [178, 848, 302, 1002], [93, 808, 177, 892]], 'blur': 0.6, 'show': [255, 120, 0]}],
+        'cracks': ['lavahot', [[120, 140, 360, 300], [150, 600, 400, 720]], {'grow': 1, 'blur': 0.5, 'show': [255, 255, 0]}],
+    },
     'acidic-sewer-land': {
         # The acid channel (flow, sheen, bubbles and ripples stay on these pixels).
         'acid': ['acid', [[165, 250, 960, 470]], {'blur': 0.8, 'scale': 0.5, 'show': [0, 255, 0]}],

@@ -42,6 +42,8 @@ export const BOARD_ART = {
   'The Live Wire': 'art/boards-v2/eels-power-line-river.jpg',
   'The Wicked Cabin': 'art/boards-v2/witches-evil-cabin.jpg',
   'The Tar Pit': 'art/boards-v2/iceage-tar-pit.jpg',
+  'The Consecrated Graveyard': 'art/boards-v2/divine-consecrated-graveyard.jpg',
+  'The Siege of Heaven': 'art/boards-v2/demons-heaven-siege.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
@@ -86,6 +88,8 @@ export const ALT_BOARDS = {
   Eels: [{ id: 'The Live Wire', expansion: true, blurb: 'A downed power line crackling through a shallow river.' }],
   Witches: [{ id: 'The Wicked Cabin', expansion: true, blurb: 'A wicked witch\'s cabin, with dinner on the boil.' }],
   'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
+  Divine: [{ id: 'The Consecrated Graveyard', expansion: true, blurb: "A moonlit graveyard where holy light smites the restless dead." }],
+  Demons: [{ id: 'The Siege of Heaven', expansion: true, blurb: "Heaven's golden gates, as hellfire and a demon legion storm the clouds." }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -163,6 +167,8 @@ export const PORTRAIT_BOARDS = {
   'The Live Wire': { src: 'art/boards-portrait/eels-power-line-river.jpg', opp: [190, 18, 264, 108, 'arch'], me: [184, 902, 268, 988, 'circle'], field: [120, 892], props: [] },
   'The Wicked Cabin': { src: 'art/boards-portrait/witches-evil-cabin.jpg', opp: [174, 32, 290, 160, 'arch'], me: [172, 825, 290, 950, 'circle'], field: [172, 815], props: [] },
   'The Tar Pit': { src: 'art/boards-portrait/iceage-tar-pit.jpg', opp: [193, 173, 268, 270, 'arch'], me: [184, 753, 275, 843, 'circle'], field: [282, 743], props: [] },
+  'The Consecrated Graveyard': { src: 'art/boards-portrait/divine-consecrated-graveyard.jpg', opp: [183, 56, 278, 170, 'arch'], me: [185, 781, 274, 871, 'circle'], field: [182, 771], props: [] },
+  'The Siege of Heaven': { src: 'art/boards-portrait/demons-heaven-siege.jpg', opp: [174, 50, 277, 160, 'arch'], me: [184, 738, 282, 834, 'circle'], field: [172, 728], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -212,6 +218,8 @@ export const LANDSCAPE_BOARDS = {
   'The Live Wire': { src: 'art/boards-v2/eels-power-line-river.jpg', opp: [462, 22, 562, 132], me: [463, 444, 560, 542], field: [150, 144, 880, 430], props: [] },
   'The Wicked Cabin': { src: 'art/boards-v2/witches-evil-cabin.jpg', opp: [450, 40, 580, 165], me: [448, 415, 578, 535], field: [150, 177, 880, 401], props: [] },
   'The Tar Pit': { src: 'art/boards-v2/iceage-tar-pit.jpg', opp: [467, 28, 556, 124], me: [455, 425, 568, 543], field: [150, 136, 880, 411], props: [] },
+  'The Consecrated Graveyard': { src: 'art/boards-v2/divine-consecrated-graveyard.jpg', opp: [458, 42, 564, 140], me: [460, 440, 564, 543], field: [150, 152, 880, 426], props: [] },
+  'The Siege of Heaven': { src: 'art/boards-v2/demons-heaven-siege.jpg', opp: [467, 30, 557, 137], me: [462, 439, 571, 539], field: [150, 149, 880, 425], props: [] },
 };
 
 

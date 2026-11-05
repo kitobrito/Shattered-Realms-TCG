@@ -1276,6 +1276,115 @@ export const BOARD_FX = {
     ],
   },
 
+  // ==== Divine (unlockable): The Consecrated Graveyard ====
+  // Divine (unlockable): The Consecrated Graveyard. Shafts of holy light pulse down on the dead, each smitten zombie shudders and sheds glowing ash, the rune circle and the spreading light breathe, the angel statue sword blazes, golden embers rise, cold mist lingers in the dark corners.
+  'divine-consecrated-graveyard-land': {
+    wind: null,
+    layers: [
+      { id: 'beams', type: 'glow', points: [[292, 60, 40], [292, 250, 46], [292, 380, 40], [728, 30, 44], [728, 140, 40]], color: [255, 240, 190], anim: 'pulse', period: 3.4, alpha: [0.08, 0.3], kickDur: 2.5 },
+      { id: 'runes', type: 'glow', points: [[512, 290, 150]], color: [255, 220, 120], anim: 'pulse', period: 5.2, alpha: [0.04, 0.15], kickDur: 2.5 },
+      { id: 'lightEdge', type: 'glow', points: [[230, 240, 60], [850, 260, 60], [640, 480, 50], [380, 470, 50], [560, 130, 50]], color: [255, 210, 110], anim: 'flicker', speed: 1.2, alpha: [0.05, 0.16], kickDur: 2 },
+      { id: 'zombie1', type: 'echo', box: [283, 308, 347, 437], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.55, pivot: [315, 435], kickAmp: 4 } },
+      { id: 'zombie2', type: 'echo', box: [666, 98, 724, 202], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.68, pivot: [695, 200], kickAmp: 4 } },
+      { id: 'zombie3', type: 'echo', box: [738, 163, 807, 272], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.81, pivot: [772, 270], kickAmp: 4 } },
+      { id: 'zombie4', type: 'echo', box: [738, 328, 832, 457], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.94, pivot: [785, 455], kickAmp: 4 } },
+      { id: 'ash', type: 'particles', kind: 'ember', from: [[315, 360, 14], [695, 140, 10], [790, 200, 14], [800, 360, 18]], rate: 6, max: 40, color: [255, 170, 60], size: [0.8, 1.6], life: [1.2, 2.4] },
+      { id: 'dust', type: 'particles', kind: 'smoke', from: [[795, 210, 10], [810, 380, 14]], rate: 1.6, max: 10, color: [110, 100, 90], size: [3, 6], life: [1.4, 2.4], alpha: 0.3, speed: 0.5 },
+      { id: 'sword', type: 'glow', points: [[886, 150, 22], [905, 210, 14]], color: [255, 245, 200], anim: 'pulse', period: 2.4, alpha: [0.2, 0.6], kickDur: 2 },
+      { id: 'moon', type: 'glow', points: [[925, 32, 40]], color: [190, 210, 255], anim: 'pulse', period: 7, alpha: [0.05, 0.16], kickDur: 2 },
+      { id: 'embers', type: 'particles', kind: 'mote', area: [120, 40, 900, 520], rate: 3, max: 30, color: [255, 215, 120], size: [0.7, 1.5], life: [3, 6], alpha: 0.7, speed: 0.6 },
+      { type: 'fog', area: [-100, 300, 300, 572], count: 4, size: [110, 200], speed: 5, color: [120, 140, 170], alpha: 0.08 },
+      { type: 'fog', area: [800, 420, 1124, 572], count: 3, size: [100, 180], speed: 5, color: [120, 140, 170], alpha: 0.08 },
+    ],
+    pokes: [
+      { area: [281, 306, 349, 439], sound: 'ignite', kick: ['zombie1', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [315, 372], spread: 16 } },
+      { area: [664, 96, 726, 204], sound: 'ignite', kick: ['zombie2', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [695, 150], spread: 16 } },
+      { area: [736, 161, 809, 274], sound: 'ignite', kick: ['zombie3', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [772, 217], spread: 16 } },
+      { area: [736, 326, 834, 459], sound: 'ignite', kick: ['zombie4', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [785, 392], spread: 16 } },
+      { area: [860, 120, 1010, 345], sound: 'chime', kick: ['sword'], flare: [255, 245, 200], glyph: '⚔️' },
+      { area: [380, 170, 650, 400], sound: 'chime', kick: ['runes', 'lightEdge'], flare: [255, 220, 120], glyph: '✝️' },
+      { area: [880, 0, 980, 70], sound: 'chime', kick: ['moon'], flare: [190, 210, 255], glyph: '🌕' },
+    ],
+  },
+  // The Consecrated Graveyard on phones.
+  'divine-consecrated-graveyard-portrait': {
+    wind: null,
+    layers: [
+      { id: 'beams', type: 'glow', points: [[70, 60, 40], [90, 200, 40], [370, 760, 36], [380, 860, 36]], color: [255, 240, 190], anim: 'pulse', period: 3.4, alpha: [0.08, 0.3], kickDur: 2.5 },
+      { id: 'runes', type: 'glow', points: [[230, 500, 130]], color: [255, 220, 120], anim: 'pulse', period: 5.2, alpha: [0.04, 0.15], kickDur: 2.5 },
+      { id: 'zombie1', type: 'echo', box: [93, 143, 152, 232], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.55, pivot: [122, 230], kickAmp: 4 } },
+      { id: 'zombie2', type: 'echo', box: [288, 193, 347, 272], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.66, pivot: [317, 270], kickAmp: 4 } },
+      { id: 'zombie3', type: 'echo', box: [43, 248, 107, 357], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.77, pivot: [75, 355], kickAmp: 4 } },
+      { id: 'zombie4', type: 'echo', box: [383, 248, 442, 347], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.88, pivot: [412, 345], kickAmp: 4 } },
+      { id: 'zombie5', type: 'echo', box: [53, 838, 117, 927], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 0.99, pivot: [85, 925], kickAmp: 4 } },
+      { id: 'zombie6', type: 'echo', box: [358, 828, 442, 937], feather: 3, autoKick: [4, 8], motion: { kind: 'rock', amp: 0.9, period: 1.1, pivot: [400, 935], kickAmp: 4 } },
+      { id: 'ash', type: 'particles', kind: 'ember', from: [[122, 180, 10], [318, 225, 10], [75, 300, 12], [412, 290, 12], [85, 880, 12], [400, 880, 14]], rate: 6, max: 40, color: [255, 170, 60], size: [0.8, 1.5], life: [1.2, 2.4] },
+      { id: 'sword', type: 'glow', points: [[366, 392, 18]], color: [255, 245, 200], anim: 'pulse', period: 2.4, alpha: [0.2, 0.6], kickDur: 2 },
+      { id: 'moon', type: 'glow', points: [[90, 26, 34]], color: [190, 210, 255], anim: 'pulse', period: 7, alpha: [0.05, 0.16], kickDur: 2 },
+      { id: 'embers', type: 'particles', kind: 'mote', area: [40, 150, 420, 900], rate: 3, max: 30, color: [255, 215, 120], size: [0.7, 1.4], life: [3, 6], alpha: 0.7, speed: 0.6 },
+      { type: 'fog', area: [-100, 880, 560, 1024], count: 4, size: [100, 180], speed: 5, color: [120, 140, 170], alpha: 0.08 },
+    ],
+    pokes: [
+      { area: [91, 141, 154, 234], sound: 'ignite', kick: ['zombie1', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [122, 187], spread: 14 } },
+      { area: [286, 191, 349, 274], sound: 'ignite', kick: ['zombie2', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [317, 232], spread: 14 } },
+      { area: [41, 246, 109, 359], sound: 'ignite', kick: ['zombie3', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [75, 302], spread: 14 } },
+      { area: [381, 246, 444, 349], sound: 'ignite', kick: ['zombie4', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [412, 297], spread: 14 } },
+      { area: [51, 836, 119, 929], sound: 'ignite', kick: ['zombie5', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [85, 882], spread: 14 } },
+      { area: [356, 826, 444, 939], sound: 'ignite', kick: ['zombie6', 'beams'], flare: [255, 240, 190], glyph: '✨', burst: { layer: 'ash', n: 10, at: [400, 882], spread: 14 } },
+      { area: [340, 370, 445, 500], sound: 'chime', kick: ['sword'], flare: [255, 245, 200], glyph: '⚔️' },
+      { area: [140, 400, 320, 600], sound: 'chime', kick: ['runes'], flare: [255, 220, 120], glyph: '✝️' },
+    ],
+  },
+  // ==== Demons (unlockable): The Siege of Heaven ====
+  // Demons (unlockable): The Siege of Heaven. The light of heaven pours through the gates while hellfire crackles along the cracks spreading across the clouds; the demon legion heaves, the imp flaps, the lord sword burns, embers and burning feathers drift up, smoke rolls in from the rift.
+  'demons-heaven-siege-land': {
+    wind: null,
+    layers: [
+      { id: 'gate', type: 'glow', points: [[512, 90, 150], [512, 40, 70]], color: [255, 240, 190], anim: 'pulse', period: 4.6, alpha: [0.08, 0.26], kickDur: 2.5 },
+      { id: 'fire', type: 'mask', mask: 'hellfire', anim: { kind: 'pulse', period: 2.2 }, alpha: [0.1, 0.5], bloom: 0.7, kickDur: 2 },
+      { id: 'cracks', type: 'mask', mask: 'cracks', anim: { kind: 'pulse', period: 1.7 }, alpha: [0.1, 0.6], bloom: 0.6, kickDur: 2 },
+      { id: 'lord', type: 'echo', box: [688, 368, 792, 502], feather: 4, autoKick: [5, 9], motion: { kind: 'breathe', amp: 1.2, period: 2.8, pivot: [740, 500] } },
+      { id: 'brute', type: 'echo', box: [588, 398, 672, 492], feather: 4, autoKick: [5, 9], motion: { kind: 'breathe', amp: 1.2, period: 2.4, pivot: [630, 490] } },
+      { id: 'flyer', type: 'echo', box: [573, 278, 692, 388], feather: 4, autoKick: [5, 9], motion: { kind: 'bob', amp: 3, period: 2.2, kickAmp: 7 } },
+      { id: 'blade', type: 'glow', points: [[722, 360, 14], [716, 395, 12]], color: [255, 120, 40], anim: 'flicker', speed: 4, alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'ring', type: 'glow', points: [[515, 490, 70]], color: [255, 120, 40], anim: 'flicker', speed: 3, alpha: [0.08, 0.3], kickDur: 2 },
+      { id: 'swordFire', type: 'particles', kind: 'ember', from: [[58, 505, 14]], rate: 2.5, max: 14, color: [255, 170, 60], size: [0.8, 1.5], life: [0.8, 1.6] },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [250, 300, 1024, 572], rate: 7, max: 50, color: [255, 170, 60], size: [0.8, 1.7], life: [1.5, 3] },
+      { id: 'feathers', type: 'particles', kind: 'petal', area: [200, 0, 1024, 450], rate: 0.5, max: 5, color: [255, 150, 80], size: [1.6, 2.6], life: [5, 8] },
+      { type: 'fog', area: [500, 260, 1124, 572], count: 6, size: [120, 220], speed: 8, color: [60, 25, 20], alpha: 0.12 },
+      { id: 'glint', type: 'particles', kind: 'glint', area: [870, 110, 960, 200], rate: 0.5, max: 2, color: [255, 250, 220], size: [1, 1.8], life: [0.4, 0.8] },
+    ],
+    pokes: [
+      { area: [686, 366, 794, 504], sound: 'growl', kick: ['lord'], flare: [255, 120, 40], glyph: '😈' },
+      { area: [586, 396, 674, 494], sound: 'growl', kick: ['brute'], flare: [255, 120, 40], glyph: '😈' },
+      { area: [571, 276, 694, 390], sound: 'growl', kick: ['flyer'], flare: [255, 120, 40], glyph: '😈' },
+      { area: [380, 0, 650, 160], sound: 'chime', kick: ['gate'], flare: [255, 240, 190], glyph: '✨' },
+      { area: [300, 300, 1000, 572], sound: 'ignite', kick: ['fire', 'cracks'], flare: [255, 120, 40], glyph: '🔥', burst: { layer: 'embers', n: 14, spread: 120 } },
+      { area: [870, 110, 960, 200], sound: 'clink', kick: [], flare: [255, 250, 220], glyph: '🛡️', burst: { layer: 'glint', n: 3, spread: 30 } },
+    ],
+  },
+  // The Siege of Heaven on phones.
+  'demons-heaven-siege-portrait': {
+    wind: null,
+    layers: [
+      { id: 'gate', type: 'glow', points: [[230, 110, 130]], color: [255, 240, 190], anim: 'pulse', period: 4.6, alpha: [0.08, 0.26], kickDur: 2.5 },
+      { id: 'fire', type: 'mask', mask: 'hellfire', anim: { kind: 'pulse', period: 2.2 }, alpha: [0.1, 0.5], bloom: 0.7, kickDur: 2 },
+      { id: 'cracks', type: 'mask', mask: 'cracks', anim: { kind: 'pulse', period: 1.7 }, alpha: [0.1, 0.6], bloom: 0.6, kickDur: 2 },
+      { id: 'flyer', type: 'echo', box: [338, 648, 442, 772], feather: 4, autoKick: [5, 9], motion: { kind: 'bob', amp: 3, period: 2.2, kickAmp: 6 } },
+      { id: 'lord', type: 'echo', box: [178, 848, 302, 1002], feather: 4, autoKick: [5, 9], motion: { kind: 'breathe', amp: 1.2, period: 2.8, pivot: [240, 1000] } },
+      { id: 'ring', type: 'glow', points: [[232, 785, 64]], color: [255, 120, 40], anim: 'flicker', speed: 3, alpha: [0.08, 0.3], kickDur: 2 },
+      { id: 'embers', type: 'particles', kind: 'ember', area: [0, 620, 459, 1024], rate: 6, max: 44, color: [255, 170, 60], size: [0.8, 1.6], life: [1.5, 3] },
+      { id: 'feathers', type: 'particles', kind: 'petal', area: [0, 200, 459, 700], rate: 0.45, max: 4, color: [255, 150, 80], size: [1.5, 2.4], life: [5, 8] },
+      { type: 'fog', area: [-100, 640, 560, 1024], count: 6, size: [110, 200], speed: 8, color: [60, 25, 20], alpha: 0.12 },
+    ],
+    pokes: [
+      { area: [336, 646, 444, 774], sound: 'growl', kick: ['flyer'], flare: [255, 120, 40], glyph: '😈' },
+      { area: [176, 846, 304, 1004], sound: 'growl', kick: ['lord'], flare: [255, 120, 40], glyph: '😈' },
+      { area: [150, 30, 320, 230], sound: 'chime', kick: ['gate'], flare: [255, 240, 190], glyph: '✨' },
+      { area: [0, 620, 459, 1024], sound: 'ignite', kick: ['fire', 'cracks'], flare: [255, 120, 40], glyph: '🔥', burst: { layer: 'embers', n: 14, spread: 100 } },
+    ],
+  },
+
   'acidic-land': {
     wind: null,
     layers: [
