@@ -41,6 +41,7 @@ export const BOARD_ART = {
   'The Split Realm': 'art/boards-v2/ultra-split-dimensions.jpg',
   'The Live Wire': 'art/boards-v2/eels-power-line-river.jpg',
   'The Wicked Cabin': 'art/boards-v2/witches-evil-cabin.jpg',
+  'The Tar Pit': 'art/boards-v2/iceage-tar-pit.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
@@ -84,6 +85,7 @@ export const ALT_BOARDS = {
   Ultraterrestrials: [{ id: 'The Split Realm', expansion: true, blurb: 'One world, and its mirror seen from a higher dimension.' }],
   Eels: [{ id: 'The Live Wire', expansion: true, blurb: 'A downed power line crackling through a shallow river.' }],
   Witches: [{ id: 'The Wicked Cabin', expansion: true, blurb: 'A wicked witch\'s cabin, with dinner on the boil.' }],
+  'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -117,7 +119,7 @@ export const PORTRAIT_SIZE = [459, 1024];
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
   // No painted hero frames: the game draws iron ones over the street.
-  'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'iron', props: [] },
+  'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [167, 52, 298, 169, 'circle'], me: [168, 833, 293, 961, 'circle'], field: [181, 823], props: [] },
   'Harvest Moon': { src: 'art/boards-portrait/harvest-moon.jpg', opp: [192, 130, 267, 207, 'arch'], me: [183, 757, 276, 839, 'circle'], field: [223, 741], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-portrait/cordyceps-outbreak.jpg', opp: [184, 70, 274, 158, 'arch'], me: [187, 866, 272, 950, 'circle'], field: [174, 850], props: [] },
   'The Sewage Works': { src: 'art/boards-portrait/acidic-sewer.jpg', opp: [179, 51, 281, 173, 'arch'], me: [162, 848, 298, 968, 'circle'], field: [185, 835], props: [] },
@@ -160,6 +162,7 @@ export const PORTRAIT_BOARDS = {
   'The Split Realm': { src: 'art/boards-portrait/ultra-split-dimensions.jpg', opp: [178, 48, 280, 157, 'arch'], me: [173, 862, 284, 963, 'circle'], field: [169, 852], props: [] },
   'The Live Wire': { src: 'art/boards-portrait/eels-power-line-river.jpg', opp: [190, 18, 264, 108, 'arch'], me: [184, 902, 268, 988, 'circle'], field: [120, 892], props: [] },
   'The Wicked Cabin': { src: 'art/boards-portrait/witches-evil-cabin.jpg', opp: [174, 32, 290, 160, 'arch'], me: [172, 825, 290, 950, 'circle'], field: [172, 815], props: [] },
+  'The Tar Pit': { src: 'art/boards-portrait/iceage-tar-pit.jpg', opp: [193, 173, 268, 270, 'arch'], me: [184, 753, 275, 843, 'circle'], field: [282, 743], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -167,7 +170,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
-  'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'iron', props: [] },
+  'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [452, 28, 566, 142], me: [449, 423, 567, 538], field: [150, 154, 880, 409], props: [] },
   'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
   'The Sewage Works': { src: 'art/boards-v2/acidic-sewer.jpg', opp: [449, 34, 567, 146], me: [449, 412, 575, 539], field: [150, 155, 880, 405], props: [] },
@@ -208,6 +211,7 @@ export const LANDSCAPE_BOARDS = {
   'The Split Realm': { src: 'art/boards-v2/ultra-split-dimensions.jpg', opp: [450, 24, 565, 125], me: [461, 438, 562, 540], field: [150, 137, 880, 424], props: [] },
   'The Live Wire': { src: 'art/boards-v2/eels-power-line-river.jpg', opp: [462, 22, 562, 132], me: [463, 444, 560, 542], field: [150, 144, 880, 430], props: [] },
   'The Wicked Cabin': { src: 'art/boards-v2/witches-evil-cabin.jpg', opp: [450, 40, 580, 165], me: [448, 415, 578, 535], field: [150, 177, 880, 401], props: [] },
+  'The Tar Pit': { src: 'art/boards-v2/iceage-tar-pit.jpg', opp: [467, 28, 556, 124], me: [455, 425, 568, 543], field: [150, 136, 880, 411], props: [] },
 };
 
 

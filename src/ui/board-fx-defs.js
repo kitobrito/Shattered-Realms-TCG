@@ -1176,6 +1176,106 @@ export const BOARD_FX = {
     ],
   },
 
+  // ==== Ice Age (unlockable): The Tar Pit ====
+  // Ice Age (unlockable): The Tar Pit. The trapped mammoths heave and trumpet, the tar burps up slow bubbles, the sabre-tooth crouches and watches, the hunters shift, crows hop, snow falls and breath steams.
+  'iceage-tar-pit-land': {
+    wind: { dir: 1, every: [6, 10], speed: [120, 180], width: [160, 240], lean: 0.25 },
+    layers: [
+      { id: 'mammothR', type: 'echo', box: [688, 103, 832, 242], feather: 6, autoKick: [8, 14], motion: { kind: 'breathe', amp: 1.4, period: 4.2, pivot: [760, 240] } },
+      { id: 'mammothL', type: 'echo', box: [128, 223, 362, 447], feather: 6, autoKick: [9, 15], motion: { kind: 'breathe', amp: 1.4, period: 4.8, pivot: [245, 445] } },
+      { id: 'tarBubbles', type: 'particles', kind: 'bubble', area: [640, 120, 900, 290], rate: 1.2, max: 6, color: [70, 70, 80], size: [1.5, 3], life: [1, 1.8], speed: 0.2 },
+      { id: 'tarBubbles2', type: 'particles', kind: 'bubble', area: [10, 320, 340, 560], rate: 1.2, max: 6, color: [70, 70, 80], size: [1.5, 3], life: [1, 1.8], speed: 0.2 },
+      { id: 'tarSheen', type: 'particles', kind: 'ripple', area: [10, 320, 340, 560], rate: 0.5, max: 3, color: [140, 150, 170], size: [5, 11], life: [1.8, 2.6], alpha: 0.2 },
+      { id: 'tarSheen2', type: 'particles', kind: 'ripple', area: [640, 120, 900, 290], rate: 0.5, max: 3, color: [140, 150, 170], size: [5, 11], life: [1.8, 2.6], alpha: 0.2 },
+      { id: 'breath', type: 'particles', kind: 'smoke', from: [[300, 232, 6], [738, 196, 6]], rate: 1, max: 6, color: [245, 250, 255], size: [3, 6], life: [1.2, 2], alpha: 0.25, speed: 0.4 },
+      { id: 'sabre', type: 'echo', box: [28, 183, 137, 262], feather: 4, motion: { kind: 'breathe', amp: 1.2, period: 3.3, pivot: [82, 260] } },
+      { id: 'hunters', type: 'echo', box: [838, 38, 982, 167], feather: 4, motion: { kind: 'breathe', amp: 0.9, period: 3.7, pivot: [910, 165] } },
+      { id: 'crows', type: 'echo', box: [898, 333, 992, 392], feather: 4, motion: { kind: 'bob', amp: 1.2, period: 1.8, kickAmp: 5 } },
+      { id: 'snow', type: 'particles', kind: 'snow', area: [-40, 0, 1064, 572], rate: 4, max: 40, color: [245, 250, 255], size: [0.8, 1.6], life: [3, 5], drift: 18 },
+    ],
+    pokes: [
+      { area: [686, 101, 834, 244], sound: 'groan', kick: ['mammothR'], flare: [200, 170, 140], glyph: '🦣', burst: { layer: 'tarBubbles', n: 6, spread: 50 } },
+      { area: [126, 221, 364, 449], sound: 'groan', kick: ['mammothL'], flare: [200, 170, 140], glyph: '🦣', burst: { layer: 'tarBubbles2', n: 6, spread: 60 } },
+      { area: [26, 181, 139, 264], sound: 'growl', kick: ['sabre'], flare: [230, 170, 80], glyph: '🐅' },
+      { area: [836, 36, 984, 169], sound: 'drum', kick: ['hunters'], flare: [200, 160, 120] },
+      { area: [896, 331, 994, 394], sound: 'flutter', kick: ['crows'], flare: [60, 60, 70], glyph: '🐦‍⬛' },
+    ],
+  },
+  // The Tar Pit on phones.
+  'iceage-tar-pit-portrait': {
+    wind: { dir: 1, every: [6, 10], speed: [90, 140], width: [140, 220], lean: 0.1 },
+    layers: [
+      { id: 'mammoth', type: 'echo', box: [83, 28, 222, 152], feather: 6, autoKick: [8, 14], motion: { kind: 'breathe', amp: 1.3, period: 4.4, pivot: [150, 150] } },
+      { id: 'tarBubbles', type: 'particles', kind: 'bubble', area: [10, 20, 250, 180], rate: 1.2, max: 6, color: [70, 70, 80], size: [1.5, 2.8], life: [1, 1.8], speed: 0.2 },
+      { id: 'tarSheen', type: 'particles', kind: 'ripple', area: [10, 20, 250, 180], rate: 0.5, max: 3, color: [140, 150, 170], size: [4, 10], life: [1.8, 2.6], alpha: 0.2 },
+      { id: 'breath', type: 'particles', kind: 'smoke', from: [[175, 40, 5]], rate: 0.9, max: 5, color: [245, 250, 255], size: [3, 5], life: [1.2, 2], alpha: 0.25, speed: 0.4 },
+      { id: 'sabre1', type: 'echo', box: [348, 143, 432, 227], feather: 4, motion: { kind: 'breathe', amp: 1.2, period: 3.3, pivot: [390, 225] } },
+      { id: 'sabre2', type: 'echo', box: [353, 243, 437, 322], feather: 4, motion: { kind: 'breathe', amp: 1.2, period: 3.8, pivot: [395, 320] } },
+      { id: 'hunters', type: 'echo', box: [378, 438, 447, 537], feather: 4, motion: { kind: 'breathe', amp: 0.9, period: 3.7, pivot: [412, 535] } },
+      { id: 'crow', type: 'echo', box: [398, 63, 442, 97], feather: 3, motion: { kind: 'bob', amp: 1.1, period: 1.8, kickAmp: 4 } },
+      { id: 'snow', type: 'particles', kind: 'snow', area: [-30, 0, 489, 1024], rate: 3.5, max: 36, color: [245, 250, 255], size: [0.7, 1.4], life: [3, 5], drift: 12 },
+    ],
+    pokes: [
+      { area: [81, 26, 224, 154], sound: 'groan', kick: ['mammoth'], flare: [200, 170, 140], glyph: '🦣', burst: { layer: 'tarBubbles', n: 6, spread: 50 } },
+      { area: [346, 141, 434, 229], sound: 'growl', kick: ['sabre1'], flare: [230, 170, 80], glyph: '🐅' },
+      { area: [351, 241, 439, 324], sound: 'growl', kick: ['sabre2'], flare: [230, 170, 80], glyph: '🐅' },
+      { area: [376, 436, 449, 539], sound: 'drum', kick: ['hunters'], flare: [200, 160, 120] },
+      { area: [396, 61, 444, 99], sound: 'flutter', kick: ['crow'], flare: [60, 60, 70], glyph: '🐦‍⬛' },
+    ],
+  },
+  // ==== The Rage Outbreak (Zombies alternate board, new art): a blood-soaked city street ====
+  // The Rage Outbreak: each infected moves on its own frantic rhythm (one hammers at a car, one sprints, one feeds), crows hop on the lampposts, the warning light strobes, papers and ash blow across the blood-streaked street.
+  'rage-outbreak-land': {
+    wind: { dir: 1, every: [6, 11], speed: [130, 190], width: [160, 260], lean: 0.2 },
+    layers: [
+      { id: 'hammerer', type: 'echo', box: [138, 88, 232, 197], feather: 3, autoKick: [3, 7], motion: { kind: 'rock', amp: 2.4, period: 0.9, pivot: [185, 195], kickAmp: 5 } },
+      { id: 'shambler', type: 'echo', box: [18, 243, 72, 332], feather: 3, autoKick: [3, 7], motion: { kind: 'bob', amp: 1.2, period: 0.6, kickAmp: 4 } },
+      { id: 'runner', type: 'echo', box: [808, 228, 897, 322], feather: 3, autoKick: [3, 7], motion: { kind: 'bob', amp: 1.5, period: 0.46, kickAmp: 4 } },
+      { id: 'feeder', type: 'echo', box: [803, 338, 902, 422], feather: 3, autoKick: [3, 7], motion: { kind: 'breathe', amp: 1.2, period: 0.8, pivot: [850, 420] } },
+      { id: 'crow1', type: 'echo', box: [363, 6, 392, 32], feather: 3, motion: { kind: 'bob', amp: 1, period: 1.7, kickAmp: 4 } },
+      { id: 'crow3', type: 'echo', box: [343, 398, 377, 422], feather: 3, motion: { kind: 'bob', amp: 1, period: 1.9, kickAmp: 4 } },
+      { id: 'crow4', type: 'echo', box: [648, 398, 682, 427], feather: 3, motion: { kind: 'bob', amp: 1, period: 2.3, kickAmp: 4 } },
+      { id: 'siren', type: 'glow', points: [[571, 426, 22]], color: [255, 50, 50], anim: 'pulse', period: 0.8, alpha: [0, 0.8], kickDur: 2 },
+      { id: 'lamps', type: 'glow', points: [[356, 44, 16], [642, 40, 16]], color: [220, 230, 255], anim: 'flicker', speed: 2, alpha: [0.06, 0.25], kickDur: 2 },
+      { id: 'papers', type: 'particles', kind: 'ash', area: [0, 100, 1024, 520], rate: 0.8, max: 8, color: [225, 225, 215], size: [2, 3.2], life: [5, 9], speed: 0.8 },
+      { id: 'blood', type: 'particles', kind: 'glint', area: [160, 120, 900, 470], rate: 1.4, max: 8, color: [255, 110, 110], size: [0.8, 1.3], life: [0.4, 0.8] },
+      { id: 'ash', type: 'particles', kind: 'ash', area: [0, -20, 1024, 572], rate: 1.2, max: 16, color: [90, 90, 95], size: [1, 1.8], life: [6, 10], speed: 0.5 },
+      { type: 'fog', area: [-80, 0, 1104, 572], count: 7, size: [100, 200], speed: 4, color: [120, 120, 135], alpha: 0.05 },
+    ],
+    pokes: [
+      { area: [136, 86, 234, 199], sound: 'growl', kick: ['hammerer'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [16, 241, 74, 334], sound: 'growl', kick: ['shambler'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [806, 226, 899, 324], sound: 'growl', kick: ['runner'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [801, 336, 904, 424], sound: 'growl', kick: ['feeder'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [340, 0, 690, 40], sound: 'flutter', kick: ['crow1'], flare: [60, 60, 70], glyph: '🐦‍⬛' },
+      { area: [340, 394, 686, 430], sound: 'flutter', kick: ['crow3', 'crow4'], flare: [60, 60, 70], glyph: '🐦‍⬛' },
+      { area: [555, 410, 590, 445], sound: 'beep', kick: ['siren'], flare: [255, 50, 50], glyph: '🚨' },
+    ],
+  },
+  // The Rage Outbreak on phones.
+  'rage-outbreak-portrait': {
+    wind: { dir: 1, every: [6, 11], speed: [100, 150], width: [140, 220], lean: 0.1 },
+    layers: [
+      { id: 'runnerA', type: 'echo', box: [338, 328, 375, 412], feather: 3, autoKick: [3, 7], motion: { kind: 'bob', amp: 1.3, period: 0.48, kickAmp: 4 } },
+      { id: 'runnerB', type: 'echo', box: [374, 362, 414, 452], feather: 3, autoKick: [3, 7], motion: { kind: 'bob', amp: 1.3, period: 0.53, kickAmp: 4 } },
+      { id: 'clawer', type: 'echo', box: [80, 552, 163, 648], feather: 3, autoKick: [3, 7], motion: { kind: 'rock', amp: 2.2, period: 0.9, pivot: [120, 646], kickAmp: 5 } },
+      { id: 'crawler', type: 'echo', box: [64, 768, 128, 832], feather: 3, autoKick: [3, 7], motion: { kind: 'bob', amp: 1, period: 0.9, kickAmp: 3 } },
+      { id: 'feeder', type: 'echo', box: [314, 758, 384, 828], feather: 3, autoKick: [3, 7], motion: { kind: 'breathe', amp: 1.2, period: 0.8, pivot: [349, 826] } },
+      { id: 'siren', type: 'glow', points: [[156, 158, 14], [301, 158, 14], [231, 805, 18]], color: [255, 50, 50], anim: 'pulse', period: 0.8, alpha: [0, 0.8], kickDur: 2 },
+      { id: 'papers', type: 'particles', kind: 'ash', area: [0, 100, 459, 1000], rate: 0.7, max: 7, color: [225, 225, 215], size: [2, 3], life: [5, 9], speed: 0.8 },
+      { id: 'blood', type: 'particles', kind: 'glint', area: [60, 250, 420, 900], rate: 1.2, max: 7, color: [255, 110, 110], size: [0.8, 1.3], life: [0.4, 0.8] },
+      { id: 'ash', type: 'particles', kind: 'ash', area: [0, -20, 459, 1024], rate: 1, max: 14, color: [90, 90, 95], size: [1, 1.6], life: [6, 10], speed: 0.5 },
+    ],
+    pokes: [
+      { area: [336, 326, 377, 414], sound: 'growl', kick: ['runnerA'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [372, 360, 416, 454], sound: 'growl', kick: ['runnerB'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [78, 550, 165, 650], sound: 'growl', kick: ['clawer'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [62, 766, 130, 834], sound: 'growl', kick: ['crawler'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [312, 756, 386, 830], sound: 'growl', kick: ['feeder'], flare: [255, 60, 60], glyph: '😡' },
+      { area: [200, 780, 262, 830], sound: 'beep', kick: ['siren'], flare: [255, 50, 50], glyph: '🚨' },
+    ],
+  },
+
   'acidic-land': {
     wind: null,
     layers: [
@@ -2931,52 +3031,6 @@ export const BOARD_FX = {
   },
 
   // ---- Basic: a quiet hilltop at golden hour that belongs to no realm ------------------------
-  // ---- The Rage Outbreak (Zombies alternate board): an abandoned city street, days after the outbreak ----
-  // Each infected is cut out (tools/board-objects.py) and runs in place on its own rhythm; the one on
-  // the wrecked car claws at it; the biohazard sign swings; the police car's lights strobe. The street,
-  // the bus and the blood stay still.
-  'rage-outbreak-land': {
-    wind: { dir: 1, every: [7, 12], speed: [120, 180], width: [160, 260], lean: 0.2 },
-    layers: [
-      { id: 'runner1', type: 'echo', box: [166, 92, 244, 220], feather: 3, motion: { kind: 'bob', amp: 1.4, period: 0.46, kickAmp: 4 } },
-      { id: 'runner2', type: 'echo', box: [88, 292, 164, 436], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.52, kickAmp: 4 } },
-      { id: 'climber', type: 'echo', box: [652, 28, 728, 124], feather: 3, motion: { kind: 'rock', amp: 2.2, period: 0.9, pivot: [690, 120], kickAmp: 5 } },
-      { id: 'pack1', type: 'echo', box: [810, 246, 920, 450], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.47, kickAmp: 4 } },
-      { id: 'pack3', type: 'echo', box: [898, 332, 990, 458], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.55, kickAmp: 4 } },
-      { id: 'sign', type: 'echo', box: [788, 32, 846, 84], feather: 3, motion: { kind: 'rock', amp: 2.4, period: 3.3, pivot: [814, 34], kickAmp: 7 } },
-      { id: 'sirenRed', type: 'glow', points: [[800, 488, 24]], color: [255, 40, 40], anim: 'pulse', period: 0.8, alpha: [0, 0.75], kickDur: 2 },
-      { id: 'sirenBlue', type: 'glow', points: [[832, 486, 24]], color: [60, 120, 255], anim: 'pulse', period: 0.66, alpha: [0, 0.75], kickDur: 2 },
-      { id: 'blood', type: 'particles', kind: 'glint', area: [160, 120, 860, 470], rate: 1.5, max: 8, color: [255, 120, 120], size: [0.8, 1.3], life: [0.4, 0.8] },
-      { id: 'ash', type: 'particles', kind: 'ash', area: [0, -20, 1024, 572], rate: 1.2, max: 16, color: [90, 90, 95], size: [1, 1.8], life: [6, 10], speed: 0.5 },
-      { type: 'fog', area: [-80, 0, 1104, 140], count: 8, size: [90, 160], speed: 3, color: [120, 120, 130], alpha: 0.08 },
-    ],
-    pokes: [
-      { area: [160, 86, 250, 226], sound: 'growl', kick: ['runner1'], flare: [255, 60, 60], glyph: '😡' },
-      { area: [82, 286, 170, 442], sound: 'growl', kick: ['runner2'], flare: [255, 60, 60], glyph: '😡' },
-      { area: [644, 22, 736, 130], sound: 'knock', kick: ['climber'], flare: [255, 80, 80] },
-      { area: [806, 242, 996, 464], sound: 'screech', kick: ['pack1', 'pack3'], flare: [255, 60, 60], glyph: '😡' },
-      { area: [782, 26, 852, 90], sound: 'clink', kick: ['sign'], flare: [255, 230, 120], glyph: '☣️' },
-      { area: [696, 462, 920, 572], sound: 'beep', kick: ['sirenRed', 'sirenBlue'], flare: [80, 140, 255], glyph: '🚨' },
-    ],
-  },
-  'rage-outbreak-portrait': {
-    wind: { dir: 1, every: [7, 12], speed: [100, 150], width: [140, 220], lean: 0.1 },
-    layers: [
-      { id: 'runner1', type: 'echo', box: [52, 142, 104, 250], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.46, kickAmp: 4 } },
-      { id: 'runner2', type: 'echo', box: [6, 298, 68, 412], feather: 3, motion: { kind: 'bob', amp: 1.2, period: 0.52, kickAmp: 4 } },
-      { id: 'pack1', type: 'echo', box: [346, 666, 436, 804], feather: 3, motion: { kind: 'bob', amp: 1.3, period: 0.47, kickAmp: 4 } },
-      { id: 'sirenRed', type: 'glow', points: [[402, 884, 18]], color: [255, 40, 40], anim: 'pulse', period: 0.8, alpha: [0, 0.75], kickDur: 2 },
-      { id: 'sirenBlue', type: 'glow', points: [[428, 882, 18]], color: [60, 120, 255], anim: 'pulse', period: 0.66, alpha: [0, 0.75], kickDur: 2 },
-      { id: 'ash', type: 'particles', kind: 'ash', area: [0, -20, 459, 1024], rate: 1, max: 14, color: [90, 90, 95], size: [1, 1.6], life: [6, 10], speed: 0.5 },
-    ],
-    pokes: [
-      { area: [46, 136, 110, 256], sound: 'growl', kick: ['runner1'], flare: [255, 60, 60], glyph: '😡' },
-      { area: [0, 292, 74, 418], sound: 'growl', kick: ['runner2'], flare: [255, 60, 60], glyph: '😡' },
-      { area: [342, 662, 440, 808], sound: 'screech', kick: ['pack1'], flare: [255, 60, 60], glyph: '😡' },
-      { area: [318, 848, 459, 1000], sound: 'beep', kick: ['sirenRed', 'sirenBlue'], flare: [80, 140, 255], glyph: '🚨' },
-    ],
-  },
-
   // ---- Harvest Moon (Plants alternate board): a haunted pumpkin patch at night -----------------
   // Every corner prop is cut out (tools/board-objects.py) and moves on its own loop: lanterns swing
   // from their hooks, the scarecrow sways, the crow pecks, the gourd stack wobbles. Jack-o'-lantern
