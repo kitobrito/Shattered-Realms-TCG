@@ -7,6 +7,7 @@ import { actingPlayer } from '../engine/engine.js';
 import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
+import { MASTERY_NAMES, SPELLBOOK_CARRY, SPELLBOOK_PAGES, WAND_ENCHANTS } from '../engine/effects.js';
 import { ALT_BOARDS, BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { hasBoardFx } from './circle-fx.js';
 import { getSettings } from './settings.js';
@@ -296,7 +297,28 @@ function weaponHTML(pl) {
   if (!w) return '';
   const art = artOf(getCard(w.cardId));
   return `<div class="weapon-badge" data-preview="${w.cardId}" title="${esc(w.name)}: ${w.attack} Attack, ${w.durability} Durability left (each attack uses 1)">
-    ${art ? `<i style="background-image:url('${art}')"></i>` : '<span>⚔️</span>'}<b class="w-atk">${w.attack}</b><b class="w-dur">${w.durability}</b></div>`;
+    ${art ? `<i style="background-image:url('${art}')"></i>` : '<span>⚔️</span>'}<b class="w-atk">${w.attack}</b><b class="w-dur">${w.durability}</b>${runesHTML(w)}</div>`;
+}
+
+// Witches (Spellbound): the Wand's Rune Slots: filled with enchantments (a glowing rune) or inscribed spells
+// (a scroll), empty slots dim. Hover a rune to see what it does.
+const RUNE_GLYPH = { rabbitcurse: '🐇', hexfire: '🔥', arcaneEcho: '🔔', spellstrike: '✴', frostbite: '❄', hushing: '🤫', manaSiphon: '💧', twinBolt: '⚡' };
+function runesHTML(w) {
+  if (!w.wand || !w.slots) return '';
+  const filled = (w.runes ?? []).map((r) => r.kind === 'ench'
+    ? `<i class="w-rune ench" title="${esc(`${WAND_ENCHANTS[r.id].name}: ${WAND_ENCHANTS[r.id].text}`)}">${RUNE_GLYPH[r.id] ?? '✦'}</i>`
+    : `<i class="w-rune inscr" data-preview="${r.cardId}" title="Inscribed: ${esc(getCard(r.cardId).name)} (cast every attack)">📜</i>`);
+  const empty = Array.from({ length: Math.max(0, w.slots - filled.length) }, () => '<i class="w-rune empty" title="Empty Rune Slot"></i>');
+  return `<span class="w-runes">${[...filled, ...empty].join('')}</span>`;
+}
+
+// Witches (Spellbound): the Spellbook, pages written so far (out of 10), or the Mastery once finished.
+const MASTERY_GLYPH = { darkArts: '🩸', livingGrimoire: '📖', beastTamer: '🐾' };
+function spellbookHTML(pl) {
+  const b = pl.spellbook;
+  if (!b || (!b.pages && !b.done)) return '';
+  if (b.done) return `<span class="hero-book done" title="Spellbook complete${b.mastery ? `: ${MASTERY_NAMES[b.mastery]}` : ''}">${b.mastery ? MASTERY_GLYPH[b.mastery] : '📖'}</span>`;
+  return `<span class="hero-book" style="--fill:${(b.pages / SPELLBOOK_PAGES) * 100}%" title="Spellbook: ${b.pages}/${SPELLBOOK_PAGES} pages${b.pages >= SPELLBOOK_CARRY ? ' (Wand enchantments carry over)' : ''}">📖<b>${b.pages}</b></span>`;
 }
 
 function extinctionHTML(pl, s) {
@@ -362,6 +384,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
       <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
+        ${spellbookHTML(pl)}
         ${pl.storm > 0 ? `<span class="hero-storm" title="Endless Storm: at the end of each of your turns, Chain ${pl.storm} at a random enemy">⛈${pl.storm}</span>` : ''}
         ${h.holyFlame > 0 ? `<span class="hero-holy" title="Holy Flame ${h.holyFlame}: takes ${h.holyFlame} damage at the end of the enemy's turn and can't be healed">✨${h.holyFlame}</span>` : ''}
         ${radHTML(h)}${radHitHTML(h)}

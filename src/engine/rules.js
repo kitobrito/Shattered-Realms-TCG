@@ -126,6 +126,12 @@ export const KEYWORD_TEXT = {
   Counter: "Witches: the spell card is cast and spent, but none of its effects happen. Hero Spells can't be Countered. Only one Trap Counters each spell.",
   'Silence their Hero': "Witches: that player can't use their Hero Spell until the end of their next turn.",
   'Silence the enemy Hero': "Witches: your opponent can't use their Hero Spell until the end of their next turn.",
+  Spellbook: 'Witches (Spellbound): 10 pages, written by Scribes at the end of each of your turns (while they live and aren\'t Silenced), by Wandweaving and by Inscribing. At 5 pages your Wand\'s enchantments carry over to your next Wand. At 10, Wandcraft becomes Wandweaving and you choose a Mastery.',
+  Scribe: "Witches: writes a page of your Spellbook at the end of each of your turns while it's alive and not Silenced.",
+  Wandweave: 'Witches: choose 1 of 3 enchantments for your Wand (you get an Apprentice Wand first if you have none). Writes a page.',
+  Inscribe: 'Witches: attach a spell from your hand to your Wand (you pay its cost). Every time your Wand attacks, it casts that spell for free at the target. Writes a page.',
+  'Rune Slots': 'Witches: how many enchantments and inscribed spells a Wand holds (Apprentice Wand 1, most Wands 2). A new one pushes out the oldest.',
+  Mastery: 'Witches: chosen when your Spellbook is complete. Dark Arts: Wands deal +2 damage and have Lifesteal. Living Grimoire: Inscribing is free and inscribed spells survive when the Wand breaks. Beast-Tamer: summon a companion (Frisk, Spindex or Toby).',
   Discharge: 'Eels: a minion spends all its Volts at once to fire a Chain of that strength.',
   Chain: "Eels: Chain X deals X damage to an enemy, then jumps to the nearest enemy minion it hasn't hit, 1 weaker each jump. If it still has power after every enemy minion was hit, the rest hits the enemy Hero. It skips Stealth, Burrowed and Thawing minions.",
   Conductive: "Eels: until the end of the turn, a Chain that jumps off this minion doesn't get weaker.",
@@ -197,6 +203,8 @@ export const BOARD_EVENTS = [
   'cardDiscarded',    // Void: a card was discarded from a hand ({ player, cardId, cost })
   'minionTransformed', // Lycanthropes: a minion switched form ({ source, player, form: 'beast' | 'human' })
   'heroLethal',       // Traps only: the Hero would take lethal damage (Last Resort Protocol)
+  'wandWouldBreak',   // Traps only (Witches): the Hero's Wand would break (Ward of Binding)
+  'spellInscribed',   // Witches (Spellbound): a spell was Inscribed onto a Wand ({ player, cardId })
 ];
 
 export const TRIGGER_EVENTS = [...SELF_TRIGGERS, ...BOARD_EVENTS];
