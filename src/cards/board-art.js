@@ -29,6 +29,19 @@ export const BOARD_ART = {
   'Cordyceps Outbreak': 'art/boards-v2/cordyceps-outbreak.jpg',
   'Cordyceps Bloom': 'art/boards-v2/cordyceps-bloom.jpg',
   'The Shifting Dunes': 'art/boards-v2/sand-sharks.jpg',
+  'The Bone Crater': 'art/boards-v2/dino-graveyard.jpg',
+  'The Fallout Vault': 'art/boards-v2/radioactive-vault.jpg',
+  'The Blood Bar': 'art/boards-v2/vampire-blood-bar.jpg',
+  'The Haunted Set': 'art/boards-v2/ghost-haunted-tv.jpg',
+  'The Skinwalker Cave': 'art/boards-v2/lycan-skinwalker.jpg',
+  'The Hornet Hollow': 'art/boards-v2/bees-hornet-nest.jpg',
+  'The Kaiju Cockpit': 'art/boards-v2/robots-mech-kaiju.jpg',
+  'The Frozen Hoard': 'art/boards-v2/dragons-ice-lair.jpg',
+  'The White Hole': 'art/boards-v2/void-white-hole.jpg',
+  'The Split Realm': 'art/boards-v2/ultra-split-dimensions.jpg',
+  'The Live Wire': 'art/boards-v2/eels-power-line-river.jpg',
+  'The Wicked Cabin': 'art/boards-v2/witches-evil-cabin.jpg',
+  'The Tar Pit': 'art/boards-v2/iceage-tar-pit.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
@@ -59,6 +72,20 @@ export const ALT_BOARDS = {
   // The old Aliens board: unlocked by the Hive Brood cards (the Xenomorphs), not the Qu cards.
   Aliens: [{ id: 'The Xeno Hive', cards: ['facehugger_swarmling', 'ovomorph_clutch', 'parasite_carrier', 'acid_blood_drone', 'hive_stalker', 'brood_tender', 'hive_brute', 'xeno_runner', 'hive_warrior', 'praetorian_guard', 'hive_queen_xaral', 'gestation', 'it_bursts_out', 'acid_blood_spray', 'egg_chamber'], blurb: 'The xenomorph hive: resin walls and egg clusters.' }],
   Acidic: [{ id: 'The Sewage Works', expansion: true, blurb: 'A flooded sewage plant: glowing acid, skeletal fish and rats, and one very lucky frog.' }],
+  // Unlocked by each realm's expansion cards.
+  Dinosaurs: [{ id: 'The Bone Crater', expansion: true, blurb: 'A long-cold meteor crater ringed with giant fossil skeletons.' }],
+  Radioactive: [{ id: 'The Fallout Vault', expansion: true, blurb: 'An atomic-age shelter vault leaking glowing green goo.' }],
+  Vampires: [{ id: 'The Blood Bar', expansion: true, blurb: 'A gothic vampire lounge built around a pool of blood.' }],
+  Ghosts: [{ id: 'The Haunted Set', expansion: true, blurb: 'A living room taken over by a poltergeist and a haunted TV.' }],
+  Lycanthropes: [{ id: 'The Skinwalker Cave', expansion: true, blurb: 'A moonlit cave lair where something is changing shape.' }],
+  Bees: [{ id: 'The Hornet Hollow', expansion: true, blurb: 'A vast underground hornet nest glowing with nectar.' }],
+  Robots: [{ id: 'The Kaiju Cockpit', expansion: true, blurb: 'Inside a giant mech mid-battle with a kaiju.' }],
+  Dragons: [{ id: 'The Frozen Hoard', expansion: true, blurb: 'An ice dragon coiled around its frozen treasure.' }],
+  Void: [{ id: 'The White Hole', expansion: true, blurb: 'A new universe pouring out of a white hole.' }],
+  Ultraterrestrials: [{ id: 'The Split Realm', expansion: true, blurb: 'One world, and its mirror seen from a higher dimension.' }],
+  Eels: [{ id: 'The Live Wire', expansion: true, blurb: 'A downed power line crackling through a shallow river.' }],
+  Witches: [{ id: 'The Wicked Cabin', expansion: true, blurb: 'A wicked witch\'s cabin, with dinner on the boil.' }],
+  'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -92,7 +119,7 @@ export const PORTRAIT_SIZE = [459, 1024];
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
   // No painted hero frames: the game draws iron ones over the street.
-  'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 800, 261, 870, 'circle'], field: [120, 785], frame: 'iron', props: [] },
+  'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [167, 52, 298, 169, 'circle'], me: [168, 833, 293, 961, 'circle'], field: [181, 823], props: [] },
   'Harvest Moon': { src: 'art/boards-portrait/harvest-moon.jpg', opp: [192, 130, 267, 207, 'arch'], me: [183, 757, 276, 839, 'circle'], field: [223, 741], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-portrait/cordyceps-outbreak.jpg', opp: [184, 70, 274, 158, 'arch'], me: [187, 866, 272, 950, 'circle'], field: [174, 850], props: [] },
   'The Sewage Works': { src: 'art/boards-portrait/acidic-sewer.jpg', opp: [179, 51, 281, 173, 'arch'], me: [162, 848, 298, 968, 'circle'], field: [185, 835], props: [] },
@@ -123,6 +150,19 @@ export const PORTRAIT_BOARDS = {
   Aliens: { src: 'art/boards-portrait/aliens-ufo.jpg', opp: [167, 36, 292, 150, 'circle'], me: [168, 794, 292, 918, 'circle'], field: [180, 785], props: [] },
   'The Xeno Hive': { src: 'art/boards-portrait/aliens.jpg', opp: [201, 20, 259, 88, 'arch'], me: [198, 790, 261, 860, 'circle'], field: [120, 775], frame: 'chitin', props: [] },
   'The Shifting Dunes': { src: 'art/boards-portrait/sand-sharks.jpg', opp: [189, 33, 270, 126, 'arch'], me: [187, 743, 273, 829, 'circle'], field: [140, 735], props: [] },
+  'The Bone Crater': { src: 'art/boards-portrait/dino-graveyard.jpg', opp: [170, 24, 289, 129, 'arch'], me: [179, 783, 281, 885, 'circle'], field: [141, 773], props: [] },
+  'The Fallout Vault': { src: 'art/boards-portrait/radioactive-vault.jpg', opp: [169, 105, 291, 236, 'arch'], me: [160, 800, 299, 939, 'circle'], field: [248, 790], props: [] },
+  'The Blood Bar': { src: 'art/boards-portrait/vampire-blood-bar.jpg', opp: [174, 46, 282, 157, 'arch'], me: [179, 878, 282, 982, 'circle'], field: [169, 868], props: [] },
+  'The Haunted Set': { src: 'art/boards-portrait/ghost-haunted-tv.jpg', opp: [183, 57, 284, 178, 'arch'], me: [175, 838, 284, 941, 'circle'], field: [190, 828], props: [] },
+  'The Skinwalker Cave': { src: 'art/boards-portrait/lycan-skinwalker.jpg', opp: [170, 108, 290, 212, 'arch'], me: [169, 806, 290, 942, 'circle'], field: [224, 796], props: [] },
+  'The Hornet Hollow': { src: 'art/boards-portrait/bees-hornet-nest.jpg', opp: [181, 50, 279, 162, 'arch'], me: [175, 851, 285, 960, 'circle'], field: [174, 841], props: [] },
+  'The Kaiju Cockpit': { src: 'art/boards-portrait/robots-mech-kaiju.jpg', opp: [180, 184, 281, 297, 'arch'], me: [183, 766, 278, 866, 'circle'], field: [309, 756], props: [] },
+  'The Frozen Hoard': { src: 'art/boards-portrait/dragons-ice-lair.jpg', opp: [184, 42, 277, 146, 'arch'], me: [188, 800, 278, 893, 'circle'], field: [158, 790], props: [] },
+  'The White Hole': { src: 'art/boards-portrait/void-white-hole.jpg', opp: [176, 35, 290, 166, 'arch'], me: [175, 812, 285, 930, 'circle'], field: [178, 802], props: [] },
+  'The Split Realm': { src: 'art/boards-portrait/ultra-split-dimensions.jpg', opp: [178, 48, 280, 157, 'arch'], me: [173, 862, 284, 963, 'circle'], field: [169, 852], props: [] },
+  'The Live Wire': { src: 'art/boards-portrait/eels-power-line-river.jpg', opp: [190, 18, 264, 108, 'arch'], me: [184, 902, 268, 988, 'circle'], field: [120, 892], props: [] },
+  'The Wicked Cabin': { src: 'art/boards-portrait/witches-evil-cabin.jpg', opp: [174, 32, 290, 160, 'arch'], me: [172, 825, 290, 950, 'circle'], field: [172, 815], props: [] },
+  'The Tar Pit': { src: 'art/boards-portrait/iceage-tar-pit.jpg', opp: [193, 173, 268, 270, 'arch'], me: [184, 753, 275, 843, 'circle'], field: [282, 743], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -130,7 +170,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
-  'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'iron', props: [] },
+  'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [452, 28, 566, 142], me: [449, 423, 567, 538], field: [150, 154, 880, 409], props: [] },
   'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
   'The Sewage Works': { src: 'art/boards-v2/acidic-sewer.jpg', opp: [449, 34, 567, 146], me: [449, 412, 575, 539], field: [150, 155, 880, 405], props: [] },
@@ -159,6 +199,19 @@ export const LANDSCAPE_BOARDS = {
   Aliens: { src: 'art/boards-v2/aliens-ufo.jpg', opp: [465, 27, 562, 141], me: [463, 439, 561, 538], field: [160, 150, 870, 420], props: [] },
   'The Xeno Hive': { src: 'art/boards-v2/aliens.jpg', opp: [471, 24, 553, 118], me: [468, 446, 556, 548], field: [110, 140, 915, 425], frame: 'chitin', props: [] },
   'The Shifting Dunes': { src: 'art/boards-v2/sand-sharks.jpg', opp: [467, 34, 557, 138], me: [459, 430, 565, 536], field: [150, 150, 880, 415], props: [] },
+  'The Bone Crater': { src: 'art/boards-v2/dino-graveyard.jpg', opp: [446, 22, 575, 133], me: [455, 433, 570, 548], field: [150, 145, 880, 419], props: [] },
+  'The Fallout Vault': { src: 'art/boards-v2/radioactive-vault.jpg', opp: [451, 26, 571, 146], me: [441, 438, 580, 571], field: [150, 158, 880, 424], props: [] },
+  'The Blood Bar': { src: 'art/boards-v2/vampire-blood-bar.jpg', opp: [459, 36, 566, 130], me: [458, 436, 566, 543], field: [150, 142, 880, 422], props: [] },
+  'The Haunted Set': { src: 'art/boards-v2/ghost-haunted-tv.jpg', opp: [472, 43, 553, 143], me: [456, 437, 561, 540], field: [150, 155, 880, 423], props: [] },
+  'The Skinwalker Cave': { src: 'art/boards-v2/lycan-skinwalker.jpg', opp: [456, 56, 568, 162], me: [440, 418, 585, 552], field: [150, 174, 880, 404], props: [] },
+  'The Hornet Hollow': { src: 'art/boards-v2/bees-hornet-nest.jpg', opp: [462, 36, 562, 147], me: [454, 428, 567, 537], field: [150, 159, 880, 414], props: [] },
+  'The Kaiju Cockpit': { src: 'art/boards-v2/robots-mech-kaiju.jpg', opp: [458, 29, 566, 157], me: [454, 427, 570, 541], field: [150, 169, 880, 413], props: [] },
+  'The Frozen Hoard': { src: 'art/boards-v2/dragons-ice-lair.jpg', opp: [455, 40, 569, 145], me: [461, 428, 563, 536], field: [150, 157, 880, 414], props: [] },
+  'The White Hole': { src: 'art/boards-v2/void-white-hole.jpg', opp: [461, 27, 562, 135], me: [460, 427, 570, 543], field: [150, 147, 880, 413], props: [] },
+  'The Split Realm': { src: 'art/boards-v2/ultra-split-dimensions.jpg', opp: [450, 24, 565, 125], me: [461, 438, 562, 540], field: [150, 137, 880, 424], props: [] },
+  'The Live Wire': { src: 'art/boards-v2/eels-power-line-river.jpg', opp: [462, 22, 562, 132], me: [463, 444, 560, 542], field: [150, 144, 880, 430], props: [] },
+  'The Wicked Cabin': { src: 'art/boards-v2/witches-evil-cabin.jpg', opp: [450, 40, 580, 165], me: [448, 415, 578, 535], field: [150, 177, 880, 401], props: [] },
+  'The Tar Pit': { src: 'art/boards-v2/iceage-tar-pit.jpg', opp: [467, 28, 556, 124], me: [455, 425, 568, 543], field: [150, 136, 880, 411], props: [] },
 };
 
 

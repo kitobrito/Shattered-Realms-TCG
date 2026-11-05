@@ -43,8 +43,13 @@ SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 BONE_CUT = {'within': {'method': 'hsv', 'hsv': [[0, 180, 0, 115, 115, 255], [0, 180, 0, 255, 0, 50]], 'close': 2, 'grow': 1, 'expand': 0}}
 HINTS = {
-    # The Rage Outbreak: the infected, not the wrecked cars beside them.
-    'rage-outbreak-portrait/pack1': {'bg': [[344, 712, 364, 770]]},
+    # The Tar Pit: the mammoth, not the tar around it; the Rage Outbreak's clawing infected, not the car door.
+    'iceage-tar-pit-land/mammothL': {'bg': [[128, 395, 362, 447]]},
+    'rage-outbreak-portrait/clawer': {'bg': [[80, 595, 104, 648]]},
+    # The Skinwalker Cave (phones): the creature, not the hero frame beside it.
+    'lycan-skinwalker-portrait/skinwalker': {'bg': [[150, 800, 300, 960]]},
+    # The Bone Crater: the vulture, not the bone it perches on.
+    'dino-graveyard-land/vulture': {'bg': [[764, 66, 818, 88]]},
     # Witches: the brooms against the pillars (outlined: the model can't find them); the phone board's raven
     # stands on a book pile the model takes with it, so a colour rule keeps only the bird.
     'witches-land/broom': {'method': 'poly', 'polys': [[[718, 0], [728, 0], [709, 56], [716, 62], [716, 82], [712, 105], [708, 128], [700, 140], [682, 142], [662, 138], [664, 124], [680, 104], [694, 84], [697, 62], [706, 56]]]},

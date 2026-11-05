@@ -58,6 +58,12 @@ def hue_near(h, c, w):
 # ---- Rules: (h, s, v) -> strength 0..1 ----
 RULES = {
     'any': lambda h, s, v: np.ones_like(v),
+    # The Live Wire's shallow river: pale teal-green water over pebbles.
+    'shallows': lambda h, s, v: hue_near(h, 170, 34) * ramp(s, 0.12, 0.22) * ramp(v, 0.45, 0.58),
+    # The Blood Bar's pool: deep, dark, saturated crimson (not the brighter red velvet).
+    'bloodpool': lambda h, s, v: hue_near(h, 354, 16) * ramp(s, 0.6, 0.8) * ramp(v, 0.07, 0.12) * (1 - ramp(v, 0.45, 0.6)),
+    # The Haunted Set's curling poltergeist mist: pale steel blue.
+    'mistblue': lambda h, s, v: hue_near(h, 202, 22) * ramp(s, 0.16, 0.28) * ramp(v, 0.26, 0.4),
     # dry grass and reeds: straw yellow
     'straw': lambda h, s, v: hue_near(h, 40, 22) * ramp(s, 0.25, 0.45) * ramp(v, 0.45, 0.7),
     # dark thin twigs and branches (use with hp and thin, inside tight boxes: the ink outlines
