@@ -86,7 +86,7 @@ export const ALT_BOARDS = {
   Void: [{ id: 'The White Hole', expansion: true, blurb: 'A new universe pouring out of a white hole.' }],
   Ultraterrestrials: [{ id: 'The Split Realm', expansion: true, blurb: 'One world, and its mirror seen from a higher dimension.' }],
   Eels: [{ id: 'The Live Wire', expansion: true, blurb: 'A downed power line crackling through a shallow river.' }],
-  Witches: [{ id: 'The Wicked Cabin', expansion: true, blurb: 'A wicked witch\'s cabin, with dinner on the boil.' }],
+  Witches: [{ id: 'The Wicked Cabin', set: 'Spellbound', blurb: 'A wicked witch\'s cabin, with dinner on the boil.' }],
   'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
   Divine: [{ id: 'The Consecrated Graveyard', expansion: true, blurb: "A moonlit graveyard where holy light smites the restless dead." }],
   Demons: [{ id: 'The Siege of Heaven', expansion: true, blurb: "Heaven's golden gates, as hellfire and a demon legion storm the clouds." }],
