@@ -93,10 +93,11 @@ test('A non-Wand weapon (The Witching Hour Broom) does take damage back, and giv
   if (hero(0).health !== hp - 3) return `hero hp ${hp} -> ${hero(0).health}`;
   if (!getLegalActions(s).some((a) => a.type === 'attack' && a.attacker === hero(0).uid)) return 'no second attack';
 });
-test('The Witching Hour Broom Silences all enemy minions when equipped; Twin Strike leaves with the Broom', () => {
-  const a = blank(1, 2, 2, ['Taunt']), b = blank(1, 2, 2, ['Evade']);
+test('The Witching Hour Broom deals 2 to all enemy minions when equipped; Twin Strike leaves with the Broom', () => {
+  const a = blank(1, 2, 3, ['Taunt']), b = blank(1, 2, 3);
   play(0, give(0, 'the_witching_hour_broom'));
-  if (!sil(a) || !sil(b) || hasKeyword(a, 'Taunt')) return 'not silenced';
+  if (a.health !== 1 || b.health !== 1) return `${a.health} / ${b.health}`;
+  if (sil(a)) return 'still silences';
   heroSpell(0, 'wandcraft');
   if (hasKeyword(hero(0), 'Twin Strike')) return 'Twin Strike stayed after the Broom was replaced';
 });
@@ -116,12 +117,11 @@ test('Wand of Unmaking destroys a Silenced minion it attacks, but not an un-Sile
   attack(0, hero(0).uid, quiet.uid);
   if (pl(1).board.includes(quiet)) return 'silenced one survived';
 });
-test('Cinderthorn Wand: after the Hero attacks, every Silenced enemy minion takes 2', () => {
-  const quiet = blank(1, 1, 5), loud = blank(1, 1, 5);
-  play(0, give(0, 'silencing_charm'), quiet.uid);
+test('Cinderthorn Wand: after the Hero attacks, every enemy minion takes 1', () => {
+  const a = blank(1, 1, 5), b = blank(1, 1, 5);
   play(0, give(0, 'cinderthorn_wand'));
   attack(0, hero(0).uid, hero(1).uid);
-  if (quiet.health !== 3 || loud.health !== 5) return `${quiet.health} / ${loud.health}`;
+  if (a.health !== 4 || b.health !== 4) return `${a.health} / ${b.health}`;
 });
 test('Wand of Binding Freezes the minion it hit', () => {
   play(0, give(0, 'wand_of_binding'));
@@ -185,14 +185,12 @@ test('Spell Snare counters only spells that cost (2) or less', () => {
   play(1, give(1, 'fireball'), hero(0).uid);
   if (hero(0).health !== hp || pl(0).traps.length) return 'snare missed a 2-cost';
 });
-test('Mirror Hex (Legendary): counters, the copy costs (0), and the enemy Hero is Silenced', () => {
+test('Mirror Hex (Legendary): counters and the copy costs (0)', () => {
   play(0, give(0, 'mirror_hex')); endTurn(0);
   play(1, give(1, 'fireball'), hero(0).uid);
   const copy = pl(0).hand.find((c) => c.cardId === 'fireball');
   if (!copy) return 'no copy';
   if (costOf(s, copy) !== 0) return `copy costs ${costOf(s, copy)}`;
-  endTurn(1); endTurn(0);
-  if (canHeroSpell(1, pl(1).heroSpells[0].cardId)) return 'enemy hero spell not locked';
   if (!getCard('mirror_hex').legendary) return 'not legendary';
 });
 test('Nullify (Quick Play) counters a 4+ cost enemy spell, and is not offered for a cheap one', () => {
@@ -208,7 +206,7 @@ test('Nullify (Quick Play) counters a 4+ cost enemy spell, and is not offered fo
 
 // ---- Silence the Hero, taxes, punishers ----
 test('Silence the enemy Hero: no Hero Spell on their next turn, back the turn after', () => {
-  play(0, give(0, 'the_great_hush'));
+  play(0, give(0, 'coven_matriarch'));
   endTurn(0);
   const id = pl(1).heroSpells[0].cardId;
   if (canHeroSpell(1, id)) return 'usable on their next turn';
@@ -283,12 +281,16 @@ test('Raven Familiar can only target minions that cost (3) or less', () => {
   const t = getLegalActions(s).filter((a) => a.type === 'play' && a.card === r.uid).map((a) => a.target);
   if (t.includes(big.uid) || !t.includes(small.uid)) return `targets ${t}`;
 });
-test('Crossroads Witch Silences an un-Silenced enemy at the end of the Witch turn', () => {
+test('Crossroads Witch deals 2 to a random enemy minion at the end of the Witch turn', () => {
   put(0, 'crossroads_witch');
-  const quiet = blank(1, 1, 3); quiet.keywords = ['Silenced'];
-  const loud = blank(1, 1, 3, ['Taunt']);
+  const m = blank(1, 1, 5);
   endTurn(0);
-  if (!sil(loud)) return 'did not silence the loud one';
+  if (m.health !== 3) return `health ${m.health}`;
+  if (sil(m)) return 'still silences';
+});
+test('Witches: only 10 cards carry Silence', () => {
+  const n = allCards().filter((c) => c.faction === 'Witches' && /silenc/i.test(c.text ?? '')).length;
+  if (n !== 10) return `${n} cards mention Silence`;
 });
 test('Coven Matriarch Silences every enemy minion and the enemy Hero', () => {
   const a = blank(1, 1, 3, ['Taunt']), b = blank(1, 1, 3, ['Lifesteal']);
