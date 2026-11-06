@@ -3,6 +3,7 @@
 
 import { ART, CLICKER_ART, FUSION_HERO_ART, HERO_ART, RAGE_RUNNER_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
+import { weaponStatsForCard } from '../cards/weapon-template.js';
 import { getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
@@ -169,15 +170,18 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
     : card.type === 'minion' ? (card.typeLine ?? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ')) : card.type === 'trap' ? 'Trap'
     // Hero Weapons are spells that arm your Hero: Witches' Wands say so, other weapons (Robots, the Broom) say Weapon.
-    : card.wand ? 'Wand' : card.heroWeapon ? 'Weapon' : 'Spell';
+    : card.wand ? 'Wand' : weaponStatsForCard(card) ? 'Weapon' : 'Spell';
+  const weaponStats = weaponStatsForCard(card);
+  const weaponStatsHTML = weaponStats ? `<div class="bc-weapon-stats" aria-label="Weapon: ${weaponStats.attack} Attack, ${weaponStats.durability} Durability"><span><i aria-hidden="true">⚔</i><b>${weaponStats.attack}</b><small>ATK</small></span><span><i aria-hidden="true">⛨</i><b>${weaponStats.durability}</b><small>DUR</small></span></div>` : '';
   const faction = fslug(card.faction);
-  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver });
+  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver, weaponStatsHTML });
   return `
     <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.legendary ? 'legend' : ''}">
       <div class="bc-art">${artOver ?? artOf(card) ? `<img src="${artOver ?? artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <img class="bc-frame" src="art/frames/${card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell'}.png" alt="" draggable="false">
       <i class="bc-sock sock-cost"></i>${card.type === 'minion' ? '<i class="bc-sock sock-atk"></i><i class="bc-sock sock-hp"></i>' : ''}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
+      ${weaponStatsHTML}
       ${ribbonSVG(card.name, card.type)}
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
@@ -205,7 +209,7 @@ function sigilHTML(card) {
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes', 'Monster Hunter',
   'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels']);
-function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {
+function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null, weaponStatsHTML = '' }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
@@ -232,6 +236,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
       ${legend ? '' : `<i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>`}
       ${sigilHTML(card)}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
+      ${weaponStatsHTML}
       <div class="bc-banner"><span>${esc(card.name)}</span></div>
       ${label ? (type === 'minion'
     ? `<div class="bc-type lines-${label.split(' · ').length}">${label.split(' · ').map((w) => `<span>${esc(w)}</span>`).join('')}</div>`

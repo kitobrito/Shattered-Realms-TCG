@@ -2723,6 +2723,7 @@ export const EFFECT_OPS = {
     if (oldWeapon) { if (slot === 2) hero.weapon2 = null; else dropHeroWeapon(state, hero, 'drops'); }
     const weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
       ...(e.prey ? { prey: e.prey, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.heroOnly ? { heroOnly: true } : {}),
+      ...(e.ranged ? { ranged: true } : {}), ...(e.cooldown ? { cooldown: e.cooldown } : {}), ...(e.executeFaction ? { executeFaction: e.executeFaction } : {}),
       // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
       ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
     // Witches (Spellbound): Rune Slots (Apprentice 1, most Wands 2, legendary 3), a built-in enchantment,
@@ -3069,6 +3070,7 @@ export const EFFECT_OPS = {
     const slot = e.slot === 2 ? 2 : 1;
     const w = slot === 2 ? hero.weapon2 : hero.weapon;
     if (!w) return;
+    if (w.cooldown) w.cooldownUntilTurn = (state.players[ctx.controller].turnsTaken ?? 0) + w.cooldown + 1;
     w.durability -= 1;
     // Witches: Ward of Binding (a Trap) saves a Wand that would break.
     if (w.durability <= 0 && w.wand) {

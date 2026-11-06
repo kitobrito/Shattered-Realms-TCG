@@ -33,8 +33,10 @@ import { STANDARD_CUTS, STANDARD_DUPLICATES } from './standard-cuts.js';
 import { isComplete } from './validate.js';
 import { VAMPIRE_CARDS } from './vampires.js';
 import { MONSTER_HUNTER_CARDS } from './monster-hunter.js';
+import { applyWeaponCardTemplate } from './weapon-template.js';
 
 registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...FUSION_CARDS]);
+applyWeaponCardTemplate(allCards());
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
 // gold legendary frame (shared.js). A Lycanthrope's Beast Form is legendary with it.

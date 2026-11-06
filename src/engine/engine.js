@@ -319,6 +319,10 @@ export function getLegalActions(state) {
     if (canShift(m) && m.shiftedTurn !== state.turn && shiftCost <= manaFor(pl, getCard(m.cardId))) actions.push({ type: 'transform', player: p, minion: m.uid });
   }
   for (const c of [pl.hero, ...pl.board]) {
+    if (c.kind === 'hero') {
+      const weapon = c.weapon2 && c.attacksThisTurn >= 1 ? c.weapon2 : c.weapon;
+      if (weapon?.cooldownUntilTurn > pl.turnsTaken) continue;
+    }
     if (!canAttack(c)) continue;
     for (const d of defendersFor(state, c)) actions.push({ type: 'attack', player: p, attacker: c.uid, defender: d });
   }
@@ -789,12 +793,26 @@ const STEPS = {
       ]);
       return;
     }
+    const activeWeapon = a.kind === 'hero' ? (a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon) : null;
     const huntDmg = huntDamage(state, a, d, aDmg);
     const wasPrey = d.kind === 'minion' && d.prey;
     const dealt = dealDamage(state, a.uid, d.uid, huntDmg);
+    const executed = dealt > 0 && d.kind === 'minion' && activeWeapon?.executeFaction === getCard(d.cardId).faction;
+    if (executed) {
+      d.destroyed = true;
+      d.lastDamagedBy = a.uid;
+      d.lastDamagedByController = a.controller;
+      log(state, `🗡 ${nameOf(state, a)} executes ${nameOf(state, d)} with ${activeWeapon.name}.`);
+    }
+    if (a.kind === 'hero' && d.kind === 'minion' && (d.health <= 0 || d.destroyed) && a.dualWield && a.weapon && a.weapon2) {
+      const growingWeapon = a.weapon.attack <= a.weapon2.attack ? a.weapon : a.weapon2;
+      growingWeapon.attack += 1;
+      if (growingWeapon === a.weapon) a.attack += 1;
+      log(state, `⚔ Dual-Wield: ${growingWeapon.name} gains +1 Attack.`);
+    }
     // Witches: a Hero attacking with a Wand fires from afar and takes no damage back.
-    const fromAfar = a.kind === 'hero' && !!a.weapon?.wand;
-    if (!fromAfar) dealDamage(state, d.uid, a.uid, dDmg);
+    const fromAfar = a.kind === 'hero' && (activeWeapon?.wand || activeWeapon?.ranged);
+    if (!fromAfar && !executed) dealDamage(state, d.uid, a.uid, dDmg);
     // Acidic (Half-Digested): Acid Hide melts whatever attacks it.
     if (!fromAfar) acidHideTouch(state, d, a);
     // Scarred Leviathan: damage to Marked Prey heals your Hero by as much.

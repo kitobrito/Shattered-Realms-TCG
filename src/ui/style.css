@@ -5799,6 +5799,14 @@ body.reduced-motion .arena .minion.f-witches .m-art::before { animation: none; }
 .weapon-badge .w-rune { width: 1.05em; height: 1.05em; border-radius: 50%; display: grid; place-items: center; font-size: 0.62em; font-style: normal; background: #2b0938; box-shadow: 0 0 0 1px #10b981; }
 .weapon-badge .w-rune.inscr { box-shadow: 0 0 0 1px #d946ef; }
 .weapon-badge .w-rune.empty { background: #0b0610aa; box-shadow: 0 0 0 1px #6b5a7a; }
+
+/* Shared Hero Weapon template: printed Attack and Durability on every weapon card. */
+.big-card .bc-weapon-stats { position: absolute; z-index: 6; left: 50%; top: 54%; transform: translate(-50%, -50%); display: flex; gap: .45em; pointer-events: none; }
+.big-card .bc-weapon-stats span { min-width: 2.75em; padding: .24em .48em; display: inline-flex; align-items: center; justify-content: center; gap: .18em; border: 1px solid #e4c17d; border-radius: 1em; background: linear-gradient(180deg, #36281ecc, #100d0ce8); box-shadow: 0 1px 4px #000b, inset 0 0 0 1px #3c2e1f; color: #fff2cc; font: 700 1em/1 'Card Rules', sans-serif; text-shadow: 0 1px 2px #000; }
+.big-card .bc-weapon-stats i { color: #f3c65d; font-style: normal; font-size: .88em; }
+.big-card .bc-weapon-stats b { font-size: 1.15em; }
+.big-card .bc-weapon-stats small { color: #dccba7; font-size: .55em; letter-spacing: .04em; }
+.card .big-card .bc-weapon-stats { font-size: .68em; gap: .25em; }
 body.reduced-motion .hero-book.done { animation: none; }
 
 /* The pre-match screen: choose the AI opponent (or Random), or both hot seat players' realms. */

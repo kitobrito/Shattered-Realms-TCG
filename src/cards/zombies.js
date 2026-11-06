@@ -347,5 +347,11 @@ export const ZOMBIE_CARDS = [
   // ---- Tokens ----
   { ...Z, id: 'zombie', name: 'Zombie', art: '🧟', token: true, cost: 1, attack: 1, health: 1, text: '' },
   { ...Z, tribes: ['Infected', 'Human'], id: 'rage_runner', name: 'Rage Runner', art: '😡', token: true, cost: 2, attack: 2, health: 1, keywords: ['Rush'], text: 'Rush. Risen from an Infected minion.' },
+  { ...Z, tribes: ['Infected', 'Human'], id: 'rage_runner_hunter', name: 'Rage Runner Hunter', art: '😡', token: true, cost: 3, attack: 3, health: 2, keywords: ['Rush'],
+    text: 'Rush. After this kills a minion, give your Hero +1 Attack this turn.',
+    triggers: [{ on: 'minionDied', filter: { killer: 'self' }, effects: [{ op: 'buff', target: 'friendlyHero', attack: 1, temporary: true }] }] },
+  { ...Z, tribes: ['Zombie', 'Fungus'], tags: ['Dark'], id: 'clicker_hybrid', name: 'Clicker Hybrid', art: '🧟', token: true, cost: 4, attack: 2, health: 5, keywords: ['Taunt'],
+    text: 'Taunt. After this kills a minion, gain 2 Armor.',
+    triggers: [{ on: 'minionDied', filter: { killer: 'self' }, effects: [{ op: 'gainArmor', amount: 2 }] }] },
   { ...Z, id: 'plague_rat', name: 'Plague Rat', art: '🐀', token: true, tribes: ['Zombie', 'Beast'], cost: 1, attack: 1, health: 1, keywords: ['Rush'], text: 'Rush.' },
 ];

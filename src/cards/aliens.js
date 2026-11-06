@@ -312,6 +312,9 @@ export const ALIEN_CARDS = [
   // ---- Hive Brood tokens: the Chestburster and the Xenos it Evolves into ----
   { ...M, id: 'chestburster', name: 'Chestburster', art: '🐍', token: true, cost: 1, attack: 1, health: 1,
     text: 'After 2 of your turns, Evolves into the Xeno of the realm it burst from.' },
+  { ...M, tribes: ['Alien', 'Human'], id: 'xeno_hunter', name: 'Xeno-Hunter', art: '👽', token: true, cost: 3, attack: 3, health: 4, keywords: ['Rush'],
+    text: 'Rush. After this kills a minion, gain +1/+1.',
+    triggers: [{ on: 'minionDied', filter: { killer: 'self' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }] },
   { ...XENO, id: 'xeno_nosferatu', name: 'Xeno Nosferatu', attack: 3, health: 4, keywords: ['Lifesteal'], text: 'Lifesteal. (Evolved from a Vampire.)' },
   { ...XENO, id: 'xeno_warrior', name: 'Xeno Warrior', attack: 4, health: 5, text: '(Evolved from an Alien: the pure strain.)' },
   { ...XENO, id: 'xeno_raptor', name: 'Xeno Raptor', attack: 4, health: 3, keywords: ['Rush'], text: 'Rush. (Evolved from a Dinosaur.)' },

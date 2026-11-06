@@ -6,7 +6,7 @@
 // situational cards. Designer: edit freely — validation checks these lists.
 
 export const STANDARD_CUTS = {
-  'Monster Hunter': ['field_quartermaster','silver_sight_scout','field_medic','veteran_duelist','the_night_captain','flintlock_pistol','wolfsbane_dagger','dragonfall_chain_net','reliquary_cross','exorcists_chain'],
+  'Monster Hunter': ['the_night_captain','powder_and_ball','silvered_cartridges','the_prey_dossier','belladonna_snare','flintlock_pistol','wolfsbane_dagger','dragonfall_chain_net','reliquary_cross','exorcists_chain'],
   // Keeps: Lifesteal, Bats, Blood Pool, Health-loss synergy, Bloodlord / Crimson King.
   Vampires: [
     'vampire_mesmerist', 'blood_drinker',
