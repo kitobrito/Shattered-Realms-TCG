@@ -184,7 +184,9 @@ function canAttack(c) {
   if (c.kind === 'minion' && getCard(c.cardId).cantAttack) return false; // The Living Hive
   if (effectiveAttack(c) <= 0 || hasKeyword(c, 'Frozen') || c.cantAttackThisTurn || c.encased > 0) return false;
   // attacksPerTurn: a minion that attacks more than once each turn by itself (the Three-Headed Necrohydra).
-  const perTurn = (c.kind === 'minion' && !c.textLost && getCard(c.cardId).attacksPerTurn) || (hasKeyword(c, 'Twin Strike') ? 2 : 1);
+  const perTurn = c.kind === 'minion'
+    ? (!c.textLost && getCard(c.cardId).attacksPerTurn) || (hasKeyword(c, 'Twin Strike') ? 2 : 1)
+    : (hasKeyword(c, 'Twin Strike') || c.dualWieldStrikeUsed ? 2 : 1);
   if (c.attacksThisTurn >= perTurn + (c.bonusAttacks ?? 0)) return false;
   // Frenzy of the Pack: a Shark that just arrived may still attack Marked Prey.
   if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush') && !c.preyRush) return false;
@@ -543,6 +545,7 @@ function transformAction(state, { player: p, minion }) {
 
 function declareAttack(state, { player: p, attacker, defender }) {
   const a = findCharacter(state, attacker);
+  if (a.kind === 'hero' && a.attacksThisTurn === 0 && hasKeyword(a, 'Twin Strike')) a.dualWieldStrikeUsed = true;
   a.attacksThisTurn += 1;
   if (a.kind === 'hero') a.weaponUsedSlot = a.weapon2 && a.attacksThisTurn === 2 ? 2 : 1;
   // Stealth lasts until the minion attacks. A Burrowed minion that attacks Surfaces first.
@@ -1168,6 +1171,7 @@ const STEPS = {
     if (pl.greatFreeze) pl.greatFreeze.turns += 1;
     factionHook(pl, 'turnStartMana')(state, pl);
     pl.hero.attacksThisTurn = 0;
+    pl.hero.dualWieldStrikeUsed = false;
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }
     // Passive Hero Spells (Extinction Cycle, The Living Hive) can't be used, so each
     // such faction charges the Fusion by 1 every other turn instead.

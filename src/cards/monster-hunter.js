@@ -13,7 +13,7 @@ export const MONSTER_HUNTER_CARDS=[
 {...M,id:'the_night_captain',name:'The Night Captain',legendary:true,cost:6,attack:4,health:5,text:'Arrival: Give your Hero +2 Attack this turn and 3 Armor.',triggers:[{on:'battlecry',effects:[{op:'buff',target:'friendlyHero',attack:2,temporary:true},{op:'gainArmor',amount:3}]}]},
 W('rowan_stake','Rowan Stake',1,2,2,'Your Hero has +2 Attack against Vampires.','Vampires'),
 W('silver_bolt_crossbow','Silver-Bolt Crossbow',2,2,2,'Your Hero has +2 Attack against Werewolves.','Lycanthropes'),
-W('flintlock_pistol','Flintlock Pistol',2,3,1,'A powerful single shot.'),
+W('flintlock_pistol','Flintlock Pistol',2,3,1,'Give your Hero +3 Attack with this 1-Durability pistol. It breaks after one attack.'),
 W('cross_hilt_longsword','Cross-Hilt Longsword',3,3,2,'Your Hero has +2 Attack against Vampires.','Vampires',{legendary:true}),
 W('wolfsbane_dagger','Wolfsbane Dagger',2,2,3,'Your Hero has +2 Attack against Werewolves.','Lycanthropes'),
 W('dragon_slayer_harpoon','Dragon-Slayer Harpoon',4,3,2,'Your Hero has +3 Attack against Dragons.','Dragons'),
