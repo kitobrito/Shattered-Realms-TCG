@@ -5086,6 +5086,10 @@ body.reduced-motion .descent { display: none; }
 .stage-img.mystery { display: grid; place-items: center; align-content: center; background: radial-gradient(circle, rgba(60, 36, 90, 0.9), rgba(8, 4, 14, 0.98)); border-color: rgba(255, 210, 90, 0.55); }
 .stage-img.mystery i { font-style: normal; font-family: var(--font-title); font-size: clamp(60px, 16vh, 170px); line-height: 1; color: #ffd25a; text-shadow: 0 0 30px rgba(255, 200, 70, 0.9), 0 4px 0 #4a2a00; animation: mysteryPulse 2.4s ease-in-out infinite; }
 .stage-img.mystery small { color: #d8c8ff; font-size: clamp(10px, 1.6vh, 14px); padding: 0 8px; }
+/* An unmet fused hero: its figure as a pure black silhouette (art/fusion-silhouettes, tools/fusion-silhouettes.py) with a faint violet rim, the text over it. */
+.stage-img.mystery.silhouette { overflow: hidden; }
+.stage-img.mystery.silhouette img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0) drop-shadow(0 0 12px rgba(170, 120, 255, 0.7)); }
+.stage-img.mystery.silhouette small { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; z-index: 1; text-shadow: 0 2px 6px #000; }
 @keyframes mysteryPulse { 50% { transform: scale(1.08); text-shadow: 0 0 46px rgba(255, 220, 120, 1), 0 4px 0 #4a2a00; } }
 .stage-mini { position: absolute; bottom: -6%; width: 34%; display: flex; flex-direction: column; align-items: center; gap: 2px; animation: slabFloat 4s ease-in-out infinite; }
 .stage-mini.l { left: -18%; } .stage-mini.r { right: -18%; animation-delay: -2s; }
