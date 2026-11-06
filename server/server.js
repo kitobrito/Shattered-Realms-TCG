@@ -58,7 +58,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
 
   // Admin accounts (every card and board unlocked on any device they sign in from). Names,
   // comma-separated, from ADMIN_NAMES; the game's owner, Kito, by default.
-  const ADMINS = new Set(String(process.env.ADMIN_NAMES ?? 'Kito').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean));
+  const ADMINS = new Set(['kito', ...String(process.env.ADMIN_NAMES ?? '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean)]);
   // What a player sees about themselves.
   async function youOf(acc) {
     return {
