@@ -122,13 +122,11 @@ export function progressLine() {
   return `${availableFactions().length} of ${PLAYABLE_FACTIONS.length} realms open · ${PER_MATCH} more after every match`;
 }
 
-// Fused heroes stay a mystery (a "?" on the menu) until you play a match with that pair:
-// the match-start fusion is where you first meet them.
+// Fused hero portraits are visible in the menu before you play each faction pair.
 const pairKey = (factions) => [...factions].map((f) => f.toLowerCase()).sort().join('+');
-// Admin accounts see every fused hero straight away.
-export const heroRevealed = (factions) => isAdmin() || (state.heroes ?? []).includes(pairKey(factions));
+export const heroRevealed = () => true;
 export function revealHero(factions) {
-  if (heroRevealed(factions)) return false;
+  if ((state.heroes ?? []).includes(pairKey(factions))) return false;
   (state.heroes ??= []).push(pairKey(factions));
   save();
   return true;
