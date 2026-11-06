@@ -14,7 +14,7 @@ import {
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
   traceFx, allKeywords,
 } from './core.js';
-import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, tickChestbursters, tickThawing } from './effects.js';
+import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -101,6 +101,7 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
       hand: [], traps: [], board: [], graveyard: [], fatigue: 0,
       corpses: 0, deadZombies: [], zombieDeathsThisTurn: 0, // Zombies
     };
+    if (cfg.factions.includes('Monster Hunter')) { pl.hero.dualWield = true; pl.hero.auraKeywords = []; }
     shuffle(state, pl.deck);
     state.players.push(pl);
     // Bees: the game starts with The Living Hive on the board.
@@ -204,6 +205,10 @@ export function attackTargets(state, p) {
 // Rush: on the turn it arrives, a minion may attack only minions.
 function defendersFor(state, c) {
   let all = attackTargets(state, c.controller);
+  if (c.kind === 'hero') {
+    const weapon = c.weapon2 && c.attacksThisTurn >= 1 ? c.weapon2 : c.weapon;
+    if (weapon?.heroOnly) all = all.filter((id) => findCharacter(state, id)?.kind === 'hero');
+  }
   // Sharks: Marked Prey can't hide in Stealth from a Shark (Blood in the Water); Goblin Shark
   // sees every Stealthed minion. (Taunt still has to be dealt with first.)
   if (isShark(c)) {
@@ -501,6 +506,11 @@ function resolveChoice(state, { player: p, index }) {
 function huntDamage(state, a, d, dmg) {
   // Sky Piercer Drill Unit: extra damage when it attacks the enemy Hero.
   if (a.kind === 'minion' && d.kind === 'hero') dmg += getCard(a.cardId).heroAttackBonus ?? 0;
+  // Monster Hunter prey-specific weapons are stronger only against their named faction.
+  if (a.kind === 'hero' && d.kind === 'minion') {
+    const weapon = a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon;
+    if (weapon?.prey && getCard(d.cardId)?.faction === weapon.prey) dmg += weapon.preyBonus ?? 0;
+  }
   if (a.kind !== 'minion' || d.kind !== 'minion') return dmg;
   const card = getCard(a.cardId);
   if (d.prey && isShark(a)) {
@@ -534,6 +544,7 @@ function transformAction(state, { player: p, minion }) {
 function declareAttack(state, { player: p, attacker, defender }) {
   const a = findCharacter(state, attacker);
   a.attacksThisTurn += 1;
+  if (a.kind === 'hero') a.weaponUsedSlot = a.weapon2 && a.attacksThisTurn === 2 ? 2 : 1;
   // Stealth lasts until the minion attacks. A Burrowed minion that attacks Surfaces first.
   if (a.kind === 'minion' && a.burrowed) surfaceMinion(state, a);
   if (a.kind === 'minion' && hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); traceFx(state, { type: 'stealthLost', target: a.uid }); }
@@ -564,7 +575,7 @@ function declareAttack(state, { player: p, attacker, defender }) {
     state.queue.push({ kind: 'effect', effect: { op: 'wandRunes', phase: 'after' }, ctx: rctx }, { kind: 'deaths' });
   }
   // Robots (Arsenal Protocol): a Hero attacking with a Weapon wears it down by 1 Durability.
-  if (a.kind === 'hero' && a.weapon) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon' }, ctx: { self: a.uid, controller: p } });
+  if (a.kind === 'hero' && (a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon)) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon', slot: a.weaponUsedSlot }, ctx: { self: a.uid, controller: p } });
 }
 
 // Acid Hide: `hide` touched `other` in a fight. A minion is Corroded by 1; a Hero loses its Weapon,
@@ -801,7 +812,7 @@ const STEPS = {
     }
     // New legendaries: what a killer gains from a kill. The Slayer Hornet (killAttacks: N) may
     // attack again after each kill, up to N extra attacks a turn; Rex, the Tyrant King grows
-    // (killGrow); the Skinwalker takes the victim's keywords (stealKeywordsOnKill).
+    // (killGrow); the Skinwalker takes the victim's keywords or full hide.
     if (d.kind === 'minion' && (d.health <= 0 || d.destroyed) && a.kind === 'minion' && a.health > 0) {
       const ac = getCard(a.cardId);
       if (ac.killAttacks) {
@@ -817,6 +828,10 @@ const STEPS = {
         const taken = allKeywords(d).filter((k) => !NEGATIVE_KEYWORDS.includes(k) && !hasKeyword(a, k));
         for (const k of taken) addKeyword(a, k, false, state);
         if (taken.length) log(state, `${nameOf(state, a)} takes ${taken.join(', ')} from ${nameOf(state, d)}.`);
+      }
+      if ((ac.takeHideOnKill || a.takeHideUntilTurn === state.turn) && getCard(a.cardId).form === 'beast') {
+        takeHide(state, a, d);
+        delete a.takeHideUntilTurn;
       }
     }
     // Varkhul, the Crimson Maw: killing a minion lets it attack again this turn (once).

@@ -176,7 +176,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
   const card = getCard(m.cardId);
   const atk = effectiveAttack(m);
   // A minion remade into another form (Blood Shade) wears that form's art.
-  const art = m.look ? artOf(getCard(m.look) ?? card) : minionArtOf(m, card);
+  const art = m.borrowedHide ? artOf(getCard(m.borrowedHide) ?? card) : m.look ? artOf(getCard(m.look) ?? card) : minionArtOf(m, card);
   // Frozen in Time: a minion sealed in ice shows the ice block, and its Taunt waits until it breaks free.
   const kws = allKeywords(m).filter((k) => !(m.encased > 0 && k === 'Taunt')).map(kwSlug);
   if (m.encased > 0) kws.push('encased');

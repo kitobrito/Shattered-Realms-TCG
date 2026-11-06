@@ -5,6 +5,14 @@ export const EMOTE_KINDS = ['greetings', 'wellPlayed', 'thanks', 'wow', 'oops', 
 export const EMOTE_LABELS = { greetings: 'Greetings', wellPlayed: 'Well played', thanks: 'Thanks', wow: 'Wow', oops: 'Oops', threaten: 'Threaten' };
 
 export const EMOTES = {
+  'Monster Hunter': {
+    greetings: 'Keep your distance. I have the right tool for this.',
+    wellPlayed: 'Clean work. The hunt is not over.',
+    thanks: 'I will put it to good use.',
+    wow: 'That is a new one.',
+    oops: 'Wrong tool. My mistake.',
+    threaten: 'I have hunted worse in the dark.',
+  },
   Vampires: {
     greetings: "Good evening… and welcome.",
     wellPlayed: "Your blood is quite tasty.",

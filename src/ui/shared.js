@@ -7,7 +7,7 @@ import { getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
 
-export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Ghosts: '👻', Ultraterrestrials: '🔺', Sharks: '🦈', Acidic: '🧪', Witches: '🧙', Fusion: '🌀' };
+export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Ghosts: '👻', Ultraterrestrials: '🔺', Sharks: '🦈', Acidic: '🧪', Witches: '🧙', 'Monster Hunter': '🏹', Fusion: '🌀' };
 
 // Small line icons for buttons (they take the button's text colour).
 const ICON_PATHS = {
@@ -57,7 +57,7 @@ const artFocus = (card) => (ART_FOCUS_Y[card.id] ? ` style="object-position: 50%
 export const artOf = (card) => { const path = ART[card.id] ?? (card.artFrom ? ART[card.artFrom] : undefined); return path && artSrc(path); };
 // A minion on the board: a Rage Runner wears the look of the faction it burst out of.
 const LOOK_ART = { rage_runner: RAGE_RUNNER_ART, clicker: CLICKER_ART };
-export const minionArtOf = (m, card) => (LOOK_ART[card.id]?.[m.lookFaction] ? artSrc(LOOK_ART[card.id][m.lookFaction]) : artOf(card));
+export const minionArtOf = (m, card) => (m.borrowedHide ? artOf(getCard(m.borrowedHide)) : LOOK_ART[card.id]?.[m.lookFaction] ? artSrc(LOOK_ART[card.id][m.lookFaction]) : artOf(card));
 
 // Hero portrait for a faction (designer-provided art), if there is one yet.
 export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[faction]);
@@ -80,7 +80,7 @@ export const playerPortraitHTML = (factions) => {
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${fslug(faction)}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
@@ -167,7 +167,7 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
   const { incomplete } = validateCard(card);
   const label = card.fusion ? `Fusion · ${card.fusion.join(' + ')}` : card.heroSpell ? 'Hero Spell' : card.quickPlay ? 'Spell ⚡'
     // Minions show their tribe and any Dark / Undead tags (Divine cards punish those).
-    : card.type === 'minion' ? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ') : card.type === 'trap' ? 'Trap'
+    : card.type === 'minion' ? (card.typeLine ?? [...(card.tribes ?? []), ...(card.tags ?? FACTION_TAGS[card.faction] ?? [])].join(' · ')) : card.type === 'trap' ? 'Trap'
     // Hero Weapons are spells that arm your Hero: Witches' Wands say so, other weapons (Robots, the Broom) say Weapon.
     : card.wand ? 'Wand' : card.heroWeapon ? 'Weapon' : 'Spell';
   const faction = fslug(card.faction);
@@ -203,7 +203,7 @@ function sigilHTML(card) {
 // Frames: art/frames/painted-<type>.png (painted; the openings are transparent) and
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
-const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes',
+const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes', 'Monster Hunter',
   'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
@@ -217,11 +217,13 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   // one for a legendary Trap. Their ordinary traps and spells wear the normal frames like every realm.
   const witchFrame = card.faction === 'Witches' && !card.fusion && legend && (type === 'trap' || type === 'spell')
     ? (type === 'trap' ? 'trap-witches' : 'legendary-spell-witches') : null;
-  const own = !!witchFrame || (legend && type === 'minion' && !card.fusion && (card.legendFrame || LEGEND_FRAMES.has(card.faction)));
+  const hunterFrame = card.faction === 'Monster Hunter' && legend
+    ? (type === 'minion' ? 'art/monster-hunter/frames/legendary-minion-monster-hunter.png' : type === 'spell' ? 'art/monster-hunter/frames/legendary-spell-monster-hunter.png' : null) : null;
+  const own = !!witchFrame || !!hunterFrame || (legend && type === 'minion' && !card.fusion && (card.legendFrame || LEGEND_FRAMES.has(card.faction)));
   // ?v=3: new frames for Acidic, Radioactive, Dinosaurs, Sharks, Eels, Vampires and Demons; the tag makes browsers fetch them.
-  const frameSrc = witchFrame ? `art/frames/${witchFrame}.webp`
+  const frameSrc = hunterFrame ?? (witchFrame ? `art/frames/${witchFrame}.webp`
     : own ? `art/frames/legendary-minion-${card.legendFrame ?? fslug(card.faction)}.webp?v=3`
-    : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`;
+    : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`);
   return `
     <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>
       <div class="bc-art">${artOver ?? artOf(card) ? `<img src="${artOver ?? artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>

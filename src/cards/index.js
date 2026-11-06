@@ -32,8 +32,9 @@ import { PLANT_CARDS } from './plants.js';
 import { STANDARD_CUTS, STANDARD_DUPLICATES } from './standard-cuts.js';
 import { isComplete } from './validate.js';
 import { VAMPIRE_CARDS } from './vampires.js';
+import { MONSTER_HUNTER_CARDS } from './monster-hunter.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...FUSION_CARDS]);
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
 // gold legendary frame (shared.js). A Lycanthrope's Beast Form is legendary with it.
@@ -123,8 +124,13 @@ export const LEGENDARY = new Set([
   'the_lantern_ferryman',
   'the_tesseract_prism',
   'the_pale_wanderer',
+  'face_that_comes_back',
   'pulsar_the_neutron_heart',
   'rex_the_tyrant_king',
+  'the_night_captain',
+  'cross_hilt_longsword',
+  'hidden_hand_cannon',
+  'xenomorph_trophy',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).

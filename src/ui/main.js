@@ -876,6 +876,9 @@ async function act(action, meta = {}) {
     if (action.type === 'attack') {
       sound.play('attack');
       const striker = findCharacter(s, action.attacker);
+      const activeWeapon = striker?.weaponUsedSlot === 2 ? striker.weapon2 : striker?.weapon;
+      if (striker?.kind === 'hero' && ['flintlock_pistol', 'hidden_hand_cannon'].includes(activeWeapon?.cardId)) sound.play('gunshot');
+      else if (striker?.kind === 'hero' && activeWeapon?.cardId === 'silver_bolt_crossbow') sound.play('crossbow');
       // Witches: a Hero with a Wand fires from afar — a bolt, not a lunge.
       if (striker?.kind === 'hero' && striker.weapon?.wand) { sound.play('zap'); await fx.wandBolt(charEl(action.attacker), charEl(action.defender), effectiveAttack(striker)); }
       else lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {

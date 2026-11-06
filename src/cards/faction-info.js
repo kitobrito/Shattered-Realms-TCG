@@ -1,6 +1,7 @@
 // Short faction guides shown on the main menu under your matchup.
 // Designer: rewrite freely. Keep `strengths` and `weaknesses` to 3 short points each.
 export const FACTION_INFO = {
+  'Monster Hunter': { summary: 'A weapon-first hunter who brings a specialized answer to every kind of monster.', strengths: ['Hero-led weapon damage', 'Tools tailored to particular prey', 'Strong pairings with other weapon factions'], weaknesses: ['Needs weapons to deal damage', 'Specialist tools can be narrow', 'Attacking exposes the Hero to retaliation'], mechanic: 'Dual-Wield (passive): equip two different weapons. While both are equipped, attack twice, using the first weapon for the first attack and the second for the next.', style: 'Hero combat · Weapons' },
   Vampires: {
     summary: 'Drain life to outlast anyone, and turn your own lost Health into power.',
     strengths: ['Lifesteal and healing', 'Minions that grow as your Hero is hurt', 'Strong in long, grinding games'],
@@ -368,11 +369,35 @@ export const SYNERGY = {
   'Witches+Zombies': [2, 'A wide horde clashes with a deck built around one armed Hero.'],
 };
 
+Object.assign(SYNERGY, {
+  'Acidic+Monster Hunter': [4, 'Corrosion strips Attack while the Hunter answers a specific prey type with the right weapon.'],
+  'Aliens+Monster Hunter': [4, 'Implants and stolen forms create targets for a weapon-focused Hero to finish.'],
+  'Bees+Monster Hunter': [4, 'The Hive and its defenders protect the Hunter while weapons control priority threats.'],
+  'Demons+Monster Hunter': [3, 'Demons bring explosive board power while the Hunter spends Health carefully to keep pressure.'],
+  'Dinosaurs+Monster Hunter': [3, 'Primal Mana enables heavier gear early, while huge Dinosaurs cover the Hunter’s slower turns.'],
+  'Divine+Monster Hunter': [5, 'Healing and Armor keep the exposed Hero safe through repeated weapon attacks.'],
+  'Dragons+Monster Hunter': [4, 'Burn softens enemy minions so specialized weapons can finish them efficiently.'],
+  'Eels+Monster Hunter': [5, 'Chains clear clustered enemies while the Hunter’s weapons remove the single dangerous target.'],
+  'Fungus+Monster Hunter': [3, 'Mushrooms punish a slow opponent while the Hunter controls the board and protects the clock.'],
+  'Ghosts+Monster Hunter': [4, 'Haunted minions hold the board while the Hunter uses gear to make deliberate trades.'],
+  'Ice Age+Monster Hunter': [5, 'Freeze buys safe weapon swings and makes the Hunter’s specialist removal easier to time.'],
+  'Lycanthropes+Monster Hunter': [4, 'Beasts pressure the board while the Hunter’s silvered kit handles the opposing pack.'],
+  'Monster Hunter+Plants': [3, 'Seedlings build a defensive screen that gives the Hero room to equip and attack.'],
+  'Monster Hunter+Radioactive': [3, 'Radiation weakens a whole enemy board; the Hunter saves specialized weapons for survivors.'],
+  'Monster Hunter+Robots': [5, 'Robot upgrades and a second weapon both scale the same Hero-led combat plan.'],
+  'Monster Hunter+Sharks': [4, 'Sharks mark wounded prey while the Hunter’s weapons deliver precise finishing blows.'],
+  'Monster Hunter+Ultraterrestrials': [4, 'Displacement opens attack lanes and gives the Hunter time to prepare the right tool.'],
+  'Monster Hunter+Vampires': [4, 'Lifesteal offsets the cost of fighting with the Hero and rewards sustained weapon pressure.'],
+  'Monster Hunter+Void': [3, 'Void rewards fast, lean turns while the Hunter supplies durable gear and targeted answers.'],
+  'Monster Hunter+Witches': [5, 'Wand-like ranged tools and weapon counters let both realms keep the Hero fighting safely.'],
+  'Monster Hunter+Zombies': [4, 'A persistent horde screens the Hero while weapons handle the enemy’s strongest threats.'],
+});
+
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;
 
 // The faction picker groups the realms by the kind of deck they bring to the table.
 export const DECK_TYPES = [
-  { name: 'Aggro', blurb: 'Hit hard, hit fast, end it early.', factions: ['Demons', 'Sharks', 'Void'] },
+  { name: 'Aggro', blurb: 'Hit hard, hit fast, end it early.', factions: ['Demons', 'Sharks', 'Void', 'Monster Hunter'] },
   { name: 'Swarm', blurb: 'Flood the board with many small minions.', factions: ['Zombies', 'Plants', 'Bees'] },
   { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs'] },
   { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials', 'Lycanthropes'] },
@@ -385,5 +410,5 @@ export const EXPANSION_NAMES = {
   Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
   Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
   Divine: 'The Holy Pyre', Acidic: 'The Half-Digested', Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
-  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time', Eels: 'Storm Season', Witches: 'Spellbound',
+  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time', Eels: 'Storm Season', Witches: 'Spellbound', 'Monster Hunter': 'The Final Hunt',
 };

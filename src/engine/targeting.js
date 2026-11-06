@@ -41,7 +41,7 @@ export function minionPasses(m, f) {
   if (f.cardId && m.cardId !== f.cardId) return false;
   if (f.maxAttack != null && effectiveAttack(m) > f.maxAttack) return false;
   if (f.hasKeyword && !allKeywords(m).length) return false;
-  if (f.alive && (m.health <= 0 || m.destroyed)) return false;
+  if (f.alive != null && ((m.health > 0 && !m.destroyed) !== f.alive)) return false;
   // Sharks: Marked Prey, at most N Health, in Stealth.
   if (f.prey && !m.prey) return false;
   if (f.maxHealth != null && m.health > f.maxHealth) return false;

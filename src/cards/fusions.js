@@ -817,3 +817,33 @@ export const FUSION_CARDS = [
     effects: [hush('chosen'), { op: 'addCorpses', count: 2 }] },
   { faction: 'Fusion', type: 'minion', token: true, id: 'spectral_wolf', name: 'Spectral Wolf', art: '👻', cost: 2, attack: 2, health: 2, keywords: ['Stealth'], text: 'Stealth.' },
 ];
+
+// Monster Hunter pairings: each spell combines the Hunter's weapon plan with
+// the paired realm's signature mechanic. The art is resolved from the fusion
+// hero pairing in art-manifest.js.
+const hunterFusion = (faction, id, name, cost, text, effects, art) => ({
+  ...F('Monster Hunter', faction), id, name, art, cost, text, effects,
+});
+FUSION_CARDS.push(
+  hunterFusion('Acidic', 'caustic_round', 'Caustic Round', 3, 'Give your Hero +2 Attack this turn. Corrode a random enemy minion by 2.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'corrode', target: { randomOf: ENEMY_MINIONS }, amount: 2 }], '🧪'),
+  hunterFusion('Aliens', 'xeno_hunter_protocol', 'Xeno-Hunter Protocol', 3, 'Equip a 2/2 weapon. Implant a random enemy minion.', [{ op: 'equipHeroWeapon', name: 'Xeno-Hunter Blade', attack: 2, durability: 2 }, { op: 'implant', target: { randomOf: { minions: { side: 'enemy' } } } }], '🛸'),
+  hunterFusion('Bees', 'queenbreaker_sting', 'Queenbreaker Sting', 3, 'Give your Hero +2 Attack this turn. Gain 3 Armor and summon a Worker Bee.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'gainArmor', amount: 3 }, { op: 'summon', cardId: 'worker_bee' }], '🐝'),
+  hunterFusion('Demons', 'infernal_contract', 'Infernal Contract', 3, 'Lose 3 Health. Give your Hero +4 Attack this turn and gain 3 Armor.', [pay(3), { op: 'buff', target: 'friendlyHero', attack: 4, temporary: true }, { op: 'gainArmor', amount: 3 }], '😈'),
+  hunterFusion('Dinosaurs', 'greatest_trophy', 'Greatest Trophy', 4, 'Give your Hero +3 Attack this turn. A random friendly Dinosaur gains +2/+2.', [{ op: 'buff', target: 'friendlyHero', attack: 3, temporary: true }, { op: 'buff', target: { randomOf: { minions: { side: 'friendly', tribe: 'Dinosaur' } } }, attack: 2, health: 2 }], '🦖'),
+  hunterFusion('Divine', 'reliquary_of_dawn', 'Reliquary of Dawn', 3, 'Gain 5 Armor. Restore 3 Health to your Hero and give it +2 Attack this turn.', [{ op: 'gainArmor', amount: 5 }, { op: 'heal', target: 'friendlyHero', amount: 3 }, { op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }], '✝️'),
+  hunterFusion('Dragons', 'dragonfall_salvo', 'Dragonfall Salvo', 4, 'Give your Hero +3 Attack this turn. Deal 2 damage to all enemy minions.', [{ op: 'buff', target: 'friendlyHero', attack: 3, temporary: true }, { op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }], '🐉'),
+  hunterFusion('Eels', 'stormcharged_bolts', 'Stormcharged Bolts', 3, 'Give your Hero +2 Attack this turn. Chain 2 from a random enemy minion.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'chain', amount: 2, start: { randomOf: ENEMY_MINIONS } }], '⚡'),
+  hunterFusion('Fungus', 'sporeproof_salve', 'Sporeproof Salve', 3, 'Gain 4 Armor. Give a friendly minion +2/+2.', [{ op: 'gainArmor', amount: 4 }, { op: 'buff', target: { randomOf: { minions: { side: 'friendly' } } }, attack: 2, health: 2 }], '🍄'),
+  hunterFusion('Ghosts', 'graveyard_expedition', 'Graveyard Expedition', 3, 'Give your Hero +2 Attack this turn. Haunt a random minion that died this game.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'haunt' }], '👻'),
+  hunterFusion('Ice Age', 'whiteout_ambush', 'Whiteout Ambush', 3, 'Freeze all enemy minions. Gain 3 Armor.', [{ op: 'buff', target: { minions: { side: 'enemy' } }, keywords: ['Frozen'] }, { op: 'gainArmor', amount: 3 }], '❄️'),
+  hunterFusion('Lycanthropes', 'silver_moon_hunt', 'Silver-Moon Hunt', 3, 'Give your Hero +2 Attack this turn. Transform a random friendly Lycanthrope.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'shift', target: { randomOf: { minions: { side: 'friendly', tribe: 'Lycan' } } } }], '🐺'),
+  hunterFusion('Plants', 'thorned_stake', 'Thorned Stake', 3, 'Give your Hero +2 Attack this turn. Summon two 1/1 Seedlings.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, seedling(), seedling()], '🌿'),
+  hunterFusion('Radioactive', 'fallout_filter', 'Fallout Filter', 3, 'Gain 5 Armor. Deal 2 damage to all enemy minions.', [{ op: 'gainArmor', amount: 5 }, { op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }], '☢️'),
+  hunterFusion('Robots', 'modular_hunter', 'Modular Hunter', 3, 'Equip a 2/2 weapon. Give a random friendly Robot +2/+2.', [{ op: 'equipHeroWeapon', name: 'Modular Silverblade', attack: 2, durability: 2 }, { op: 'buff', target: { randomOf: { minions: { side: 'friendly', tribe: 'Robot' } } }, attack: 2, health: 2 }], '🤖'),
+  hunterFusion('Sharks', 'blood_in_the_water', 'Blood in the Water', 3, 'Give your Hero +3 Attack this turn. Mark a random enemy minion as Prey.', [{ op: 'buff', target: 'friendlyHero', attack: 3, temporary: true }, { op: 'markPrey', target: { randomOf: ENEMY_MINIONS }, force: true }], '🦈'),
+  hunterFusion('Ultraterrestrials', 'riftbound_hunt', 'Riftbound Hunt', 3, 'Give your Hero +2 Attack this turn. Displace a random enemy minion until your next turn.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'displace', target: { randomOf: ENEMY_MINIONS } }], '🔺'),
+  hunterFusion('Vampires', 'crimson_stakeout', 'Crimson Stakeout', 3, 'Equip a 2/2 weapon. Your Hero has Lifesteal this turn.', [{ op: 'equipHeroWeapon', name: 'Crimson Rowan Stake', attack: 2, durability: 2 }, { op: 'buff', target: 'friendlyHero', temporaryKeywords: ['Lifesteal'], temporary: true }], '🩸'),
+  hunterFusion('Void', 'null_silver', 'Null Silver', 3, 'Give your Hero +3 Attack this turn. If your hand is empty, gain 4 Armor.', [{ op: 'buff', target: 'friendlyHero', attack: 3, temporary: true }, { op: 'gainArmor', amount: 4, if: { handEmpty: true } }], '🌑'),
+  hunterFusion('Witches', 'countershot', 'Countershot', 3, 'Give your Hero +2 Attack this turn and gain 3 Armor.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'gainArmor', amount: 3 }], '🪄'),
+  hunterFusion('Zombies', 'last_round_protocol', 'Last-Round Protocol', 3, 'Give your Hero +2 Attack this turn. Summon a 2/2 Rage Runner.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'summon', cardId: 'rage_runner' }], '🧟'),
+);

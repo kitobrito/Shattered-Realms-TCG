@@ -44,7 +44,8 @@ export function effectiveAttack(c) {
   const rad = c.kind === 'minion' && radiationOf(c) > 0 ? (getCard(c.cardId).attackWhileIrradiated ?? 0) : 0;
   // The Chewed One: extra Attack while damaged.
   const hurt = c.kind === 'minion' && c.health < c.maxHealth ? (getCard(c.cardId).attackWhileDamaged ?? 0) : 0;
-  return Math.max(0, c.attack + c.tempAttack + linger + (c.auraAttack ?? 0) + rad + hurt);
+  const dual = c.kind === 'hero' && c.weaponUsedSlot === 2 && c.weapon && c.weapon2 ? (c.weapon2.attack - c.weapon.attack) : 0;
+  return Math.max(0, c.attack + c.tempAttack + linger + (c.auraAttack ?? 0) + rad + hurt + dual);
 }
 
 // ---- Radiation (Radioactive) -------------------------------------------------

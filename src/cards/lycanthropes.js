@@ -9,6 +9,8 @@
 // Rulings made while building are marked "Ruling:".
 
 const K = { faction: 'Lycanthropes', type: 'minion', tribes: ['Lycan'] };
+const SKINWALKER_SET = 'Stolen Hide';
+const SKINWALKER_TYPES = { tribes: ['Lycan', 'Human', 'Cryptid'], tags: ['Dark'], typeLine: 'Human · Cryptid · Dark' };
 const S = { faction: 'Lycanthropes', type: 'spell' };
 const T = { faction: 'Lycanthropes', type: 'trap' };
 
@@ -41,7 +43,7 @@ function lycan(h, b) {
   const beastLine = `Beast ${b.attack}/${b.health}${b.text ? `: ${b.text}` : '.'}`;
   return [
     { ...K, ...h, form: 'human', beastForm: beastId, text: `${h.text ? `${h.text} ` : ''}▸ ${beastLine}` },
-    { ...K, art: '🐺', ...b, id: beastId, name: h.name, cost: h.cost, extra: h.extra, form: 'beast', humanForm: h.id, token: true, text: b.text ?? '' },
+    { ...K, art: '🐺', ...b, id: beastId, name: h.name, cost: h.cost, extra: h.extra, set: h.set, tribes: h.tribes ?? K.tribes, tags: h.tags, typeLine: h.typeLine, form: 'beast', humanForm: h.id, token: true, text: b.text ?? '' },
   ];
 }
 
@@ -329,12 +331,89 @@ export const LYCANTHROPE_CARDS = [
 
   // ---- New legendary: a skinwalker ----
   ...lycan(
-    { id: 'the_pale_wanderer', name: 'The Pale Wanderer', art: '🎩', extra: true, cost: 5, attack: 3, health: 5, keywords: ['Stealth'],
+    { id: 'the_pale_wanderer', name: 'The Pale Wanderer', art: '🎩', ...SKINWALKER_TYPES, extra: true, cost: 5, attack: 3, health: 5, keywords: ['Stealth'],
       target: { type: 'minion', side: 'enemy' },
       text: 'Stealth. Arrival: Copy the keywords of an enemy minion.',
       triggers: [arrival([{ op: 'copyKeywords', from: 'chosen', to: 'self' }])] },
-    { attack: 7, health: 6, stealKeywordsOnKill: true, text: "Whenever it kills a minion, it takes that minion's keywords (they stay when it changes back)." },
+    { attack: 7, health: 6, takeHideOnKill: true, text: "Whenever this kills a minion, it steals its hide, gaining its Attack, Health and positive keywords until it transforms back." },
   ),
+
+  // ---- Stolen Hide expansion (15) ----
+  ...lycan(
+    { id: 'one_among_flock', name: 'One Among the Flock', art: '🐑', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 2, attack: 2, health: 3, text: '' },
+    { attack: 3, health: 3, keywords: ['Stealth'], takeHideOnKill: true,
+      text: 'Stealth. Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'coyote_wrong_face', name: 'Coyote in the Wrong Face', art: '🐺', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 3, attack: 3, health: 2, text: '' },
+    { attack: 4, health: 2, keywords: ['Rush'], takeHideOnKill: true,
+      text: 'Rush. Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'owl_treeline', name: 'Owl at the Treeline', art: '🦉', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 3, attack: 2, health: 4, text: '' },
+    { attack: 3, health: 4, keywords: ['Elusive'], takeHideOnKill: true,
+      text: 'Elusive. Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'antlers_backward', name: 'Antlers Bent Backward', art: '🦌', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 4, attack: 3, health: 4, text: '' },
+    { attack: 4, health: 5, keywords: ['Taunt'], takeHideOnKill: true,
+      text: 'Taunt. Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'fox_runs_beside_you', name: 'Fox That Runs Beside You', art: '🦊', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 4, attack: 3, health: 3, text: '' },
+    { attack: 4, health: 4, keywords: ['Rush'], killAttacks: 1, takeHideOnKill: true,
+      text: 'Rush. After this kills a minion, it can attack again once this turn. Whenever it kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'bear_two_shadows', name: 'Bear with Two Shadows', art: '🐻', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 5, attack: 4, health: 6, keywords: ['Taunt'], text: 'Taunt.' },
+    { attack: 5, health: 7, keywords: ['Taunt'], takeHideOnKill: true,
+      text: 'Taunt. Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'wolf_inside_flock', name: 'Wolf Inside the Flock', art: '🐺', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 6, attack: 5, health: 5, text: '' },
+    { attack: 6, health: 6, takeHideOnKill: true,
+      text: 'Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  ...lycan(
+    { id: 'face_that_comes_back', name: 'The Face That Comes Back', art: '🎭', ...SKINWALKER_TYPES, extra: true, set: SKINWALKER_SET, cost: 8, attack: 5, health: 7, legendary: true, text: '' },
+    { attack: 7, health: 8, keywords: ['Rush'], takeHideOnKill: true,
+      text: 'Rush. Whenever this kills a minion, it steals its hide: gain its Attack, Health and positive keywords until this transforms back.' },
+  ),
+  {
+    ...S, id: 'moonless_pursuit', name: 'Moonless Pursuit', art: '🌑', extra: true, set: SKINWALKER_SET, cost: 1,
+    text: 'Give a friendly Lycanthrope +2 Attack this turn. If it is in Beast Form, it also gains Rush this turn.', target: LYC,
+    effects: [tempAtk('chosen', 2), { op: 'ifTarget', target: 'chosen', filter: { form: 'beast' }, effects: [{ op: 'buff', target: 'chosen', temporaryKeywords: ['Rush'] }] }],
+  },
+  {
+    ...S, id: 'wound_that_walks', name: 'The Wound That Walks', art: '🩸', extra: true, set: SKINWALKER_SET, cost: 2,
+    text: 'Deal 3 damage to an enemy minion. If it dies, a friendly Beast Form steals its hide.', target: { type: 'minion', side: 'enemy' },
+    effects: [{ op: 'damage', target: 'chosen', amount: 3 }, { op: 'ifTarget', target: 'chosen', filter: { alive: false }, effects: [{ op: 'takeHide', target: { randomOf: FRIENDLY_BEASTS }, from: 'chosen' }] }],
+  },
+  {
+    ...S, id: 'hold_the_shape', name: 'Hold the Shape', art: '🪶', extra: true, set: SKINWALKER_SET, cost: 2,
+    text: 'Give a friendly Lycanthrope +2 Health and Taunt until your next turn.', target: LYC,
+    effects: [buff('chosen', 0, 2), untilNext('chosen', 'Taunt')],
+  },
+  {
+    ...S, id: 'shedding_borrowed_face', name: 'Shedding the Borrowed Face', art: '🩸', extra: true, set: SKINWALKER_SET, cost: 2,
+    text: 'Transform a friendly Lycanthrope. If it transforms into Humanoid Form, restore 3 Health to it.', target: LYC,
+    effects: [shift('chosen'), { op: 'ifTarget', target: 'chosen', filter: { form: 'human' }, effects: [{ op: 'heal', target: 'chosen', amount: 3 }] }],
+  },
+  {
+    ...S, id: 'suspicious_flock', name: 'A Suspicious Flock', art: '🐦', extra: true, set: SKINWALKER_SET, cost: 3,
+    text: 'Give your Beast Forms +1/+1. They steal the hide of the first minion each kills this turn.',
+    effects: [buff(FRIENDLY_BEASTS, 1, 1), { op: 'grantHideOnKill', target: FRIENDLY_BEASTS }],
+  },
+  {
+    ...T, id: 'tracks_end_here', name: 'The Tracks End Here', art: '🐾', extra: true, set: SKINWALKER_SET, cost: 2,
+    text: 'When an enemy minion attacks: transform a random friendly Humanoid Lycanthrope into Beast Form. It gains Taunt until your next turn.',
+    trap: { on: 'attackDeclared', filter: { player: 'enemy', source: 'enemyMinion' }, effects: [shift({ randomOf: LYC_HUMAN }, { to: 'beast', then: [untilNext('chosen', 'Taunt')] })] },
+  },
+  {
+    ...S, id: 'a_second_face', name: 'A Second Face', art: '🎭', extra: true, set: SKINWALKER_SET, cost: 5,
+    text: 'Transform a friendly Lycanthrope into Beast Form. It gains +2/+2 and steals the hide of its next kill this turn.', target: LYC,
+    effects: [shift('chosen', { to: 'beast' }), buff('chosen', 2, 2), { op: 'grantHideOnKill', target: 'chosen' }],
+  },
 ];
 // The Pale Wanderer's Beast Form has its own name.
 for (const c of LYCANTHROPE_CARDS) if (c.id === 'the_pale_wanderer_beast') c.name = SKINWALKER_NAME;

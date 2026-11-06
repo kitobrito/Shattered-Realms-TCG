@@ -23,6 +23,7 @@ export const BOARD_ART = {
   'Ice Age': 'art/boards-v2/ice-age.jpg',
   Eels: 'art/boards-v2/eels.jpg',
   Witches: 'art/boards-v2/witches.jpg',
+  'Monster Hunter': 'art/monster-hunter/monsterhunterlandscape.jpg',
   // Unlockable alternate boards (ALT_BOARDS below): keyed by the board's own name.
   'Harvest Moon': 'art/boards-v2/harvest-moon.jpg',
   'The Rage Outbreak': 'art/boards-v2/rage-outbreak.jpg',
@@ -79,7 +80,7 @@ export const ALT_BOARDS = {
   Radioactive: [{ id: 'The Fallout Vault', expansion: true, blurb: 'An atomic-age shelter vault leaking glowing green goo.' }],
   Vampires: [{ id: 'The Blood Bar', expansion: true, blurb: 'A gothic vampire lounge built around a pool of blood.' }],
   Ghosts: [{ id: 'The Haunted Set', expansion: true, blurb: 'A living room taken over by a poltergeist and a haunted TV.' }],
-  Lycanthropes: [{ id: 'The Skinwalker Cave', expansion: true, blurb: 'A moonlit cave lair where something is changing shape.' }],
+  Lycanthropes: [{ id: 'The Skinwalker Cave', set: 'Stolen Hide', blurb: 'A moonlit cave lair where something is changing shape.' }],
   Bees: [{ id: 'The Hornet Hollow', expansion: true, blurb: 'A vast underground hornet nest glowing with nectar.' }],
   Robots: [{ id: 'The Kaiju Cockpit', expansion: true, blurb: 'Inside a giant mech mid-battle with a kaiju.' }],
   Dragons: [{ id: 'The Frozen Hoard', expansion: true, blurb: 'An ice dragon coiled around its frozen treasure.' }],
@@ -122,6 +123,7 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
+  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterportrait.jpg', opp: [195, 150, 264, 219, 'circle'], me: [195, 788, 264, 857, 'circle'], field: [115, 250, 344, 750], props: [] },
   // No painted hero frames: the game draws iron ones over the street.
   'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [167, 52, 298, 169, 'circle'], me: [168, 833, 293, 961, 'circle'], field: [181, 823], props: [] },
   'Harvest Moon': { src: 'art/boards-portrait/harvest-moon.jpg', opp: [192, 130, 267, 207, 'arch'], me: [183, 757, 276, 839, 'circle'], field: [223, 741], props: [] },
@@ -176,6 +178,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
+  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterlandscape.jpg', opp: [472, 28, 552, 108], me: [472, 464, 552, 544], field: [130, 145, 894, 425], props: [] },
   'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [452, 28, 566, 142], me: [449, 423, 567, 538], field: [150, 154, 880, 409], props: [] },
   'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },

@@ -15,6 +15,27 @@ function exitOnLeave(state, m) {
   }
 }
 
+// The skinwalker's stolen stats, positive keywords, and visible likeness last only in Beast Form.
+export function takeHide(state, wearer, victim) {
+  if (!wearer || !victim || wearer.kind !== 'minion' || victim.kind !== 'minion' || wearer.health <= 0) return;
+  const old = wearer.borrowedHideBonus;
+  if (old) {
+    wearer.attack = Math.max(0, wearer.attack - old.attack);
+    wearer.maxHealth = Math.max(1, wearer.maxHealth - old.health);
+    wearer.health = Math.min(wearer.health, wearer.maxHealth);
+    wearer.keywords = wearer.keywords.filter((k) => !old.keywords.includes(k));
+  }
+  const keywords = allKeywords(victim).filter((k) => !NEGATIVE_KEYWORDS.includes(k));
+  const gainedKeywords = keywords.filter((k) => !hasKeyword(wearer, k));
+  const attack = Math.max(0, effectiveAttack(victim));
+  const health = Math.max(0, victim.maxHealth ?? getCard(victim.cardId).health);
+  applyBuff(state, wearer, { attack, health });
+  for (const k of gainedKeywords) addKeyword(wearer, k, false, state);
+  wearer.borrowedHideBonus = { attack, health, keywords: gainedKeywords };
+  wearer.borrowedHide = victim.cardId;
+  log(state, `${nameOf(state, wearer)} steals ${nameOf(state, victim)}'s hide and takes its shape.`);
+}
+
 // Any effect may carry `if: <condition>` (and optional `else: [effects]`).
 
 import {
@@ -221,6 +242,16 @@ export function shiftMinion(state, m, to = null) {
   if (m.shifts.turn !== state.turn) m.shifts = { turn: state.turn, n: 0 };
   if (++m.shifts.n > 6) return false;
   const damage = Math.max(0, m.maxHealth - m.health);
+  // A stolen hide lasts only while the skinwalker wears Beast Form.
+  if (nw.form === 'human' && m.borrowedHideBonus) {
+    const hide = m.borrowedHideBonus;
+    m.attack = Math.max(0, m.attack - hide.attack);
+    m.maxHealth = Math.max(1, m.maxHealth - hide.health);
+    for (const k of hide.keywords) m.keywords = m.keywords.filter((x) => x !== k);
+    delete m.borrowedHideBonus;
+    delete m.borrowedHide;
+  }
+  if (nw.form === 'human') delete m.takeHideUntilTurn;
   m.attack = Math.max(0, m.attack + (nw.attack ?? 0) - (old.attack ?? 0));
   m.maxHealth = Math.max(1, m.maxHealth + (nw.health ?? 0) - (old.health ?? 0));
   m.health = Math.max(1, Math.min(m.maxHealth, m.maxHealth - damage));
@@ -717,7 +748,22 @@ export function dischargeMinion(state, m, opts = {}) {
 }
 const CHAIN_OPTS = ['lifesteal', 'burn', 'corrode', 'radiate', 'preyLast', 'healPerHit', 'freeze', 'lossless'];
 
+function syncDualWield(hero) {
+  const keywords = (hero.auraKeywords ?? []).filter((k) => k !== 'Twin Strike');
+  if (hero.dualWield && hero.weapon && hero.weapon2 && hero.weapon.cardId !== hero.weapon2.cardId) keywords.push('Twin Strike');
+  hero.auraKeywords = keywords;
+}
+
 export const EFFECT_OPS = {
+  // { target, from } — a Beast Form steals the dead minion's hide.
+  takeHide(state, e, ctx) {
+    const victim = findCharacter(state, resolveSelector(state, e.from, ctx)[0]);
+    each(state, e.target, ctx, (wearer) => takeHide(state, wearer, victim));
+  },
+  // Mark a minion to take a hide on its next combat kill this turn.
+  grantHideOnKill(state, e, ctx) {
+    each(state, e.target, ctx, (m) => { m.takeHideUntilTurn = state.turn; });
+  },
   // ---- Eels ----
   // { target, amount, overcap? } — the minions gain Volts.
   gainVolts(state, e, ctx) {
@@ -2669,21 +2715,29 @@ export const EFFECT_OPS = {
   equipHeroWeapon(state, e, ctx) {
     const hero = heroOf(state, ctx.controller);
     if (e.ifNoWeapon && hero.weapon) return;
-    if (hero.weapon) dropHeroWeapon(state, hero, 'drops');
     const wcard = getCard(e.cardId ?? ctx.cardId);
-    hero.weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
+    const dual = hero.dualWield && !e.wand && !wcard?.wand;
+    let slot = 1;
+    if (dual && hero.weapon && hero.weapon.cardId !== (e.cardId ?? ctx.cardId) && !hero.weapon2) slot = 2;
+    const oldWeapon = slot === 2 ? hero.weapon2 : hero.weapon;
+    if (oldWeapon) { if (slot === 2) hero.weapon2 = null; else dropHeroWeapon(state, hero, 'drops'); }
+    const weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
+      ...(e.prey ? { prey: e.prey, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.heroOnly ? { heroOnly: true } : {}),
       // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
       ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
     // Witches (Spellbound): Rune Slots (Apprentice 1, most Wands 2, legendary 3), a built-in enchantment,
     // and runes carried over from the last Wand once the Spellbook is half written.
-    if (hero.weapon.wand) {
-      hero.weapon.slots = e.slots ?? wcard?.runeSlots ?? 2;
-      hero.weapon.runes = [];
-      if (e.enchant ?? wcard?.enchant) hero.weapon.runes.push({ kind: 'ench', id: e.enchant ?? wcard.enchant });
+    if (weapon.wand) {
+      weapon.slots = e.slots ?? wcard?.runeSlots ?? 2;
+      weapon.runes = [];
+      if (e.enchant ?? wcard?.enchant) weapon.runes.push({ kind: 'ench', id: e.enchant ?? wcard.enchant });
       const stash = state.players[ctx.controller].spellbook?.stash;
       if (stash?.length) { for (const r of stash) addRune(state, hero, r); state.players[ctx.controller].spellbook.stash = null; log(state, `📖 The enchantments carry over to the ${hero.weapon.name}.`); }
     }
-    hero.attack = (hero.attack ?? 0) + e.attack;
+    if (slot === 2) hero.weapon2 = weapon;
+    else hero.weapon = weapon;
+    if (slot === 1) hero.attack = (hero.attack ?? 0) + e.attack;
+    syncDualWield(hero);
     for (const t of e.triggers ?? []) (hero.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, weapon: true });
     log(state, `${nameOf(state, hero)} equips ${e.name} (${e.attack}/${e.durability}).`);
     emit(state, { type: 'weaponEquipped', source: hero.uid, player: ctx.controller });
@@ -3012,21 +3066,32 @@ export const EFFECT_OPS = {
   // After your Hero attacks with a Weapon: it loses 1 Durability (engine declareAttack).
   wearHeroWeapon(state, e, ctx) {
     const hero = heroOf(state, ctx.controller);
-    if (!hero.weapon) return;
-    hero.weapon.durability -= 1;
+    const slot = e.slot === 2 ? 2 : 1;
+    const w = slot === 2 ? hero.weapon2 : hero.weapon;
+    if (!w) return;
+    w.durability -= 1;
     // Witches: Ward of Binding (a Trap) saves a Wand that would break.
-    if (hero.weapon.durability <= 0 && hero.weapon.wand) {
+    if (w.durability <= 0 && w.wand) {
       const pl = state.players[ctx.controller];
       const trap = pl.traps.find((t) => getCard(t.cardId).trap?.on === 'wandWouldBreak');
       if (trap) {
         pl.traps.splice(pl.traps.indexOf(trap), 1); pl.graveyard.push(trap);
-        hero.weapon.durability = 1;
-        log(state, `Trap revealed: ${getCard(trap.cardId).name}! The ${hero.weapon.name} holds together.`);
+        w.durability = 1;
+        log(state, `Trap revealed: ${getCard(trap.cardId).name}! The ${w.name} holds together.`);
         emit(state, { type: 'trapTriggered', player: ctx.controller, cardId: trap.cardId });
         return;
       }
     }
-    if (hero.weapon.durability <= 0) dropHeroWeapon(state, hero, 'breaks');
+    if (w.durability <= 0) {
+      if (slot === 2) hero.weapon2 = null;
+      else {
+        dropHeroWeapon(state, hero, 'breaks');
+        if (hero.dualWield && hero.weapon2) {
+          hero.weapon = hero.weapon2; hero.weapon2 = null; hero.attack = (hero.attack ?? 0) + hero.weapon.attack;
+        }
+      }
+      syncDualWield(hero);
+    }
   },
 
   // Dinosaur Extinction Cycle modifiers for the caster's next Extinction.
@@ -3148,6 +3213,7 @@ export function dropHeroWeapon(state, hero, how = 'breaks') {
     if (keep.length) book.stash = keep;
   }
   hero.weapon = null;
+  syncDualWield(hero);
   if (how === 'moves') return;
   log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : how === 'melts' ? `🧪 ${nameOf(state, hero)}'s ${w.name} melts away.` : `${nameOf(state, hero)} drops the ${w.name}.`);
   // A Relic's last gasp when it breaks (Soulforge Relic).
