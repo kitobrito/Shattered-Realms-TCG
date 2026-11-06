@@ -3,10 +3,12 @@
 //   node tools/test-boards.mjs
 
 import { existsSync } from 'node:fs';
-import { BOARD_ART, CIRCLE_BOARDS, LANDSCAPE_BOARDS, PORTRAIT_BOARDS } from '../src/cards/board-art.js';
+import { ALT_BOARDS, BOARD_ART, CIRCLE_BOARDS, LANDSCAPE_BOARDS, PORTRAIT_BOARDS } from '../src/cards/board-art.js';
 import { BOARD_MASKS } from '../src/cards/board-fx-masks.js';
 import { BOARD_OBJECTS } from '../src/cards/board-objects.js';
 import { BOARD_FX } from '../src/ui/board-fx-defs.js';
+import { allCards } from '../src/engine/registry.js';
+import '../src/cards/index.js';
 
 let failures = 0, passed = 0;
 function test(name, fn) { try { const r = fn(); if (r) { failures++; console.log(`FAIL ${name}: ${r}`); } else { passed++; console.log(`ok   ${name}`); } } catch (e) { failures++; console.log(`FAIL ${name}: ${e.message}`); } }
@@ -53,6 +55,16 @@ test('every moving object is cut out of its painting (only the object moves)', (
     });
     if (BOARD_OBJECTS[k] && !existsSync(BOARD_OBJECTS[k].src)) return `${k}: ${BOARD_OBJECTS[k].src}`;
   }
+});
+
+test('every unlockable board has cards that unlock it', () => {
+  const extras = allCards().filter((c) => c.extra && !c.token && !c.custom && !c.alwaysUnlocked);
+  const bad = [];
+  for (const [f, alts] of Object.entries(ALT_BOARDS)) for (const b of alts) {
+    const n = b.cards ? b.cards.length : b.set ? extras.filter((c) => c.set === b.set).length : extras.filter((c) => c.faction === f && !c.set).length;
+    if (!n) bad.push(`${f}: ${b.id}`);
+  }
+  if (bad.length) return `nothing unlocks ${bad.join(', ')}`;
 });
 
 console.log(`\n${passed} passed, ${failures} failed`);
