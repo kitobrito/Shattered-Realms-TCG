@@ -49,7 +49,7 @@ import {
 } from './core.js';
 import { collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
-import { NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL, REMADE_FORMS } from './rules.js';
+import { FACTION_TAGS, NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL, REMADE_FORMS } from './rules.js';
 import { minionPasses, resolveSelector, targetCandidates } from './targeting.js';
 import { enterBattlefield, queueSelfTrigger, selfTriggerSteps } from './triggers.js';
 
@@ -2125,6 +2125,27 @@ export const EFFECT_OPS = {
       c.lastDamagedBy = ctx.self;
       c.lastDamagedByController = ctx.controller;
     });
+  },
+
+  // The Last Exorcist: destroy Dark minions on the enemy board and in their hand.
+  destroyDarkMinions(state, _e, ctx) {
+    const enemy = state.players[opponentOf(ctx.controller)];
+    const isDarkMinionCard = (card) => card.type === 'minion' && (card.tags ?? FACTION_TAGS[card.faction] ?? []).includes('Dark');
+    for (const minion of enemy.board) {
+      if (!isDarkMinionCard(getCard(minion.cardId))) continue;
+      minion.destroyed = true;
+      minion.lastDamagedBy = ctx.self;
+      minion.lastDamagedByController = ctx.controller;
+    }
+    const kept = [];
+    for (const inst of enemy.hand) {
+      const card = getCard(inst.cardId);
+      if (!isDarkMinionCard(card)) { kept.push(inst); continue; }
+      enemy.graveyard.push(inst);
+      log(state, `☀ ${enemy.name}'s ${card.name} is destroyed in hand.`);
+      emit(state, { type: 'cardBurned', player: enemy.index, by: ctx.controller, cardId: card.id, cardUid: inst.uid, from: 'hand' });
+    }
+    enemy.hand = kept;
   },
 
   // Mushrooms (Fungus): { count, countPer?: selector, onto?: 'eventCard' }

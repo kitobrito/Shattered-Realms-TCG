@@ -14,6 +14,7 @@ export const ART = {
   relic_appraiser: 'art/monster-hunter/mh8.jpg',
   veteran_duelist: 'art/monster-hunter/mh7.jpg',
   the_night_captain: 'art/monster-hunter/the-night-captain.jpg',
+  the_last_exorcist: 'art/monster-hunter/the-last-exorcist.jpg',
   rowan_stake: 'art/monster-hunter/mhw1.jpg',
   silver_bolt_crossbow: 'art/monster-hunter/mh2.jpg',
   flintlock_pistol: 'art/monster-hunter/mhw3.jpg',

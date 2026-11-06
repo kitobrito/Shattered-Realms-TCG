@@ -11,6 +11,7 @@ export const MONSTER_HUNTER_CARDS=[
 {...M,id:'relic_appraiser',name:'Relic Appraiser',cost:3,attack:3,health:4,text:'Whenever you equip a weapon, gain 2 Armor.',triggers:[{on:'weaponEquipped',effects:[{op:'gainArmor',amount:2}]}]},
 {...M,id:'veteran_duelist',name:'Veteran Duelist',cost:4,attack:4,health:4,text:'Twin Strike.',keywords:['Twin Strike']},
 {...M,id:'the_night_captain',name:'The Night Captain',legendary:true,cost:6,attack:4,health:5,text:'Arrival: Give your Hero +2 Attack this turn and 3 Armor.',triggers:[{on:'battlecry',effects:[{op:'buff',target:'friendlyHero',attack:2,temporary:true},{op:'gainArmor',amount:3}]}]},
+{...M,id:'the_last_exorcist',name:'The Last Exorcist',legendary:true,extra:true,cost:9,attack:7,health:6,text:'Arrival: Destroy all enemy Dark minions on the field and in your opponent’s hand.',triggers:[{on:'battlecry',effects:[{op:'destroyDarkMinions'}]}]},
 W('rowan_stake','Rowan Stake',1,2,1,'Your Hero instantly kills enemy Vampire minions it attacks.',null,{executeFaction:'Vampires'}),
 W('silver_bolt_crossbow','Silver-Bolt Crossbow',2,3,3,'Ranged. Your Hero has +2 Attack against Werewolves.','Lycanthropes',{ranged:true}),
 W('flintlock_pistol','Flintlock Pistol',2,4,2,'Ranged. Has a 1-turn cooldown after use.',null,{ranged:true,cooldown:1}),
