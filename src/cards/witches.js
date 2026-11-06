@@ -1,6 +1,6 @@
 // WITCHES FACTION — The Coven. A dark academy of wand-duelling witches: the game's anti-spell
-// faction. Few minions; their power is in the Wands they arm their Hero with, in Silence, and in
-// Traps that Counter the enemy's spells. Their Legendaries are Weapons, not minions.
+// faction. Few minions; their power is in the Wands they arm their Hero with, in a few well-placed
+// Silences, and in Traps that Counter the enemy's spells. Their Legendaries are Weapons, not minions.
 //
 // Wand (card.wand): a Hero Weapon your Hero fires from afar. When your Hero attacks with a Wand it
 //   takes no damage back (engine combat). Each attack still uses 1 Durability.
@@ -83,8 +83,8 @@ export const WITCH_CARDS = [
   },
   {
     ...WITCH, id: 'wandwright', name: 'Wandwright', art: '🪵', cost: 3, attack: 3, health: 3,
-    text: `Arrival: If your Hero has no Weapon, equip a 2/2 Willow Wand: ${HUSH_TEXT}`,
-    triggers: [{ on: 'battlecry', effects: [{ ...wand('willow_wand', 'Willow Wand', 2, 2, HUSH_ON_HIT), ifNoWeapon: true }] }],
+    text: 'Arrival: If your Hero has no Weapon, equip a 2/2 Willow Wand.',
+    triggers: [{ on: 'battlecry', effects: [{ ...wand('willow_wand', 'Willow Wand', 2, 2), ifNoWeapon: true }] }],
   },
   {
     ...WITCH, id: 'bayou_bone_reader', name: 'Bayou Bone-Reader', art: '🦴', cost: 4, attack: 4, health: 4,
@@ -98,8 +98,8 @@ export const WITCH_CARDS = [
   },
   {
     ...WITCH, id: 'crossroads_witch', name: 'Crossroads Witch', art: '🔀', cost: 5, attack: 4, health: 6,
-    text: "At the end of your turn, permanently Silence a random enemy minion that isn't Silenced.",
-    triggers: [{ ...MY_TURN_END, effects: [SILENCE({ randomOf: { minions: { side: 'enemy', notKeyword: 'Silenced', alive: true } } })] }],
+    text: 'At the end of your turn, deal 2 damage to a random enemy minion.',
+    triggers: [{ ...MY_TURN_END, effects: [{ op: 'damage', target: { randomOf: { minions: { side: 'enemy', alive: true } } }, amount: 2 }] }],
   },
   {
     ...WITCH, id: 'coven_matriarch', name: 'Coven Matriarch', art: '👁️', cost: 7, attack: 5, health: 6, keywords: ['Taunt'],
@@ -120,8 +120,8 @@ export const WITCH_CARDS = [
   },
   {
     ...S, id: 'cinderthorn_wand', name: 'Cinderthorn Wand', art: '🔥', cost: 3, wand: true, heroWeapon: { attack: 2, durability: 3 },
-    text: 'Equip a 2/3 Wand: "After your Hero attacks, deal 2 damage to every Silenced enemy minion."',
-    effects: [wand('cinderthorn_wand', 'Cinderthorn Wand', 2, 3, [{ ...AFTER_ATTACK, effects: [{ op: 'damage', target: { minions: { side: 'enemy', keyword: 'Silenced' } }, amount: 2 }] }])],
+    text: 'Equip a 2/3 Wand: "After your Hero attacks, deal 1 damage to all enemy minions."',
+    effects: [wand('cinderthorn_wand', 'Cinderthorn Wand', 2, 3, [{ ...AFTER_ATTACK, effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 1 }] }])],
   },
   {
     ...S, id: 'wand_of_unmaking', name: 'Wand of Unmaking', art: '💀', cost: 3, wand: true, heroWeapon: { attack: 2, durability: 2 },
@@ -140,8 +140,8 @@ export const WITCH_CARDS = [
   },
   {
     ...S, id: 'the_witching_hour_broom', name: 'The Witching Hour Broom', art: '🧹', cost: 8, heroWeapon: { attack: 4, durability: 4 },
-    text: 'Permanently Silence all enemy minions. Equip a 4/4 Weapon: "Your Hero has Twin Strike." (It is no Wand: your Hero flies in close and takes damage back.)',
-    effects: [SILENCE({ minions: { side: 'enemy' } }), { op: 'equipHeroWeapon', cardId: 'the_witching_hour_broom', name: 'The Witching Hour Broom', attack: 4, durability: 4, keywords: ['Twin Strike'] }],
+    text: 'Deal 2 damage to all enemy minions. Equip a 4/4 Weapon: "Your Hero has Twin Strike." (It is no Wand: your Hero flies in close and takes damage back.)',
+    effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }, { op: 'equipHeroWeapon', cardId: 'the_witching_hour_broom', name: 'The Witching Hour Broom', attack: 4, durability: 4, keywords: ['Twin Strike'] }],
   },
 
   // ---- Spells (6) ----
@@ -164,9 +164,9 @@ export const WITCH_CARDS = [
   },
   {
     ...S, id: 'pin_the_poppet', name: 'Pin the Poppet', art: '🪡', cost: 3,
-    text: 'Permanently Silence an enemy minion, then deal 3 damage to it.',
+    text: 'Deal 4 damage to an enemy minion.',
     target: ENEMY_MINION,
-    effects: [SILENCE('chosen'), { op: 'damage', target: 'chosen', amount: 3 }],
+    effects: [{ op: 'damage', target: 'chosen', amount: 4 }],
   },
   {
     ...S, id: 'forbidden_grimoire', name: 'Forbidden Grimoire', art: '📖', cost: 3,
@@ -175,8 +175,8 @@ export const WITCH_CARDS = [
   },
   {
     ...S, id: 'the_great_hush', name: 'The Great Hush', art: '🌑', cost: 5,
-    text: 'Permanently Silence all enemy minions, then deal 1 damage to them. Silence the enemy Hero until the end of their next turn. Draw a card.',
-    effects: [SILENCE({ minions: { side: 'enemy' } }), { op: 'damage', target: { minions: { side: 'enemy' } }, amount: 1 }, { op: 'silenceHero' }, { op: 'draw', count: 1 }],
+    text: 'Deal 2 damage to all enemy minions. Draw a card.',
+    effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 2 }, { op: 'draw', count: 1 }],
   },
   {
     ...S, id: 'nullify', name: 'Nullify', art: '🚫', cost: 3,
@@ -198,13 +198,13 @@ export const WITCH_CARDS = [
   },
   {
     ...T, id: 'backfire_curse', name: 'Backfire Curse', art: '💥', cost: 2,
-    text: 'When your opponent casts a spell card, deal 3 damage to their Hero and Silence their Hero until the end of their next turn.',
-    trap: { on: 'cardPlayed', filter: ENEMY_SPELL, effects: [{ op: 'damage', target: 'enemyHero', amount: 3 }, { op: 'silenceHero' }] },
+    text: 'When your opponent casts a spell card, deal 3 damage to their Hero and draw a card.',
+    trap: { on: 'cardPlayed', filter: ENEMY_SPELL, effects: [{ op: 'damage', target: 'enemyHero', amount: 3 }, { op: 'draw', count: 1 }] },
   },
   {
     ...T, id: 'curse_of_the_withered_hand', name: 'Curse of the Withered Hand', art: '🖐️', cost: 2,
-    text: 'When an enemy minion attacks, permanently Silence it and give it -3 Attack.',
-    trap: { on: 'attackDeclared', filter: { source: { side: 'enemy' } }, effects: [SILENCE('eventSource'), { op: 'buff', target: 'eventSource', attack: -3 }] },
+    text: 'When an enemy minion attacks, give it -3 Attack.',
+    trap: { on: 'attackDeclared', filter: { source: { side: 'enemy' } }, effects: [{ op: 'buff', target: 'eventSource', attack: -3 }] },
   },
   {
     ...T, id: 'counter_hex', name: 'Counter-Hex', art: '🔮', cost: 3,
@@ -214,8 +214,8 @@ export const WITCH_CARDS = [
   {
     // The Witches' Legendary Trap (it wears their legendary trap frame).
     ...T, id: 'mirror_hex', name: 'Mirror Hex', art: '🪞', cost: 5,
-    text: 'When your opponent casts a spell card, Counter it and add a copy of it to your hand. It costs (0). Silence the enemy Hero until the end of their next turn.',
-    trap: { on: 'cardPlayed', filter: ENEMY_SPELL, counters: true, effects: [{ op: 'counterSpell', copy: true, copyCostMod: -99 }, { op: 'silenceHero' }] },
+    text: 'When your opponent casts a spell card, Counter it and add a copy of it to your hand. It costs (0).',
+    trap: { on: 'cardPlayed', filter: ENEMY_SPELL, counters: true, effects: [{ op: 'counterSpell', copy: true, copyCostMod: -99 }] },
   },
 
   // ---- Spellbound expansion (unlockable): the Spellbook, Scribes, Wandweaving and Inscribe ----
@@ -347,5 +347,5 @@ export const WITCH_CARDS = [
 
   // ---- Tokens ----
   { ...S, id: 'apprentice_wand', name: 'Apprentice Wand', art: '🪄', token: true, cost: 2, wand: true, runeSlots: 1, heroWeapon: { attack: 1, durability: 2 }, text: 'A 1/2 Wand from Wandcraft.', effects: [wand('apprentice_wand', 'Apprentice Wand', 1, 2)] },
-  { ...S, id: 'willow_wand', name: 'Willow Wand', art: '🌿', token: true, cost: 2, wand: true, heroWeapon: { attack: 2, durability: 2 }, text: `A 2/2 Wand from Wandwright: ${HUSH_TEXT}`, effects: [wand('willow_wand', 'Willow Wand', 2, 2, HUSH_ON_HIT)] },
+  { ...S, id: 'willow_wand', name: 'Willow Wand', art: '🌿', token: true, cost: 2, wand: true, heroWeapon: { attack: 2, durability: 2 }, text: 'A 2/2 Wand from Wandwright.', effects: [wand('willow_wand', 'Willow Wand', 2, 2)] },
 ];

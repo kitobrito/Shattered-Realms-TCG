@@ -115,7 +115,7 @@ export const FACTION_INFO = {
     style: 'Control · Burst',
   },
   Witches: {
-    summary: 'A dark coven of wand duellists: arm your Hero with Wands, Silence everything, and Counter the enemy\'s spells.',
+    summary: 'A dark coven of wand duellists: arm your Hero with Wands, Silence the biggest threats, and Counter the enemy\'s spells.',
     strengths: ['Shuts down spell-heavy decks with Counters and spell taxes', 'Silence strips Taunt, Evade and every other keyword', 'Wands hit from afar: your Hero takes no damage back'],
     weaknesses: ['Few minions to hold the board', 'Counters do nothing against minion-heavy decks', 'Losing your Wand leaves you with little pressure'],
     mechanic: 'Wandcraft: equip a 1/2 Apprentice Wand (or give your Wand +1 Durability). Wand: your Hero attacks from afar and takes no damage back. Counter: an enemy spell card is spent with no effect. Silence the enemy Hero: no Hero Spell on their next turn.',
@@ -345,6 +345,27 @@ export const SYNERGY = {
   'Lycanthropes+Ultraterrestrials': [3, 'Displace blockers while the pack transforms.'],
   'Lycanthropes+Sharks': [4, 'Predators everywhere: beasts finish off Prey.'],
   'Acidic+Lycanthropes': [3, 'Corroded enemies cannot fight off the pack.'],
+  // ---- Witches ----
+  'Acidic+Witches': [3, 'Corrosion and Wands both disarm the enemy board; your Hero picks off what is left.'],
+  'Aliens+Witches': [3, 'Keyword tricks and Counters: two rule-benders that make the enemy play on your terms.'],
+  'Bees+Witches': [3, 'The Hive and its Taunts guard your Hero while Wands fire over them.'],
+  'Demons+Witches': [4, 'Pay Health for Demons, then Lifesteal Wands and Counters buy it back.'],
+  'Dinosaurs+Witches': [2, 'Dinosaurs want a wide, hard-hitting board; Witches want few minions and a busy Hero.'],
+  'Divine+Witches': [4, 'Healing keeps your Hero firing, and Counters protect your shields.'],
+  'Dragons+Witches': [4, 'Burn and Wands clear the board; Counters stop the comeback.'],
+  'Eels+Witches': [3, 'Discharges and Wand bolts both hit from afar, so your board never has to trade.'],
+  'Fungus+Witches': [2, 'Mushrooms grow slowly on the board; Witches barely use one.'],
+  'Ghosts+Witches': [4, 'Haunting and Counters: a control deck that answers everything twice.'],
+  'Ice Age+Witches': [4, 'Freeze locks the board while Counters lock their hand: the long game is yours.'],
+  'Lycanthropes+Witches': [2, 'The pack wants to brawl; the coven wants to stay out of reach.'],
+  'Plants+Witches': [3, 'Slow Seedlings grow behind Taunts while Wands keep the board clear.'],
+  'Radioactive+Witches': [3, 'Mutations hit hard; Wand bolts clean up what the blast leaves standing.'],
+  'Robots+Witches': [3, 'Upgrades make your few minions sturdy; Wands handle the rest.'],
+  'Sharks+Witches': [3, 'Burrowed Sharks are hard to answer; Counters stop the spells that try.'],
+  'Ultraterrestrials+Witches': [4, 'Displace blockers and Counter their tricks: total control of the board.'],
+  'Vampires+Witches': [4, 'Lifesteal on your Wand and minions keeps your Hero alive for the long duel.'],
+  'Void+Witches': [3, 'Void empties hands; Counters waste the cards they keep.'],
+  'Witches+Zombies': [2, 'A wide horde clashes with a deck built around one armed Hero.'],
 };
 
 export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] ?? null;

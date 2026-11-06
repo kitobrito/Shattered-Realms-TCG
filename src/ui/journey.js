@@ -125,7 +125,8 @@ export function progressLine() {
 // Fused heroes stay a mystery (a "?" on the menu) until you play a match with that pair:
 // the match-start fusion is where you first meet them.
 const pairKey = (factions) => [...factions].map((f) => f.toLowerCase()).sort().join('+');
-export const heroRevealed = (factions) => (state.heroes ?? []).includes(pairKey(factions));
+// Admin accounts see every fused hero straight away.
+export const heroRevealed = (factions) => isAdmin() || (state.heroes ?? []).includes(pairKey(factions));
 export function revealHero(factions) {
   if (heroRevealed(factions)) return false;
   (state.heroes ??= []).push(pairKey(factions));
