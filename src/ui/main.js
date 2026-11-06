@@ -2481,7 +2481,9 @@ function renderMenu() {
   } else if (ready && fusionHeroPath(picked) && heroRevealed(picked)) {
     portrait = `<div class="stage-img fused">${livingPortraitHTML(artSrc(fusionHeroPath(picked)))}</div>${mini(picked[0], 'l')}${mini(picked[1], 'r')}`;
   } else {
-    portrait = `<div class="stage-img mystery ${ready ? 'ready' : ''}"><i>?</i><small>${ready ? 'Play a match to reveal your hero' : `Pick ${pickNeeded() - picked.length} more`}</small></div>${picked[0] ? mini(picked[0], 'l') : ''}${picked[1] ? mini(picked[1], 'r') : ''}`;
+    // Not met yet: the fused hero shows as a blacked-out silhouette (no features) until you play the pair.
+    const shadow = ready && fusionHeroPath(picked);
+    portrait = `<div class="stage-img mystery ${ready ? 'ready' : ''} ${shadow ? 'silhouette' : ''}">${shadow ? `<img src="${artSrc(fusionHeroPath(picked).replace('fusion-heroes/', 'fusion-silhouettes/').replace(/\.jpg$/, '.png'))}" alt="" draggable="false">` : '<i>?</i>'}<small>${ready ? 'Play a match to reveal your hero' : `Pick ${pickNeeded() - picked.length} more`}</small></div>${picked[0] ? mini(picked[0], 'l') : ''}${picked[1] ? mini(picked[1], 'r') : ''}`;
   }
   const title = picked.length ? picked.map(esc).join(' <i>+</i> ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`;
   const sets = picked.map((f) => EXPANSION_NAMES[f]).filter(Boolean);
