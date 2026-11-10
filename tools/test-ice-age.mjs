@@ -83,8 +83,8 @@ test('every Ice Age card, fusion, hero, fusion hero, back, board and the legenda
   for (const id of [...ICE_IDS, ...FUSION_IDS]) if (!ART[id] || !existsSync(ART[id].split('?')[0])) missing.push(id);
   if (!HERO_ART['Ice Age'] || !existsSync(HERO_ART['Ice Age'])) missing.push('hero');
   for (const f of PLAYABLE_FACTIONS.filter((f) => f !== 'Ice Age')) {
-    const key = ['ice-age', f.toLowerCase().replace(/\s+/g, '-')].sort().join('-');
-    const path = FUSION_HERO_ART[key] ?? FUSION_HERO_ART[`ice-age-${f.toLowerCase()}`] ?? FUSION_HERO_ART[`${f.toLowerCase()}-ice-age`];
+    const slug = f.toLowerCase().replace(/\s+/g, '-');
+    const path = FUSION_HERO_ART[`ice-age-${slug}`] ?? FUSION_HERO_ART[`${slug}-ice-age`];
     if (!path || !existsSync(path)) missing.push(`fusion hero ${f}`);
   }
   for (const f of ['art/backs/ice-age.jpg', 'art/frames/legendary-minion-ice-age.webp', BOARD_ART['Ice Age'], PORTRAIT_BOARDS['Ice Age']?.src, LANDSCAPE_BOARDS['Ice Age']?.src]) {
