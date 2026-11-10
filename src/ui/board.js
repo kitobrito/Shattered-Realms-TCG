@@ -381,7 +381,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
     <div class="hero-zone ${mine ? 'me' : 'opp'}">
       <div class="traps">${traps}</div>
       ${pl.hero.weapon ? `<div class="hero-fusion">${weaponHTML(pl)}</div>` : ''}
-      <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
+      <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${h.eclipse ? 'eclipse' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
         ${spellbookHTML(pl)}

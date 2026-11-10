@@ -45,7 +45,6 @@ export const BOARD_ART = {
   'The Tar Pit': 'art/boards-v2/iceage-tar-pit.jpg',
   'The Consecrated Graveyard': 'art/boards-v2/divine-consecrated-graveyard.jpg',
   'The Siege of Heaven': 'art/boards-v2/demons-heaven-siege.jpg',
-  'The Hunter\'s Crypt': 'art/boards-v2/monster-hunter-crypt.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
@@ -92,7 +91,6 @@ export const ALT_BOARDS = {
   'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
   Divine: [{ id: 'The Consecrated Graveyard', expansion: true, blurb: "A moonlit graveyard where holy light smites the restless dead." }],
   Demons: [{ id: 'The Siege of Heaven', expansion: true, blurb: "Heaven's golden gates, as hellfire and a demon legion storm the clouds." }],
-  'Monster Hunter': [{ id: 'The Hunter\'s Crypt', expansion: true, blurb: 'A torch-lit crypt where hunters fight vampires, werewolves and the restless dead.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -173,7 +171,6 @@ export const PORTRAIT_BOARDS = {
   'The Tar Pit': { src: 'art/boards-portrait/iceage-tar-pit.jpg', opp: [193, 173, 268, 270, 'arch'], me: [184, 753, 275, 843, 'circle'], field: [282, 743], props: [] },
   'The Consecrated Graveyard': { src: 'art/boards-portrait/divine-consecrated-graveyard.jpg', opp: [183, 56, 278, 170, 'arch'], me: [185, 781, 274, 871, 'circle'], field: [182, 771], props: [] },
   'The Siege of Heaven': { src: 'art/boards-portrait/demons-heaven-siege.jpg', opp: [174, 50, 277, 160, 'arch'], me: [184, 738, 282, 834, 'circle'], field: [172, 728], props: [] },
-  'The Hunter\'s Crypt': { src: 'art/boards-portrait/monster-hunter-crypt.jpg', opp: [175, 232, 280, 347, 'arch'], me: [164, 694, 298, 829, 'circle'], field: [352, 690], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -226,7 +223,6 @@ export const LANDSCAPE_BOARDS = {
   'The Tar Pit': { src: 'art/boards-v2/iceage-tar-pit.jpg', opp: [467, 28, 556, 124], me: [455, 425, 568, 543], field: [150, 136, 880, 411], props: [] },
   'The Consecrated Graveyard': { src: 'art/boards-v2/divine-consecrated-graveyard.jpg', opp: [458, 42, 564, 140], me: [460, 440, 564, 543], field: [150, 152, 880, 426], props: [] },
   'The Siege of Heaven': { src: 'art/boards-v2/demons-heaven-siege.jpg', opp: [467, 30, 557, 137], me: [462, 439, 571, 539], field: [150, 149, 880, 425], props: [] },
-  'The Hunter\'s Crypt': { src: 'art/boards-v2/monster-hunter-crypt.jpg', opp: [463, 42, 557, 148], me: [456, 442, 571, 557], field: [150, 160, 880, 425], props: [] },
 };
 
 

@@ -5853,3 +5853,38 @@ body.reduced-motion .hero-book.done { animation: none; }
   .ms-medal { width: 38px; height: 38px; }
   .ms-realm small { font-size: 10px; }
 }
+
+/* ---- Monster Hunter legendaries: Graveshredder, Sun, Moon, Eclipse ---- */
+.fx-moon-head { position: fixed; width: 38px; height: 38px; border-radius: 50%; pointer-events: none; z-index: 1004;
+  background: radial-gradient(circle, #fff 0%, #eaf4ff 35%, #9cc4ff 60%, transparent 72%); box-shadow: 0 0 24px #cfe4ff, 0 0 52px #8fb8ff, 0 0 90px #5f8fff88; }
+.fx-moon-tail { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; background: #f6faff; box-shadow: 0 0 10px #d6e8ff, 0 0 22px #8fb8ff; }
+.fx-sun-beam { position: fixed; height: 16px; margin-top: -8px; transform-origin: 0 50%; pointer-events: none; z-index: 1003; border-radius: 6px;
+  background: linear-gradient(90deg, #fff6c8, #ffd25a 40%, #ff9a2a 85%, transparent); box-shadow: 0 0 18px #ffcf5a, 0 0 40px #ff9a2a; }
+.fx-sun-bullet { position: fixed; width: 46px; height: 15px; pointer-events: none; z-index: 1004; border-radius: 6px 50% 50% 6px;
+  background: linear-gradient(90deg, transparent, #fffbe8 25%, #ffffff 60%, #ff5a2a 82%, #c8100a); box-shadow: 0 0 12px #fff2b0, 0 0 22px #ff6a2a; }
+.fx-sun-ember { position: fixed; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; z-index: 1003; background: #ffb24a; box-shadow: 0 0 8px #ff6a2a; }
+.fx-saw { position: fixed; pointer-events: none; z-index: 5000;
+  background: radial-gradient(circle, #1c1d20 0 13%, #6c727b 14% 18%, transparent 19%), conic-gradient(from 0deg, #f4f6f8, #9aa1ab, #e9ecef, #7d848e, #f4f6f8, #a3aab3, #eef1f4, #8a919b, #f4f6f8);
+  filter: drop-shadow(0 0 6px #fff9) drop-shadow(0 0 14px #ffcf7a); }
+.fx-saw-spark { position: fixed; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; z-index: 5001; background: #fff3b0; box-shadow: 0 0 8px #ffb02a; }
+.fx-saw-gore { position: fixed; width: 10px; height: 10px; border-radius: 50% 50% 50% 0; pointer-events: none; z-index: 5001; background: #7a0d0d; box-shadow: 0 0 2px #2a0000; }
+.fx-rise-moon, .fx-rise-sun { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; }
+.fx-rise-moon { background: radial-gradient(circle at 38% 38%, #ffffff, #dfe9f5 45%, #9fb2c8 70%, transparent 72%); box-shadow: 0 0 30px #cfe4ff, 0 0 60px #8fb8ff; }
+.fx-rise-sun { background: radial-gradient(circle, #fffbe0, #ffd25a 45%, #ff8a1a 68%, transparent 72%); box-shadow: 0 0 30px #ffd25a, 0 0 70px #ff8a1a; }
+.fx-eclipse-dim { position: fixed; inset: 0; pointer-events: none; z-index: 900; background: radial-gradient(circle at 50% 60%, rgba(10, 8, 20, 0.35), rgba(4, 3, 10, 0.8)); }
+.fx-eclipse-sun { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; background: radial-gradient(circle, #fffbe0, #ffd25a 50%, #ff8a1a 70%, transparent 72%); box-shadow: 0 0 40px #ffcf5a, 0 0 90px #ff8a1a; }
+.fx-eclipse-moon { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1004; background: radial-gradient(circle at 40% 40%, #ffffff, #d7e2ee 50%, #9fb2c8 70%, transparent 72%); box-shadow: 0 0 30px #cfe4ff;
+  transition: filter 0.45s, box-shadow 0.45s; }
+.fx-eclipse-moon.covering { filter: brightness(0.06) saturate(0); box-shadow: 0 0 0 transparent; }
+.fx-eclipse-corona { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; filter: blur(2px);
+  background: repeating-conic-gradient(from 0deg, rgba(255, 236, 170, 0.95) 0 4deg, rgba(255, 160, 60, 0.0) 4deg 11deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 33%, #000 36%, transparent 70%); mask: radial-gradient(circle, transparent 0 33%, #000 36%, transparent 70%); }
+.fx-banner.eclipse { z-index: 1010; }
+.fx-banner.eclipse span { color: #fff6dc; letter-spacing: 0.18em; text-shadow: 0 0 10px #ffd25a, 0 0 24px #ffb03a, 0 0 42px #8fb8ff, 0 3px 0 #2a1a00; }
+/* While Eclipse holds: a slow-turning corona around the Hero's portrait. */
+.hero-portrait.eclipse::after { content: ''; position: absolute; inset: -14%; border-radius: 50%; pointer-events: none; z-index: 0;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 230, 160, 0.7) 0 3deg, transparent 3deg 10deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 56%, #000 60%, transparent 72%); mask: radial-gradient(circle, transparent 0 56%, #000 60%, transparent 72%);
+  animation: eclipseTurn 14s linear infinite; filter: drop-shadow(0 0 6px #ffcf5a); }
+@keyframes eclipseTurn { to { transform: rotate(360deg); } }
+body.reduced-motion .hero-portrait.eclipse::after { animation: none; }

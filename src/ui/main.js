@@ -869,6 +869,7 @@ async function act(action, meta = {}) {
 
   before.srcFaction = sourceFaction(s, action, playedCard);
   before.castType = playedCard?.type;
+  before.eclipse = s.players.map((p) => !!p.hero.eclipse);
   before.playedId = playedCard?.id;
 
   // ---- Before: the move itself.
@@ -877,15 +878,26 @@ async function act(action, meta = {}) {
     if (action.type === 'attack') {
       sound.play('attack');
       const striker = findCharacter(s, action.attacker);
-      const activeWeapon = striker?.weaponUsedSlot === 2 ? striker.weapon2 : striker?.weapon;
+      // The weapon this swing uses (two weapons take turns: 1, 2, 1, ...).
+      const activeWeapon = striker?.kind === 'hero' ? (striker.weapon2 && striker.attacksThisTurn % 2 === 1 ? striker.weapon2 : striker.weapon) : null;
+      const legend = striker?.kind === 'hero' ? activeWeapon?.cardId : null;
       if (striker?.kind === 'hero' && ['flintlock_pistol', 'hidden_hand_cannon'].includes(activeWeapon?.cardId)) sound.play('gunshot');
       else if (striker?.kind === 'hero' && activeWeapon?.cardId === 'silver_bolt_crossbow') sound.play('crossbow');
       // Witches: a Hero with a Wand fires from afar — a bolt, not a lunge.
       if (striker?.kind === 'hero' && striker.weapon?.wand) { sound.play('zap'); await fx.wandBolt(charEl(action.attacker), charEl(action.defender), effectiveAttack(striker)); }
+      // Monster Hunter legendaries: Moon's silver streak, Sun's beam and its hellfire bullet at the enemy Hero.
+      else if (legend === 'moon_revolver') { sound.play('gunshot'); await fx.moonShot(charEl(action.attacker), charEl(action.defender)); }
+      else if (legend === 'sun_revolver') {
+        sound.play('gunshot');
+        await fx.sunShot(charEl(action.attacker), charEl(action.defender));
+        const foeHero = s.players[1 - striker.controller].hero;
+        fx.sunBullet(charEl(action.attacker), charEl(foeHero.uid));
+      }
       else lunged = await fx.lunge(charEl(action.attacker), charEl(action.defender), {
         power: striker ? effectiveAttack(striker) : 2, color: fx.factionColor(before.srcFaction), table: app.querySelector('.arena'),
         style: striker?.kind === 'minion' ? before.srcFaction : null,
       });
+      if (legend === 'graveshredder') { sound.play('grind'); await fx.chainsawBite(charEl(action.defender)); }
     } else if (action.type === 'transform') {
       // Lycanthropes: the minion shudders in a flash of moonlight as it changes shape.
       sound.play('growl');
@@ -1477,6 +1489,17 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       const i = Number(el.dataset.crystal);
       jobs.push(fx.animate(el, [{ filter: 'brightness(0.3) saturate(0)' }, { filter: 'brightness(2.4)', offset: 0.5 }, { filter: 'none' }], { duration: 420, delay: i * 60, fill: 'none' }));
     }
+  }
+
+  // Monster Hunter legendaries: equipping Graveshredder, Moon or Sun; then the Eclipse when both revolvers are held.
+  for (const line of newLog) {
+    const m = /^(.+) equips (Graveshredder|Moon|Sun) \(/.exec(line);
+    if (!m) continue;
+    const pl = s.players.find((x) => x.name === m[1]);
+    if (pl) await fx.weaponRise(charEl(pl.hero.uid), m[2] === 'Graveshredder' ? 'graveshredder' : m[2].toLowerCase());
+  }
+  for (const pl of s.players) {
+    if (pl.hero.eclipse && !before.eclipse?.[pl.index]) { sound.play('chime'); await fx.eclipse(charEl(pl.hero.uid)); }
   }
 
   // Mushrooms (Fungus): placed ones hop into the deck; bursting ones fly out and explode on the Hero.

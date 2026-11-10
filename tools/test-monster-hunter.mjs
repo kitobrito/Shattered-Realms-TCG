@@ -172,5 +172,15 @@ test('Eclipse: Sun + Moon give +3 Attack, Lifesteal, and no Durability lost', ()
   if (hero(0).health <= 20) return `no lifesteal (${hero(0).health})`;
 });
 
+test('Graveshredder: each Zombie it kills restores 2 Health to your Hero', () => {
+  play(0, 'graveshredder');
+  hero(0).health = 20;
+  const z = put(1, 'walker'); z.keywords = []; z.health = z.maxHealth = 1;
+  swing(z.uid);
+  if (hero(0).health !== 20 - z.attack + 2 && hero(0).health !== 22 - 1) return `hero at ${hero(0).health}`;
+  const r = put(1, 'scrapper_spider'); r.keywords = []; r.health = r.maxHealth = 1; r.attack = 0;
+  const h = hero(0).health; swing(r.uid);
+  if (hero(0).health !== h) return `healed on a non-Zombie (${h} -> ${hero(0).health})`;
+});
 console.log(`\n${passed} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);
