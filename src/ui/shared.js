@@ -223,7 +223,7 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
     ? (type === 'trap' ? 'trap-witches' : 'legendary-spell-witches') : null;
   // A card can bring its own frame (the Sun and Moon revolvers).
   const hunterFrame = card.frameArt ?? (card.faction === 'Monster Hunter' && legend
-    ? (type === 'minion' ? 'art/monster-hunter/frames/legendary-minion-monster-hunter.png' : type === 'spell' ? 'art/monster-hunter/frames/legendary-spell-monster-hunter.png' : null) : null);
+    ? (type === 'minion' ? 'art/frames/legendary-minion-monster-hunter.png' : type === 'spell' ? 'art/frames/legendary-spell-monster-hunter.png' : null) : null);
   const own = !!witchFrame || !!hunterFrame || (legend && type === 'minion' && !card.fusion && (card.legendFrame || LEGEND_FRAMES.has(card.faction)));
   // ?v=3: new frames for Acidic, Radioactive, Dinosaurs, Sharks, Eels, Vampires and Demons; the tag makes browsers fetch them.
   const frameSrc = hunterFrame ?? (witchFrame ? `art/frames/${witchFrame}.webp`
