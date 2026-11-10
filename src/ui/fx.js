@@ -2643,3 +2643,154 @@ export async function eclipse(heroEl) {
     animate(dim, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => dim.remove()),
   ]);
 }
+
+// ---- Monster Hunter legendary kills ---------------------------------------------------------
+
+function killGhost(clone, rect) {
+  const host = ghostHost(rect);
+  const g = clone.cloneNode(true);
+  g.classList.add('fx-ghost');
+  Object.assign(g.style, { position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: '0', zIndex: '900', pointerEvents: 'none', animation: 'none' });
+  host.appendChild(g);
+  return { host, g };
+}
+
+// Graveshredder: a slow cut. A glowing seam crawls across the minion along one of four lines
+// (straight down, straight across, or either diagonal), sparks and blood spitting from the
+// cutting point while it judders; then the two halves come apart and fall away.
+export async function chainsawSlice(clone, rect, line = null) {
+  const angles = { vertical: 90, horizontal: 0, diagRight: 45, diagLeft: -45 };
+  const keys = Object.keys(angles);
+  const ang = angles[line] ?? angles[keys[Math.floor(Math.random() * keys.length)]];
+  const rad = (ang * Math.PI) / 180;
+  const d = { x: Math.cos(rad), y: Math.sin(rad) }, n = { x: -d.y, y: d.x };
+  const host = ghostHost(rect);
+  const halves = [1, -1].map((side) => {
+    const g = clone.cloneNode(true);
+    g.classList.add('fx-ghost');
+    Object.assign(g.style, { position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: '0', zIndex: '900', pointerEvents: 'none', animation: 'none' });
+    const P = (a, b) => `${(50 + d.x * a + n.x * b * side).toFixed(1)}% ${(50 + d.y * a + n.y * b * side).toFixed(1)}%`;
+    g.style.clipPath = `polygon(${P(-200, 0)}, ${P(200, 0)}, ${P(200, 200)}, ${P(-200, 200)})`;
+    host.appendChild(g);
+    return { g, side };
+  });
+  const c = center(rect);
+  const len = Math.hypot(rect.width * Math.abs(d.x), rect.height * Math.abs(d.y)) || rect.width;
+  const start = { x: c.x - d.x * len / 2, y: c.y - d.y * len / 2 };
+  const seam = addFx('fx-cut-seam', { left: `${start.x}px`, top: `${start.y}px`, width: `${len}px`, transform: `rotate(${ang}deg) scaleX(0)` });
+  document.body.appendChild(seam);
+  const cutDur = 1100;
+  const jobs = [animate(seam, [{ transform: `rotate(${ang}deg) scaleX(0)` }, { transform: `rotate(${ang}deg) scaleX(1)` }], { duration: cutDur, easing: 'linear', fill: 'forwards' })];
+  // The minion judders while the chain bites.
+  for (const { g } of halves) jobs.push(animate(g, [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ transform: `translate(${i % 2 ? 2 : -2}px, ${i % 3 ? 1 : -1}px)` })), { duration: cutDur, easing: 'linear' }));
+  // Sparks and blood from the moving cutting point.
+  for (let i = 0; i < 26; i++) {
+    const k = i / 25, tip = { x: start.x + d.x * len * k, y: start.y + d.y * len * k };
+    const gore = i % 3 === 0;
+    const el = addFx(gore ? 'fx-saw-gore' : 'fx-saw-spark', { left: `${tip.x}px`, top: `${tip.y}px` });
+    document.body.appendChild(el);
+    const a = Math.random() * Math.PI * 2, dist = 18 + Math.random() * 34;
+    jobs.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist + (gore ? 24 : 0)}px)) scale(0.3)`, opacity: 0 },
+    ], { duration: 420, delay: cutDur * k })));
+  }
+  await Promise.all(jobs);
+  // The halves part along the cut and fall away.
+  const sep = Math.max(rect.width, rect.height) * 0.22;
+  await Promise.all([
+    animate(seam, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).then(() => seam.remove()),
+    ...halves.map(({ g, side }) => animate(g, [
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${n.x * sep * side}px, ${n.y * sep * side}px) rotate(${side * 8}deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${n.x * sep * 1.6 * side}px, ${n.y * sep * 1.6 * side + rect.height * 0.6}px) rotate(${side * 22}deg)`, opacity: 0 },
+    ], { duration: 900, easing: 'cubic-bezier(.3,.1,.6,1)' })),
+  ]);
+  host.remove();
+}
+
+// Ash flecks falling from a line across the card (shared by Sun and Eclipse).
+function ashFall(rect, y, count, { ember = 0.25, dark = false } = {}) {
+  const jobs = [];
+  for (let i = 0; i < count; i++) {
+    const glow = Math.random() < ember;
+    const el = addFx(glow ? 'fx-ash-ember' : dark ? 'fx-ash-dark' : 'fx-ash', { left: `${rect.left + Math.random() * rect.width}px`, top: `${y + (Math.random() - 0.5) * 8}px` });
+    const dx = (Math.random() - 0.5) * rect.width * 0.6, dy = rect.height * (0.4 + Math.random() * 0.7);
+    jobs.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.4) rotate(${(Math.random() - 0.5) * 300}deg)`, opacity: 0 },
+    ], { duration: 900 + Math.random() * 600, delay: Math.random() * 120, easing: 'cubic-bezier(.3,0,.7,1)' })));
+  }
+  return Promise.all(jobs);
+}
+
+// Sun: the minion bakes in the light (glows white-gold, scorches black) then crumbles to ash
+// from the top down, flecks and embers drifting to the ground.
+export async function sunDeath(clone, rect) {
+  const { host, g } = killGhost(clone, rect);
+  await animate(g, [
+    { filter: 'none' },
+    { filter: 'sepia(1) saturate(3) brightness(1.9) hue-rotate(-15deg)', offset: 0.35 },
+    { filter: 'grayscale(1) brightness(0.28) contrast(1.3)' },
+  ], { duration: 900, fill: 'forwards' });
+  const steps = 8, jobs = [];
+  for (let i = 1; i <= steps; i++) jobs.push(wait2((i - 1) * 110).then(() => ashFall(rect, rect.top + rect.height * (i - 0.5) / steps, 9, { ember: 0.3 })));
+  jobs.push(animate(g, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(100% 0 0 0)' }], { duration: steps * 110 + 200, easing: 'linear', fill: 'forwards' }));
+  await Promise.all(jobs);
+  host.remove();
+}
+
+// Moon: the minion turns to silver light, swells, and bursts in a spray of silver motes that
+// drift and fade.
+export async function moonDeath(clone, rect) {
+  const { host, g } = killGhost(clone, rect);
+  const c = center(rect), size = Math.max(rect.width, rect.height);
+  await animate(g, [
+    { transform: 'scale(1)', filter: 'none', opacity: 1 },
+    { transform: 'scale(1.06)', filter: 'saturate(0) brightness(2.6) drop-shadow(0 0 12px #dfeeff)', opacity: 1 },
+  ], { duration: 520, fill: 'forwards' });
+  const motes = [];
+  for (let i = 0; i < 28; i++) {
+    const el = addFx('fx-moon-tail', { left: `${c.x + (Math.random() - 0.5) * rect.width * 0.6}px`, top: `${c.y + (Math.random() - 0.5) * rect.height * 0.6}px`, width: `${4 + Math.random() * 6}px`, height: `${4 + Math.random() * 6}px` });
+    const a = Math.random() * Math.PI * 2, dist = size * (0.5 + Math.random() * 0.9);
+    motes.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist - size * 0.2}px)) scale(0.2)`, opacity: 0 },
+    ], { duration: 1000 + Math.random() * 700, easing: 'cubic-bezier(.1,.7,.3,1)' })));
+  }
+  await Promise.all([
+    animate(g, [{ transform: 'scale(1.06)', opacity: 1, filter: 'saturate(0) brightness(2.6) blur(0px)' }, { transform: 'scale(1.3)', opacity: 0, filter: 'saturate(0) brightness(3) blur(8px)' }], { duration: 500, fill: 'forwards' }),
+    glowBall(c, size * 1.8, '#f2f8ff', '#9fc4ff', { duration: 800 }),
+    ring(c, size * 1.4, '#e4f0ff', { width: 3 }),
+    ...motes,
+  ]);
+  host.remove();
+}
+
+// Eclipse: both at once. A silver flash, then the minion goes black as a golden corona flares
+// round it; it crumbles into dark ash and gold embers while silver motes burst outward.
+export async function eclipseDeath(clone, rect) {
+  const { host, g } = killGhost(clone, rect);
+  const c = center(rect), size = Math.max(rect.width, rect.height);
+  await animate(g, [
+    { filter: 'none', transform: 'scale(1)' },
+    { filter: 'saturate(0) brightness(2.6)', transform: 'scale(1.05)', offset: 0.3 },
+    { filter: 'brightness(0) drop-shadow(0 0 10px #ffcf5a)', transform: 'scale(1.05)' },
+  ], { duration: 800, fill: 'forwards' });
+  const corona = addFx('fx-eclipse-corona', box(c, size * 1.5));
+  const motes = [];
+  for (let i = 0; i < 18; i++) {
+    const el = addFx('fx-moon-tail', { left: `${c.x}px`, top: `${c.y}px`, width: '6px', height: '6px' });
+    const a = Math.random() * Math.PI * 2, dist = size * (0.6 + Math.random() * 0.8);
+    motes.push(done(el, animate(el, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist}px)) scale(0.2)`, opacity: 0 }], { duration: 1200, delay: 150, easing: 'cubic-bezier(.1,.7,.3,1)' })));
+  }
+  const steps = 7, jobs = [];
+  for (let i = 1; i <= steps; i++) jobs.push(wait2(200 + (i - 1) * 100).then(() => ashFall(rect, rect.top + rect.height * (i - 0.5) / steps, 9, { ember: 0.35, dark: true })));
+  jobs.push(animate(g, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 0)', offset: 0.2 }, { clipPath: 'inset(100% 0 0 0)' }], { duration: 200 + steps * 100 + 250, easing: 'linear', fill: 'forwards' }));
+  await Promise.all([
+    animate(corona, [{ transform: 'scale(0.6) rotate(0deg)', opacity: 0 }, { transform: 'scale(1) rotate(50deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.3) rotate(120deg)', opacity: 0 }], { duration: 1400 }).then(() => corona.remove()),
+    ring(c, size * 1.5, '#ffe7a0', { width: 4 }),
+    ...motes, ...jobs,
+  ]);
+  host.remove();
+}

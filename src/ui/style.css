@@ -5888,3 +5888,10 @@ body.reduced-motion .hero-book.done { animation: none; }
   animation: eclipseTurn 14s linear infinite; filter: drop-shadow(0 0 6px #ffcf5a); }
 @keyframes eclipseTurn { to { transform: rotate(360deg); } }
 body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
+/* Legendary kills: Graveshredder's cutting seam, Sun's ash. */
+.fx-cut-seam { position: fixed; height: 4px; margin-top: -2px; transform-origin: 0 50%; pointer-events: none; z-index: 4999; border-radius: 2px;
+  background: linear-gradient(90deg, #ffd27a, #fff 50%, #ff8a3a); box-shadow: 0 0 8px #ffb347, 0 0 16px #ff6a2a; }
+.fx-ash, .fx-ash-dark, .fx-ash-ember { position: fixed; pointer-events: none; z-index: 1004; }
+.fx-ash { width: 4px; height: 3px; background: #6d6660; border-radius: 1px; }
+.fx-ash-dark { width: 4px; height: 3px; background: #2a2628; border-radius: 1px; }
+.fx-ash-ember { width: 3px; height: 3px; border-radius: 50%; background: #ffb24a; box-shadow: 0 0 6px #ff6a2a; }
