@@ -56,6 +56,6 @@ export const MONSTER_HUNTER_EXPANSION=[
 {...M,id:'the_hunt_master',name:'The Hunt Master',legendary:true,extra:true,set:SET,cost:7,attack:5,health:6,heroExtraAttacks:2,text:'Your Hero can attack two extra times each turn.'},
 XW('cryptid_cleaver','Cryptid Cleaver',3,3,3,'Your Hero has +2 Attack against Cryptids.',{preyTribe:'Cryptid',preyBonus:2}),
 XW('graveshredder','Graveshredder',6,2,8,'Takes up both weapon slots. Quad Strike. Your Hero has +2 Attack against Zombies.',{prey:'Zombies',preyBonus:2,twoHanded:true,attacksPerTurn:4},{legendary:true}),
-XW('moon_revolver','Moon',4,3,3,'Ranged. Your Hero has +3 Attack against Dark minions. Eclipse with Sun: +3 Attack, Lifesteal, no Durability lost.',{ranged:true,preyTag:'Dark',preyBonus:3},{legendary:true,frameArt:'art/monster-hunter/frames/legendary-moon-revolver.png'}),
-XW('sun_revolver','Sun',4,4,2,'Ranged. After your Hero attacks with Sun, deal 2 damage to the enemy Hero. Eclipse with Moon: +3 Attack, Lifesteal, no Durability lost.',{ranged:true,sunShot:2},{legendary:true,frameArt:'art/monster-hunter/frames/legendary-sun-revolver.png'}),
+XW('moon_revolver','Moon',4,3,3,'Ranged. Your Hero has +3 Attack against Dark minions. Eclipse with Sun: +3 Attack, Lifesteal, no Durability lost.',{ranged:true,preyTag:'Dark',preyBonus:3},{legendary:true,frameArt:'art/frames/legendary-moon-revolver.png'}),
+XW('sun_revolver','Sun',4,4,2,'Ranged. After your Hero attacks with Sun, deal 2 damage to the enemy Hero. Eclipse with Moon: +3 Attack, Lifesteal, no Durability lost.',{ranged:true,sunShot:2},{legendary:true,frameArt:'art/frames/legendary-sun-revolver.png'}),
 ];
