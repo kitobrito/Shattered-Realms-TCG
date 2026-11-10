@@ -2519,6 +2519,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 .arena.p-board .hero-zone.me .hero-portrait { left: var(--mh-x); top: var(--mh-y); width: var(--mh-w); height: var(--mh-h); }
 .arena.p-board.opp-arch .hero-zone.opp .hero-portrait { border-radius: 50% 50% 4% 4% / 44% 44% 3% 3%; }
 .arena.p-board.opp-circle .hero-zone.opp .hero-portrait, .arena.p-board.me-circle .hero-zone.me .hero-portrait { border-radius: 50%; }
+.arena.v-board.opp-circle .hero-zone.opp .hero-portrait, .arena.v-board.me-circle .hero-zone.me .hero-portrait { border-radius: 50%; }
 .arena.p-board.me-arch .hero-zone.me .hero-portrait { border-radius: 50% 50% 4% 4% / 44% 44% 3% 3%; }
 /* Hero Spells to the right of each frame, Traps to the left. */
 .arena.p-board .hero-zone .hero-powers { position: absolute; transform: translateY(-50%); }
@@ -5895,3 +5896,32 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 .fx-ash { width: 4px; height: 3px; background: #6d6660; border-radius: 1px; }
 .fx-ash-dark { width: 4px; height: 3px; background: #2a2628; border-radius: 1px; }
 .fx-ash-ember { width: 3px; height: 3px; border-radius: 50%; background: #ffb24a; box-shadow: 0 0 6px #ff6a2a; }
+
+/* Hero weapons: medallions (one per weapon; Weapon I and II side by side when dual-wielding). */
+.hero-fusion:has(.weapon-medal) { gap: calc(var(--hero) * 0.16); }
+/* Phone: keep the enemy medals clear of the rival panel and ours clear of the deck counter. */
+.arena.p-board .hero-zone.opp .hero-fusion:has(.weapon-medal) { top: calc(var(--oh-y) + var(--oh-h) * 0.88); }
+.arena.p-board .hero-zone.me .hero-fusion:has(.weapon-medal) { top: calc(var(--mh-y) + var(--mh-h) * 0.12); }
+.weapon-medal { position: relative; flex: none; width: calc(var(--hero) * 0.66); aspect-ratio: 1; cursor: help; filter: drop-shadow(0 3px 5px #000a); }
+.weapon-medal .wm-art { position: absolute; left: 21.3%; top: 21.3%; width: 57.4%; height: 57.4%; border-radius: 50%; background: #1a1418 center / cover no-repeat;
+  display: grid; place-items: center; font-style: normal; font-size: calc(var(--hero) * 0.18); }
+.weapon-medal .wm-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.weapon-medal b { position: absolute; display: grid; place-items: center; font-family: var(--font-title); font-weight: 900; color: #fff; line-height: 1;
+  text-shadow: 0 1px 0 #000, 0 0 4px #000, 0 0 2px #000; pointer-events: none; }
+/* Attack in the shield notch (right), Durability on a small chip opposite (left). */
+.weapon-medal .wm-atk { left: 78%; top: 37%; width: 26%; aspect-ratio: 1; border-radius: 50%; font-size: calc(var(--hero) * 0.15); color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ffe27a, #f39a1a 55%, #8a3a00); box-shadow: 0 0 0 1.5px #2a1400, 0 0 6px #ff9a2a99, 0 2px 3px #0009;
+  -webkit-text-stroke: 1px #3a1800; paint-order: stroke fill; text-shadow: 0 1px 0 #3a1800, 0 0 3px #3a1800; }
+.weapon-medal .wm-dur { left: -4%; top: 40%; width: 20%; aspect-ratio: 1; border-radius: 50%; font-size: calc(var(--hero) * 0.1);
+  background: radial-gradient(circle at 35% 30%, #3e4652, #1c2027 60%, #0c0e12); box-shadow: 0 0 0 1.5px #aeb5c2, 0 2px 3px #0008; }
+/* The numeral plate (bottom): I or II, engraved-gold. */
+.weapon-medal .wm-num { position: absolute; left: 33%; top: 83%; width: 34%; height: 9%; display: grid; place-items: center; pointer-events: none;
+  font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-size: calc(var(--hero) * 0.085); letter-spacing: 0.08em; color: #ffd98a;
+  text-shadow: 0 1px 0 #2a1a00, 0 0 4px #000; }
+/* The weapon the next swing uses glows; the other dims a little. */
+.hero-fusion:has(.weapon-medal.next) .weapon-medal:not(.next) { filter: drop-shadow(0 3px 5px #000a) saturate(0.6) brightness(0.8); }
+.weapon-medal.next { filter: drop-shadow(0 0 6px #ffd06a) drop-shadow(0 3px 5px #000a); }
+.weapon-medal .w-runes { bottom: -0.6em; }
+/* Two medallions need more room before the traps. */
+.arena.has-board .hero-zone:has(.weapon-medal + .weapon-medal) .traps { margin-right: calc(var(--hero) * 1.4 + 2cqw); }
+.arena.p-board .hero-zone:has(.weapon-medal + .weapon-medal) .traps { margin-right: calc(var(--hero) * 1.4 + 18px); }

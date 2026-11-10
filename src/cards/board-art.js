@@ -179,7 +179,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
-  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterlandscape.jpg', opp: [458, 55, 566, 163], me: [451, 425, 573, 547], field: [130, 170, 894, 418], props: [] },
+  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterlandscape.jpg', opp: [458, 55, 566, 163, 'circle'], me: [451, 425, 573, 547, 'circle'], field: [130, 170, 894, 418], props: [] },
   'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [452, 28, 566, 142], me: [449, 423, 567, 538], field: [150, 154, 880, 409], props: [] },
   'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
