@@ -14,36 +14,6 @@ const SNOW = [244, 248, 255];
 const FROST = [190, 228, 255];
 
 export const BOARD_FX = {
-  // Monster Hunter's armory: keep the battlefield clear while the hearth and
-  // cool window light move on independent cycles; occasional sparks drift up.
-  'monsterhunterlandscape-land': {
-    wind: null,
-    layers: [
-      { id: 'hearth', type: 'glow', points: [[500, 18, 78]], color: [255, 154, 72], anim: 'flicker', speed: 1.4, alpha: [0.08, 0.24], kickDur: 1.8 },
-      { id: 'windowMoon', type: 'glow', points: [[18, 72, 64], [1004, 68, 54]], color: [142, 190, 255], anim: 'pulse', period: 8.3, alpha: [0.025, 0.09], kickDur: 2.4 },
-      { id: 'hearthSparks', type: 'particles', kind: 'ember', area: [390, 0, 625, 105], rate: 0.45, max: 7, color: [255, 176, 91], size: [1, 2], life: [1.4, 2.8], alpha: 0.42, speed: 0.5 },
-      { id: 'dustMotes', type: 'particles', kind: 'mote', area: [160, 70, 860, 480], rate: 0.8, max: 10, color: [192, 202, 218], size: [0.6, 1.2], life: [4, 7], alpha: 0.2, speed: 0.22 },
-    ],
-    pokes: [
-      { area: [80, 20, 250, 136], sound: 'clink', kick: ['windowMoon'], flare: [190, 215, 255], glyph: '🏹' },
-      { area: [770, 18, 935, 137], sound: 'clink', kick: ['windowMoon'], flare: [190, 215, 255], glyph: '🗡️' },
-      { area: [425, 0, 585, 88], sound: 'crackle', kick: ['hearth'], flare: [255, 176, 91], glyph: '🔥', burst: { layer: 'hearthSparks', n: 6, at: [500, 38], spread: 24 } },
-    ],
-  },
-  'monsterhunterlandscape-portrait': {
-    wind: null,
-    layers: [
-      { id: 'hearth', type: 'glow', points: [[230, 83, 60]], color: [255, 154, 72], anim: 'flicker', speed: 1.35, alpha: [0.08, 0.24], kickDur: 1.8 },
-      { id: 'windowMoon', type: 'glow', points: [[14, 112, 48], [445, 110, 46]], color: [142, 190, 255], anim: 'pulse', period: 8.5, alpha: [0.025, 0.09], kickDur: 2.4 },
-      { id: 'hearthSparks', type: 'particles', kind: 'ember', area: [112, 28, 340, 158], rate: 0.32, max: 6, color: [255, 176, 91], size: [1, 2], life: [1.4, 2.8], alpha: 0.4, speed: 0.5 },
-      { id: 'dustMotes', type: 'particles', kind: 'mote', area: [40, 180, 420, 850], rate: 0.65, max: 8, color: [192, 202, 218], size: [0.6, 1.1], life: [4, 7], alpha: 0.18, speed: 0.2 },
-    ],
-    pokes: [
-      { area: [36, 143, 185, 274], sound: 'clink', kick: ['windowMoon'], flare: [190, 215, 255], glyph: '🏹' },
-      { area: [278, 140, 426, 278], sound: 'clink', kick: ['windowMoon'], flare: [190, 215, 255], glyph: '🗡️' },
-      { area: [144, 38, 316, 137], sound: 'crackle', kick: ['hearth'], flare: [255, 176, 91], glyph: '🔥', burst: { layer: 'hearthSparks', n: 5, at: [230, 90], spread: 18 } },
-    ],
-  },
   // ---- Eels: a flooded river cave, lit by its own electricity ------------------------------
   // ---- Eels: a flooded river cave lit by its own electricity ---------------------------------
   // The painting is one flat image, so nothing is cut out: the eels, lily pads and hanging vines
@@ -1206,7 +1176,7 @@ export const BOARD_FX = {
     ],
   },
 
-  // ==== Monster Hunter (unlockable): Sundown Street ====
+  // ==== Monster Hunter: Sundown Street (the realm's own board) ====
   // A haunted frontier street split between a blood-red sunset (left) and a full moon (right). Every
   // moving thing keeps its own clock (periods share no common beat, so nothing peaks together): the
   // noose swings and its shadow on the sand swings with it (same period and phase, pivoting where the
