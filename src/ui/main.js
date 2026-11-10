@@ -2565,10 +2565,10 @@ function firstPickHTML() {
   };
   const n = firstPicks.length;
   return `<div class="overlay first-pick-overlay"><div class="first-pick">
+    ${tutorialDone() ? '' : '<button data-act="tutorial" class="fp-tutorial">🎓 New to card games? Play the tutorial first</button>'}
     <h2>Choose your first realms</h2>
     <p class="sub">Pick <b>${FIRST_PICKS}</b> to start with. These are the easiest to learn; the other realms open as you play.</p>
     <div class="fp-grid">${STARTERS.map(card).join('')}</div>
-    ${tutorialDone() ? '' : '<button data-act="tutorial" class="fp-tutorial">🎓 New to card games? Play the tutorial first</button>'}
     <div class="fp-foot"><button data-act="firstBegin" ${n === FIRST_PICKS ? '' : 'disabled'}>${n === FIRST_PICKS ? 'Begin my journey' : `Choose ${FIRST_PICKS - n} more`}</button>
       <button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>
   </div></div>`;
@@ -3145,7 +3145,8 @@ function coachTips() {
   if (mp.traps.length) tip('myTrap');
   if (legal.some((a) => a.type === 'heroSpell')) tip('heroSpell');
   if (s.pending?.type === 'reaction' && s.pending.player === me) tip('quickPlay');
-  if (myTurn && mp.hand.length && !legal.some((a) => a.type === 'play' || a.type === 'heroSpell')) tip('nothingFits');
+  // Only at the start of a turn (no Mana spent yet): after playing a card, running out of Mana is not "nothing fits".
+  if (myTurn && mp.hand.length && mp.mana.current >= mp.mana.max && !legal.some((a) => a.type === 'play' || a.type === 'heroSpell')) tip('nothingFits');
   if (myTurn && s.turn > 2 && legal.length === 1) tip('endTurn');
 }
 window.addEventListener('tips-off', () => { setSetting({ tips: false }); flash('Tips turned off. You can turn them back on in Settings.'); });

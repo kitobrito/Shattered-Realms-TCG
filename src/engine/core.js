@@ -585,7 +585,10 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     // Rage: damage it survives makes it angrier.
     if (amount > 0 && t.health > 0 && !t.destroyed && hasKeyword(t, 'Rage')) { t.attack += 1; log(state, `😡 ${nameOf(state, t)} rages (+1 Attack).`); traceFx(state, { type: 'rage', target: t.uid }); }
   }
-  log(state, `${src ? nameOf(state, src) : opts.burn ? '🔥 Burn' : 'Effect'} deals ${amount} to ${nameOf(state, t)}.`);
+  // A minion that already died (an Exit effect) is named from the graveyard: "Bloater's Exit deals 1".
+  const gone = !src && sourceId != null ? state.players.flatMap((p) => p.graveyard).find((c) => c.uid === sourceId) : null;
+  const who = src ? nameOf(state, src) : gone ? `${getCard(gone.cardId).name}'s Exit` : opts.burn ? '🔥 Burn' : 'Effect';
+  log(state, `${who} deals ${amount} to ${nameOf(state, t)}.`);
   emit(state, { type: 'damageDealt', source: sourceId, target: t.uid, player: t.controller, amount });
 
   if ((src && hasKeyword(src, 'Lifesteal')) || opts.lifesteal) {
