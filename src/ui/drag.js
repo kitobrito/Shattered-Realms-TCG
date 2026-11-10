@@ -20,7 +20,11 @@
 import { ghost } from './fx.js';
 import { setHandOpen } from './board.js';
 
-const DRAG_START = 6; // px of movement before a press becomes a drag
+const DRAG_START = 6; // px of movement before a press becomes a drag (mouse)
+// A fingertip wobbles more than a mouse: on touch it takes 12 px before a tap becomes a drag,
+// so a slightly shaky tap on the resting hand still just brings it up.
+// The resting hand's cards are small, so a press there needs a clear pull (14 px) to become a drag.
+const dragStart = (p) => (p?.docked ? 14 : p?.touch ? 12 : DRAG_START);
 const HOLD_MS = 320;  // press and hold a hand card this long (without moving) for its big preview
 
 let api = null;
@@ -118,6 +122,9 @@ export const recentlyAimed = () => Date.now() - aimEndedAt < 500;
 // extra: fields to add to the chosen action (e.g. { position }).
 function startAim(fromEl, options, { key = (a) => a.target, extra = {}, source = null } = {}) {
   aim = { from: centerOf(fromEl), options, key, extra, first: null, source, pointer: null };
+  // Aiming an attack or a Hero Spell from the board: the raised hand steps back to its corner,
+  // out of the way of the targets (aiming a card dragged out of the hand leaves it alone).
+  if (!fromEl.closest('.my-hand') && !drag) setHandOpen(false, api.root(), { force: true });
   paintTargets();
 }
 
@@ -347,8 +354,8 @@ function onMove(e) {
     if (!aboveHand(e.clientY) || !(press.options === null || press.options.length)) return;
     endHold();
   }
-  if (press && !drag && press.kind === 'hand' && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) endHold();
-  if (press && !drag && press.kind === 'hand' && (press.options === null || press.options.length) && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START) {
+  if (press && !drag && press.kind === 'hand' && Math.hypot(e.clientX - press.x, e.clientY - press.y) > dragStart(press)) endHold();
+  if (press && !drag && press.kind === 'hand' && (press.options === null || press.options.length) && Math.hypot(e.clientX - press.x, e.clientY - press.y) > dragStart(press)) {
     clearInspect();
     // Start dragging a hand card.
     const rect = press.el.getBoundingClientRect();
@@ -391,7 +398,7 @@ function onUp(e) {
   if (e.button === 2) { cancel(); return; }
   // Releasing / clicking while aiming (attack drags, or click-to-target).
   if (aim && (!press || press.kind === 'attack')) {
-    const moved = press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > DRAG_START;
+    const moved = press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > dragStart(press);
     const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-char]');
     if (over && pickTarget(Number(over.dataset.char))) { press = null; return; }
     // A plain click on the source keeps the arrow up (click-to-target); otherwise cancel.
@@ -401,7 +408,9 @@ function onUp(e) {
   }
   if (!press) return;
   // Held for the big preview: letting go just closes it.
-  if (press.kind === 'hand' && press.held && !drag) { endHold(); press = null; return; }
+  // On the resting hand, letting go after a long press also brings the hand up, so a slow tap never
+  // leaves it in the corner.
+  if (press.kind === 'hand' && press.held && !drag) { const up = press.docked; endHold(); press = null; if (up) setHandOpen(true, api.root()); return; }
   clearTimeout(press.holdTimer);
   const { kind, options, el } = press;
 
