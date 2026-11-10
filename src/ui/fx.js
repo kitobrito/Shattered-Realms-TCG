@@ -2101,62 +2101,141 @@ export function heroHit(el) {
 
 // ---- Mushrooms (Fungus) ----------------------------------------------------------------
 
-// One mushroom glyph that arcs from a to b (spinning a little), then removes itself.
-function mushroomArc(a, b, { size = 26, delay = 0, duration = 700, lift = 90, endScale = 0.5 } = {}) {
-  const el = document.createElement('div');
-  el.className = 'fx-glyph fx-mushroom';
-  setGlyph(el, '🍄');
-  Object.assign(el.style, { left: `${a.x}px`, top: `${a.y}px`, fontSize: `${size}px` });
+// The Fungus Mushroom (art/fx/mushroom.png) and its cracked, smoke-bursting form (mushroom-burst.png).
+const MUSHROOM_IMG = 'art/fx/mushroom.png';
+const MUSHROOM_BURST_IMG = 'art/fx/mushroom-burst.png';
+function mushroomImg(src, w) {
+  const el = document.createElement('img');
+  el.src = src; el.alt = ''; el.draggable = false;
+  el.className = 'fx-mushroom-img';
+  el.style.width = `${w}px`;
   layer().appendChild(el);
+  return el;
+}
+
+// One Mushroom that arcs from a to b (tumbling a little), then removes itself.
+function mushroomArc(a, b, { size = 34, delay = 0, duration = 700, lift = 90, endScale = 0.5, keep = false } = {}) {
+  const el = mushroomImg(MUSHROOM_IMG, size);
+  Object.assign(el.style, { left: `${a.x}px`, top: `${a.y}px` });
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  const spin = (Math.random() - 0.5) * 120;
-  return done(el, animate(el, [
+  const spin = (Math.random() - 0.5) * 70;
+  const anim = animate(el, [
     { transform: 'translate(-50%, -50%) scale(0.2) rotate(0deg)', opacity: 0 },
     { transform: 'translate(-50%, -50%) scale(1.15) rotate(0deg)', opacity: 1, offset: 0.15 },
     { transform: `translate(calc(-50% + ${dx * 0.5}px), calc(-50% + ${dy * 0.5 - lift}px)) scale(1) rotate(${spin / 2}deg)`, opacity: 1, offset: 0.55 },
     { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${endScale}) rotate(${spin}deg)`, opacity: 1 },
-  ], { duration, delay, easing: 'cubic-bezier(.35,.1,.45,1)' }));
+  ], { duration, delay, easing: 'cubic-bezier(.35,.1,.45,1)' });
+  return keep ? anim.then(() => el) : done(el, anim);
 }
 
-// Mushrooms are placed in a deck: they hop from the caster into the deck pile, which
-// shudders and glows purple as each one sinks in.
+// Mushrooms are placed in a deck: one small Mushroom per Mushroom flies from the card that cast
+// them across the screen into the enemy deck, each settling in a puff of green smoke, and the
+// deck shakes as they land.
 export function mushroomsToDeck(fromRect, pileEl, count = 1) {
   if (!pileEl) return Promise.resolve();
-  const to = center(pileEl.getBoundingClientRect());
+  const pr = pileEl.getBoundingClientRect();
+  const to = center(pr);
   const from = fromRect ? center(fromRect) : { x: to.x, y: to.y - 160 };
-  const n = Math.max(1, Math.min(6, count));
+  const n = Math.max(1, Math.min(10, count));
+  const size = Math.max(26, Math.min(40, pr.width * 0.45));
+  const gap = n > 5 ? 110 : 170;
   const jobs = [];
+  if (count > 1) jobs.push(mushroomTag(from, `${count}× Mushrooms`, { color: '#d9b3ff', duration: 900 + n * gap, size: 22 }));
   for (let i = 0; i < n; i++) {
-    const jitter = { x: to.x + (Math.random() - 0.5) * 24, y: to.y + (Math.random() - 0.5) * 16 };
-    jobs.push(mushroomArc(from, jitter, { delay: i * 140, lift: 70 + Math.random() * 60 }).then(() => {
-      spores(jitter, 46, 2);
-      return animate(pileEl, [{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.08) rotate(-2deg)', filter: 'drop-shadow(0 0 12px #c98cff) brightness(1.2)', offset: 0.4 }, { transform: 'scale(1)', filter: 'none' }], { duration: 320, fill: 'none' });
+    const land = { x: to.x + (Math.random() - 0.5) * pr.width * 0.4, y: to.y + (Math.random() - 0.5) * pr.height * 0.3 };
+    jobs.push(mushroomArc(from, land, { size, delay: i * gap, duration: 720, lift: 60 + Math.random() * 70, endScale: 0.6 }).then(() => {
+      smokePuffs(land, size * 1.6, 4);
+      spores(land, 30, 2);
+      return shake(pileEl, 4 + Math.min(4, i));
     }));
   }
-  return Promise.all(jobs);
+  return Promise.all(jobs).then(() => animate(pileEl, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 12px #7dff7a) brightness(1.15)', offset: 0.4 }, { filter: 'none' }], { duration: 420, fill: 'none' }));
 }
 
-// Mushrooms burst from a drawn card: they pop up out of the deck, fly at the Hero and
-// explode there one after another in purple spore blasts.
-export function mushroomBurst(pileEl, heroEl, count = 1) {
+// A short floating caption ("3× Mushrooms · 3 damage").
+function mushroomTag(c, text, { color = '#8dff8a', duration = 1500, delay = 0, size = 26 } = {}) {
+  const el = document.createElement('div');
+  el.className = 'fx-mushroom-tag';
+  el.textContent = text;
+  // Kept on screen: a deck pile sits at the edge, so the caption is pulled inward.
+  const half = Math.min(window.innerWidth / 2 - 8, text.length * size * 0.36 + 12);
+  const x = Math.max(half + 8, Math.min(window.innerWidth - half - 8, c.x));
+  const y = Math.max(size * 1.4, Math.min(window.innerHeight - size, c.y));
+  Object.assign(el.style, { left: `${x}px`, top: `${y}px`, color, fontSize: `${size}px` });
+  layer().appendChild(el);
+  return done(el, animate(el, [
+    { transform: 'translate(-50%, -30%) scale(0.6)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.08)', opacity: 1, offset: 0.15 },
+    { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0.75 },
+    { transform: 'translate(-50%, -80%) scale(1)', opacity: 0 },
+  ], { duration, delay, easing: 'ease-out' }));
+}
+
+// Mushrooms burst from a drawn card: each pops out of the deck as the whole Mushroom and flies
+// over the Hero, they gather into one, it cracks down the middle and bursts in green smoke, with
+// "N× Mushrooms · D damage", and the Hero shudders.
+export async function mushroomBurst(pileEl, heroEl, count = 1, damage = count) {
   const pr = pileEl?.getBoundingClientRect();
   const hr = heroEl?.getBoundingClientRect();
-  if (!pr || !hr) return Promise.resolve();
+  if (!pr || !hr) return;
   const from = center(pr);
   const hit = center(hr);
-  const n = Math.max(1, Math.min(6, count));
-  const size = Math.max(hr.width, 60);
-  const jobs = [animate(pileEl, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', filter: 'drop-shadow(0 0 14px #c98cff)', offset: 0.3 }, { transform: 'scale(1)' }], { duration: 420, fill: 'none' })];
-  for (let i = 0; i < n; i++) {
-    const t = { x: hit.x + (Math.random() - 0.5) * hr.width * 0.4, y: hit.y + (Math.random() - 0.5) * hr.height * 0.3 };
-    jobs.push(mushroomArc(from, t, { size: 30, delay: 120 + i * 180, duration: 620, lift: 120, endScale: 1.3 }).then(() => Promise.all([
-      bigGlyph(t, '💥', size * 0.6, { duration: 520 }),
-      glowBall(t, size * 0.9, '#e8c8ff', '#7a3ac8', { duration: 560 }),
-      ring(t, size, '#c98cff', { width: 3, duration: 520 }),
-      spores(t, size * 0.9, 4),
-      shake(heroEl, 7),
-    ])));
+  const size = Math.max(hr.width, 70);
+  // Over the Hero, nudged toward the middle of the screen so it never leaves the edge.
+  const spot = { x: hit.x, y: hit.y + (hit.y > window.innerHeight / 2 ? -size * 0.9 : size * 0.9) };
+  const n = Math.max(1, Math.min(5, count));
+  animate(pileEl, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', filter: 'drop-shadow(0 0 14px #c98cff)', offset: 0.3 }, { transform: 'scale(1)' }], { duration: 420, fill: 'none' });
+  // 1) Out of the deck: one whole Mushroom each, gathering over the Hero.
+  const big = Math.min(150, size * 1.5);
+  await Promise.all(Array.from({ length: n }, (_, i) => mushroomArc(from, spot, { size: big * 0.6, delay: i * 140, duration: 620, lift: 110, endScale: 1 })));
+  // 2) The gathered Mushroom swells and trembles...
+  const whole = mushroomImg(MUSHROOM_IMG, big);
+  Object.assign(whole.style, { left: `${spot.x}px`, top: `${spot.y}px` });
+  await animate(whole, [
+    { transform: 'translate(-50%, -50%) scale(0.6) rotate(0deg)' },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(-4deg)', offset: 0.35 },
+    { transform: 'translate(-50%, -50%) scale(1.04) rotate(4deg)', offset: 0.55 },
+    { transform: 'translate(-50%, -50%) scale(1.02) rotate(-5deg)', offset: 0.75 },
+    { transform: 'translate(-50%, -50%) scale(1.08) rotate(3deg)' },
+  ], { duration: 420, easing: 'ease-in-out' });
+  // 3) ...and cracks open, bursting green smoke.
+  const burst = mushroomImg(MUSHROOM_BURST_IMG, big * 2.1);
+  Object.assign(burst.style, { left: `${spot.x}px`, top: `${spot.y - big * 0.08}px` });
+  const label = `${count}× Mushroom${count === 1 ? '' : 's'} · ${damage} damage`;
+  await Promise.all([
+    done(whole, animate(whole, [{ opacity: 1, transform: 'translate(-50%, -50%) scale(1.08)' }, { opacity: 0, transform: 'translate(-50%, -50%) scale(1.15)' }], { duration: 160 })),
+    done(burst, animate(burst, [
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(0.55)', filter: 'brightness(2)' },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)', filter: 'brightness(1.3)', offset: 0.18 },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(1.12)', filter: 'brightness(1)', offset: 0.75 },
+      { opacity: 0, transform: 'translate(-50%, -54%) scale(1.25)', filter: 'brightness(1)' },
+    ], { duration: 1500, easing: 'ease-out' })),
+    glowBall(spot, big * 1.8, '#c9ffb8', '#2fae3c', { duration: 700 }),
+    ring(spot, big * 1.6, '#7dff7a', { width: 4, duration: 640 }),
+    smokePuffs(spot, big * 1.3, 9),
+    mushroomTag({ x: spot.x, y: spot.y + big * 0.85 }, label, { delay: 150, duration: 1600 }),
+    animate(heroEl, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 16px #5cff6a) brightness(1.15) hue-rotate(40deg)', offset: 0.3 }, { filter: 'none' }], { duration: 900, delay: 150, fill: 'none' }),
+    fxDelay(220).then(() => shake(heroEl, 6 + Math.min(10, damage * 2))),
+  ]);
+}
+const fxDelay = (ms) => new Promise((r) => setTimeout(r, ms * speed()));
+
+// Soft green smoke puffs drifting out of a point.
+function smokePuffs(c, size, count = 8) {
+  const jobs = [];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'fx-smoke-puff';
+    const s = size * (0.35 + Math.random() * 0.35);
+    Object.assign(el.style, { left: `${c.x}px`, top: `${c.y}px`, width: `${s}px`, height: `${s}px` });
+    layer().appendChild(el);
+    const ang = (i / count) * Math.PI * 2 + Math.random() * 0.6;
+    const d = size * (0.45 + Math.random() * 0.4);
+    jobs.push(done(el, animate(el, [
+      { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 0.85 },
+      { transform: `translate(calc(-50% + ${Math.cos(ang) * d}px), calc(-50% + ${Math.sin(ang) * d - size * 0.25}px)) scale(1.4)`, opacity: 0 },
+    ], { duration: 1100 + Math.random() * 400, delay: Math.random() * 120, easing: 'ease-out' })));
   }
   return Promise.all(jobs);
 }
