@@ -315,6 +315,7 @@ export function burnCards(state, p, from, count, byPlayer) {
 export const hooks = {
   hasReaction: () => false,
   preventLethal: () => false, // Last Resort Protocol (engine fills it in)
+  shieldHero: () => false, // Archangel's Divine Shield (engine fills it in)
 };
 
 // ---- Step queue helpers ---------------------------------------------------
@@ -567,6 +568,8 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
   if (amount > 1 && hasKeyword(t, 'Hardy')) amount -= 1;
   const src = findCharacter(state, sourceId);
   const srcController = src ? src.controller : (opts.sourceController ?? null);
+  // Archangel's Divine Shield: the Hero's weapon takes the hit (1 Durability) and the damage is gone.
+  if (t.kind === 'hero' && hooks.shieldHero(state, t)) return 0;
   if (t.kind === 'hero') {
     const absorbed = Math.min(t.armor, amount);
     // Lethal damage to a Hero can be stopped by a Trap (Last Resort Protocol).

@@ -108,9 +108,9 @@ export const ALIEN_CARDS = [
   // ---- Spells (9) ----
   {
     ...S, id: 'gene_mutation', name: 'Gene Mutation', art: '🧪', cost: 1,
-    text: 'Give a friendly minion 2 random Keywords.',
+    text: 'Give a friendly minion +1/+1 and 2 random Keywords.',
     target: FRIENDLY_MINION,
-    effects: [{ op: 'giveRandomKeyword', target: 'chosen', count: 2 }],
+    effects: [{ op: 'buff', target: 'chosen', attack: 1, health: 1 }, { op: 'giveRandomKeyword', target: 'chosen', count: 2 }],
   },
   {
     ...S, id: 'gene_corruption', name: 'Gene Corruption', art: '☣️', cost: 2,
@@ -139,9 +139,9 @@ export const ALIEN_CARDS = [
   },
   {
     ...S, id: 'replication_protocol', name: 'Replication Protocol', art: '📠', cost: 3,
-    text: 'Choose a friendly minion. Add two copies of it to your hand; they cost (1) less.',
+    text: 'Choose a friendly minion. Add two copies of it to your hand; they cost (2) less.',
     target: FRIENDLY_MINION,
-    effects: [{ op: 'copyToHand', target: 'chosen', count: 2, costChange: -1 }],
+    effects: [{ op: 'copyToHand', target: 'chosen', count: 2, costChange: -2 }],
   },
   {
     ...S, id: 'planetary_quarantine', name: 'Planetary Quarantine', art: '🌐', cost: 6,
@@ -171,7 +171,7 @@ export const ALIEN_CARDS = [
     triggers: [{ on: 'battlecry', effects: [{ op: 'discoverKeyword', target: 'self', temporary: true }] }],
   },
   {
-    ...M, id: 'probe_drone', name: 'Probe Drone', art: '🤖', tribes: ['Alien', 'Mech'], cost: 2, attack: 2, health: 2,
+    ...M, id: 'probe_drone', name: 'Probe Drone', art: '🤖', tribes: ['Alien', 'Mech'], cost: 2, attack: 2, health: 3,
     text: 'Mech. Whenever a friendly minion gains a Keyword, this gains +1/+1.',
     // Q: "you" = any of your minions gaining a Keyword.
     triggers: [{ on: 'keywordGained', filter: { player: 'friendly', target: 'anyMinion' }, effects: [{ op: 'buff', target: 'self', attack: 1, health: 1 }] }],
@@ -205,7 +205,7 @@ export const ALIEN_CARDS = [
     triggers: [{ on: 'battlecry', effects: [{ op: 'stripKeywords', target: { minions: { side: 'enemy' } } }] }],
   },
   {
-    ...M, id: 'ufo_abductor', name: 'UFO Abductor', art: '🛸', cost: 8, attack: 8, health: 8,
+    ...M, id: 'ufo_abductor', name: 'UFO Abductor', art: '🛸', cost: 7, attack: 8, health: 8,
     text: 'When summoned, select an enemy minion and add them to your hand.',
     target: ENEMY_MINION,
     triggers: [{ on: 'summon', effects: [{ op: 'abduct', target: 'chosen' }] }],

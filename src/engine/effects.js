@@ -2750,7 +2750,7 @@ export const EFFECT_OPS = {
     if (oldWeapon) { if (slot === 2) hero.weapon2 = null; else dropHeroWeapon(state, hero, 'drops'); }
     const weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
       ...(e.prey ? { prey: e.prey, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.heroOnly ? { heroOnly: true } : {}),
-      ...(e.ranged ? { ranged: true } : {}), ...(e.cooldown ? { cooldown: e.cooldown } : {}), ...(e.executeFaction ? { executeFaction: e.executeFaction } : {}),
+      ...(e.ranged ? { ranged: true } : {}), ...(e.heroShield ? { heroShield: true } : {}), ...(e.cooldown ? { cooldown: e.cooldown } : {}), ...(e.executeFaction ? { executeFaction: e.executeFaction } : {}),
       // Monster Hunter (Sun & Moon): bonus against a tribe or a tag, two-handed, several attacks a turn, Sun's shot.
       ...(e.preyTribe ? { preyTribe: e.preyTribe, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.preyTag ? { preyTag: e.preyTag, preyBonus: e.preyBonus ?? 0 } : {}),
       ...(twoHanded ? { twoHanded: true } : {}), ...(e.attacksPerTurn ? { attacksPerTurn: e.attacksPerTurn } : {}), ...(e.sunShot ? { sunShot: e.sunShot } : {}), ...(e.killHeal ? { killHeal: e.killHeal, killHealFaction: e.killHealFaction } : {}),
