@@ -170,7 +170,8 @@ test('The Pale Wanderer: Stealth, copies an enemy minion\'s keywords', () => {
   const w = pl(0).board.find((m) => m.cardId === 'the_pale_wanderer');
   if (!hasKeyword(w, 'Stealth') || !hasKeyword(w, 'Taunt') || !hasKeyword(w, 'Lifesteal')) return kws(w);
 }, realm('Lycanthropes'));
-test('Skinwalker (Beast Form): takes the keywords of what it kills, and keeps them when it changes back', () => {
+// Stolen Hide reworked the beast: it wears the hide (Attack, Health and keywords) only until it changes back.
+test('Skinwalker (Beast Form): steals the hide of what it kills, and sheds it when it changes back', () => {
   const w = put(0, 'the_pale_wanderer');
   run({ op: 'shift', target: { uid: w.uid } });
   if (w.cardId !== 'the_pale_wanderer_beast' || getCard(w.cardId).name !== 'Skinwalker') return `form ${w.cardId}`;
@@ -178,7 +179,7 @@ test('Skinwalker (Beast Form): takes the keywords of what it kills, and keeps th
   attack(0, w.uid, foe.uid);
   if (!hasKeyword(w, 'Taunt') || !hasKeyword(w, 'Lifesteal')) return `after kill: ${kws(w)}`;
   run({ op: 'shift', target: { uid: w.uid } });
-  if (!hasKeyword(w, 'Taunt') || !hasKeyword(w, 'Lifesteal')) return `after changing back: ${kws(w)}`;
+  if (hasKeyword(w, 'Taunt') || hasKeyword(w, 'Lifesteal')) return `after changing back: ${kws(w)}`;
 }, realm('Lycanthropes'));
 test('Pulsar: discards your hand and grows +1/+1 per card', () => {
   for (const id of ['spark_fry', 'spark_fry', 'dynamo_eel']) give(0, id);

@@ -533,68 +533,79 @@ export function particles(rect, faction, power = 1) {
   return Promise.all(jobs);
 }
 
-// A defeated hero: the portrait trembles, flares, then bursts into pieces.
-// A defeated Hero: glowing cracks split the portrait in three jolts (light leaking through
-// them, the portrait shuddering harder each time), then it bursts: a white flash, a
-// shockwave, and the shards of the portrait tumble away.
+// A defeated Hero: the portrait itself fractures. It is cut into jagged shards that sit exactly
+// where the picture was, and in three jolts the shards pull apart a little more each time, so
+// light leaks through real gaps (not lines drawn on top). Then it bursts: a white flash, a
+// shockwave, and the shards tumble away from where they had cracked to.
 export async function heroExplode(el) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
-  const img = el.querySelector('.portrait-img')?.getAttribute('src');
-  const c = center(rect);
-  // Cracks of light, drawn over the portrait.
-  const NS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 100 100');
-  svg.setAttribute('class', 'fx-hero-cracks');
-  Object.assign(svg.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
-  layer().appendChild(svg);
-  const crackPath = (ang, len, from = [50, 46]) => {
-    const pts = [from];
-    let [x, y] = from;
-    const steps = 4 + Math.floor(Math.random() * 3);
-    for (let k = 1; k <= steps; k++) {
-      const a = ang + (Math.random() - 0.5) * 0.7;
-      x += Math.cos(a) * (len / steps); y += Math.sin(a) * (len / steps);
-      pts.push([x, y]);
-    }
-    return { d: `M${pts.map((q) => q.map((v) => v.toFixed(1)).join(',')).join(' L')}`, end: pts[pts.length - 1] };
+  const imgEl = el.querySelector('.portrait-img');
+  const img = imgEl?.getAttribute('src');
+  const pr = imgEl?.getBoundingClientRect() ?? rect;
+  const cs = imgEl ? getComputedStyle(imgEl) : null;
+  const radius = cs?.borderRadius || '50%';
+  const objPos = cs?.objectPosition || 'center 22%';
+  const c = center(pr);
+  // Light behind the picture: only visible through the gaps between the shards.
+  const glow = document.createElement('div');
+  glow.className = 'fx-hero-crackglow';
+  Object.assign(glow.style, { left: `${pr.left}px`, top: `${pr.top}px`, width: `${pr.width}px`, height: `${pr.height}px`, borderRadius: radius });
+  layer().appendChild(glow);
+  // Jagged wedges from an off-centre impact point; each shared edge has a kink, so neighbours fit.
+  const n = 8;
+  const o = [48 + (Math.random() - 0.5) * 10, 42 + (Math.random() - 0.5) * 10];
+  const angs = Array.from({ length: n }, (_, i) => (i / n) * 360 + (Math.random() - 0.5) * (260 / n));
+  // Two kinks on every shared edge, so the fracture lines zig-zag instead of running straight.
+  const kinks = angs.map(() => [{ r: 12 + Math.random() * 16, dd: (Math.random() - 0.5) * 26 }, { r: 34 + Math.random() * 26, dd: (Math.random() - 0.5) * 22 }]);
+  const pt = (deg, r) => `${(o[0] + Math.cos((deg * Math.PI) / 180) * r).toFixed(1)}% ${(o[1] + Math.sin((deg * Math.PI) / 180) * r).toFixed(1)}%`;
+  const pieces = [];
+  for (let i = 0; i < n; i++) {
+    const a0 = angs[i], a1 = i + 1 < n ? angs[i + 1] : angs[0] + 360;
+    const [p0, q0] = kinks[i], [p1, q1] = kinks[(i + 1) % n];
+    const piece = document.createElement('div');
+    piece.className = 'fx-hero-piece';
+    Object.assign(piece.style, {
+      left: `${pr.left}px`, top: `${pr.top}px`, width: `${pr.width}px`, height: `${pr.height}px`, borderRadius: radius,
+      backgroundImage: img ? `url('${img}')` : 'none', backgroundPosition: objPos,
+      clipPath: `polygon(${o[0]}% ${o[1]}%, ${pt(a0 + p0.dd, p0.r)}, ${pt(a0 + q0.dd, q0.r)}, ${pt(a0, 95)}, ${pt((a0 + a1) / 2, 95)}, ${pt(a1, 95)}, ${pt(a1 + q1.dd, q1.r)}, ${pt(a1 + p1.dd, p1.r)})`,
+    });
+    layer().appendChild(piece);
+    // Each shard gives way by its own amount, and the lower ones sag a little.
+    pieces.push({ el: piece, mid: (((a0 + a1) / 2) * Math.PI) / 180, spin: (Math.random() - 0.5) * 2.2, give: 0.45 + Math.random() * 1.1, off: [0, 0], rot: 0 });
+  }
+  const layers = imgEl ? [...imgEl.parentElement.querySelectorAll('.portrait-img')] : [];
+  for (const l of layers) l.style.visibility = 'hidden';
+  // Three jolts: the shards spread a little more each time and the light behind grows.
+  const jolt = (k) => {
+    const gap = (1 + k * 1.5) * (pr.width / 120);
+    const jobs = pieces.map((q) => {
+      const g = gap * q.give;
+      const to = [Math.cos(q.mid) * g, Math.sin(q.mid) * g + Math.max(0, Math.sin(q.mid)) * k * 0.8];
+      const rot = q.spin * (k + 1) * 0.9;
+      const from = `translate(${q.off[0]}px, ${q.off[1]}px) rotate(${q.rot}deg)`;
+      q.off = to; q.rot = rot;
+      return animate(q.el, [
+        { transform: from },
+        { transform: `translate(${to[0] * 1.6}px, ${to[1] * 1.6}px) rotate(${rot * 1.4}deg)`, offset: 0.35 },
+        { transform: `translate(${to[0]}px, ${to[1]}px) rotate(${rot}deg)` },
+      ], { duration: 220, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'forwards' });
+    });
+    jobs.push(animate(glow, [{ opacity: 0.35 + k * 0.25, filter: `brightness(${1.4 + k * 0.4})` }, { opacity: 0.5 + k * 0.25, filter: 'brightness(1)' }], { duration: 240, fill: 'forwards' }));
+    jobs.push(animate(el, [
+      { transform: 'translate(0,0)' },
+      { transform: `translate(${-2 - k * 2}px, ${1 + k}px) rotate(${-0.6 - k * 0.6}deg)`, offset: 0.3 },
+      { transform: `translate(${2 + k * 2}px, ${-1 - k}px) rotate(${0.6 + k * 0.6}deg)`, offset: 0.6 },
+      { transform: 'translate(0,0)' },
+    ], { duration: 240, easing: 'ease-out' }));
+    return Promise.all(jobs);
   };
-  const addCracks = (n, len, from) => {
-    const ends = [];
-    for (let k = 0; k < n; k++) {
-      const ang = (k / n) * Math.PI * 2 + Math.random() * 0.8;
-      const { d, end } = crackPath(ang, len * (0.7 + Math.random() * 0.5), from);
-      ends.push(end);
-      for (const cls of ['glow', 'core']) {
-        const path = document.createElementNS(NS, 'path');
-        path.setAttribute('d', d);
-        path.setAttribute('class', cls);
-        path.setAttribute('pathLength', '1');
-        svg.appendChild(path);
-        animate(path, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.3,1)' });
-      }
-    }
-    return ends;
-  };
-  const shudder = (k) => animate(el, [
-    { transform: 'translate(0,0)', filter: `brightness(${1 + k * 0.4})` },
-    { transform: `translate(${-3 - k * 2}px, ${1 + k}px) rotate(${-1 - k}deg)`, filter: `brightness(${1.3 + k * 0.5})`, offset: 0.25 },
-    { transform: `translate(${3 + k * 2}px, ${-1 - k}px) rotate(${1 + k}deg)`, offset: 0.55 },
-    { transform: 'translate(0,0)', filter: `brightness(${1.1 + k * 0.4})` },
-  ], { duration: 240, easing: 'ease-out', fill: 'forwards' });
-  let ends = addCracks(4, 26);
-  await shudder(0); await wait(160);
-  ends = ends.flatMap((e) => addCracks(1, 18, e)).concat(addCracks(3, 34));
-  await shudder(1); await wait(140);
-  ends.slice(0, 6).forEach((e) => addCracks(1, 16, e));
-  addCracks(5, 44);
-  await shudder(2);
-  svg.classList.add('blazing');
-  await wait(180);
+  await jolt(0); await wait(170);
+  await jolt(1); await wait(150);
+  await jolt(2); await wait(200);
   // Burst.
   el.style.visibility = 'hidden';
-  svg.remove();
+  for (const l of layers) l.style.visibility = '';
   const flash = document.createElement('div');
   flash.className = 'fx-hero-flash';
   const size = Math.max(rect.width, rect.height);
@@ -606,27 +617,16 @@ export async function heroExplode(el) {
   const jobs = [
     animate(flash, [{ transform: 'translate(-50%, -50%) scale(0.2)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(1)', opacity: 0 }], { duration: 600, easing: 'ease-out' }).then(() => flash.remove()),
     animate(ring, [{ transform: 'translate(-50%, -50%) scale(0.4)', opacity: 1, borderWidth: '10px' }, { transform: 'translate(-50%, -50%) scale(4)', opacity: 0, borderWidth: '1px' }], { duration: 800, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => ring.remove()),
+    animate(glow, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 }).then(() => glow.remove()),
   ];
-  const n = 16;
-  for (let i = 0; i < n; i++) {
-    const a0 = (i / n) * 360 + (Math.random() - 0.5) * 8;
-    const a1 = ((i + 1) / n) * 360 + (Math.random() - 0.5) * 8;
-    const pt = (deg, r) => `${50 + Math.cos((deg * Math.PI) / 180) * r}% ${50 + Math.sin((deg * Math.PI) / 180) * r}%`;
-    const piece = document.createElement('div');
-    piece.className = 'fx-hero-piece';
-    Object.assign(piece.style, {
-      left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`,
-      backgroundImage: img ? `url('${img}')` : 'none',
-      clipPath: `polygon(${pt((a0 + a1) / 2, 4 + Math.random() * 8)}, ${pt(a0, 75)}, ${pt((a0 + a1) / 2, 55 + Math.random() * 25)}, ${pt(a1, 75)})`,
-    });
-    layer().appendChild(piece);
-    const mid = (((a0 + a1) / 2) * Math.PI) / 180;
-    const d = rect.width * (1.3 + Math.random() * 1.5);
-    jobs.push(animate(piece, [
-      { transform: 'translate(0,0) rotate(0) scale(1)', opacity: 1, filter: 'brightness(2.6)' },
-      { transform: `translate(${Math.cos(mid) * d * 0.35}px, ${Math.sin(mid) * d * 0.35}px) rotate(${(Math.random() - 0.5) * 120}deg) scale(1.02)`, opacity: 1, filter: 'brightness(1.4)', offset: 0.2 },
-      { transform: `translate(${Math.cos(mid) * d}px, ${Math.sin(mid) * d + rect.height * 1.1}px) rotate(${(Math.random() - 0.5) * 600}deg) scale(0.8)`, opacity: 0, filter: 'brightness(0.5)' },
-    ], { duration: 1300 + Math.random() * 300, easing: 'cubic-bezier(.2,.6,.4,1)' }).then(() => piece.remove()));
+  for (const q of pieces) {
+    const d = pr.width * (1.3 + Math.random() * 1.5);
+    const start = `translate(${q.off[0]}px, ${q.off[1]}px) rotate(${q.rot}deg)`;
+    jobs.push(animate(q.el, [
+      { transform: `${start} scale(1)`, opacity: 1, filter: 'brightness(2.2)' },
+      { transform: `translate(${Math.cos(q.mid) * d * 0.35}px, ${Math.sin(q.mid) * d * 0.35}px) rotate(${(Math.random() - 0.5) * 120}deg) scale(1.02)`, opacity: 1, filter: 'brightness(1.3)', offset: 0.2 },
+      { transform: `translate(${Math.cos(q.mid) * d}px, ${Math.sin(q.mid) * d + pr.height * 1.1}px) rotate(${(Math.random() - 0.5) * 600}deg) scale(0.8)`, opacity: 0, filter: 'brightness(0.5)' },
+    ], { duration: 1300 + Math.random() * 300, easing: 'cubic-bezier(.2,.6,.4,1)' }).then(() => q.el.remove()));
   }
   jobs.push(particles(rect, null, 12));
   const arena = el.closest('.arena');
@@ -2241,10 +2241,10 @@ function smokePuffs(c, size, count = 8) {
 }
 
 // Cards you draw: each one is swiped off the top of your deck face-down, turns over into a
-// big preview in the middle of the screen, stays there for about 2 seconds (tap to skip),
+// big preview in the middle of the screen, stays there for about a second (tap to skip),
 // then shrinks into its place in your hand. Several cards drawn at once are shown side by side.
 //   items: [{ el: the card in the hand, html: its big card }]
-export async function drawShow(items, from, backUrl, { hold = 2000 } = {}) {
+export async function drawShow(items, from, backUrl, { hold = 1000 } = {}) {
   if (!items.length) return;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -2276,7 +2276,7 @@ export async function drawShow(items, from, backUrl, { hold = 2000 } = {}) {
       { transform: `translate(${dx}px, ${dy}px) rotateY(180deg) rotate(-8deg) scale(${fromC.s})`, opacity: 1 },
       { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 30}px) rotateY(150deg) rotate(-4deg) scale(${(fromC.s + 1) / 2})`, offset: 0.35 },
       { transform: 'translate(0, 0) rotateY(0deg) rotate(0deg) scale(1)', opacity: 1 },
-    ], { duration: 700, delay: i * 140, easing: 'cubic-bezier(.25,.8,.25,1)' });
+    ], { duration: 450, delay: i * 90, easing: 'cubic-bezier(.25,.8,.25,1)' });
   }));
   // 2) Hold so it can be read; a tap (anywhere) moves on.
   await new Promise((resolve) => {
@@ -2294,7 +2294,7 @@ export async function drawShow(items, from, backUrl, { hold = 2000 } = {}) {
     return animate(wrap, [
       { transform: 'translate(0, 0) scale(1)', opacity: 1 },
       { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 1 },
-    ], { duration: 420, delay: i * 80, easing: 'cubic-bezier(.5,0,.3,1)' });
+    ], { duration: 320, delay: i * 60, easing: 'cubic-bezier(.5,0,.3,1)' });
   }));
   wraps.forEach((wrap) => wrap.remove());
 }

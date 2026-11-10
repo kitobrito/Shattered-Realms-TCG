@@ -5,6 +5,7 @@ import * as fx from './fx.js';
 import * as sound from './sound.js';
 import { setMusicVolume } from './music.js';
 import { journeyDone, restartJourney, unlockEverything } from './journey.js';
+import * as srv from './server-link.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
@@ -114,6 +115,9 @@ export function openSettings() {
       ${journeyDone()
     ? '<div class="set-row"><span>New-player path</span><button class="ghost journey-replay">Replay it</button><i>Start over as a new player: choose 3 starter realms, starter decks first. Your decks and unlocked cards stay.</i></div>'
     : '<div class="set-row"><span>New-player path</span><button class="ghost journey-skip">Unlock everything</button><i>All realms, two-faction decks, traps and Quick Plays now</i></div>'}
+      ${srv.user || srv.hasSavedLogin()
+    ? `<div class="set-row"><span>Account</span><button class="ghost acct-logout">Log out</button><i>${srv.user ? `Signed in as <b>${String(srv.user.name).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}</b>` : 'You are signed in on this device'}${'. Ends any match in progress.'}</i></div>`
+    : '<div class="set-row"><span>Account</span><button class="ghost acct-login">Sign in</button><i>Playing offline. Sign in for online matches and ranks.</i></div>'}
       <button class="settings-close">Done</button>
     </div>`;
   document.body.appendChild(el);
@@ -169,6 +173,12 @@ export function openSettings() {
       e.target.textContent = 'Everything unlocked';
       e.target.disabled = true;
       document.dispatchEvent(new Event('journey'));
+    }
+    const acct = e.target.closest('.acct-logout, .acct-login');
+    if (acct) {
+      closeSettings();
+      document.dispatchEvent(new CustomEvent('account', { detail: acct.classList.contains('acct-logout') ? 'logout' : 'login' }));
+      return;
     }
     if (e.target.closest('.settings-close') || e.target === el) closeSettings();
   });

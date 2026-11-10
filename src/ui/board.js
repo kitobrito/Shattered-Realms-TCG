@@ -217,7 +217,7 @@ export function minionHTML(m, s, cls = '', shift = false) {
       ${shift ? `<button class="m-shift ${card.form}" data-shift="${m.uid}" title="Transform into ${card.form === 'beast' ? 'Humanoid' : 'Beast'} Form">🌕</button>` : ''}
       ${taunt ? wardHTML(m) : ''}
       <i class="sm-socket l"></i><i class="sm-socket r"></i>
-      <span class="atk ${atk > m.attack ? 'up' : atk < m.attack ? 'down' : ''}">${atk}</span>
+      <span class="atk ${atk > (card.attack ?? m.attack) ? 'up' : atk < (card.attack ?? m.attack) ? 'down' : ''}">${atk}</span>
       <span class="hp ${m.health < m.maxHealth ? 'down' : m.maxHealth > (card.health ?? 0) ? 'up' : ''}">${m.health}</span>
     </div>`;
 }

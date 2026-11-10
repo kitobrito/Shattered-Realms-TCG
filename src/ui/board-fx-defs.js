@@ -1253,6 +1253,76 @@ export const BOARD_FX = {
       { area: [396, 61, 444, 99], sound: 'flutter', kick: ['crow'], flare: [60, 60, 70], glyph: '🐦‍⬛' },
     ],
   },
+  // ==== Monster Hunter (unlockable): The Hunter's Crypt ====
+  // A torch-lit crypt. Each thing keeps its own clock so nothing peaks together: the red and blue
+  // lanterns flicker at different speeds, the gargoyles' eyes smoulder in turn, mist rolls out of
+  // the far door, the hunters and vampires in the melee sway and lunge, the lone hunter braces
+  // against his bats, and in the four paintings the stake glints, the werewolf bleeds, the holy
+  // water burns blue and the zombie's head drips. Dust hangs in the lantern light; fog creeps on the floor.
+  'monster-hunter-crypt-land': {
+    wind: null,
+    layers: [
+      { id: 'lanternRed', type: 'glow', points: [[257, 32, 46]], color: [255, 80, 60], anim: 'flicker', speed: 1.3, alpha: [0.08, 0.22], kickDur: 1.6 },
+      { id: 'lanternBlue', type: 'glow', points: [[759, 28, 44]], color: [110, 170, 255], anim: 'flicker', speed: 0.9, alpha: [0.07, 0.2], kickDur: 1.6 },
+      { id: 'gargoyleEyes', type: 'glow', points: [[339, 36, 7], [683, 35, 7]], color: [255, 120, 60], anim: 'pulse', period: 5.3, alpha: [0, 0.35], kickDur: 1.4 },
+      { id: 'doorMist', type: 'fog', area: [466, 60, 554, 150], count: 3, size: [40, 70], speed: 3, color: [170, 200, 215], alpha: 0.12 },
+      { id: 'doorWisps', type: 'particles', kind: 'wisp', area: [470, 70, 550, 150], rate: 0.8, max: 5, color: [200, 225, 235], size: [2, 4], life: [2, 3.2], alpha: 0.35 },
+      { id: 'melee', type: 'echo', box: [82, 186, 313, 387], feather: 5, autoKick: [6, 11], motion: { kind: 'breathe', amp: 1.1, period: 2.7, pivot: [198, 385] } },
+      { id: 'hunter', type: 'echo', box: [837, 231, 949, 361], feather: 4, autoKick: [7, 12], motion: { kind: 'breathe', amp: 1, period: 3.4, pivot: [893, 359] } },
+      { id: 'bats', type: 'echo', box: [781, 186, 975, 249], feather: 4, motion: { kind: 'bob', amp: 1.6, period: 1.3, kickAmp: 6 } },
+      { id: 'batFlock', type: 'particles', kind: 'fly', from: [[880, 210, 60]], rate: 0.3, max: 3, color: [30, 18, 26], size: [2, 3.2], life: [3, 5] },
+      { id: 'stakeGlint', type: 'particles', kind: 'glint', from: [[171, 84, 14]], rate: 0.7, max: 4, color: [230, 240, 255], size: [1, 2], life: [0.3, 0.7] },
+      { id: 'wolfBlood', type: 'particles', kind: 'drip', from: [[886, 106, 6]], rate: 0.7, max: 3, color: [150, 10, 20], size: [1, 1.6], life: [0.6, 1] },
+      { id: 'holyFire', type: 'flames', points: [[176, 444, 16, 18]], tongues: 3, idle: 0.5, kickDur: 3 },
+      { id: 'holyGlow', type: 'glow', points: [[140, 462, 40]], color: [120, 190, 255], anim: 'flicker', speed: 1.8, alpha: [0.06, 0.18], kickDur: 1.8 },
+      { id: 'holySpray', type: 'particles', kind: 'glint', from: [[112, 476, 18]], rate: 2, max: 10, color: [170, 220, 255], size: [0.8, 1.6], life: [0.3, 0.6] },
+      { id: 'headBlood', type: 'particles', kind: 'drip', from: [[967, 432, 6]], rate: 0.8, max: 3, color: [120, 20, 20], size: [1, 1.6], life: [0.6, 1] },
+      { id: 'potions', type: 'particles', kind: 'glint', from: [[350, 199, 6], [625, 158, 6], [647, 179, 6], [636, 432, 6], [327, 543, 6]], rate: 0.6, max: 3, color: [255, 235, 220], size: [0.8, 1.5], life: [0.4, 0.8] },
+      { type: 'fog', area: [-40, 360, 1064, 572], count: 5, size: [120, 200], speed: 2.5, color: [90, 100, 110], alpha: 0.05 },
+      { type: 'particles', kind: 'mote', area: [120, 0, 900, 572], rate: 1.2, max: 14, color: [255, 220, 180], size: [0.6, 1.1], life: [3, 6], alpha: 0.35, speed: 0.3 },
+    ],
+    pokes: [
+      { area: [236, 8, 280, 62], sound: 'clink', kick: ['lanternRed'], flare: [255, 90, 60], glyph: '🏮' },
+      { area: [738, 4, 782, 58], sound: 'clink', kick: ['lanternBlue'], flare: [120, 170, 255], glyph: '🏮' },
+      { area: [312, 18, 378, 146], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
+      { area: [652, 18, 716, 146], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
+      { area: [80, 184, 315, 389], sound: 'clang', kick: ['melee'], flare: [220, 200, 170], glyph: '⚔️' },
+      { area: [835, 229, 951, 363], sound: 'clang', kick: ['hunter'], flare: [220, 200, 170], glyph: '🗡️' },
+      { area: [779, 184, 977, 251], sound: 'flutter', kick: ['bats'], flare: [80, 40, 60], glyph: '🦇', burst: { layer: 'batFlock', n: 3, at: [880, 210], spread: 50 } },
+      { area: [30, 10, 230, 166], sound: 'whoosh', kick: [], flare: [230, 240, 255], glyph: '🩸', burst: { layer: 'stakeGlint', n: 6, at: [171, 84], spread: 12 } },
+      { area: [795, 10, 995, 166], sound: 'growl', kick: [], flare: [150, 20, 30], glyph: '🐺', burst: { layer: 'wolfBlood', n: 3, at: [886, 106], spread: 6 } },
+      { area: [3, 420, 195, 572], sound: 'whoosh', kick: ['holyFire', 'holyGlow'], flare: [120, 190, 255], glyph: '💧', burst: { layer: 'holySpray', n: 10, at: [112, 476], spread: 20 } },
+      { area: [817, 420, 1024, 572], sound: 'groan', kick: [], flare: [120, 160, 90], glyph: '🧟', burst: { layer: 'headBlood', n: 3, at: [967, 432], spread: 6 } },
+      { area: [462, 40, 558, 150], sound: 'whoosh', kick: ['doorMist'], flare: [170, 200, 215], burst: { layer: 'doorWisps', n: 5, spread: 30 } },
+    ],
+  },
+  // The Hunter's Crypt on phones: the four paintings above and below the crypt floor.
+  'monster-hunter-crypt-portrait': {
+    wind: null,
+    layers: [
+      { id: 'gargoyleEyes', type: 'glow', points: [[26, 216, 7], [430, 216, 7]], color: [255, 120, 60], anim: 'pulse', period: 5.3, alpha: [0, 0.35], kickDur: 1.4 },
+      { id: 'doorMist', type: 'fog', area: [178, 245, 278, 345], count: 3, size: [40, 70], speed: 3, color: [170, 200, 215], alpha: 0.12 },
+      { id: 'doorWisps', type: 'particles', kind: 'wisp', area: [182, 255, 274, 345], rate: 0.8, max: 5, color: [200, 225, 235], size: [2, 4], life: [2, 3.2], alpha: 0.35 },
+      { id: 'stakeGlint', type: 'particles', kind: 'glint', from: [[163, 81, 12]], rate: 0.7, max: 4, color: [230, 240, 255], size: [1, 2], life: [0.3, 0.7] },
+      { id: 'wolfBlood', type: 'particles', kind: 'drip', from: [[332, 105, 5]], rate: 0.7, max: 3, color: [150, 10, 20], size: [1, 1.5], life: [0.6, 1] },
+      { id: 'holyFire', type: 'flames', points: [[206, 874, 14, 16]], tongues: 3, idle: 0.5, kickDur: 3 },
+      { id: 'holyGlow', type: 'glow', points: [[160, 900, 36]], color: [120, 190, 255], anim: 'flicker', speed: 1.8, alpha: [0.06, 0.18], kickDur: 1.8 },
+      { id: 'holySpray', type: 'particles', kind: 'glint', from: [[130, 912, 16]], rate: 2, max: 10, color: [170, 220, 255], size: [0.8, 1.5], life: [0.3, 0.6] },
+      { id: 'headBlood', type: 'particles', kind: 'drip', from: [[394, 857, 5]], rate: 0.8, max: 3, color: [120, 20, 20], size: [1, 1.5], life: [0.6, 1] },
+      { id: 'potions', type: 'particles', kind: 'glint', from: [[39, 410, 5], [362, 362, 5], [388, 386, 5], [375, 682, 5], [13, 813, 5]], rate: 0.6, max: 3, color: [255, 235, 220], size: [0.8, 1.4], life: [0.4, 0.8] },
+      { type: 'fog', area: [-30, 560, 489, 700], count: 4, size: [100, 170], speed: 2.5, color: [90, 100, 110], alpha: 0.05 },
+      { type: 'particles', kind: 'mote', area: [0, 180, 459, 840], rate: 1, max: 12, color: [255, 220, 180], size: [0.6, 1], life: [3, 6], alpha: 0.35, speed: 0.3 },
+    ],
+    pokes: [
+      { area: [0, 180, 60, 330], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
+      { area: [399, 180, 459, 330], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
+      { area: [4, 2, 227, 175], sound: 'whoosh', kick: [], flare: [230, 240, 255], glyph: '🩸', burst: { layer: 'stakeGlint', n: 6, at: [163, 81], spread: 12 } },
+      { area: [232, 2, 455, 175], sound: 'growl', kick: [], flare: [150, 20, 30], glyph: '🐺', burst: { layer: 'wolfBlood', n: 3, at: [332, 105], spread: 6 } },
+      { area: [4, 848, 227, 1022], sound: 'whoosh', kick: ['holyFire', 'holyGlow'], flare: [120, 190, 255], glyph: '💧', burst: { layer: 'holySpray', n: 10, at: [130, 912], spread: 18 } },
+      { area: [232, 848, 455, 1022], sound: 'groan', kick: [], flare: [120, 160, 90], glyph: '🧟', burst: { layer: 'headBlood', n: 3, at: [394, 857], spread: 6 } },
+      { area: [175, 232, 280, 347], sound: 'whoosh', kick: ['doorMist'], flare: [170, 200, 215], burst: { layer: 'doorWisps', n: 5, spread: 30 } },
+    ],
+  },
   // ==== The Rage Outbreak (Zombies alternate board, new art): a blood-soaked city street ====
   // The Rage Outbreak: each infected moves on its own frantic rhythm (one hammers at a car, one sprints, one feeds), crows hop on the lampposts, the warning light strobes, papers and ash blow across the blood-streaked street.
   'rage-outbreak-land': {

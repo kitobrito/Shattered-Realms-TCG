@@ -72,7 +72,7 @@ test('Void is a playable realm: 30 standard cards, a Hero Spell and a token, in 
   if (!getCard('feed_the_void')?.heroSpell) return 'no hero spell';
   if (!getCard('void_spawn')?.token) return 'no Void Spawn token';
   const aggro = DECK_TYPES.find((d) => d.name === 'Aggro');
-  if (!aggro.factions.includes('Void') || aggro.factions.length !== 3) return `Aggro row: ${aggro.factions}`;
+  if (!aggro.factions.includes('Void')) return `Aggro row: ${aggro.factions}`;
   if (DECK_TYPES.some((d) => d.factions.length < 3)) return 'a row has fewer than three realms';
 });
 

@@ -863,7 +863,8 @@ body.in-game { overflow: hidden; }
 .cracks .crack-light { stroke: #ffffff66; stroke-width: 4; transform: translate(0.6px, 0.6px); }
 .cracks .crack-dark { stroke: #0b0204; stroke-width: 2.2; }
 .hero-portrait.destroyed { visibility: hidden; }
-.fx-hero-piece { position: fixed; background: #000 center 22% / cover no-repeat; border-radius: 50% 50% 46% 46%; }
+.fx-hero-piece { position: fixed; pointer-events: none; z-index: 9; background: #000 center 22% / cover no-repeat; border-radius: 50% 50% 46% 46%; }
+.fx-hero-crackglow { position: fixed; pointer-events: none; z-index: 8; opacity: 0; background: radial-gradient(circle at 48% 42%, #ffe9b0, #ff9a3c 30%, #b8401a 65%, #3a0e04); box-shadow: 0 0 18px #ff8a3a88; }
 
 /* The Victory / Defeat panel rises in after the hero explodes. */
 .arena .overlay.game-over.fresh { animation: gameover-in 0.6s ease-out; }
@@ -3731,7 +3732,8 @@ body.reduced-motion .end-turn.done, body.reduced-motion .end-turn.done::before, 
 .go-actions { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
 .go-actions button { min-width: 140px; }
 /* Gold rays turning slowly behind a Victory; ash drifting down behind a Defeat. */
-.go-rays { position: absolute; left: 50%; top: 38%; width: 160vmax; height: 160vmax; translate: -50% -50%; pointer-events: none; opacity: 0.5;
+/* Fixed (not absolute): the spinning square is huge, and inside the scrolling overlay its turning corners kept changing the scroll height. */
+.go-rays { position: fixed; left: 50%; top: 38%; width: 160vmax; height: 160vmax; translate: -50% -50%; pointer-events: none; opacity: 0.5;
   background: repeating-conic-gradient(from 0deg, #ffd87722 0deg 6deg, transparent 6deg 18deg);
   -webkit-mask: radial-gradient(circle, #000 0%, transparent 45%); mask: radial-gradient(circle, #000 0%, transparent 45%);
   animation: go-spin 60s linear infinite; }
@@ -4990,6 +4992,10 @@ body.reduced-motion .descent { display: none; }
 
 /* ---- Guided tutorial (guide.js) ---- */
 #guide-layer { position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
+/* Reading a card during the tutorial: the guide steps aside so the enlarged card is readable. */
+#guide-layer { transition: opacity 0.18s; }
+body:has(#preview.show) #guide-layer { opacity: 0.08; }
+body:has(#preview.show) #guide-layer .guide-panel { pointer-events: none; }
 #guide-layer .guide-catch { position: fixed; inset: 0; pointer-events: auto; }
 #guide-layer .guide-dim { position: fixed; inset: 0; background: rgba(4, 3, 10, 0.62); }
 #guide-layer .guide-spot { position: fixed; border-radius: 16px; box-shadow: 0 0 0 200vmax rgba(4, 3, 10, 0.62), 0 0 30px 6px rgba(255, 210, 90, 0.75) inset; }
@@ -5031,7 +5037,7 @@ body.reduced-motion .descent { display: none; }
 }
 
 /* The first-realms picker offers the tutorial to brand-new players. */
-.fp-tutorial { display: block; margin: 4px auto 10px; font-size: 18px; padding: 10px 26px; border-color: #ffd25a; box-shadow: 0 0 18px rgba(255, 200, 70, 0.55); animation: guideRing 1.6s ease-in-out infinite; }
+.fp-tutorial { display: block; margin: 0 auto 14px; font-size: 18px; padding: 10px 26px; border-color: #ffd25a; box-shadow: 0 0 18px rgba(255, 200, 70, 0.55); animation: guideRing 1.6s ease-in-out infinite; }
 
 /* ---- Realm select (main menu): floating realm slabs down both sides, the pair's hero on a centre stage ---- */
 .menu.tavern.select-screen { max-width: none; width: 100%; box-sizing: border-box; display: grid; grid-template-columns: minmax(170px, 22vw) minmax(0, 1fr) minmax(170px, 22vw);

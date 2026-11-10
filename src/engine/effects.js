@@ -2753,11 +2753,14 @@ export const EFFECT_OPS = {
       weapon.slots = e.slots ?? wcard?.runeSlots ?? 2;
       weapon.runes = [];
       if (e.enchant ?? wcard?.enchant) weapon.runes.push({ kind: 'ench', id: e.enchant ?? wcard.enchant });
-      const stash = state.players[ctx.controller].spellbook?.stash;
-      if (stash?.length) { for (const r of stash) addRune(state, hero, r); state.players[ctx.controller].spellbook.stash = null; log(state, `📖 The enchantments carry over to the ${hero.weapon.name}.`); }
     }
     if (slot === 2) hero.weapon2 = weapon;
     else hero.weapon = weapon;
+    if (weapon.wand) {
+      // Carried-over runes go on once the new Wand is in the hand (addRune writes to hero.weapon).
+      const stash = state.players[ctx.controller].spellbook?.stash;
+      if (stash?.length) { for (const r of stash) addRune(state, hero, r); state.players[ctx.controller].spellbook.stash = null; log(state, `📖 The enchantments carry over to the ${weapon.name}.`); }
+    }
     if (slot === 1) hero.attack = (hero.attack ?? 0) + e.attack;
     syncDualWield(hero);
     for (const t of e.triggers ?? []) (hero.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, weapon: true });
