@@ -869,6 +869,7 @@ async function act(action, meta = {}) {
 
   before.srcFaction = sourceFaction(s, action, playedCard);
   before.castType = playedCard?.type;
+  before.playedId = playedCard?.id;
 
   // ---- Before: the move itself.
   let lunged = null;
@@ -1482,7 +1483,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
   for (const line of newLog) {
     const placed = /^🍄 (\d+) Mushrooms? placed in (.+)'s deck\.$/.exec(line);
     const sprout = /^🍄 (\d+) Mushrooms? sprouts? on the card (.+) drew\.$/.exec(line);
-    const burst = /^🍄 (\d+) Mushrooms? burst from (.+)'s card!$/.exec(line);
+    const burst = /^🍄 (\d+) Mushrooms? burst from (.+)'s card( \(doubled by the Fly Agaric\))?!$/.exec(line);
     const m = placed ?? sprout ?? burst;
     if (!m) continue;
     const pl = s.players.find((x) => x.name === m[2]);
@@ -1491,10 +1492,17 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     const pile = app.querySelector(`.deck-pile.${side}`);
     if (burst) {
       sound.play('mushroom');
-      jobs.push(fx.mushroomBurst(pile, charEl(pl.hero.uid), Number(m[1])));
+      jobs.push(fx.mushroomBurst(pile, charEl(pl.hero.uid), Number(m[1]), Number(m[1]) * (burst[3] ? 2 : 1)));
     } else {
       // From the Fungus player (the deck owner's opponent) into the deck, or onto the hand for a freshly drawn card.
-      const caster = charEl(s.players[1 - pl.index].hero.uid)?.getBoundingClientRect();
+      // The card that cast them: the minion just played, else where the card left the hand
+      // (the hero spell's button for a hero spell), else the Fungus Hero.
+      const played = action.type === 'play' || action.type === 'quickPlay';
+      const fungus = s.players[1 - pl.index];
+      const minion = played && [...fungus.board].reverse().find((c) => c.cardId === before.playedId);
+      const caster = (played && ((minion && charEl(minion.uid)?.getBoundingClientRect()) ?? rects.get(`h${action.card}`)))
+        || (action.type === 'heroSpell' && app.querySelector(`[data-hs="${action.card}"]`)?.getBoundingClientRect())
+        || charEl(fungus.hero.uid)?.getBoundingClientRect();
       const target = sprout ? (app.querySelector(side === 'me' ? '.my-hand' : '.opp-hand') ?? pile) : pile;
       jobs.push(fx.mushroomsToDeck(caster, target, Number(m[1])));
     }
