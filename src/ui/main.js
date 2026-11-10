@@ -16,7 +16,7 @@ import { actingPlayer, applyAction, createGame, fusionFor, getLegalActions, lega
 import { checkDeck, deckProblem } from '../cards/deck-check.js';
 import { premadeDecks } from '../cards/premade-decks.js';
 import { allCards, getCard, hasCard, restoreCustomCards } from '../engine/registry.js';
-import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS } from '../engine/rules.js';
+import { DEFAULT_RULES, FACTIONS, KEYWORD_TEXT, LAUNCH_FACTIONS, termText } from '../engine/rules.js';
 import { boardFaction, boardUnlocked, chosenBoard, boardHTML, boardRealmOf, descentCalloutHTML, handIsOpen, layoutHands, setHandDocks, setHandOpen, layoutPortraitBoard, paintedBoards, portraitLayout, crackTier } from './board.js';
 import { boardReact, canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startBoardFx } from './circle-fx.js';
@@ -3112,7 +3112,7 @@ function zoomHTML(base) {
           ${twin ? `<button class="zoom-flip ghost" data-act="zoomFlip">⟲ Show ${twinName}</button>` : ''}
           ${isLocked(card.id) ? `<div class="zoom-locked">🔒 Locked · win games with ${esc(card.faction)} to unlock its cards</div>` : ''}
           ${art ? '<button class="zoom-artbtn ghost" data-act="zoomArt">View full art</button>' : ''}
-          ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}` : ''}
+          ${cardTerms(card).length ? `<div class="zoom-sub">Keywords</div>${cardTerms(card).map((t) => `<div class="zoom-term"><b>${esc(t)}</b><span>${esc(termText(t, card))}</span></div>`).join('')}` : ''}
         </aside>
         <button class="zoom-arrow" data-act="zoomNext" ${last ? 'disabled' : ''} title="Next (→)">›</button>
       </div>
@@ -3469,7 +3469,7 @@ function showPreview(target) {
   const twin = twinId ? getCard(twinId) : null;
   // Beside the card, what each of its keywords means (as when you hold a card in Hearthstone).
   const terms = cardTerms(card).filter((t) => KEYWORD_TEXT[t]).slice(0, 4);
-  const glossary = terms.length ? `<aside class="preview-terms">${terms.map((t) => `<div class="preview-term"><b>${esc(t)}</b><span>${esc(KEYWORD_TEXT[t])}</span></div>`).join('')}</aside>` : '';
+  const glossary = terms.length ? `<aside class="preview-terms">${terms.map((t) => `<div class="preview-term"><b>${esc(t)}</b><span>${esc(termText(t, card))}</span></div>`).join('')}</aside>` : '';
   el.innerHTML = `<div class="preview-row">${bigCardHTML(card, live)}${glossary}</div>` + (twin ? `<div class="preview-twin"><span>${twin.form === 'beast' ? 'Beast Form' : 'Humanoid Form'}</span>${bigCardHTML(twin)}</div>` : '') + note;
   const r = target.getBoundingClientRect();
   // A card in your hand is read up in the open, above the hand (not squeezed in beside it).

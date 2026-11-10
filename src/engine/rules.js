@@ -147,6 +147,15 @@ export const KEYWORD_TEXT = {
 };
 
 // "A random Keyword" draws from this pool (designer list).
+// A keyword's explanation for one card: Weapon means different things by realm (a Robot's Upgrade
+// vs. a weapon the Hero swings), so a card only explains its own kind.
+export function termText(term, card) {
+  if (term !== 'Weapon' || !card) return KEYWORD_TEXT[term];
+  if (card.faction === 'Robots') return 'An Upgrade: an Attack bonus with its own effect. A Robot holds one at a time; a new one replaces the old.';
+  const hero = 'Your Hero gains its Attack and can attack. Each attack uses 1 Durability; at 0 it breaks.';
+  return card.faction === 'Monster Hunter' ? `${hero} A Monster Hunter can hold two weapons at once.` : hero;
+}
+
 export const RANDOM_KEYWORD_POOL = POSITIVE_KEYWORDS;
 
 // Keywords used on designer cards but not yet defined. Cards using them are
