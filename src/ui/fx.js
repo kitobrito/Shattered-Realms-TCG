@@ -2455,8 +2455,15 @@ export async function tarPit(rect) {
 
 // ---- Monster Hunter legendaries: Graveshredder, Sun, Moon and their Eclipse ------------------
 
+// These legendary effects run at 65% of their first length (snappier, as asked).
+const LEG = 0.65;
+const legOpts = (o = {}, d = 0) => ({ ...o, duration: (o.duration ?? d) * LEG, ...(o.delay != null ? { delay: o.delay * LEG } : {}) });
+const legAnimate = (el, kf, o = {}) => animate(el, kf, legOpts(o));
+const legGlow = (c, size, a, b, o = {}) => glowBall(c, size, a, b, legOpts(o, 620));
+const legRing = (c, size, color, o = {}) => ring(c, size, color, legOpts(o, 560));
+
 const ptAlong = (a, b, k) => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k });
-const wait2 = (ms) => new Promise((r) => setTimeout(r, ms * speed()));
+const wait2 = (ms) => new Promise((r) => setTimeout(r, ms * speed() * LEG));
 
 // Moon fires: a silver-white flare streaks to the target with four wavy tails of light streaming
 // behind it like wind, then bursts in cold silver fire.
@@ -2469,7 +2476,7 @@ export async function moonShot(fromEl, toEl) {
   const n = { x: -dy / len, y: dx / len };
   const dur = 600;
   const head = addFx('fx-moon-head', { left: `${a.x}px`, top: `${a.y}px` });
-  const fly = animate(head, [
+  const fly = legAnimate(head, [
     { transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0 },
     { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0.12 },
     { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.15)`, opacity: 1 },
@@ -2483,7 +2490,7 @@ export async function moonShot(fromEl, toEl) {
       const p = ptAlong(a, b, k);
       const sway = Math.sin(k * Math.PI * 2.4 + j * (Math.PI / 2)) * (14 + j * 5) * (0.4 + k * 0.6);
       const dot = addFx('fx-moon-tail', { left: `${p.x + n.x * sway}px`, top: `${p.y + n.y * sway}px`, width: `${12 - j * 2}px`, height: `${12 - j * 2}px` });
-      jobs.push(done(dot, animate(dot, [
+      jobs.push(done(dot, legAnimate(dot, [
         { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0 },
         { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 0.95, offset: 0.15 },
         { transform: `translate(calc(-50% - ${dx / len * 26}px), calc(-50% - ${dy / len * 26}px)) scale(0.3)`, opacity: 0 },
@@ -2493,9 +2500,9 @@ export async function moonShot(fromEl, toEl) {
   await done(head, fly);
   const size = Math.max(tr.width, tr.height);
   await Promise.all([
-    glowBall(b, size * 1.7, '#e9f4ff', '#8fb8ff', { duration: 640 }),
-    ring(b, size * 1.3, '#dff0ff', { width: 3 }),
-    ring(b, size * 0.9, '#9fc4ff', { width: 2, delay: 90 }),
+    legGlow(b, size * 1.7, '#e9f4ff', '#8fb8ff', { duration: 640 }),
+    legRing(b, size * 1.3, '#dff0ff', { width: 3 }),
+    legRing(b, size * 0.9, '#9fc4ff', { width: 2, delay: 90 }),
     smokePuffs(b, size * 1.1, 6).catch(() => {}),
     ...jobs,
   ]);
@@ -2509,13 +2516,13 @@ export async function sunShot(fromEl, toEl) {
   const b = center(tr);
   const len = Math.hypot(b.x - a.x, b.y - a.y), ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
   const beam = addFx('fx-sun-beam', { left: `${a.x}px`, top: `${a.y}px`, width: `${len}px`, transform: `rotate(${ang}deg) scaleX(0)` });
-  await animate(beam, [
+  await legAnimate(beam, [
     { transform: `rotate(${ang}deg) scaleX(0)`, opacity: 1 },
     { transform: `rotate(${ang}deg) scaleX(1)`, opacity: 1, offset: 0.35 },
     { transform: `rotate(${ang}deg) scaleX(1) scaleY(0.2)`, opacity: 0 },
   ], { duration: 420, easing: 'ease-out' }).then(() => beam.remove());
   const size = Math.max(tr.width, tr.height);
-  await Promise.all([glowBall(b, size * 1.8, '#ffe38a', '#ff9a2a', { duration: 600 }), ring(b, size * 1.4, '#ffd060', { width: 4 })]);
+  await Promise.all([legGlow(b, size * 1.8, '#ffe38a', '#ff9a2a', { duration: 600 }), legRing(b, size * 1.4, '#ffd060', { width: 4 })]);
 }
 
 // Sun's bullet: a slug of pure light with a red hellfire tip streaks to the enemy Hero.
@@ -2528,7 +2535,7 @@ export async function sunBullet(fromEl, toEl) {
   const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
   const dur = 420;
   const slug = addFx('fx-sun-bullet', { left: `${a.x}px`, top: `${a.y}px` });
-  const fly = animate(slug, [
+  const fly = legAnimate(slug, [
     { transform: `translate(-50%, -50%) rotate(${ang}deg) scale(0.5)`, opacity: 0 },
     { transform: `translate(-50%, -50%) rotate(${ang}deg) scale(1)`, opacity: 1, offset: 0.1 },
     { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${ang}deg) scale(1)`, opacity: 1 },
@@ -2537,11 +2544,11 @@ export async function sunBullet(fromEl, toEl) {
   for (let i = 1; i <= 12; i++) {
     const k = i / 13, p = ptAlong(a, b, k);
     const e = addFx('fx-sun-ember', { left: `${p.x + (Math.random() - 0.5) * 8}px`, top: `${p.y + (Math.random() - 0.5) * 8}px` });
-    embers.push(done(e, animate(e, [{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: `translate(-50%, calc(-50% - ${6 + Math.random() * 10}px)) scale(0.2)`, opacity: 0 }], { duration: 480, delay: dur * k })));
+    embers.push(done(e, legAnimate(e, [{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: `translate(-50%, calc(-50% - ${6 + Math.random() * 10}px)) scale(0.2)`, opacity: 0 }], { duration: 480, delay: dur * k })));
   }
   await done(slug, fly);
   const size = Math.max(tr.width, tr.height);
-  await Promise.all([glowBall(b, size * 1.5, '#fff1b0', '#ff3a1a', { duration: 560 }), ring(b, size * 1.2, '#ff7a3a', { width: 3 }), ...embers]);
+  await Promise.all([legGlow(b, size * 1.5, '#fff1b0', '#ff3a1a', { duration: 560 }), legRing(b, size * 1.2, '#ff7a3a', { width: 3 }), ...embers]);
 }
 
 // Graveshredder bites: a spinning silver saw rips across the target in a spray of sparks and gore.
@@ -2560,7 +2567,7 @@ export async function chainsawBite(toEl) {
   }
   saw.style.clipPath = `polygon(${pts.join(',')})`;
   document.body.appendChild(saw);
-  const spin = animate(saw, [
+  const spin = legAnimate(saw, [
     { transform: 'scale(0.4) rotate(0deg)', opacity: 0 },
     { transform: 'scale(1) rotate(260deg)', opacity: 1, offset: 0.2 },
     { transform: 'scale(1.05) rotate(980deg)', opacity: 1, offset: 0.8 },
@@ -2573,7 +2580,7 @@ export async function chainsawBite(toEl) {
     document.body.appendChild(el);
     const angle = (gore ? Math.PI * (0.15 + Math.random() * 0.7) : Math.random() * Math.PI * 2);
     const d = size * (0.5 + Math.random() * 0.8);
-    bits.push(done(el, animate(el, [
+    bits.push(done(el, legAnimate(el, [
       { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
       { transform: `translate(calc(-50% + ${Math.cos(angle) * d}px), calc(-50% + ${Math.sin(angle) * d + (gore ? size * 0.4 : 0)}px)) scale(${gore ? 0.7 : 0.2})`, opacity: 0 },
     ], { duration: 520 + Math.random() * 320, delay: 60 + Math.random() * 450, easing: 'cubic-bezier(.2,.7,.4,1)' })));
@@ -2594,20 +2601,20 @@ export async function weaponRise(heroEl, kind) {
     for (let i = 0; i < 18; i++) {
       const el = addFx('fx-saw-spark', { left: `${c.x + size * 0.4}px`, top: `${c.y}px` });
       const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, d = size * (0.4 + Math.random() * 0.6);
-      jobs.push(done(el, animate(el, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(ang) * d}px), calc(-50% + ${Math.sin(ang) * d}px)) scale(0.2)`, opacity: 0 }], { duration: 650, delay: Math.random() * 600 })));
+      jobs.push(done(el, legAnimate(el, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(ang) * d}px), calc(-50% + ${Math.sin(ang) * d}px)) scale(0.2)`, opacity: 0 }], { duration: 650, delay: Math.random() * 600 })));
     }
     return Promise.all(jobs);
   }
   const moon = kind === 'moon';
   const orb = addFx(moon ? 'fx-rise-moon' : 'fx-rise-sun', box({ x: c.x, y: c.y - size * 0.15 }, size * 0.55));
   await Promise.all([
-    done(orb, animate(orb, [
+    done(orb, legAnimate(orb, [
       { transform: 'translateY(20%) scale(0.3)', opacity: 0 },
       { transform: 'translateY(-30%) scale(1)', opacity: 1, offset: 0.45 },
       { transform: 'translateY(-60%) scale(1.15)', opacity: 0 },
     ], { duration: 1500, easing: 'ease-out' })),
-    glowBall(c, size * 1.8, moon ? '#eef6ff' : '#fff0a8', moon ? '#8fb8ff' : '#ffb03a', { duration: 900 }),
-    ring(c, size * 1.4, moon ? '#dff0ff' : '#ffd060', { width: 3, delay: 150 }),
+    legGlow(c, size * 1.8, moon ? '#eef6ff' : '#fff0a8', moon ? '#8fb8ff' : '#ffb03a', { duration: 900 }),
+    legRing(c, size * 1.4, moon ? '#dff0ff' : '#ffd060', { width: 3, delay: 150 }),
   ]);
 }
 
@@ -2622,25 +2629,25 @@ export async function eclipse(heroEl) {
   const sunD = addFx('fx-eclipse-sun', box(c, size));
   const moonD = addFx('fx-eclipse-moon', box(c, size));
   const gap = size * 1.6;
-  animate(dim, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: 'forwards' });
+  legAnimate(dim, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: 'forwards' });
   await Promise.all([
-    animate(sunD, [{ transform: `translateX(${-gap}px) scale(0.6)`, opacity: 0 }, { transform: 'translateX(0) scale(1)', opacity: 1 }], { duration: 900, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' }),
-    animate(moonD, [{ transform: `translateX(${gap}px) scale(0.6)`, opacity: 0 }, { transform: 'translateX(0) scale(1)', opacity: 1 }], { duration: 1000, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' }),
+    legAnimate(sunD, [{ transform: `translateX(${-gap}px) scale(0.6)`, opacity: 0 }, { transform: 'translateX(0) scale(1)', opacity: 1 }], { duration: 900, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' }),
+    legAnimate(moonD, [{ transform: `translateX(${gap}px) scale(0.6)`, opacity: 0 }, { transform: 'translateX(0) scale(1)', opacity: 1 }], { duration: 1000, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' }),
   ]);
   // The Moon turns black as it covers the Sun; the corona bursts out around them.
   moonD.classList.add('covering');
   const corona = addFx('fx-eclipse-corona', box(c, size * 1.5));
   shake(heroEl, 8);
   await Promise.all([
-    animate(corona, [{ transform: 'scale(0.5) rotate(0deg)', opacity: 0 }, { transform: 'scale(1.05) rotate(40deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.25) rotate(110deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out' }).then(() => corona.remove()),
-    ring(c, size * 1.6, '#ffe7a0', { width: 5, duration: 800 }),
-    ring(c, size * 1.2, '#dff0ff', { width: 3, duration: 800, delay: 120 }),
+    legAnimate(corona, [{ transform: 'scale(0.5) rotate(0deg)', opacity: 0 }, { transform: 'scale(1.05) rotate(40deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.25) rotate(110deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out' }).then(() => corona.remove()),
+    legRing(c, size * 1.6, '#ffe7a0', { width: 5, duration: 800 }),
+    legRing(c, size * 1.2, '#dff0ff', { width: 3, duration: 800, delay: 120 }),
     banner('ECLIPSE', 'eclipse'),
   ]);
   await Promise.all([
-    animate(sunD, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => sunD.remove()),
-    animate(moonD, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => moonD.remove()),
-    animate(dim, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => dim.remove()),
+    legAnimate(sunD, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => sunD.remove()),
+    legAnimate(moonD, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => moonD.remove()),
+    legAnimate(dim, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }).then(() => dim.remove()),
   ]);
 }
 
@@ -2680,9 +2687,9 @@ export async function chainsawSlice(clone, rect, line = null) {
   const seam = addFx('fx-cut-seam', { left: `${start.x}px`, top: `${start.y}px`, width: `${len}px`, transform: `rotate(${ang}deg) scaleX(0)` });
   document.body.appendChild(seam);
   const cutDur = 1100;
-  const jobs = [animate(seam, [{ transform: `rotate(${ang}deg) scaleX(0)` }, { transform: `rotate(${ang}deg) scaleX(1)` }], { duration: cutDur, easing: 'linear', fill: 'forwards' })];
+  const jobs = [legAnimate(seam, [{ transform: `rotate(${ang}deg) scaleX(0)` }, { transform: `rotate(${ang}deg) scaleX(1)` }], { duration: cutDur, easing: 'linear', fill: 'forwards' })];
   // The minion judders while the chain bites.
-  for (const { g } of halves) jobs.push(animate(g, [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ transform: `translate(${i % 2 ? 2 : -2}px, ${i % 3 ? 1 : -1}px)` })), { duration: cutDur, easing: 'linear' }));
+  for (const { g } of halves) jobs.push(legAnimate(g, [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ transform: `translate(${i % 2 ? 2 : -2}px, ${i % 3 ? 1 : -1}px)` })), { duration: cutDur, easing: 'linear' }));
   // Sparks and blood from the moving cutting point.
   for (let i = 0; i < 26; i++) {
     const k = i / 25, tip = { x: start.x + d.x * len * k, y: start.y + d.y * len * k };
@@ -2690,7 +2697,7 @@ export async function chainsawSlice(clone, rect, line = null) {
     const el = addFx(gore ? 'fx-saw-gore' : 'fx-saw-spark', { left: `${tip.x}px`, top: `${tip.y}px` });
     document.body.appendChild(el);
     const a = Math.random() * Math.PI * 2, dist = 18 + Math.random() * 34;
-    jobs.push(done(el, animate(el, [
+    jobs.push(done(el, legAnimate(el, [
       { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
       { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist + (gore ? 24 : 0)}px)) scale(0.3)`, opacity: 0 },
     ], { duration: 420, delay: cutDur * k })));
@@ -2699,8 +2706,8 @@ export async function chainsawSlice(clone, rect, line = null) {
   // The halves part along the cut and fall away.
   const sep = Math.max(rect.width, rect.height) * 0.22;
   await Promise.all([
-    animate(seam, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).then(() => seam.remove()),
-    ...halves.map(({ g, side }) => animate(g, [
+    legAnimate(seam, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).then(() => seam.remove()),
+    ...halves.map(({ g, side }) => legAnimate(g, [
       { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
       { transform: `translate(${n.x * sep * side}px, ${n.y * sep * side}px) rotate(${side * 8}deg)`, opacity: 1, offset: 0.35 },
       { transform: `translate(${n.x * sep * 1.6 * side}px, ${n.y * sep * 1.6 * side + rect.height * 0.6}px) rotate(${side * 22}deg)`, opacity: 0 },
@@ -2716,7 +2723,7 @@ function ashFall(rect, y, count, { ember = 0.25, dark = false } = {}) {
     const glow = Math.random() < ember;
     const el = addFx(glow ? 'fx-ash-ember' : dark ? 'fx-ash-dark' : 'fx-ash', { left: `${rect.left + Math.random() * rect.width}px`, top: `${y + (Math.random() - 0.5) * 8}px` });
     const dx = (Math.random() - 0.5) * rect.width * 0.6, dy = rect.height * (0.4 + Math.random() * 0.7);
-    jobs.push(done(el, animate(el, [
+    jobs.push(done(el, legAnimate(el, [
       { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 },
       { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.4) rotate(${(Math.random() - 0.5) * 300}deg)`, opacity: 0 },
     ], { duration: 900 + Math.random() * 600, delay: Math.random() * 120, easing: 'cubic-bezier(.3,0,.7,1)' })));
@@ -2728,14 +2735,14 @@ function ashFall(rect, y, count, { ember = 0.25, dark = false } = {}) {
 // from the top down, flecks and embers drifting to the ground.
 export async function sunDeath(clone, rect) {
   const { host, g } = killGhost(clone, rect);
-  await animate(g, [
+  await legAnimate(g, [
     { filter: 'none' },
     { filter: 'sepia(1) saturate(3) brightness(1.9) hue-rotate(-15deg)', offset: 0.35 },
     { filter: 'grayscale(1) brightness(0.28) contrast(1.3)' },
   ], { duration: 900, fill: 'forwards' });
   const steps = 8, jobs = [];
   for (let i = 1; i <= steps; i++) jobs.push(wait2((i - 1) * 110).then(() => ashFall(rect, rect.top + rect.height * (i - 0.5) / steps, 9, { ember: 0.3 })));
-  jobs.push(animate(g, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(100% 0 0 0)' }], { duration: steps * 110 + 200, easing: 'linear', fill: 'forwards' }));
+  jobs.push(legAnimate(g, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(100% 0 0 0)' }], { duration: steps * 110 + 200, easing: 'linear', fill: 'forwards' }));
   await Promise.all(jobs);
   host.remove();
 }
@@ -2745,7 +2752,7 @@ export async function sunDeath(clone, rect) {
 export async function moonDeath(clone, rect) {
   const { host, g } = killGhost(clone, rect);
   const c = center(rect), size = Math.max(rect.width, rect.height);
-  await animate(g, [
+  await legAnimate(g, [
     { transform: 'scale(1)', filter: 'none', opacity: 1 },
     { transform: 'scale(1.06)', filter: 'saturate(0) brightness(2.6) drop-shadow(0 0 12px #dfeeff)', opacity: 1 },
   ], { duration: 520, fill: 'forwards' });
@@ -2753,15 +2760,15 @@ export async function moonDeath(clone, rect) {
   for (let i = 0; i < 28; i++) {
     const el = addFx('fx-moon-tail', { left: `${c.x + (Math.random() - 0.5) * rect.width * 0.6}px`, top: `${c.y + (Math.random() - 0.5) * rect.height * 0.6}px`, width: `${4 + Math.random() * 6}px`, height: `${4 + Math.random() * 6}px` });
     const a = Math.random() * Math.PI * 2, dist = size * (0.5 + Math.random() * 0.9);
-    motes.push(done(el, animate(el, [
+    motes.push(done(el, legAnimate(el, [
       { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
       { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist - size * 0.2}px)) scale(0.2)`, opacity: 0 },
     ], { duration: 1000 + Math.random() * 700, easing: 'cubic-bezier(.1,.7,.3,1)' })));
   }
   await Promise.all([
-    animate(g, [{ transform: 'scale(1.06)', opacity: 1, filter: 'saturate(0) brightness(2.6) blur(0px)' }, { transform: 'scale(1.3)', opacity: 0, filter: 'saturate(0) brightness(3) blur(8px)' }], { duration: 500, fill: 'forwards' }),
-    glowBall(c, size * 1.8, '#f2f8ff', '#9fc4ff', { duration: 800 }),
-    ring(c, size * 1.4, '#e4f0ff', { width: 3 }),
+    legAnimate(g, [{ transform: 'scale(1.06)', opacity: 1, filter: 'saturate(0) brightness(2.6) blur(0px)' }, { transform: 'scale(1.3)', opacity: 0, filter: 'saturate(0) brightness(3) blur(8px)' }], { duration: 500, fill: 'forwards' }),
+    legGlow(c, size * 1.8, '#f2f8ff', '#9fc4ff', { duration: 800 }),
+    legRing(c, size * 1.4, '#e4f0ff', { width: 3 }),
     ...motes,
   ]);
   host.remove();
@@ -2772,7 +2779,7 @@ export async function moonDeath(clone, rect) {
 export async function eclipseDeath(clone, rect) {
   const { host, g } = killGhost(clone, rect);
   const c = center(rect), size = Math.max(rect.width, rect.height);
-  await animate(g, [
+  await legAnimate(g, [
     { filter: 'none', transform: 'scale(1)' },
     { filter: 'saturate(0) brightness(2.6)', transform: 'scale(1.05)', offset: 0.3 },
     { filter: 'brightness(0) drop-shadow(0 0 10px #ffcf5a)', transform: 'scale(1.05)' },
@@ -2782,14 +2789,14 @@ export async function eclipseDeath(clone, rect) {
   for (let i = 0; i < 18; i++) {
     const el = addFx('fx-moon-tail', { left: `${c.x}px`, top: `${c.y}px`, width: '6px', height: '6px' });
     const a = Math.random() * Math.PI * 2, dist = size * (0.6 + Math.random() * 0.8);
-    motes.push(done(el, animate(el, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist}px)) scale(0.2)`, opacity: 0 }], { duration: 1200, delay: 150, easing: 'cubic-bezier(.1,.7,.3,1)' })));
+    motes.push(done(el, legAnimate(el, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist}px)) scale(0.2)`, opacity: 0 }], { duration: 1200, delay: 150, easing: 'cubic-bezier(.1,.7,.3,1)' })));
   }
   const steps = 7, jobs = [];
   for (let i = 1; i <= steps; i++) jobs.push(wait2(200 + (i - 1) * 100).then(() => ashFall(rect, rect.top + rect.height * (i - 0.5) / steps, 9, { ember: 0.35, dark: true })));
-  jobs.push(animate(g, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 0)', offset: 0.2 }, { clipPath: 'inset(100% 0 0 0)' }], { duration: 200 + steps * 100 + 250, easing: 'linear', fill: 'forwards' }));
+  jobs.push(legAnimate(g, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 0)', offset: 0.2 }, { clipPath: 'inset(100% 0 0 0)' }], { duration: 200 + steps * 100 + 250, easing: 'linear', fill: 'forwards' }));
   await Promise.all([
-    animate(corona, [{ transform: 'scale(0.6) rotate(0deg)', opacity: 0 }, { transform: 'scale(1) rotate(50deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.3) rotate(120deg)', opacity: 0 }], { duration: 1400 }).then(() => corona.remove()),
-    ring(c, size * 1.5, '#ffe7a0', { width: 4 }),
+    legAnimate(corona, [{ transform: 'scale(0.6) rotate(0deg)', opacity: 0 }, { transform: 'scale(1) rotate(50deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.3) rotate(120deg)', opacity: 0 }], { duration: 1400 }).then(() => corona.remove()),
+    legRing(c, size * 1.5, '#ffe7a0', { width: 4 }),
     ...motes, ...jobs,
   ]);
   host.remove();
