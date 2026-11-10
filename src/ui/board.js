@@ -290,14 +290,29 @@ function corpseHTML(pl) {
   return `<div class="corpse-badge ${n ? '' : 'empty'}" title="${n} Corpse${n === 1 ? '' : 's'}: left when a friendly Zombie or Fungus minion dies; some cards spend them"><span>🪦</span><b>${n}</b></div>`;
 }
 
-// Robots (Arsenal Protocol): the Hero's Weapon, with its Attack and Durability left. Tap to see the card.
-// It sits in the slot left of the portrait; the Fusion sits with the Hero Spells.
+// Hero weapons (every realm): one medallion per weapon held (art/ui/weapon-medallion.png). The weapon's
+// picture sits in the middle, the Attack it hits for in the shield, Durability left on a chip opposite,
+// and when a Hero can hold two (Monster Hunter's Dual-Wield) a numeral plate says which is Weapon I and
+// which Weapon II; the one the next swing uses glows. Tap a medallion to see the card.
 function weaponHTML(pl) {
-  const w = pl.hero.weapon;
-  if (!w) return '';
-  const art = artOf(getCard(w.cardId));
-  return `<div class="weapon-badge" data-preview="${w.cardId}" title="${esc(w.name)}: ${w.attack} Attack, ${w.durability} Durability left (each attack uses 1)">
-    ${art ? `<i style="background-image:url('${art}')"></i>` : '<span>⚔️</span>'}<b class="w-atk">${w.attack}</b><b class="w-dur">${w.durability}</b>${runesHTML(w)}</div>`;
+  const h = pl.hero;
+  const slots = [h.weapon, h.weapon2].filter(Boolean);
+  if (!slots.length) return '';
+  const dual = !!(h.dualWield || h.weapon2);
+  const base = effectiveAttack({ ...h, weaponUsedSlot: 1 });
+  const nextSlot = h.weapon2 && (h.attacksThisTurn ?? 0) % 2 === 1 ? 2 : 1;
+  return slots.map((w, i) => {
+    const slot = i + 1;
+    const atk = slot === 2 ? Math.max(0, base - (h.weapon?.attack ?? 0) + w.attack) : base;
+    const art = artOf(getCard(w.cardId));
+    const tip = `${dual ? `Weapon ${slot === 1 ? 'I' : 'II'}: ` : ''}${w.name}. Hits for ${atk}, ${w.durability} Durability left (each attack uses 1).${dual && h.weapon2 ? ` Your next attack uses Weapon ${nextSlot === 1 ? 'I' : 'II'}.` : ''}`;
+    return `<div class="weapon-medal slot-${slot} ${h.weapon2 && nextSlot === slot ? 'next' : ''}" data-preview="${w.cardId}" title="${esc(tip)}">
+      ${art ? `<i class="wm-art" style="background-image:url('${art}')"></i>` : '<i class="wm-art wm-none">⚔️</i>'}
+      <img class="wm-frame" src="art/ui/weapon-medallion.png" alt="" draggable="false">
+      <b class="wm-atk">${atk}</b><b class="wm-dur">${w.durability}</b>
+      ${dual ? `<span class="wm-num">${slot === 1 ? 'I' : 'II'}</span>` : ''}
+      ${runesHTML(w)}</div>`;
+  }).join('');
 }
 
 // Witches (Spellbound): the Wand's Rune Slots: filled with enchantments (a glowing rune) or inscribed spells
@@ -381,7 +396,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
     <div class="hero-zone ${mine ? 'me' : 'opp'}">
       <div class="traps">${traps}</div>
       ${pl.hero.weapon ? `<div class="hero-fusion">${weaponHTML(pl)}</div>` : ''}
-      <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
+      <div class="hero-portrait ${keywordClasses(h)} ${cls} ${destroyed ? 'destroyed' : ''} ${!s.gameOver && h.health <= 10 ? 'weary' : ''} ${h.burn > 0 ? 'burning' : ''} ${h.eclipse ? 'eclipse' : ''} ${radiationOf(h) ? 'irradiated' : ''} ${h.radReduction > 0 ? 'rad-hit' : ''}" data-char="${h.uid}" data-kw="${allKeywords(h).map(kwSlug).join(' ')}">
         ${portraitHTML(pl)}
         ${burnHTML(h)}
         ${spellbookHTML(pl)}
@@ -391,7 +406,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         ${cracksSVG(crackStage(h))}
         <span class="m-ice"></span>
         <div class="hero-name">${esc(pl.name)}</div>
-        ${atk > 0 ? `<span class="atk">${atk}</span>` : ''}
+        ${atk > 0 && !pl.hero.weapon ? `<span class="atk">${atk}</span>` : ''}
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
@@ -750,13 +765,15 @@ export function boardHTML(ctx) {
   // variables (container units of the 16:9 arena), plus the animated corner props.
   const lb = board ? (circle ? CIRCLE_BOARDS.land[circle] : LANDSCAPE_BOARDS[bf]) : null;
   const lbStyle = lb ? landscapeVars(lb) : '';
+  // A painted round hole: the portrait is cut to a circle so its corners don't poke out.
+  const lbCls = lb && !pb ? `${lb.opp[4] ? `opp-${lb.opp[4]}` : ''} ${lb.me[4] ? `me-${lb.me[4]}` : ''}` : '';
   // Living realm boards (board-fx-defs.js) and boards whose painting has no hero frames.
   const fxKey = circle ? null : boardKey(bf);
   const pfx = circle || (pb && hasBoardFx(fxKey, 'portrait') ? fxKey : null);
   const frame = (pb ?? lb)?.frame;
 
   return `
-    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''} ${frame ? `drawn-frame frame-${frame}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : bf}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
+    <div class="arena f-${faction} ${board ? 'has-board' : ''} ${lb ? 'v-board' : ''} ${portrait ? 'portrait' : ''} ${pbCls} ${lbCls} ${lowHp ? 'low-hp' : ''} ${circle ? `in-circle circle-${circle}` : ''} ${frame ? `drawn-frame frame-${frame}` : ''}" ${art ? artStyle : lb ? `style="${lbStyle}"` : ''} ${pb ? `data-pboard="${circle ? `circle${circle}` : bf}"` : ''} data-faction="${esc(mp.factions[0])}" ${circle ? `data-circle="${circle}"` : ''}>
       ${pb ? `<div class="pboard-img" style="background-image: url('${artUrl}')"></div>` : ''}
       ${pb && pfx ? `<div class="pboard-fx" data-fx="${pfx}"></div>` : ''}
       ${pb?.props ? propsHTML(pb.props, PORTRAIT_SIZE, artUrl, BOARD_CUTS.portrait?.[bf]?.cuts) : ''}

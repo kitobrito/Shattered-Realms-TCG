@@ -2753,7 +2753,7 @@ export const EFFECT_OPS = {
       ...(e.ranged ? { ranged: true } : {}), ...(e.cooldown ? { cooldown: e.cooldown } : {}), ...(e.executeFaction ? { executeFaction: e.executeFaction } : {}),
       // Monster Hunter (Sun & Moon): bonus against a tribe or a tag, two-handed, several attacks a turn, Sun's shot.
       ...(e.preyTribe ? { preyTribe: e.preyTribe, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.preyTag ? { preyTag: e.preyTag, preyBonus: e.preyBonus ?? 0 } : {}),
-      ...(twoHanded ? { twoHanded: true } : {}), ...(e.attacksPerTurn ? { attacksPerTurn: e.attacksPerTurn } : {}), ...(e.sunShot ? { sunShot: e.sunShot } : {}),
+      ...(twoHanded ? { twoHanded: true } : {}), ...(e.attacksPerTurn ? { attacksPerTurn: e.attacksPerTurn } : {}), ...(e.sunShot ? { sunShot: e.sunShot } : {}), ...(e.killHeal ? { killHeal: e.killHeal, killHealFaction: e.killHealFaction } : {}),
       // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
       ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
     // Witches (Spellbound): Rune Slots (Apprentice 1, most Wands 2, legendary 3), a built-in enchantment,

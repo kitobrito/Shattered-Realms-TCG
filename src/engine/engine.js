@@ -926,6 +926,11 @@ const STEPS = {
       };
       // Poisonous: the enemy minion that killed it dies too.
       const killer = findCharacter(state, m.lastDamagedBy);
+      // Graveshredder: a Zombie it kills heals its Hero.
+      const kw = killer?.kind === 'hero' ? (killer.weaponUsedSlot === 2 ? killer.weapon2 : killer.weapon) : null;
+      if (kw?.killHeal && killer.controller !== m.controller && getCard(m.cardId).faction === kw.killHealFaction) {
+        steps.push({ kind: 'effect', effect: { op: 'heal', target: 'friendlyHero', amount: kw.killHeal }, ctx: { self: killer.uid, controller: killer.controller } });
+      }
       if (hasKeyword(m, 'Poisonous') && killer?.kind === 'minion' && killer.controller !== m.controller) {
         killer.destroyed = true;
         log(state, `${nameOf(state, killer)} is poisoned.`);

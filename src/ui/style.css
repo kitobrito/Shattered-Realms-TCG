@@ -2519,6 +2519,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 .arena.p-board .hero-zone.me .hero-portrait { left: var(--mh-x); top: var(--mh-y); width: var(--mh-w); height: var(--mh-h); }
 .arena.p-board.opp-arch .hero-zone.opp .hero-portrait { border-radius: 50% 50% 4% 4% / 44% 44% 3% 3%; }
 .arena.p-board.opp-circle .hero-zone.opp .hero-portrait, .arena.p-board.me-circle .hero-zone.me .hero-portrait { border-radius: 50%; }
+.arena.v-board.opp-circle .hero-zone.opp .hero-portrait, .arena.v-board.me-circle .hero-zone.me .hero-portrait { border-radius: 50%; }
 .arena.p-board.me-arch .hero-zone.me .hero-portrait { border-radius: 50% 50% 4% 4% / 44% 44% 3% 3%; }
 /* Hero Spells to the right of each frame, Traps to the left. */
 .arena.p-board .hero-zone .hero-powers { position: absolute; transform: translateY(-50%); }
@@ -5853,3 +5854,74 @@ body.reduced-motion .hero-book.done { animation: none; }
   .ms-medal { width: 38px; height: 38px; }
   .ms-realm small { font-size: 10px; }
 }
+
+/* ---- Monster Hunter legendaries: Graveshredder, Sun, Moon, Eclipse ---- */
+.fx-moon-head { position: fixed; width: 38px; height: 38px; border-radius: 50%; pointer-events: none; z-index: 1004;
+  background: radial-gradient(circle, #fff 0%, #eaf4ff 35%, #9cc4ff 60%, transparent 72%); box-shadow: 0 0 24px #cfe4ff, 0 0 52px #8fb8ff, 0 0 90px #5f8fff88; }
+.fx-moon-tail { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; background: #f6faff; box-shadow: 0 0 10px #d6e8ff, 0 0 22px #8fb8ff; }
+.fx-sun-beam { position: fixed; height: 16px; margin-top: -8px; transform-origin: 0 50%; pointer-events: none; z-index: 1003; border-radius: 6px;
+  background: linear-gradient(90deg, #fff6c8, #ffd25a 40%, #ff9a2a 85%, transparent); box-shadow: 0 0 18px #ffcf5a, 0 0 40px #ff9a2a; }
+.fx-sun-bullet { position: fixed; width: 46px; height: 15px; pointer-events: none; z-index: 1004; border-radius: 6px 50% 50% 6px;
+  background: linear-gradient(90deg, transparent, #fffbe8 25%, #ffffff 60%, #ff5a2a 82%, #c8100a); box-shadow: 0 0 12px #fff2b0, 0 0 22px #ff6a2a; }
+.fx-sun-ember { position: fixed; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; z-index: 1003; background: #ffb24a; box-shadow: 0 0 8px #ff6a2a; }
+.fx-saw { position: fixed; pointer-events: none; z-index: 5000;
+  background: radial-gradient(circle, #1c1d20 0 13%, #6c727b 14% 18%, transparent 19%), conic-gradient(from 0deg, #f4f6f8, #9aa1ab, #e9ecef, #7d848e, #f4f6f8, #a3aab3, #eef1f4, #8a919b, #f4f6f8);
+  filter: drop-shadow(0 0 6px #fff9) drop-shadow(0 0 14px #ffcf7a); }
+.fx-saw-spark { position: fixed; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; z-index: 5001; background: #fff3b0; box-shadow: 0 0 8px #ffb02a; }
+.fx-saw-gore { position: fixed; width: 10px; height: 10px; border-radius: 50% 50% 50% 0; pointer-events: none; z-index: 5001; background: #7a0d0d; box-shadow: 0 0 2px #2a0000; }
+.fx-rise-moon, .fx-rise-sun { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; }
+.fx-rise-moon { background: radial-gradient(circle at 38% 38%, #ffffff, #dfe9f5 45%, #9fb2c8 70%, transparent 72%); box-shadow: 0 0 30px #cfe4ff, 0 0 60px #8fb8ff; }
+.fx-rise-sun { background: radial-gradient(circle, #fffbe0, #ffd25a 45%, #ff8a1a 68%, transparent 72%); box-shadow: 0 0 30px #ffd25a, 0 0 70px #ff8a1a; }
+.fx-eclipse-dim { position: fixed; inset: 0; pointer-events: none; z-index: 900; background: radial-gradient(circle at 50% 60%, rgba(10, 8, 20, 0.35), rgba(4, 3, 10, 0.8)); }
+.fx-eclipse-sun { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; background: radial-gradient(circle, #fffbe0, #ffd25a 50%, #ff8a1a 70%, transparent 72%); box-shadow: 0 0 40px #ffcf5a, 0 0 90px #ff8a1a; }
+.fx-eclipse-moon { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1004; background: radial-gradient(circle at 40% 40%, #ffffff, #d7e2ee 50%, #9fb2c8 70%, transparent 72%); box-shadow: 0 0 30px #cfe4ff;
+  transition: filter 0.45s, box-shadow 0.45s; }
+.fx-eclipse-moon.covering { filter: brightness(0.06) saturate(0); box-shadow: 0 0 0 transparent; }
+.fx-eclipse-corona { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1003; filter: blur(2px);
+  background: repeating-conic-gradient(from 0deg, rgba(255, 236, 170, 0.95) 0 4deg, rgba(255, 160, 60, 0.0) 4deg 11deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 33%, #000 36%, transparent 70%); mask: radial-gradient(circle, transparent 0 33%, #000 36%, transparent 70%); }
+.fx-banner.eclipse { z-index: 1010; }
+.fx-banner.eclipse span { color: #fff6dc; letter-spacing: 0.18em; text-shadow: 0 0 10px #ffd25a, 0 0 24px #ffb03a, 0 0 42px #8fb8ff, 0 3px 0 #2a1a00; }
+/* While Eclipse holds: a slow-turning corona around the Hero's portrait. */
+.hero-portrait.eclipse::after { content: ''; position: absolute; inset: -14%; border-radius: 50%; pointer-events: none; z-index: 0;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 230, 160, 0.7) 0 3deg, transparent 3deg 10deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 56%, #000 60%, transparent 72%); mask: radial-gradient(circle, transparent 0 56%, #000 60%, transparent 72%);
+  animation: eclipseTurn 14s linear infinite; filter: drop-shadow(0 0 6px #ffcf5a); }
+@keyframes eclipseTurn { to { transform: rotate(360deg); } }
+body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
+/* Legendary kills: Graveshredder's cutting seam, Sun's ash. */
+.fx-cut-seam { position: fixed; height: 4px; margin-top: -2px; transform-origin: 0 50%; pointer-events: none; z-index: 4999; border-radius: 2px;
+  background: linear-gradient(90deg, #ffd27a, #fff 50%, #ff8a3a); box-shadow: 0 0 8px #ffb347, 0 0 16px #ff6a2a; }
+.fx-ash, .fx-ash-dark, .fx-ash-ember { position: fixed; pointer-events: none; z-index: 1004; }
+.fx-ash { width: 4px; height: 3px; background: #6d6660; border-radius: 1px; }
+.fx-ash-dark { width: 4px; height: 3px; background: #2a2628; border-radius: 1px; }
+.fx-ash-ember { width: 3px; height: 3px; border-radius: 50%; background: #ffb24a; box-shadow: 0 0 6px #ff6a2a; }
+
+/* Hero weapons: medallions (one per weapon; Weapon I and II side by side when dual-wielding). */
+.hero-fusion:has(.weapon-medal) { gap: calc(var(--hero) * 0.16); }
+/* Phone: keep the enemy medals clear of the rival panel and ours clear of the deck counter. */
+.arena.p-board .hero-zone.opp .hero-fusion:has(.weapon-medal) { top: calc(var(--oh-y) + var(--oh-h) * 0.88); }
+.arena.p-board .hero-zone.me .hero-fusion:has(.weapon-medal) { top: calc(var(--mh-y) + var(--mh-h) * 0.12); }
+.weapon-medal { position: relative; flex: none; width: calc(var(--hero) * 0.66); aspect-ratio: 1; cursor: help; filter: drop-shadow(0 3px 5px #000a); }
+.weapon-medal .wm-art { position: absolute; left: 21.3%; top: 21.3%; width: 57.4%; height: 57.4%; border-radius: 50%; background: #1a1418 center / cover no-repeat;
+  display: grid; place-items: center; font-style: normal; font-size: calc(var(--hero) * 0.18); }
+.weapon-medal .wm-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.weapon-medal b { position: absolute; display: grid; place-items: center; font-family: var(--font-title); font-weight: 900; color: #fff; line-height: 1;
+  text-shadow: 0 1px 0 #000, 0 0 4px #000, 0 0 2px #000; pointer-events: none; }
+/* Attack in the shield notch (right), Durability on a small chip opposite (left). */
+.weapon-medal .wm-atk { left: 78%; top: 37%; width: 26%; aspect-ratio: 1; border-radius: 50%; font-size: calc(var(--hero) * 0.15); color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ffe27a, #f39a1a 55%, #8a3a00); box-shadow: 0 0 0 1.5px #2a1400, 0 0 6px #ff9a2a99, 0 2px 3px #0009;
+  -webkit-text-stroke: 1px #3a1800; paint-order: stroke fill; text-shadow: 0 1px 0 #3a1800, 0 0 3px #3a1800; }
+.weapon-medal .wm-dur { left: -4%; top: 40%; width: 20%; aspect-ratio: 1; border-radius: 50%; font-size: calc(var(--hero) * 0.1);
+  background: radial-gradient(circle at 35% 30%, #3e4652, #1c2027 60%, #0c0e12); box-shadow: 0 0 0 1.5px #aeb5c2, 0 2px 3px #0008; }
+/* The numeral plate (bottom): I or II, engraved-gold. */
+.weapon-medal .wm-num { position: absolute; left: 33%; top: 83%; width: 34%; height: 9%; display: grid; place-items: center; pointer-events: none;
+  font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-size: calc(var(--hero) * 0.085); letter-spacing: 0.08em; color: #ffd98a;
+  text-shadow: 0 1px 0 #2a1a00, 0 0 4px #000; }
+/* The weapon the next swing uses glows; the other dims a little. */
+.hero-fusion:has(.weapon-medal.next) .weapon-medal:not(.next) { filter: drop-shadow(0 3px 5px #000a) saturate(0.6) brightness(0.8); }
+.weapon-medal.next { filter: drop-shadow(0 0 6px #ffd06a) drop-shadow(0 3px 5px #000a); }
+.weapon-medal .w-runes { bottom: -0.6em; }
+/* Two medallions need more room before the traps. */
+.arena.has-board .hero-zone:has(.weapon-medal + .weapon-medal) .traps { margin-right: calc(var(--hero) * 1.4 + 2cqw); }
+.arena.p-board .hero-zone:has(.weapon-medal + .weapon-medal) .traps { margin-right: calc(var(--hero) * 1.4 + 18px); }

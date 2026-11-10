@@ -1206,6 +1206,85 @@ export const BOARD_FX = {
     ],
   },
 
+  // ==== Monster Hunter (unlockable): Sundown Street ====
+  // A haunted frontier street split between a blood-red sunset (left) and a full moon (right). Every
+  // moving thing keeps its own clock (periods share no common beat, so nothing peaks together): the
+  // noose swings and its shadow on the sand swings with it (same period and phase, pivoting where the
+  // beam's shadow holds it); the crow breathes and ruffles; the horse swishes its tail and nods; the
+  // wanted posters lift in the gusts; the tumbleweeds rock; the coffin hand twitches; the lantern
+  // flickers and its light pool on the porch breathes with it; dust blows down the street in gusts.
+  'mh-sundown-street-land': {
+    wind: { dir: 1, every: [7, 12], speed: [130, 190], width: [140, 220], lean: 0.2 },
+    layers: [
+      // Light: the low sun behind the gallows, the moon and its halo, the lantern and its pool.
+      { id: 'sun', type: 'glow', points: [[150, 40, 120]], color: [255, 120, 50], anim: 'pulse', period: 9.7, alpha: [0.05, 0.13], kickDur: 2 },
+      { id: 'moon', type: 'glow', points: [[722, 22, 34]], color: [175, 205, 255], anim: 'pulse', period: 7.3, alpha: [0.08, 0.2], kickDur: 2.5 },
+      { id: 'lantern', type: 'glow', points: [[921, 125, 26]], color: [255, 185, 80], anim: 'flicker', speed: 3.4, alpha: [0.35, 0.85], kickDur: 2.5 },
+      { id: 'lanternPool', type: 'glow', points: [[921, 145, 70]], color: [255, 170, 70], anim: 'flicker', speed: 3.4, alpha: [0.05, 0.16], kickDur: 2.5 },
+      { type: 'rays', beams: [[190, 0, 16, 300, 70]], color: [255, 150, 80], alpha: [0.02, 0.06], period: 11.3 },
+      // Low dust banks rolling along the street, warm on the sunset side and cold on the moon side.
+      { type: 'fog', area: [-80, 230, 520, 430], count: 4, size: [80, 140], speed: 5, color: [230, 160, 100], alpha: 0.06 },
+      { type: 'fog', area: [500, 230, 1104, 430], count: 4, size: [80, 140], speed: 5, color: [150, 150, 200], alpha: 0.06 },
+      // The gallows: the noose and its shadow swing together; the crow on the beam.
+      { id: 'noose', type: 'echo', box: [139, 52, 167, 119], feather: 3, motion: { kind: 'rock', amp: 3, period: 4.4, phase: 0, pivot: [147, 53], kickAmp: 7 } },
+      { id: 'nooseShadow', type: 'echo', box: [137, 254, 165, 301], feather: 3, motion: { kind: 'rock', amp: 3, period: 4.4, phase: 0, pivot: [150, 256], kickAmp: 7 } },
+      { id: 'crow', type: 'echo', box: [100, 6, 153, 48], feather: 3, autoKick: [9, 16], motion: { kind: 'breathe', amp: 1.6, period: 2.9, pivot: [124, 46], kickAmp: 3 } },
+      // The horse at the hitching post: tail swish and a slow nod.
+      { id: 'tail', type: 'echo', box: [210, 360, 250, 402], feather: 3, autoKick: [6, 11], motion: { kind: 'rock', amp: 4, period: 2.7, pivot: [214, 366], kickAmp: 9 } },
+      { id: 'horseHead', type: 'echo', box: [117, 371, 168, 422], feather: 3, autoKick: [10, 18], motion: { kind: 'rock', amp: 1.6, period: 5.3, pivot: [165, 392], kickAmp: 5 } },
+      // The wanted posters lift in the wind (pinned at the top).
+      { id: 'posterV', type: 'echo', box: [814, 24, 862, 80], feather: 2, motion: { kind: 'rock', amp: 1.2, period: 3.7, pivot: [838, 26], kickAmp: 5 } },
+      { id: 'posterG', type: 'echo', box: [969, 36, 1017, 90], feather: 2, motion: { kind: 'rock', amp: 1.2, period: 4.1, pivot: [993, 38], kickAmp: 5 } },
+      // Tumbleweeds rocking where they've caught.
+      { id: 'weedTop', type: 'echo', box: [933, 178, 992, 234], feather: 3, motion: { kind: 'rock', amp: 4, period: 3.3, kickAmp: 25 } },
+      { id: 'weedLow', type: 'echo', box: [878, 368, 944, 431], feather: 3, motion: { kind: 'rock', amp: 3.5, period: 3.9, kickAmp: 25 } },
+      // The hand reaching out of the coffin twitches now and then.
+      { id: 'hand', type: 'echo', box: [854, 449, 883, 490], feather: 2, autoKick: [5, 10], motion: { kind: 'rock', amp: 2, period: 2.3, pivot: [868, 488], kickAmp: 8 } },
+      // Glints: silver bullets and the sheriff's star.
+      { type: 'particles', kind: 'glint', from: [[30, 266, 8], [15, 302, 5], [36, 350, 6], [48, 378, 6], [408, 478, 6], [410, 505, 6], [612, 478, 6], [610, 505, 6], [286, 508, 6], [462, 483, 30], [552, 483, 30], [508, 430, 10]], rate: 0.9, max: 4, color: [235, 240, 255], size: [0.9, 1.7], life: [0.5, 1] },
+      // Blowing dust and night specks.
+      { id: 'dust', type: 'particles', kind: 'snow', area: [-60, 180, 1024, 470], rate: 3, max: 30, color: [220, 180, 130], size: [0.7, 1.5], life: [4, 8], drift: 14, gustPush: 110, alpha: 0.5 },
+      { type: 'particles', kind: 'mote', area: [520, 0, 1024, 572], rate: 0.8, max: 10, color: [200, 210, 255], size: [0.6, 1.1], life: [3, 6], alpha: 0.35, speed: 0.3 },
+      { type: 'flyers', area: [600, 0, 860, 60], every: [9, 16], speed: [40, 65], size: [5, 8], color: [30, 26, 40], flap: 6 },
+    ],
+    pokes: [
+      { area: [130, 40, 175, 125], sound: 'creak', kick: ['noose', 'nooseShadow'], flare: [255, 140, 70] },
+      { area: [98, 4, 155, 50], sound: 'screech', kick: ['crow'], flare: [255, 140, 70] },
+      { area: [115, 355, 252, 465], sound: 'growl', kick: ['tail', 'horseHead'], flare: [255, 170, 100] },
+      { area: [810, 20, 1020, 105], sound: 'flutter', kick: ['posterV', 'posterG', 'lantern', 'lanternPool'], flare: [255, 185, 80] },
+      { area: [905, 98, 942, 145], sound: 'ignite', kick: ['lantern', 'lanternPool'], flare: [255, 185, 80] },
+      { area: [930, 175, 995, 237], sound: 'rustle', kick: ['weedTop'], flare: [220, 180, 130], burst: { layer: 'dust', n: 10, spread: 30 } },
+      { area: [875, 365, 947, 434], sound: 'rustle', kick: ['weedLow'], flare: [180, 170, 220], burst: { layer: 'dust', n: 10, spread: 30 } },
+      { area: [770, 445, 960, 572], sound: 'rattle', kick: ['hand'], flare: [170, 190, 255] },
+      { area: [700, 0, 745, 45], sound: 'chime', kick: ['moon'], flare: [175, 205, 255] },
+    ],
+  },
+  // Sundown Street on phones (the painting trimmed to 459 wide: the posters, lantern, tumbleweeds and
+  // coffin fall outside it, so the right side keeps the moon, its bats and the night dust).
+  'mh-sundown-street-portrait': {
+    wind: { dir: 1, every: [7, 12], speed: [120, 170], width: [120, 200], lean: 0.2 },
+    layers: [
+      { id: 'sun', type: 'glow', points: [[20, 70, 80]], color: [255, 120, 50], anim: 'pulse', period: 9.7, alpha: [0.05, 0.13], kickDur: 2 },
+      { id: 'moon', type: 'glow', points: [[405, 33, 30]], color: [175, 205, 255], anim: 'pulse', period: 7.3, alpha: [0.08, 0.2], kickDur: 2.5 },
+      { type: 'fog', area: [-60, 300, 260, 860], count: 4, size: [70, 120], speed: 4, color: [230, 160, 100], alpha: 0.055 },
+      { type: 'fog', area: [220, 300, 520, 860], count: 4, size: [70, 120], speed: 4, color: [150, 150, 200], alpha: 0.055 },
+      { id: 'noose', type: 'echo', box: [7, 105, 27, 169], feather: 2, motion: { kind: 'rock', amp: 3, period: 4.4, phase: 0, pivot: [16, 106], kickAmp: 7 } },
+      { id: 'nooseShadow', type: 'echo', box: [26, 326, 48, 364], feather: 2, motion: { kind: 'rock', amp: 3, period: 4.4, phase: 0, pivot: [37, 328], kickAmp: 7 } },
+      { id: 'crow', type: 'echo', box: [7, 65, 46, 103], feather: 2, autoKick: [9, 16], motion: { kind: 'breathe', amp: 1.6, period: 2.9, pivot: [26, 100], kickAmp: 3 } },
+      { id: 'tail', type: 'echo', box: [72, 798, 112, 842], feather: 2, autoKick: [6, 11], motion: { kind: 'rock', amp: 4, period: 2.7, pivot: [77, 805], kickAmp: 9 } },
+      { type: 'particles', kind: 'glint', from: [[127, 925, 8], [127, 945, 8], [130, 965, 8], [80, 960, 6], [52, 980, 5], [87, 997, 5], [14, 950, 5], [233, 893, 26], [229, 975, 20]], rate: 0.9, max: 4, color: [235, 240, 255], size: [0.9, 1.7], life: [0.5, 1] },
+      { id: 'dust', type: 'particles', kind: 'snow', area: [-40, 280, 459, 880], rate: 3, max: 28, color: [220, 180, 130], size: [0.7, 1.4], life: [4, 8], drift: 12, gustPush: 90, alpha: 0.5 },
+      { type: 'particles', kind: 'mote', area: [230, 0, 459, 1024], rate: 0.6, max: 8, color: [200, 210, 255], size: [0.6, 1.1], life: [3, 6], alpha: 0.35, speed: 0.3 },
+      { type: 'flyers', area: [330, 0, 459, 70], every: [9, 16], speed: [30, 50], size: [4, 7], color: [30, 26, 40], flap: 6 },
+    ],
+    pokes: [
+      { area: [0, 100, 35, 172], sound: 'creak', kick: ['noose', 'nooseShadow'], flare: [255, 140, 70] },
+      { area: [4, 62, 50, 104], sound: 'screech', kick: ['crow'], flare: [255, 140, 70] },
+      { area: [0, 795, 115, 905], sound: 'growl', kick: ['tail'], flare: [255, 170, 100] },
+      { area: [380, 8, 430, 58], sound: 'chime', kick: ['moon'], flare: [175, 205, 255] },
+    ],
+  },
+
   // ==== Ice Age (unlockable): The Tar Pit ====
   // Ice Age (unlockable): The Tar Pit. The trapped mammoths heave and trumpet, the tar burps up slow bubbles, the sabre-tooth crouches and watches, the hunters shift, crows hop, snow falls and breath steams.
   'iceage-tar-pit-land': {
@@ -1251,76 +1330,6 @@ export const BOARD_FX = {
       { area: [351, 241, 439, 324], sound: 'growl', kick: ['sabre2'], flare: [230, 170, 80], glyph: '🐅' },
       { area: [376, 436, 449, 539], sound: 'drum', kick: ['hunters'], flare: [200, 160, 120] },
       { area: [396, 61, 444, 99], sound: 'flutter', kick: ['crow'], flare: [60, 60, 70], glyph: '🐦‍⬛' },
-    ],
-  },
-  // ==== Monster Hunter (unlockable): The Hunter's Crypt ====
-  // A torch-lit crypt. Each thing keeps its own clock so nothing peaks together: the red and blue
-  // lanterns flicker at different speeds, the gargoyles' eyes smoulder in turn, mist rolls out of
-  // the far door, the hunters and vampires in the melee sway and lunge, the lone hunter braces
-  // against his bats, and in the four paintings the stake glints, the werewolf bleeds, the holy
-  // water burns blue and the zombie's head drips. Dust hangs in the lantern light; fog creeps on the floor.
-  'monster-hunter-crypt-land': {
-    wind: null,
-    layers: [
-      { id: 'lanternRed', type: 'glow', points: [[257, 32, 46]], color: [255, 80, 60], anim: 'flicker', speed: 1.3, alpha: [0.08, 0.22], kickDur: 1.6 },
-      { id: 'lanternBlue', type: 'glow', points: [[759, 28, 44]], color: [110, 170, 255], anim: 'flicker', speed: 0.9, alpha: [0.07, 0.2], kickDur: 1.6 },
-      { id: 'gargoyleEyes', type: 'glow', points: [[339, 36, 7], [683, 35, 7]], color: [255, 120, 60], anim: 'pulse', period: 5.3, alpha: [0, 0.35], kickDur: 1.4 },
-      { id: 'doorMist', type: 'fog', area: [466, 60, 554, 150], count: 3, size: [40, 70], speed: 3, color: [170, 200, 215], alpha: 0.12 },
-      { id: 'doorWisps', type: 'particles', kind: 'wisp', area: [470, 70, 550, 150], rate: 0.8, max: 5, color: [200, 225, 235], size: [2, 4], life: [2, 3.2], alpha: 0.35 },
-      { id: 'melee', type: 'echo', box: [82, 186, 313, 387], feather: 5, autoKick: [6, 11], motion: { kind: 'breathe', amp: 1.1, period: 2.7, pivot: [198, 385] } },
-      { id: 'hunter', type: 'echo', box: [837, 231, 949, 361], feather: 4, autoKick: [7, 12], motion: { kind: 'breathe', amp: 1, period: 3.4, pivot: [893, 359] } },
-      { id: 'bats', type: 'echo', box: [781, 186, 975, 249], feather: 4, motion: { kind: 'bob', amp: 1.6, period: 1.3, kickAmp: 6 } },
-      { id: 'batFlock', type: 'particles', kind: 'fly', from: [[880, 210, 60]], rate: 0.3, max: 3, color: [30, 18, 26], size: [2, 3.2], life: [3, 5] },
-      { id: 'stakeGlint', type: 'particles', kind: 'glint', from: [[171, 84, 14]], rate: 0.7, max: 4, color: [230, 240, 255], size: [1, 2], life: [0.3, 0.7] },
-      { id: 'wolfBlood', type: 'particles', kind: 'drip', from: [[886, 106, 6]], rate: 0.7, max: 3, color: [150, 10, 20], size: [1, 1.6], life: [0.6, 1] },
-      { id: 'holyFire', type: 'flames', points: [[176, 444, 16, 18]], tongues: 3, idle: 0.5, kickDur: 3 },
-      { id: 'holyGlow', type: 'glow', points: [[140, 462, 40]], color: [120, 190, 255], anim: 'flicker', speed: 1.8, alpha: [0.06, 0.18], kickDur: 1.8 },
-      { id: 'holySpray', type: 'particles', kind: 'glint', from: [[112, 476, 18]], rate: 2, max: 10, color: [170, 220, 255], size: [0.8, 1.6], life: [0.3, 0.6] },
-      { id: 'headBlood', type: 'particles', kind: 'drip', from: [[967, 432, 6]], rate: 0.8, max: 3, color: [120, 20, 20], size: [1, 1.6], life: [0.6, 1] },
-      { id: 'potions', type: 'particles', kind: 'glint', from: [[350, 199, 6], [625, 158, 6], [647, 179, 6], [636, 432, 6], [327, 543, 6]], rate: 0.6, max: 3, color: [255, 235, 220], size: [0.8, 1.5], life: [0.4, 0.8] },
-      { type: 'fog', area: [-40, 360, 1064, 572], count: 5, size: [120, 200], speed: 2.5, color: [90, 100, 110], alpha: 0.05 },
-      { type: 'particles', kind: 'mote', area: [120, 0, 900, 572], rate: 1.2, max: 14, color: [255, 220, 180], size: [0.6, 1.1], life: [3, 6], alpha: 0.35, speed: 0.3 },
-    ],
-    pokes: [
-      { area: [236, 8, 280, 62], sound: 'clink', kick: ['lanternRed'], flare: [255, 90, 60], glyph: '🏮' },
-      { area: [738, 4, 782, 58], sound: 'clink', kick: ['lanternBlue'], flare: [120, 170, 255], glyph: '🏮' },
-      { area: [312, 18, 378, 146], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
-      { area: [652, 18, 716, 146], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
-      { area: [80, 184, 315, 389], sound: 'clang', kick: ['melee'], flare: [220, 200, 170], glyph: '⚔️' },
-      { area: [835, 229, 951, 363], sound: 'clang', kick: ['hunter'], flare: [220, 200, 170], glyph: '🗡️' },
-      { area: [779, 184, 977, 251], sound: 'flutter', kick: ['bats'], flare: [80, 40, 60], glyph: '🦇', burst: { layer: 'batFlock', n: 3, at: [880, 210], spread: 50 } },
-      { area: [30, 10, 230, 166], sound: 'whoosh', kick: [], flare: [230, 240, 255], glyph: '🩸', burst: { layer: 'stakeGlint', n: 6, at: [171, 84], spread: 12 } },
-      { area: [795, 10, 995, 166], sound: 'growl', kick: [], flare: [150, 20, 30], glyph: '🐺', burst: { layer: 'wolfBlood', n: 3, at: [886, 106], spread: 6 } },
-      { area: [3, 420, 195, 572], sound: 'whoosh', kick: ['holyFire', 'holyGlow'], flare: [120, 190, 255], glyph: '💧', burst: { layer: 'holySpray', n: 10, at: [112, 476], spread: 20 } },
-      { area: [817, 420, 1024, 572], sound: 'groan', kick: [], flare: [120, 160, 90], glyph: '🧟', burst: { layer: 'headBlood', n: 3, at: [967, 432], spread: 6 } },
-      { area: [462, 40, 558, 150], sound: 'whoosh', kick: ['doorMist'], flare: [170, 200, 215], burst: { layer: 'doorWisps', n: 5, spread: 30 } },
-    ],
-  },
-  // The Hunter's Crypt on phones: the four paintings above and below the crypt floor.
-  'monster-hunter-crypt-portrait': {
-    wind: null,
-    layers: [
-      { id: 'gargoyleEyes', type: 'glow', points: [[26, 216, 7], [430, 216, 7]], color: [255, 120, 60], anim: 'pulse', period: 5.3, alpha: [0, 0.35], kickDur: 1.4 },
-      { id: 'doorMist', type: 'fog', area: [178, 245, 278, 345], count: 3, size: [40, 70], speed: 3, color: [170, 200, 215], alpha: 0.12 },
-      { id: 'doorWisps', type: 'particles', kind: 'wisp', area: [182, 255, 274, 345], rate: 0.8, max: 5, color: [200, 225, 235], size: [2, 4], life: [2, 3.2], alpha: 0.35 },
-      { id: 'stakeGlint', type: 'particles', kind: 'glint', from: [[163, 81, 12]], rate: 0.7, max: 4, color: [230, 240, 255], size: [1, 2], life: [0.3, 0.7] },
-      { id: 'wolfBlood', type: 'particles', kind: 'drip', from: [[332, 105, 5]], rate: 0.7, max: 3, color: [150, 10, 20], size: [1, 1.5], life: [0.6, 1] },
-      { id: 'holyFire', type: 'flames', points: [[206, 874, 14, 16]], tongues: 3, idle: 0.5, kickDur: 3 },
-      { id: 'holyGlow', type: 'glow', points: [[160, 900, 36]], color: [120, 190, 255], anim: 'flicker', speed: 1.8, alpha: [0.06, 0.18], kickDur: 1.8 },
-      { id: 'holySpray', type: 'particles', kind: 'glint', from: [[130, 912, 16]], rate: 2, max: 10, color: [170, 220, 255], size: [0.8, 1.5], life: [0.3, 0.6] },
-      { id: 'headBlood', type: 'particles', kind: 'drip', from: [[394, 857, 5]], rate: 0.8, max: 3, color: [120, 20, 20], size: [1, 1.5], life: [0.6, 1] },
-      { id: 'potions', type: 'particles', kind: 'glint', from: [[39, 410, 5], [362, 362, 5], [388, 386, 5], [375, 682, 5], [13, 813, 5]], rate: 0.6, max: 3, color: [255, 235, 220], size: [0.8, 1.4], life: [0.4, 0.8] },
-      { type: 'fog', area: [-30, 560, 489, 700], count: 4, size: [100, 170], speed: 2.5, color: [90, 100, 110], alpha: 0.05 },
-      { type: 'particles', kind: 'mote', area: [0, 180, 459, 840], rate: 1, max: 12, color: [255, 220, 180], size: [0.6, 1], life: [3, 6], alpha: 0.35, speed: 0.3 },
-    ],
-    pokes: [
-      { area: [0, 180, 60, 330], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
-      { area: [399, 180, 459, 330], sound: 'growl', kick: ['gargoyleEyes'], flare: [255, 120, 60], glyph: '🗿' },
-      { area: [4, 2, 227, 175], sound: 'whoosh', kick: [], flare: [230, 240, 255], glyph: '🩸', burst: { layer: 'stakeGlint', n: 6, at: [163, 81], spread: 12 } },
-      { area: [232, 2, 455, 175], sound: 'growl', kick: [], flare: [150, 20, 30], glyph: '🐺', burst: { layer: 'wolfBlood', n: 3, at: [332, 105], spread: 6 } },
-      { area: [4, 848, 227, 1022], sound: 'whoosh', kick: ['holyFire', 'holyGlow'], flare: [120, 190, 255], glyph: '💧', burst: { layer: 'holySpray', n: 10, at: [130, 912], spread: 18 } },
-      { area: [232, 848, 455, 1022], sound: 'groan', kick: [], flare: [120, 160, 90], glyph: '🧟', burst: { layer: 'headBlood', n: 3, at: [394, 857], spread: 6 } },
-      { area: [175, 232, 280, 347], sound: 'whoosh', kick: ['doorMist'], flare: [170, 200, 215], burst: { layer: 'doorWisps', n: 5, spread: 30 } },
     ],
   },
   // ==== The Rage Outbreak (Zombies alternate board, new art): a blood-soaked city street ====

@@ -43,8 +43,12 @@ SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 BONE_CUT = {'within': {'method': 'hsv', 'hsv': [[0, 180, 0, 115, 115, 255], [0, 180, 0, 255, 0, 50]], 'close': 2, 'grow': 1, 'expand': 0}}
 HINTS = {
-    # The Hunter's Crypt: the bats are dark shapes on the pale stone (the model can't see them).
-    'monster-hunter-crypt-land/bats': {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 80]], 'close': 1, 'expand': 0},
+    # Sundown Street: the noose's shadow is a soft dark loop on the sand (no edge for the model to find).
+    'mh-sundown-street-land/hand': {'method': 'hsv', 'hsv': [[0, 180, 0, 110, 140, 255]], 'keep': [[853, 445, 884, 486]], 'close': 2, 'expand': 0},
+    'mh-sundown-street-land/posterV': {'keep': [[819, 24, 862, 81]]},
+    'mh-sundown-street-land/crow': {'bg': [[98, 42, 155, 50]]},
+    'mh-sundown-street-portrait/crow': {'bg': [[5, 99, 48, 105]]},
+    'mh-sundown-street-land/nooseShadow': {'method': 'poly', 'polys': [[[144, 280], [152, 280], [152, 299], [146, 299]]], 'ellipses': [[151, 271, 8.5, 13, -8]], 'holes': [[[156, 269], [155, 273], [154, 276], [152, 277], [150, 276], [149, 273], [148, 269], [149, 265], [150, 262], [152, 261], [154, 262], [155, 265]]]},
     # The Tar Pit: the mammoth, not the tar around it; the Rage Outbreak's clawing infected, not the car door.
     'iceage-tar-pit-land/mammothL': {'bg': [[128, 395, 362, 447]]},
     'rage-outbreak-portrait/clawer': {'bg': [[80, 595, 104, 648]]},

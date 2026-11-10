@@ -45,9 +45,9 @@ export const BOARD_ART = {
   'The Tar Pit': 'art/boards-v2/iceage-tar-pit.jpg',
   'The Consecrated Graveyard': 'art/boards-v2/divine-consecrated-graveyard.jpg',
   'The Siege of Heaven': 'art/boards-v2/demons-heaven-siege.jpg',
-  'The Hunter\'s Crypt': 'art/boards-v2/monster-hunter-crypt.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
+  'Sundown Street': 'art/boards-v2/mh-sundown-street.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
 };
@@ -92,7 +92,7 @@ export const ALT_BOARDS = {
   'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
   Divine: [{ id: 'The Consecrated Graveyard', expansion: true, blurb: "A moonlit graveyard where holy light smites the restless dead." }],
   Demons: [{ id: 'The Siege of Heaven', expansion: true, blurb: "Heaven's golden gates, as hellfire and a demon legion storm the clouds." }],
-  'Monster Hunter': [{ id: 'The Hunter\'s Crypt', expansion: true, blurb: 'A torch-lit crypt where hunters fight vampires, werewolves and the restless dead.' }],
+  'Monster Hunter': [{ id: 'Sundown Street', set: 'Sun & Moon', blurb: 'A haunted frontier street, half in the setting sun and half under the full moon.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -125,7 +125,8 @@ export const PORTRAIT_SIZE = [459, 1024];
 //       sway | bob | wobble | spin | peck | crawl                                              (the painted prop itself moves)
 const P = (at, fx, color, tap = {}) => ({ at, fx, color, ...tap });
 export const PORTRAIT_BOARDS = {
-  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterportrait.jpg', opp: [195, 150, 264, 219, 'circle'], me: [195, 788, 264, 857, 'circle'], field: [115, 250, 344, 750], props: [] },
+  // Measured on the painting (459 wide like every phone board); field: the rows between the two frames.
+  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterportrait.jpg', opp: [186, 176, 274, 264, 'circle'], me: [177, 862, 283, 968, 'circle'], field: [272, 852], props: [] },
   // No painted hero frames: the game draws iron ones over the street.
   'The Rage Outbreak': { src: 'art/boards-portrait/rage-outbreak.jpg', opp: [167, 52, 298, 169, 'circle'], me: [168, 833, 293, 961, 'circle'], field: [181, 823], props: [] },
   'Harvest Moon': { src: 'art/boards-portrait/harvest-moon.jpg', opp: [192, 130, 267, 207, 'arch'], me: [183, 757, 276, 839, 'circle'], field: [223, 741], props: [] },
@@ -169,11 +170,11 @@ export const PORTRAIT_BOARDS = {
   'The White Hole': { src: 'art/boards-portrait/void-white-hole.jpg', opp: [176, 35, 290, 166, 'arch'], me: [175, 812, 285, 930, 'circle'], field: [178, 802], props: [] },
   'The Split Realm': { src: 'art/boards-portrait/ultra-split-dimensions.jpg', opp: [178, 48, 280, 157, 'arch'], me: [173, 862, 284, 963, 'circle'], field: [169, 852], props: [] },
   'The Live Wire': { src: 'art/boards-portrait/eels-power-line-river.jpg', opp: [190, 18, 264, 108, 'arch'], me: [184, 902, 268, 988, 'circle'], field: [120, 892], props: [] },
+  'Sundown Street': { src: 'art/boards-portrait/mh-sundown-street.jpg', opp: [183, 79, 278, 173, 'circle'], me: [189, 891, 271, 973, 'circle'], field: [292, 850], props: [] },
   'The Wicked Cabin': { src: 'art/boards-portrait/witches-evil-cabin.jpg', opp: [174, 32, 290, 160, 'arch'], me: [172, 825, 290, 950, 'circle'], field: [172, 815], props: [] },
   'The Tar Pit': { src: 'art/boards-portrait/iceage-tar-pit.jpg', opp: [193, 173, 268, 270, 'arch'], me: [184, 753, 275, 843, 'circle'], field: [282, 743], props: [] },
   'The Consecrated Graveyard': { src: 'art/boards-portrait/divine-consecrated-graveyard.jpg', opp: [183, 56, 278, 170, 'arch'], me: [185, 781, 274, 871, 'circle'], field: [182, 771], props: [] },
   'The Siege of Heaven': { src: 'art/boards-portrait/demons-heaven-siege.jpg', opp: [174, 50, 277, 160, 'arch'], me: [184, 738, 282, 834, 'circle'], field: [172, 728], props: [] },
-  'The Hunter\'s Crypt': { src: 'art/boards-portrait/monster-hunter-crypt.jpg', opp: [175, 232, 280, 347, 'arch'], me: [164, 694, 298, 829, 'circle'], field: [352, 690], props: [] },
   Vampires: { src: 'art/boards-portrait/vampires.jpg', opp: [190, 71, 266, 162, 'arch'], me: [179, 893, 280, 995, 'circle'], field: [180, 870], props: [] },
 };
 
@@ -181,7 +182,7 @@ export const PORTRAIT_BOARDS = {
 // battlefield [x0, y0, x1, y1] and the four corner props.
 export const LANDSCAPE_SIZE = [1024, 572];
 export const LANDSCAPE_BOARDS = {
-  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterlandscape.jpg', opp: [472, 28, 552, 108], me: [472, 464, 552, 544], field: [130, 145, 894, 425], props: [] },
+  'Monster Hunter': { src: 'art/monster-hunter/monsterhunterlandscape.jpg', opp: [458, 55, 566, 163, 'circle'], me: [451, 425, 573, 547, 'circle'], field: [130, 170, 894, 418], props: [] },
   'The Rage Outbreak': { src: 'art/boards-v2/rage-outbreak.jpg', opp: [452, 28, 566, 142], me: [449, 423, 567, 538], field: [150, 154, 880, 409], props: [] },
   'Harvest Moon': { src: 'art/boards-v2/harvest-moon.jpg', opp: [470, 48, 555, 136], me: [455, 436, 569, 534], field: [130, 150, 895, 424], props: [] },
   'Cordyceps Outbreak': { src: 'art/boards-v2/cordyceps-outbreak.jpg', opp: [465, 42, 558, 132], me: [467, 440, 562, 528], field: [130, 146, 895, 428], props: [] },
@@ -222,11 +223,11 @@ export const LANDSCAPE_BOARDS = {
   'The White Hole': { src: 'art/boards-v2/void-white-hole.jpg', opp: [461, 27, 562, 135], me: [460, 427, 570, 543], field: [150, 147, 880, 413], props: [] },
   'The Split Realm': { src: 'art/boards-v2/ultra-split-dimensions.jpg', opp: [450, 24, 565, 125], me: [461, 438, 562, 540], field: [150, 137, 880, 424], props: [] },
   'The Live Wire': { src: 'art/boards-v2/eels-power-line-river.jpg', opp: [462, 22, 562, 132], me: [463, 444, 560, 542], field: [150, 144, 880, 430], props: [] },
+  'Sundown Street': { src: 'art/boards-v2/mh-sundown-street.jpg', opp: [467, 16, 558, 104, 'circle'], me: [471, 440, 553, 523, 'circle'], field: [110, 210, 910, 436], props: [] },
   'The Wicked Cabin': { src: 'art/boards-v2/witches-evil-cabin.jpg', opp: [450, 40, 580, 165], me: [448, 415, 578, 535], field: [150, 177, 880, 401], props: [] },
   'The Tar Pit': { src: 'art/boards-v2/iceage-tar-pit.jpg', opp: [467, 28, 556, 124], me: [455, 425, 568, 543], field: [150, 136, 880, 411], props: [] },
   'The Consecrated Graveyard': { src: 'art/boards-v2/divine-consecrated-graveyard.jpg', opp: [458, 42, 564, 140], me: [460, 440, 564, 543], field: [150, 152, 880, 426], props: [] },
   'The Siege of Heaven': { src: 'art/boards-v2/demons-heaven-siege.jpg', opp: [467, 30, 557, 137], me: [462, 439, 571, 539], field: [150, 149, 880, 425], props: [] },
-  'The Hunter\'s Crypt': { src: 'art/boards-v2/monster-hunter-crypt.jpg', opp: [463, 42, 557, 148], me: [456, 442, 571, 557], field: [150, 160, 880, 425], props: [] },
 };
 
 
