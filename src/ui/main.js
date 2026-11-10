@@ -841,7 +841,7 @@ async function act(action, meta = {}) {
   fx.setBoost(game.mode === 'ai' && isAI(action.player) ? (AI_SPEEDS[getSettings().aiSpeed] ?? 1) : 1);
   if (!isAI(action.player)) recap = null; // the recap closes once you start playing
   // Playing a card or ending the turn puts your hand back in its corner.
-  if (!meta.remote && !isAI(action.player) && (action.type === 'play' || action.type === 'endTurn')) setHandOpen(false);
+  if (!meta.remote && !isAI(action.player) && (action.type === 'play' || action.type === 'endTurn')) setHandOpen(false, undefined, { force: true });
   if (meta.remote) {
     // The other player's move must be legal on our copy of the game.
     const legal = legalMatch(game.state, action);
@@ -3524,13 +3524,35 @@ document.addEventListener('pointerup', () => {
   longPress = null;
 });
 
-// Hand: a click anywhere else (not while dragging or aiming a card) puts an open hand back in its corner.
+// Hand: a tap anywhere that isn't a card puts an open hand back in its corner.
+//  - Only a real tap counts: finger down and up again within a few px and well under a second.
+//    A brush, a swipe or a finger resting on the glass does nothing.
+//  - Touches on or right around the hand's cards are the hand's own (read, pick up, play).
+//  - Starting to aim an attack or a Hero Spell puts it away too (drag.js), so it is never in the way.
+let handTap = null;
+function nearHand(x, y) {
+  const cards = app.querySelectorAll('.my-hand:not(.docked) [data-hand]');
+  if (!cards.length) return false;
+  let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+  for (const c of cards) { const q = c.getBoundingClientRect(); l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom); }
+  return x >= l - 14 && x <= r + 14 && y >= t - 14 && y <= b + 14;
+}
 document.addEventListener('pointerdown', (e) => {
-  if (screen !== 'game' || !handIsOpen() || drag.busy() || e.button !== 0) return;
-  if (e.target.closest?.('.my-hand [data-hand], .overlay, .reaction, .big-card-preview')) return;
+  handTap = null;
+  if (screen !== 'game' || !handIsOpen() || drag.busy() || e.button !== 0 || !e.isPrimary) return;
+  if (e.target.closest?.('.my-hand [data-hand], .overlay, .reaction, .big-card-preview, #settings, #guide-layer .guide-panel')) return;
+  if (nearHand(e.clientX, e.clientY)) return;
+  handTap = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), slop: e.pointerType === 'touch' ? 12 : 8 };
+}, true);
+document.addEventListener('pointerup', (e) => {
+  const tap = handTap;
+  handTap = null;
+  if (!tap || e.pointerId !== tap.id || screen !== 'game' || !handIsOpen() || drag.busy()) return;
+  if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > tap.slop || performance.now() - tap.t > 700) return;
   setHandOpen(false, app);
-});
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && screen === 'game' && handIsOpen()) setHandOpen(false, app); });
+}, true);
+document.addEventListener('pointercancel', () => { handTap = null; }, true);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && screen === 'game' && handIsOpen()) setHandOpen(false, app, { force: true }); });
 
 // Hand: hovering a card pushes its neighbours apart (mouse only; touch uses inspect).
 document.addEventListener('pointerover', (e) => {

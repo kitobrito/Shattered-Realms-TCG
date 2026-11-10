@@ -861,9 +861,15 @@ let handOpen = false;
 let handDocks = true; // the tutorial keeps the hand up (its arrows point into it)
 export const handIsOpen = () => handOpen || !handDocks;
 export function setHandDocks(on) { handDocks = on; }
-export function setHandOpen(open, root) {
+// The hand never flips twice in quick succession: a close within 450 ms of opening (a stray second
+// touch, the tail of the same tap) is ignored unless forced (playing a card, ending the turn).
+let handToggledAt = 0;
+export function setHandOpen(open, root, { force = false } = {}) {
+  const now = performance.now();
   if (handOpen === open) return;
+  if (!force && !open && now - handToggledAt < 450) return;
   handOpen = open;
+  handToggledAt = now;
   if (root) layoutHands(root, { animate: true });
 }
 
