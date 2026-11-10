@@ -4232,6 +4232,16 @@ async function boot() {
 document.addEventListener('cardstyle', () => { if (!animating) render(); });
 document.addEventListener('boardstyle', () => { if (!animating) render(); });
 document.addEventListener('journey', () => { if (screen === 'menu') render(); });
+// Settings → Account: Log out (ends any match, back to the sign-in screen) or Sign in when playing offline.
+document.addEventListener('account', (e) => {
+  clearTimeout(aiTimer); drag.cancel(); hidePreview();
+  if (game?.mode === 'online' || screen === 'online') leaveOnline();
+  if (e.detail === 'logout') srv.logout();
+  try { sessionStorage.removeItem(OFFLINE_KEY); } catch { /* storage unavailable */ }
+  lobby = { status: 'choose' }; acct.msg = null; acct.tab = 'login';
+  if (BUILD.online) { screen = 'signin'; connectServer(); } else screen = 'menu';
+  render();
+});
 
 // iPhone: inside a match, a finger drag must never scroll or bounce the page
 // (or the itch.io page around it), and must never start the system's

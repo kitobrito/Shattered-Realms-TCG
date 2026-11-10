@@ -1,6 +1,6 @@
 const M={faction:'Monster Hunter',type:'minion',tribes:['Human']}, S={faction:'Monster Hunter',type:'spell'}, T={faction:'Monster Hunter',type:'trap'};
 const eq=(id,name,attack,durability,extra={})=>({op:'equipHeroWeapon',cardId:id,name,attack,durability,...extra});
-const W=(id,name,cost,attack,durability,text,prey=null,extra={})=>({...S,id,name,cost,attack,durability,heroWeapon:true,text,...extra,effects:[eq(id,name,attack,durability,{...(prey?{prey,preyBonus:prey==='Dragons'?3:2}:{}),...(extra.heroOnly?{heroOnly:true}:{}),...(extra.ranged?{ranged:true}:{}),...(extra.cooldown?{cooldown:extra.cooldown}:{}),...(extra.executeFaction?{executeFaction:extra.executeFaction}:{})})]});
+const W=(id,name,cost,attack,durability,text,prey=null,extra={})=>({...S,id,name,cost,attack,durability,heroWeapon:true,text,...extra,effects:[eq(id,name,attack,durability,{...(prey?{prey,preyBonus:extra.preyBonus??(prey==='Dragons'?3:2)}:{}),...(extra.heroOnly?{heroOnly:true}:{}),...(extra.ranged?{ranged:true}:{}),...(extra.cooldown?{cooldown:extra.cooldown}:{}),...(extra.executeFaction?{executeFaction:extra.executeFaction}:{})})]});
 export const MONSTER_HUNTER_CARDS=[
 {...S,id:'dual_wield',name:'Dual-Wield',heroSpell:true,passive:true,cost:0,text:'Your Hero may equip two different weapons. With both equipped, gain Twin Strike and attack first with Weapon 1, then Weapon 2. Whenever your Hero kills a minion while wielding both, your lowest-Attack weapon gains +1 Attack.',effects:[]},
 {...M,id:'nightwatch_recruit',name:'Nightwatch Recruit',cost:1,attack:1,health:3,text:'Arrival: Gain 3 Armor.',triggers:[{on:'battlecry',effects:[{op:'gainArmor',amount:3}]}]},
@@ -15,13 +15,13 @@ export const MONSTER_HUNTER_CARDS=[
 W('rowan_stake','Rowan Stake',1,2,1,'Your Hero instantly kills enemy Vampire minions it attacks.',null,{executeFaction:'Vampires'}),
 W('silver_bolt_crossbow','Silver-Bolt Crossbow',2,3,3,'Ranged. Your Hero has +2 Attack against Werewolves.','Lycanthropes',{ranged:true}),
 W('flintlock_pistol','Flintlock Pistol',2,4,2,'Ranged. Has a 1-turn cooldown after use.',null,{ranged:true,cooldown:1}),
-W('cross_hilt_longsword','Cross-Hilt Longsword',3,4,3,'Your Hero has +2 Attack against Vampires.','Vampires',{legendary:true}),
+W('cross_hilt_longsword','Cross-Hilt Longsword',3,4,3,'Your Hero has +3 Attack against Vampires.','Vampires',{legendary:true,preyBonus:3}),
 W('wolfsbane_dagger','Wolfsbane Dagger',2,2,5,'Your Hero has +2 Attack against Werewolves.','Lycanthropes'),
 W('dragon_slayer_harpoon','Dragon-Slayer Harpoon',4,3,3,'Your Hero has +3 Attack against Dragons.','Dragons'),
 W('dragonfall_chain_net','Dragonfall Chain Net',3,4,2,'Your Hero has +2 Attack against Dragons.','Dragons'),
 W('holy_water_sprayer','Holy-Water Sprayer',3,2,6,'Your Hero has +2 Attack against Ghosts.','Ghosts'),
 W('reliquary_cross','Reliquary Cross',3,3,3,'Your Hero has +2 Attack against Vampires.','Vampires'),
-W('hidden_hand_cannon','Hidden Hand Cannon',4,7,1,'Your Hero can attack only the enemy Hero.',null,{legendary:true,heroOnly:true}),
+W('hidden_hand_cannon','Hidden Hand Cannon',4,7,1,'One devastating shot: your Hero can fire it at an enemy minion or the enemy Hero.',null,{legendary:true}),
 W('exorcists_chain','Exorcist’s Chain',4,3,3,'Your Hero has +2 Attack against Demons.','Demons'),
 {...S,id:'garlic_and_salt',name:'Garlic and Salt',cost:1,text:'Gain 3 Armor.',effects:[{op:'gainArmor',amount:3}]},
 {...S,id:'powder_and_ball',name:'Powder and Ball',cost:1,text:'Give your Hero +2 Attack this turn.',effects:[{op:'buff',target:'friendlyHero',attack:2,temporary:true}]},
