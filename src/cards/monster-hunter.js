@@ -35,3 +35,27 @@ W('exorcists_chain','Exorcist’s Chain',4,3,3,'Your Hero has +2 Attack against 
 {...S,id:'the_night_roads',name:'The Night Roads',cost:3,text:'Discover a Monster Hunter card. It costs 1 less. Draw a card.',effects:[{op:'discoverFaction',faction:'Monster Hunter',costMod:-1},{op:'draw',count:1}]},
 {...S,id:'the_prey_dossier',name:'The Prey Dossier',cost:4,text:'Give your Hero +2 Attack this turn and 3 Armor.',effects:[{op:'buff',target:'friendlyHero',attack:2,temporary:true},{op:'gainArmor',amount:3}]},
 ];
+
+// ---- Expansion: Sun & Moon (15 unlockable cards) ----
+// New weapon rules: twoHanded (fills both weapon slots), attacksPerTurn (Quad Strike), preyTribe / preyTag
+// (bonus against a tribe or a tag instead of a realm), and the Sun and Moon revolvers' Eclipse.
+const SET='Sun & Moon';
+const XW=(id,name,cost,attack,durability,text,weapon={},extra={})=>({...S,id,name,cost,attack,durability,heroWeapon:true,extra:true,set:SET,text,...extra,effects:[eq(id,name,attack,durability,weapon)]});
+export const MONSTER_HUNTER_EXPANSION=[
+{...M,id:'gunsmiths_apprentice',name:'Gunsmith\'s Apprentice',extra:true,set:SET,cost:1,attack:1,health:2,text:'Arrival: Give your weapon +1 Attack.',triggers:[{on:'battlecry',effects:[{op:'buffHeroWeapon',attack:1}]}]},
+{...M,id:'hunting_dog_handler',name:'Hunting Dog Handler',extra:true,set:SET,cost:2,attack:2,health:2,text:'Arrival: Summon a 1/1 Hunting Dog with Rush.',triggers:[{on:'battlecry',effects:[{op:'summon',cardId:'hunting_dog'}]}]},
+{...M,tribes:['Beast'],id:'hunting_dog',name:'Hunting Dog',token:true,cost:1,attack:1,health:1,keywords:['Rush'],text:'Rush.'},
+{...S,id:'bounty_board',name:'Bounty Board',extra:true,set:SET,cost:2,text:'Discover a Monster Hunter weapon. It costs 1 less.',effects:[{op:'discoverWeapon',faction:'Monster Hunter',costMod:-1}]},
+{...S,id:'blessed_bandolier',name:'Blessed Bandolier',extra:true,set:SET,cost:2,text:'Give both your weapons +1 Attack and +1 Durability.',effects:[{op:'buffHeroWeapon',attack:1,durability:1,both:true}]},
+{...T,id:'silvered_net',name:'Silvered Net',extra:true,set:SET,cost:2,text:'When an enemy minion attacks, its Attack becomes 1 this turn.',trap:{on:'attackDeclared',filter:{source:'enemyMinion'},effects:[{op:'attackBecomes',target:'eventSource',amount:1}]}},
+{...M,id:'silver_smelter',name:'Silver Smelter',extra:true,set:SET,cost:3,attack:2,health:4,text:'Whenever you equip a weapon, it gains +1 Durability.',triggers:[{on:'weaponEquipped',effects:[{op:'buffHeroWeapon',durability:1,justEquipped:true}]}]},
+{...T,id:'trophy_snare',name:'Trophy Snare',extra:true,set:SET,cost:2,text:'When your Hero kills a minion, draw a card and gain 2 Armor.',trap:{on:'minionDied',filter:{killer:'friendlyHero',player:'enemy'},effects:[{op:'draw',count:1},{op:'gainArmor',amount:2}]}},
+{...S,id:'veterans_scar',name:'Veteran\'s Scar',extra:true,set:SET,cost:1,text:'Your Hero gains Armor equal to its Attack.',effects:[{op:'gainArmor',amountFromAttackOf:'friendlyHero'}]},
+{...S,id:'the_monster_codex',name:'The Monster Codex',extra:true,set:SET,cost:2,text:'This turn, your weapons get their bonus damage against every realm.',effects:[{op:'monsterCodex'}]},
+{...S,id:'crossfire_execution',name:'Crossfire Execution',extra:true,set:SET,cost:4,text:'Deal damage equal to the total Attack of both your weapons to an enemy minion.',target:{type:'minion',side:'enemy'},effects:[{op:'damage',target:'chosen',amountFromWeapons:true}]},
+{...M,id:'the_hunt_master',name:'The Hunt Master',legendary:true,extra:true,set:SET,cost:7,attack:5,health:6,heroExtraAttacks:2,text:'Your Hero can attack two extra times each turn.'},
+XW('cryptid_cleaver','Cryptid Cleaver',3,3,3,'Your Hero has +2 Attack against Cryptids.',{preyTribe:'Cryptid',preyBonus:2}),
+XW('graveshredder','Graveshredder',6,2,8,'Takes up both weapon slots. Quad Strike. Your Hero has +2 Attack against Zombies.',{prey:'Zombies',preyBonus:2,twoHanded:true,attacksPerTurn:4},{legendary:true}),
+XW('moon_revolver','Moon',4,3,3,'Ranged. Your Hero has +3 Attack against Dark minions. Eclipse with Sun: +3 Attack, Lifesteal, no Durability lost.',{ranged:true,preyTag:'Dark',preyBonus:3},{legendary:true,frameArt:'art/monster-hunter/frames/legendary-moon-revolver.png'}),
+XW('sun_revolver','Sun',4,4,2,'Ranged. After your Hero attacks with Sun, deal 2 damage to the enemy Hero. Eclipse with Moon: +3 Attack, Lifesteal, no Durability lost.',{ranged:true,sunShot:2},{legendary:true,frameArt:'art/monster-hunter/frames/legendary-sun-revolver.png'}),
+];

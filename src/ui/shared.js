@@ -221,8 +221,9 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   // one for a legendary Trap. Their ordinary traps and spells wear the normal frames like every realm.
   const witchFrame = card.faction === 'Witches' && !card.fusion && legend && (type === 'trap' || type === 'spell')
     ? (type === 'trap' ? 'trap-witches' : 'legendary-spell-witches') : null;
-  const hunterFrame = card.faction === 'Monster Hunter' && legend
-    ? (type === 'minion' ? 'art/monster-hunter/frames/legendary-minion-monster-hunter.png' : type === 'spell' ? 'art/monster-hunter/frames/legendary-spell-monster-hunter.png' : null) : null;
+  // A card can bring its own frame (the Sun and Moon revolvers).
+  const hunterFrame = card.frameArt ?? (card.faction === 'Monster Hunter' && legend
+    ? (type === 'minion' ? 'art/monster-hunter/frames/legendary-minion-monster-hunter.png' : type === 'spell' ? 'art/monster-hunter/frames/legendary-spell-monster-hunter.png' : null) : null);
   const own = !!witchFrame || !!hunterFrame || (legend && type === 'minion' && !card.fusion && (card.legendFrame || LEGEND_FRAMES.has(card.faction)));
   // ?v=3: new frames for Acidic, Radioactive, Dinosaurs, Sharks, Eels, Vampires and Demons; the tag makes browsers fetch them.
   const frameSrc = hunterFrame ?? (witchFrame ? `art/frames/${witchFrame}.webp`

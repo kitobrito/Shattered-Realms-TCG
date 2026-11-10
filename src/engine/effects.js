@@ -47,7 +47,7 @@ import {
   descentDepth, maxHand, sinkOneCircle,
   traceFx, gainVolts, isConductive,
 } from './core.js';
-import { collectibleMinions, getCard, registerCustom } from './registry.js';
+import { allCards, collectibleMinions, getCard, registerCustom } from './registry.js';
 import { pickRandom, randomInt, shuffle } from './rng.js';
 import { FACTION_TAGS, NEGATIVE_KEYWORDS, POSITIVE_KEYWORDS, RANDOM_KEYWORD_POOL, REMADE_FORMS } from './rules.js';
 import { minionPasses, resolveSelector, targetCandidates } from './targeting.js';
@@ -1122,6 +1122,8 @@ export const EFFECT_OPS = {
     if (e.amountFromArmor) base = Math.min(e.amountFromArmor.max ?? 99, heroOf(state, ctx.controller).armor ?? 0);
     // amountFromSelfAttack — as much damage as this minion's Attack (Arsenal Overseer).
     if (e.amountFromSelfAttack) { const me = findCharacter(state, ctx.self); base = me ? effectiveAttack(me) : 0; }
+    // amountFromWeapons — the total Attack of both your weapons (Crossfire Execution).
+    if (e.amountFromWeapons) { const h = heroOf(state, ctx.controller); base = (h.weapon?.attack ?? 0) + (h.weapon2?.attack ?? 0); if (!base) return; }
     if ((e.amountFromArmor || e.amountFromSelfAttack) && !base) return;
     // Void: amountPerDiscarded: { each, max } — per card this effect discarded (Star-Swallower);
     // amountFromDiscardCost — the discarded cards' printed cost (Eclipse Maw).
@@ -2739,12 +2741,19 @@ export const EFFECT_OPS = {
     const wcard = getCard(e.cardId ?? ctx.cardId);
     const dual = hero.dualWield && !e.wand && !wcard?.wand;
     let slot = 1;
-    if (dual && hero.weapon && hero.weapon.cardId !== (e.cardId ?? ctx.cardId) && !hero.weapon2) slot = 2;
+    // A two-handed weapon (Graveshredder) fills both slots: it replaces whatever is held, and a weapon
+    // equipped while holding it replaces it.
+    const twoHanded = !!(e.twoHanded ?? wcard?.twoHanded);
+    if (dual && !twoHanded && hero.weapon && !hero.weapon.twoHanded && hero.weapon.cardId !== (e.cardId ?? ctx.cardId) && !hero.weapon2) slot = 2;
+    if (twoHanded && hero.weapon2) hero.weapon2 = null;
     const oldWeapon = slot === 2 ? hero.weapon2 : hero.weapon;
     if (oldWeapon) { if (slot === 2) hero.weapon2 = null; else dropHeroWeapon(state, hero, 'drops'); }
     const weapon = { cardId: e.cardId ?? ctx.cardId, name: e.name, attack: e.attack, durability: e.durability, maxDurability: e.durability,
       ...(e.prey ? { prey: e.prey, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.heroOnly ? { heroOnly: true } : {}),
       ...(e.ranged ? { ranged: true } : {}), ...(e.cooldown ? { cooldown: e.cooldown } : {}), ...(e.executeFaction ? { executeFaction: e.executeFaction } : {}),
+      // Monster Hunter (Sun & Moon): bonus against a tribe or a tag, two-handed, several attacks a turn, Sun's shot.
+      ...(e.preyTribe ? { preyTribe: e.preyTribe, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.preyTag ? { preyTag: e.preyTag, preyBonus: e.preyBonus ?? 0 } : {}),
+      ...(twoHanded ? { twoHanded: true } : {}), ...(e.attacksPerTurn ? { attacksPerTurn: e.attacksPerTurn } : {}), ...(e.sunShot ? { sunShot: e.sunShot } : {}),
       // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
       ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
     // Witches (Spellbound): Rune Slots (Apprentice 1, most Wands 2, legendary 3), a built-in enchantment,
@@ -2762,6 +2771,7 @@ export const EFFECT_OPS = {
       if (stash?.length) { for (const r of stash) addRune(state, hero, r); state.players[ctx.controller].spellbook.stash = null; log(state, `📖 The enchantments carry over to the ${weapon.name}.`); }
     }
     if (slot === 1) hero.attack = (hero.attack ?? 0) + e.attack;
+    hero.lastEquippedSlot = slot;
     syncDualWield(hero);
     for (const t of e.triggers ?? []) (hero.grantedTriggers ??= []).push({ ...t, controller: ctx.controller, weapon: true });
     log(state, `${nameOf(state, hero)} equips ${e.name} (${e.attack}/${e.durability}).`);
@@ -2769,15 +2779,42 @@ export const EFFECT_OPS = {
   },
 
   // { attack?, durability? } — your Hero's Weapon gets more Attack / Durability (no Weapon: nothing).
+  // both: every weapon held (Blessed Bandolier); justEquipped: the weapon just equipped (Silver Smelter).
   buffHeroWeapon(state, e, ctx) {
     const hero = heroOf(state, ctx.controller);
-    const w = hero.weapon;
-    if (!w) return;
-    w.attack += e.attack ?? 0;
-    hero.attack += e.attack ?? 0;
-    w.durability += e.durability ?? 0;
-    w.maxDurability = Math.max(w.maxDurability, w.durability);
-    log(state, `${nameOf(state, hero)}'s ${w.name} becomes ${w.attack}/${w.durability}.`);
+    const slots = e.both ? [1, 2] : e.justEquipped ? [hero.lastEquippedSlot ?? 1] : [1];
+    for (const slot of slots) {
+      const w = slot === 2 ? hero.weapon2 : hero.weapon;
+      if (!w) continue;
+      w.attack += e.attack ?? 0;
+      if (slot === 1) hero.attack += e.attack ?? 0;
+      w.durability += e.durability ?? 0;
+      w.maxDurability = Math.max(w.maxDurability, w.durability);
+      log(state, `${nameOf(state, hero)}'s ${w.name} becomes ${w.attack}/${w.durability}.`);
+    }
+  },
+  // Monster Hunter (Sun & Moon). { faction, costMod } — Discover a weapon of that realm (Bounty Board).
+  discoverWeapon(state, e, ctx) {
+    const pool = shuffle(state, allCards().filter((c) => c.heroWeapon && c.faction === e.faction && !c.token && !c.custom).map((c) => c.id)).slice(0, e.count ?? 3);
+    if (!pool.length) return;
+    state.pending = {
+      type: 'choice', player: ctx.controller, prompt: 'Discover a weapon', resolve: 'effects', ctx,
+      options: pool.map((id) => ({ cardId: id, label: getCard(id).name, effects: [{ op: 'addToHand', cardId: id, costMod: e.costMod }] })),
+    };
+  },
+  // { target, amount } — its Attack becomes `amount` for the rest of this turn (Silvered Net).
+  attackBecomes(state, e, ctx) {
+    each(state, e.target, ctx, (c) => {
+      const drop = effectiveAttack(c) - (e.amount ?? 1);
+      if (drop <= 0) return;
+      c.tempAttack = (c.tempAttack ?? 0) - drop;
+      log(state, `${nameOf(state, c)}'s Attack becomes ${e.amount ?? 1} this turn.`);
+    });
+  },
+  // This turn your weapons' bonus damage works against every realm (The Monster Codex).
+  monsterCodex(state, e, ctx) {
+    state.players[ctx.controller].codexTurn = state.turn;
+    log(state, `📖 ${state.players[ctx.controller].name}'s weapons know every monster this turn.`);
   },
 
   // ---- Acidic (The Half-Digested): melting gear ----
@@ -3094,6 +3131,8 @@ export const EFFECT_OPS = {
     const slot = e.slot === 2 ? 2 : 1;
     const w = slot === 2 ? hero.weapon2 : hero.weapon;
     if (!w) return;
+    // Eclipse: while Sun and Moon are both held, neither loses Durability.
+    if (hero.eclipse) return;
     if (w.cooldown) w.cooldownUntilTurn = (state.players[ctx.controller].turnsTaken ?? 0) + w.cooldown + 1;
     w.durability -= 1;
     // Witches: Ward of Binding (a Trap) saves a Wand that would break.
