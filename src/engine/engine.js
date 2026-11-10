@@ -15,7 +15,7 @@ import {
   traceFx, allKeywords,
   tagsOf,
 } from './core.js';
-import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
+import { EFFECT_OPS, addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
 import { allCards, getCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
@@ -1316,6 +1316,17 @@ hooks.preventLethal = (state, hero) => {
   const ctx = { self: trap.uid, controller: hero.owner, cardId: trap.cardId };
   state.buffer.push(...card.trap.effects.map((effect) => ({ kind: 'effect', effect, ctx })), { kind: 'deaths' },
     { kind: 'event', event: { type: 'trapTriggered', player: hero.owner, cardId: trap.cardId } });
+  return true;
+};
+
+// Archangel's Divine Shield: a weapon with heroShield prevents damage to its Hero and loses 1 Durability.
+hooks.shieldHero = (state, hero) => {
+  const slot = hero.weapon?.heroShield ? 1 : hero.weapon2?.heroShield ? 2 : 0;
+  if (!slot) return false;
+  const w = slot === 2 ? hero.weapon2 : hero.weapon;
+  log(state, `🛡️ ${w.name} shields ${nameOf(state, hero)} from the damage.`);
+  traceFx(state, { type: 'heroShield', target: hero.uid });
+  EFFECT_OPS.wearHeroWeapon(state, { slot, shield: true }, { controller: hero.owner });
   return true;
 };
 

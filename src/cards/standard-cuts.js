@@ -14,8 +14,9 @@ export const STANDARD_CUTS = {
     'crimson_escape', 'vampires_seduction', 'crimson_feast', 'blood_exchange', 'predatory_reflexes',
   ],
   // Keeps: Gene Splicing support, keyword engines, Abduction, the big Alien minions.
+  // Balance pass (pair format): the two cheap minions stay in; the rarely-cast Containment and Terraform sit out.
   Aliens: [
-    'grey_scout', 'gene_thief_operative',
+    'experimental_containment', 'terraform',
     'phase_shift', 'neural_disruptor', 'sub_space_jump',
     'mind_control_beam', 'planetary_quarantine', 'hive_synchronization',
     'genetic_snare', 'alien_infection',
