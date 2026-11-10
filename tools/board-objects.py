@@ -43,6 +43,8 @@ SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 BONE_CUT = {'within': {'method': 'hsv', 'hsv': [[0, 180, 0, 115, 115, 255], [0, 180, 0, 255, 0, 50]], 'close': 2, 'grow': 1, 'expand': 0}}
 HINTS = {
+    # The Hunter's Crypt: the bats are dark shapes on the pale stone (the model can't see them).
+    'monster-hunter-crypt-land/bats': {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 80]], 'close': 1, 'expand': 0},
     # The Tar Pit: the mammoth, not the tar around it; the Rage Outbreak's clawing infected, not the car door.
     'iceage-tar-pit-land/mammothL': {'bg': [[128, 395, 362, 447]]},
     'rage-outbreak-portrait/clawer': {'bg': [[80, 595, 104, 648]]},
