@@ -13,6 +13,7 @@ import {
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
   traceFx, allKeywords,
+  tagsOf,
 } from './core.js';
 import { addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
@@ -186,8 +187,9 @@ function canAttack(c) {
   // attacksPerTurn: a minion that attacks more than once each turn by itself (the Three-Headed Necrohydra).
   const perTurn = c.kind === 'minion'
     ? (!c.textLost && getCard(c.cardId).attacksPerTurn) || (hasKeyword(c, 'Twin Strike') ? 2 : 1)
-    : (hasKeyword(c, 'Twin Strike') || c.dualWieldStrikeUsed ? 2 : 1);
-  if (c.attacksThisTurn >= perTurn + (c.bonusAttacks ?? 0)) return false;
+    : (c.weapon?.attacksPerTurn ?? (hasKeyword(c, 'Twin Strike') || c.dualWieldStrikeUsed ? 2 : 1));
+  // The Hunt Master: extra Hero attacks each turn (auraBonusAttacks, from applyAuras).
+  if (c.attacksThisTurn >= perTurn + (c.bonusAttacks ?? 0) + (c.kind === 'hero' ? c.auraBonusAttacks ?? 0 : 0)) return false;
   // Frenzy of the Pack: a Shark that just arrived may still attack Marked Prey.
   if (c.kind === 'minion' && c.sick && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush') && !c.preyRush) return false;
   return true;
@@ -208,7 +210,7 @@ export function attackTargets(state, p) {
 function defendersFor(state, c) {
   let all = attackTargets(state, c.controller);
   if (c.kind === 'hero') {
-    const weapon = c.weapon2 && c.attacksThisTurn >= 1 ? c.weapon2 : c.weapon;
+    const weapon = c.weapon2 && c.attacksThisTurn % 2 === 1 ? c.weapon2 : c.weapon;
     if (weapon?.heroOnly) all = all.filter((id) => findCharacter(state, id)?.kind === 'hero');
   }
   // Sharks: Marked Prey can't hide in Stealth from a Shark (Blood in the Water); Goblin Shark
@@ -320,7 +322,7 @@ export function getLegalActions(state) {
   }
   for (const c of [pl.hero, ...pl.board]) {
     if (c.kind === 'hero') {
-      const weapon = c.weapon2 && c.attacksThisTurn >= 1 ? c.weapon2 : c.weapon;
+      const weapon = c.weapon2 && c.attacksThisTurn % 2 === 1 ? c.weapon2 : c.weapon;
       if (weapon?.cooldownUntilTurn > pl.turnsTaken) continue;
     }
     if (!canAttack(c)) continue;
@@ -515,7 +517,13 @@ function huntDamage(state, a, d, dmg) {
   // Monster Hunter prey-specific weapons are stronger only against their named faction.
   if (a.kind === 'hero' && d.kind === 'minion') {
     const weapon = a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon;
-    if (weapon?.prey && getCard(d.cardId)?.faction === weapon.prey) dmg += weapon.preyBonus ?? 0;
+    const dc = getCard(d.cardId);
+    const hits = weapon?.prey ? dc?.faction === weapon.prey
+      : weapon?.preyTribe ? (d.tribes ?? dc?.tribes ?? []).includes(weapon.preyTribe)
+      : weapon?.preyTag ? tagsOf(d).includes(weapon.preyTag) : false;
+    // The Monster Codex: this turn the bonus works against every realm.
+    const codex = weapon?.preyBonus && state.players[a.controller].codexTurn === state.turn;
+    if (hits || codex) dmg += weapon.preyBonus ?? 0;
   }
   if (a.kind !== 'minion' || d.kind !== 'minion') return dmg;
   const card = getCard(a.cardId);
@@ -551,7 +559,8 @@ function declareAttack(state, { player: p, attacker, defender }) {
   const a = findCharacter(state, attacker);
   if (a.kind === 'hero' && a.attacksThisTurn === 0 && hasKeyword(a, 'Twin Strike')) a.dualWieldStrikeUsed = true;
   a.attacksThisTurn += 1;
-  if (a.kind === 'hero') a.weaponUsedSlot = a.weapon2 && a.attacksThisTurn === 2 ? 2 : 1;
+  // Two weapons take turns: Weapon 1, then Weapon 2, then Weapon 1 again (extra attacks).
+  if (a.kind === 'hero') a.weaponUsedSlot = a.weapon2 && a.attacksThisTurn % 2 === 0 ? 2 : 1;
   // Stealth lasts until the minion attacks. A Burrowed minion that attacks Surfaces first.
   if (a.kind === 'minion' && a.burrowed) surfaceMinion(state, a);
   if (a.kind === 'minion' && hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); traceFx(state, { type: 'stealthLost', target: a.uid }); }
@@ -581,6 +590,9 @@ function declareAttack(state, { player: p, attacker, defender }) {
     if (at >= 0) state.queue.splice(at, 0, { kind: 'effect', effect: { op: 'wandRunes', phase: 'before' }, ctx: rctx }, { kind: 'deaths' });
     state.queue.push({ kind: 'effect', effect: { op: 'wandRunes', phase: 'after' }, ctx: rctx }, { kind: 'deaths' });
   }
+  // Sun: after the Hero attacks with it, a shot of light hits the enemy Hero.
+  const usedWeapon = a.kind === 'hero' ? (a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon) : null;
+  if (usedWeapon?.sunShot) state.queue.push({ kind: 'effect', effect: { op: 'damage', target: 'enemyHero', amount: usedWeapon.sunShot }, ctx: { self: a.uid, controller: p } }, { kind: 'deaths' });
   // Robots (Arsenal Protocol): a Hero attacking with a Weapon wears it down by 1 Durability.
   if (a.kind === 'hero' && (a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon)) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon', slot: a.weaponUsedSlot }, ctx: { self: a.uid, controller: p } });
 }
@@ -647,10 +659,18 @@ function applyAuras(state) {
   for (const pl of state.players) {
     const smiths = pl.board.filter((m) => getCard(m.cardId).heroWeaponAura && m.health > 0 && !m.destroyed).length;
     const darkArts = pl.hero.weapon?.wand && pl.spellbook?.mastery === 'darkArts';
-    pl.hero.auraAttack = pl.hero.weapon ? smiths + (darkArts ? 2 : 0) : 0;
+    // Monster Hunter: Eclipse (Sun and Moon both held): +3 Attack, Lifesteal, no Durability lost.
+    const held = [pl.hero.weapon?.cardId, pl.hero.weapon2?.cardId];
+    pl.hero.eclipse = held.includes('sun_revolver') && held.includes('moon_revolver');
+    pl.hero.auraAttack = pl.hero.weapon ? smiths + (darkArts ? 2 : 0) + (pl.hero.eclipse ? 3 : 0) : 0;
+    // The Hunt Master: two extra Hero attacks each turn per Hunt Master.
+    pl.hero.auraBonusAttacks = pl.board.reduce((n, m) => n + (m.health > 0 && !m.destroyed && !m.textLost ? getCard(m.cardId).heroExtraAttacks ?? 0 : 0), 0);
     // Witches: keywords a Weapon gives the Hero while it's held (The Witching Hour Broom: Twin Strike;
-    // the Twin Bolt enchantment; Dark Arts: Lifesteal on Wands).
-    const wk = [...(pl.hero.weapon?.keywords ?? []), ...(pl.hero.weapon?.runes?.some((r) => r.id === 'twinBolt') ? ['Twin Strike'] : []), ...(darkArts ? ['Lifesteal'] : [])];
+    // the Twin Bolt enchantment; Dark Arts: Lifesteal on Wands). Dual-Wield's Twin Strike (two
+    // different weapons) is kept here too, or this recompute would wipe it.
+    const dualTwin = pl.hero.dualWield && pl.hero.weapon && pl.hero.weapon2 && pl.hero.weapon.cardId !== pl.hero.weapon2.cardId;
+    const wk = [...(pl.hero.weapon?.keywords ?? []), ...(pl.hero.weapon?.runes?.some((r) => r.id === 'twinBolt') ? ['Twin Strike'] : []), ...(darkArts ? ['Lifesteal'] : []),
+      ...(dualTwin ? ['Twin Strike'] : []), ...(pl.hero.eclipse ? ['Lifesteal'] : [])];
     if (wk.length) pl.hero.auraKeywords = [...new Set(wk)];
     else if (pl.hero.auraKeywords) delete pl.hero.auraKeywords;
   }
