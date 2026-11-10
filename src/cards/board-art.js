@@ -47,6 +47,7 @@ export const BOARD_ART = {
   'The Siege of Heaven': 'art/boards-v2/demons-heaven-siege.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
+  'Sundown Street': 'art/boards-v2/mh-sundown-street.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
 };
@@ -91,6 +92,7 @@ export const ALT_BOARDS = {
   'Ice Age': [{ id: 'The Tar Pit', expansion: true, blurb: 'Woolly mammoths stuck fast in a frozen tar pit.' }],
   Divine: [{ id: 'The Consecrated Graveyard', expansion: true, blurb: "A moonlit graveyard where holy light smites the restless dead." }],
   Demons: [{ id: 'The Siege of Heaven', expansion: true, blurb: "Heaven's golden gates, as hellfire and a demon legion storm the clouds." }],
+  'Monster Hunter': [{ id: 'Sundown Street', set: 'Sun & Moon', blurb: 'A haunted frontier street, half in the setting sun and half under the full moon.' }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
 };
 
@@ -168,6 +170,7 @@ export const PORTRAIT_BOARDS = {
   'The White Hole': { src: 'art/boards-portrait/void-white-hole.jpg', opp: [176, 35, 290, 166, 'arch'], me: [175, 812, 285, 930, 'circle'], field: [178, 802], props: [] },
   'The Split Realm': { src: 'art/boards-portrait/ultra-split-dimensions.jpg', opp: [178, 48, 280, 157, 'arch'], me: [173, 862, 284, 963, 'circle'], field: [169, 852], props: [] },
   'The Live Wire': { src: 'art/boards-portrait/eels-power-line-river.jpg', opp: [190, 18, 264, 108, 'arch'], me: [184, 902, 268, 988, 'circle'], field: [120, 892], props: [] },
+  'Sundown Street': { src: 'art/boards-portrait/mh-sundown-street.jpg', opp: [183, 79, 278, 173, 'circle'], me: [189, 891, 271, 973, 'circle'], field: [292, 850], props: [] },
   'The Wicked Cabin': { src: 'art/boards-portrait/witches-evil-cabin.jpg', opp: [174, 32, 290, 160, 'arch'], me: [172, 825, 290, 950, 'circle'], field: [172, 815], props: [] },
   'The Tar Pit': { src: 'art/boards-portrait/iceage-tar-pit.jpg', opp: [193, 173, 268, 270, 'arch'], me: [184, 753, 275, 843, 'circle'], field: [282, 743], props: [] },
   'The Consecrated Graveyard': { src: 'art/boards-portrait/divine-consecrated-graveyard.jpg', opp: [183, 56, 278, 170, 'arch'], me: [185, 781, 274, 871, 'circle'], field: [182, 771], props: [] },
@@ -220,6 +223,7 @@ export const LANDSCAPE_BOARDS = {
   'The White Hole': { src: 'art/boards-v2/void-white-hole.jpg', opp: [461, 27, 562, 135], me: [460, 427, 570, 543], field: [150, 147, 880, 413], props: [] },
   'The Split Realm': { src: 'art/boards-v2/ultra-split-dimensions.jpg', opp: [450, 24, 565, 125], me: [461, 438, 562, 540], field: [150, 137, 880, 424], props: [] },
   'The Live Wire': { src: 'art/boards-v2/eels-power-line-river.jpg', opp: [462, 22, 562, 132], me: [463, 444, 560, 542], field: [150, 144, 880, 430], props: [] },
+  'Sundown Street': { src: 'art/boards-v2/mh-sundown-street.jpg', opp: [467, 16, 558, 104, 'circle'], me: [471, 440, 553, 523, 'circle'], field: [110, 210, 910, 436], props: [] },
   'The Wicked Cabin': { src: 'art/boards-v2/witches-evil-cabin.jpg', opp: [450, 40, 580, 165], me: [448, 415, 578, 535], field: [150, 177, 880, 401], props: [] },
   'The Tar Pit': { src: 'art/boards-v2/iceage-tar-pit.jpg', opp: [467, 28, 556, 124], me: [455, 425, 568, 543], field: [150, 136, 880, 411], props: [] },
   'The Consecrated Graveyard': { src: 'art/boards-v2/divine-consecrated-graveyard.jpg', opp: [458, 42, 564, 140], me: [460, 440, 564, 543], field: [150, 152, 880, 426], props: [] },
