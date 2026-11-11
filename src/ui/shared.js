@@ -6,6 +6,7 @@ import { validateCard } from '../cards/validate.js';
 import { weaponStatsForCard } from '../cards/weapon-template.js';
 import { getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
+import { FRAME_WINDOWS } from './frame-windows.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
 
 export const FACTION_ICONS = { Vampires: '🧛', Dinosaurs: '🦖', Plants: '🌿', Aliens: '👽', Fungus: '🍄', Zombies: '🧟', Dragons: '🐉', Demons: '😈', Divine: '😇', Robots: '🤖', Radioactive: '☢️', Bees: '🐝', Ghosts: '👻', Ultraterrestrials: '🔺', Sharks: '🦈', Acidic: '🧪', Witches: '🧙', 'Monster Hunter': '🏹', Fusion: '🌀' };
@@ -229,8 +230,15 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   const frameSrc = hunterFrame ?? (witchFrame ? `art/frames/${witchFrame}.webp`
     : own ? `art/frames/legendary-minion-${card.legendFrame ?? fslug(card.faction)}.webp?v=3`
     : legend ? `art/frames/legendary-${type}.png` : `art/frames/painted-${frame}.png`);
+  // A frame that brings its own painting (realm weapon and Legendary frames) has its picture
+  // window wherever its artist put it: the art is placed on that frame's measured window
+  // (frame-windows.js), a touch larger so its edge tucks under the frame instead of showing a gap.
+  // The box stays a rectangle: the frame is solid around every window, so it hides the corners.
+  const win = own ? FRAME_WINDOWS[frameSrc.split('?')[0]] : null;
+  const M = 0.8;
+  const fit = win ? `;--win-l:${(win.l - M).toFixed(2)}%;--win-t:${(win.t - M * 0.71).toFixed(2)}%;--win-w:${(win.w + 2 * M).toFixed(2)}%;--win-h:${(win.h + 2 * M * 0.71).toFixed(2)}%;--win-r:3%` : '';
   return `
-    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')"` : ''}>
+    <div class="big-card shard t-${card.type} ${frame === 'quickplay' ? 'qp' : ''} f-${faction} ${card.fusion ? 'f-fusion' : ''} ${incomplete.length ? 'is-pending' : ''} ${legend ? 'legend' : ''} ${win ? 'fit-win' : ''}"${own ? ` style="--foil-frame: url('${frameSrc}')${fit}"` : ''}>
       <div class="bc-art">${artOver ?? artOf(card) ? `<img src="${artOver ?? artOf(card)}" alt="${esc(card.name)}"${artFocus(card)} ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       <img class="bc-frame" src="${frameSrc}" alt="" draggable="false">

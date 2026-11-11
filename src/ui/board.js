@@ -662,7 +662,8 @@ function landscapeVars(lb) {
   const [W, H] = LANDSCAPE_SIZE;
   const X = (v) => `${((v / W) * 100).toFixed(2)}cqw`;
   const Y = (v) => `${((v / H) * 100).toFixed(2)}cqh`;
-  const box = (k, b) => `--${k}-x:${X(b[0])};--${k}-y:${Y(b[1])};--${k}-w:${X(b[2] - b[0])};--${k}-h:${Y(b[3] - b[1])}`;
+  // --*-ar: the vertical radius that gives an arch window a true half-circle top (half its width).
+  const box = (k, b) => `--${k}-x:${X(b[0])};--${k}-y:${Y(b[1])};--${k}-w:${X(b[2] - b[0])};--${k}-h:${Y(b[3] - b[1])};--${k}-ar:${Math.min(50, ((b[2] - b[0]) / 2 / (b[3] - b[1])) * 100).toFixed(1)}%`;
   return `${box('oh', lb.opp)};${box('mh', lb.me)};--f-top:${Y(lb.field[1])};--f-bot:${Y(lb.field[3])}`;
 }
 

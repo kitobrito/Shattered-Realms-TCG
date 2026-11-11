@@ -2528,6 +2528,9 @@ body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) {
 .arena.p-board.opp-arch .hero-zone.opp .hero-portrait { border-radius: 50% 50% 4% 4% / 44% 44% 3% 3%; }
 .arena.p-board.opp-circle .hero-zone.opp .hero-portrait, .arena.p-board.me-circle .hero-zone.me .hero-portrait { border-radius: 50%; }
 .arena.v-board.opp-circle .hero-zone.opp .hero-portrait, .arena.v-board.me-circle .hero-zone.me .hero-portrait { border-radius: 50%; }
+/* Landscape boards whose painted hero window is an arch: a half-circle top, straight sides. */
+.arena.v-board.opp-arch .hero-zone.opp .hero-portrait { border-radius: 50% 50% 4% 4% / var(--oh-ar, 44%) var(--oh-ar, 44%) 3% 3%; }
+.arena.v-board.me-arch .hero-zone.me .hero-portrait { border-radius: 50% 50% 4% 4% / var(--mh-ar, 44%) var(--mh-ar, 44%) 3% 3%; }
 .arena.p-board.me-arch .hero-zone.me .hero-portrait { border-radius: 50% 50% 4% 4% / 44% 44% 3% 3%; }
 /* Hero Spells to the right of each frame, Traps to the left. */
 .arena.p-board .hero-zone .hero-powers { position: absolute; transform: translateY(-50%); }
@@ -6102,3 +6105,8 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 /* Four choices: the vote banner's heading takes its own line, the choices and the button sit below it. */
 .m2 .m2-vote { flex-wrap: wrap; justify-content: center; row-gap: 6px; }
 .m2 .m2-vote-head { flex: 1 1 100%; flex-direction: row !important; flex-wrap: wrap; justify-content: center; align-items: baseline !important; gap: 4px 10px !important; text-align: center; }
+
+/* ---- Frames with their own painting (realm weapons, realm Legendaries, Witches, Monster Hunter):
+   the art sits on that frame's measured picture window (shared.js shardCardHTML, frame-windows.js). */
+.big-card.shard.fit-win.fit-win.fit-win .bc-art { left: var(--win-l) !important; top: var(--win-t) !important;
+  width: var(--win-w) !important; height: var(--win-h) !important; border-radius: var(--win-r) !important; transform: none !important; }
