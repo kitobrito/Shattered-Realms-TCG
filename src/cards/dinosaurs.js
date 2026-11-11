@@ -338,19 +338,7 @@ export const DINOSAUR_CARDS = [
   },
   { ...D, id: 'sobeks_fossil', name: "Sobek's Fossil", art: '🦴', token: true, formLabel: 'Fossil', cost: 8, attack: 5, health: 5, keywords: ['Rush'],
     text: 'Rush. The skeleton of Sobek, risen from its museum display at full strength.' },
-  // ---- Meteorite and the new Dinosaurs (unlockable) ----
-  // Meteorite is a deck rule, not a card you draw: it takes a deck slot, leaves the deck when the
-  // game starts (engine.js createGame) and swaps Extinction Cycle for Meteor Strike.
-  {
-    ...S, id: 'meteorite', name: 'Meteorite', art: '☄️', extra: true, cost: 0, deckRule: true,
-    text: "Never drawn: it takes a deck slot. Your Hero Spell becomes Meteor Strike: spend all your Mana to deal 1 damage to a random minion (yours or the enemy's) for each Mana spent. You no longer gain Primal Mana, and Extinction never comes.",
-    effects: [],
-  },
-  {
-    ...S, id: 'meteor_strike', name: 'Meteor Strike', art: '☄️', heroSpell: true, altHeroSpell: true, costsAllMana: true, cost: 1,
-    text: 'Spend all your Mana. Deal 1 damage to a random minion (yours or the enemy\'s) for each Mana spent. (From Meteorite.)',
-    effects: [{ op: 'meteorStrike' }],
-  },
+  // ---- The new Dinosaurs (unlockable) ----
   {
     ...D, id: 'ankylosaurus_bone_crusher', name: 'Ankylosaurus Bone-Crusher', art: '🦕', extra: true, cost: 5, attack: 3, health: 7, keywords: ['Taunt'],
     text: 'Taunt.',

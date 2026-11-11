@@ -104,7 +104,7 @@ const STATUS_DEFS = [
   { k: 'irradiated', label: 'Rad', ico: '☢', test: (m) => radiationOf(m) > 0, n: (m) => radiationOf(m), tip: (m) => `Radiation ${radiationOf(m)}: other characters without Radiation have ${radiationOf(m)} less Health` },
   { k: 'radhit', label: 'Irradiated', ico: '☢', test: (m) => m.radReduction > 0, n: (m) => `−${m.radReduction}`, tip: (m) => `Irradiated: ${m.radReduction} less Health from enemy Radiation, and can't be healed` },
   { k: 'corroded', label: 'Corroded', ico: '🧪', test: (m) => m.corrosion > 0, n: (m) => `−${m.corrosion}`, tip: (m) => `Corrosion: Attack lowered by ${m.corrosion}` },
-  { k: 'prey', label: 'Prey', ico: '🎯', test: (m) => !!m.prey, tip: 'Marked Prey: Sharks hunt it, even through Stealth and Elusive' },
+  { k: 'prey', label: 'Prey', ico: '🎯', test: (m) => !!m.prey, tip: 'Marked Prey: Sharks can attack it through Stealth and past Taunt, and ignore its Evade' },
   { k: 'silenced', label: 'Silenced', ico: '🔇', test: (m) => hasKeyword(m, 'Silenced'), tip: 'Silenced: its card text and keywords are gone' },
   { k: 'blind', label: 'Blind', ico: '🙈', test: (m) => hasKeyword(m, 'Blind'), tip: 'Blind: its attacks hit a random character' },
   { k: 'burned', label: 'Scorched', ico: '♨', test: (m) => hasKeyword(m, 'Burned'), tip: 'Burned: loses 1 Health at the end of its turn' },
@@ -264,7 +264,7 @@ function heroSpellsHTML(pl, legal, mine, s = null) {
       ${hs.cooldown > 0 ? `<span class="cooldown-badge" title="Ready in ${hs.cooldown} turn${hs.cooldown === 1 ? '' : 's'}">⏳${hs.cooldown}</span>` : ''}
       <span class="hs-flip"><span class="hs-face front">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span><span class="hs-face back"></span></span>
       <b class="hs-cost ${s && !card.costsAllMana && heroSpellCost(s, card) > card.cost ? 'pricier' : ''}">${s ? heroSpellCost(s, card, pl) : card.cost}</b>
-      ${hs.cardId === 'infernal_summoning' ? tierHTML(pl) : ''}</button>`;
+      ${hs.cardId === 'infernal_summoning' ? tierHTML(pl) : ''}${hs.cardId === 'the_chasm' && pl.chasmOpen ? '<span class="chasm-open-badge" title="The Chasm is open: no start-of-turn draw, and a random friendly minion gains +1/+1 each turn. Cast it again to close it.">OPEN</span>' : ''}</button>`;
   }).join('');
 }
 

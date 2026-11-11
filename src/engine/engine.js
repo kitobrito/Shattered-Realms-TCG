@@ -17,7 +17,7 @@ import {
 } from './core.js';
 import { EFFECT_OPS, addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
-import { allCards, getCard, restoreCustomCards } from './registry.js';
+import { allCards, getCard, hasCard, restoreCustomCards } from './registry.js';
 import { pickRandom, shuffle } from './rng.js';
 import { DEFAULT_QUICK_PLAY_WINDOWS, DEFAULT_RULES, NEGATIVE_KEYWORDS } from './rules.js';
 import { matchFilter, resolveSelector, targetCandidates } from './targeting.js';
@@ -45,7 +45,7 @@ function greatFreeze(state, p) {
   emit(state, { type: 'greatFreeze', player: p });
 }
 
-// altHeroSpell: a Hero Spell that only replaces the usual one (Meteorite's Meteor Strike).
+// altHeroSpell: a Hero Spell that only replaces the usual one (The Great Chasm Beyond's The Chasm).
 export function heroSpellsFor(factions) {
   return allCards().filter((c) => c.heroSpell && !c.altHeroSpell && factions.includes(c.faction));
 }
@@ -79,12 +79,9 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
     log: [],
   };
   players.forEach((cfg, p) => {
-    // Dinosaurs (Meteorite): a deck-rule card is never drawn. It leaves the deck at the start and
-    // swaps Extinction Cycle for Meteor Strike (no Primal Mana, no Extinction).
-    const meteorite = cfg.factions.includes('Dinosaurs') && cfg.deck.includes('meteorite');
-    const deckIds = cfg.deck.filter((id) => id !== 'meteorite');
-    const heroSpells = heroSpellsFor(cfg.factions).filter((c) => !(meteorite && c.id === 'extinction_cycle'))
-      .concat(meteorite ? [getCard('meteor_strike')] : []);
+    // A card that has since been removed from the game (Meteorite) is dropped from an old deck.
+    const deckIds = cfg.deck.filter((id) => hasCard(id));
+    const heroSpells = heroSpellsFor(cfg.factions);
     const pl = {
       index: p, name: cfg.name ?? `Player ${p + 1}`, factions: [...cfg.factions],
       hero: createHero(state, p),
@@ -95,9 +92,8 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
       passives: heroSpells.filter((c) => c.passive).map((c) => c.id),
       // Ice Age: the Great Freeze comes every GREAT_FREEZE_EVERY of this player's turns.
       greatFreeze: cfg.factions.includes('Ice Age') ? { turns: 0, every: GREAT_FREEZE_EVERY } : null,
-      extinction: cfg.factions.includes('Dinosaurs') && !meteorite
+      extinction: cfg.factions.includes('Dinosaurs')
         ? { turns: 0, nextAt: state.rules.extinctionEvery, mode: 'normal', shower: 0 } : null,
-      meteorite,
       deck: deckIds.map((cardId) => ({ uid: state.nextUid++, cardId, owner: p })),
       hand: [], traps: [], board: [], graveyard: [], fatigue: 0,
       corpses: 0, deadZombies: [], zombieDeathsThisTurn: 0, // Zombies
@@ -213,14 +209,17 @@ function defendersFor(state, c) {
     const weapon = c.weapon2 && c.attacksThisTurn % 2 === 1 ? c.weapon2 : c.weapon;
     if (weapon?.heroOnly) all = all.filter((id) => findCharacter(state, id)?.kind === 'hero');
   }
-  // Sharks: Marked Prey can't hide in Stealth from a Shark (Blood in the Water); Goblin Shark
-  // sees every Stealthed minion. (Taunt still has to be dealt with first.)
+  // Sharks: Marked Prey can't hide from a Shark (Blood in the Water): a Shark can attack it through
+  // Stealth and past Taunt (and its hits ignore the Prey's Evade, core.js dealDamage). Goblin Shark
+  // also sees every other Stealthed minion, but those still wait behind Taunt.
   if (isShark(c)) {
     const enemy = state.players[opponentOf(c.controller)];
     const taunts = enemy.board.some((m) => hasKeyword(m, 'Taunt') && !hasKeyword(m, 'Stealth'));
     const seesAll = getCard(c.cardId).seesStealth;
-    const hidden = enemy.board.filter((m) => hasKeyword(m, 'Stealth') && !(m.encased > 0) && (seesAll || (m.prey && huntsPrey(state, c.controller))));
-    if (!taunts) all = [...all, ...hidden.map((m) => m.uid)];
+    const hunting = huntsPrey(state, c.controller);
+    const prey = hunting ? enemy.board.filter((m) => m.prey && m.health > 0 && !m.destroyed && !(m.encased > 0)) : [];
+    const hidden = seesAll && !taunts ? enemy.board.filter((m) => hasKeyword(m, 'Stealth') && !(m.encased > 0)) : [];
+    all = [...new Set([...all, ...prey.map((m) => m.uid), ...hidden.map((m) => m.uid)])];
   }
   // Frenzy of the Pack: an arriving Shark may only attack Marked Prey.
   if (c.kind === 'minion' && c.sick && c.preyRush && !hasKeyword(c, 'Charge') && !hasKeyword(c, 'Rush')) {
@@ -461,7 +460,7 @@ function castHeroSpell(state, { player: p, card: cardId, target, target2 }) {
     const hs = pl.heroSpells.find((h) => h.cardId === cardId);
     hs.uses += 1;
     if (card.cooldown) hs.cooldown = card.cooldown; // Controlled Irradiation: usable again after N turns
-    if (pl.fusion) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + 1);
+    if (pl.fusion && !card.noFusionCharge) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + 1);
   }
   const spent = heroSpellCost(state, card, pl);
   payMana(pl, card, spent);
@@ -1223,7 +1222,7 @@ const STEPS = {
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }
     // Passive Hero Spells (Extinction Cycle, The Living Hive) can't be used, so each
     // such faction charges the Fusion by 1 every other turn instead.
-    const passives = pl.factions.filter((f) => hasPassiveHeroSpell(f) && !(f === 'Dinosaurs' && pl.meteorite)).length;
+    const passives = pl.factions.filter((f) => hasPassiveHeroSpell(f)).length;
     if (pl.fusion && passives && pl.turnsTaken % 2 === 0) pl.fusion.charge = Math.min(FUSION_CHARGE, pl.fusion.charge + passives);
     // "Until your next turn" effects that player p applied expire now.
     for (const c of [...state.players.flatMap((x) => [x.hero, ...x.board])]) {
@@ -1249,8 +1248,16 @@ const STEPS = {
       if (state.descent.lead == null) state.descent.lead = p;
       else if (state.descent.lead === p) sinkCircles(state, 1);
     }
-    // The Third Circle (Gluttony): an extra card at the start of the turn.
-    drawCards(state, p, descentDepth(state) === 3 ? 2 : 1);
+    // The Great Chasm Beyond (Void): while the Chasm is open, no start-of-turn draw; a random friendly
+    // minion gains +1/+1 instead.
+    if (pl.chasmOpen) {
+      log(state, `🕳 The Chasm is open: ${pl.name} draws nothing.`);
+      const grow = pickRandom(state, pl.board.filter((m) => m.health > 0 && !m.destroyed));
+      if (grow) resolveEffect(state, { op: 'buff', target: { uid: grow.uid }, attack: 1, health: 1 }, { controller: p });
+    } else {
+      // The Third Circle (Gluttony): an extra card at the start of the turn.
+      drawCards(state, p, descentDepth(state) === 3 ? 2 : 1);
+    }
     // The Eighth Circle (Fraud): steal a random card from the opponent's hand.
     if (descentDepth(state) === 8) {
       const foe = state.players[opponentOf(p)];

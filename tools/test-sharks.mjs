@@ -107,12 +107,35 @@ test('Sharks can attack Marked Prey in Stealth (others can\'t)', () => {
   const v = put(0, 'vampire_gargoyle'); v.keywords = [];
   if (getLegalActions(s).some((a) => a.type === 'attack' && a.attacker === v.uid && a.defender === e.uid)) return 'a non-Shark can';
 });
-test('Shark cards reach Prey through Elusive', () => {
+test('Sharks attack Marked Prey past Taunt; other targets still wait behind the Taunt', () => {
+  const sh = put(0, 'reef_nibbler');
+  const wall = put(1, 'vampire_gargoyle'); wall.keywords = ['Taunt']; wall.health = 9; wall.maxHealth = 9;
+  const e = prey(1, 2); e.prey = true;
+  const healthy = put(1, 'vampire_gargoyle'); healthy.keywords = []; healthy.health = 9; healthy.maxHealth = 9;
+  const legal = (att, def) => getLegalActions(s).some((a) => a.type === 'attack' && a.attacker === att.uid && a.defender === def.uid);
+  if (!legal(sh, e)) return 'Shark cannot attack Prey behind Taunt';
+  if (legal(sh, healthy) || legal(sh, pl(1).hero)) return 'Shark ignored Taunt for a non-Prey target';
+  const v = put(0, 'vampire_gargoyle'); v.keywords = [];
+  if (legal(v, e)) return 'a non-Shark attacked Prey behind Taunt';
+  const hidden = prey(1, 2); hidden.keywords = ['Stealth']; hidden.prey = true;
+  if (!legal(sh, hidden)) return 'Shark cannot attack Stealthed Prey behind Taunt';
+});
+test('A Shark\'s hit ignores Marked Prey\'s Evade (and leaves the Evade); anyone else is still Evaded', () => {
+  const sh = put(0, 'reef_nibbler'); sh.attack = 2;
+  const e = prey(1, 3); e.prey = true; e.keywords = ['Evade']; e.maxHealth = 9; e.attack = 0;
+  attack(0, sh.uid, e.uid);
+  if (e.health >= 3) return `Prey took no damage (health ${e.health})`;
+  const f = prey(1, 3); f.prey = true; f.keywords = ['Evade']; f.maxHealth = 9; f.attack = 0;
+  const v = put(0, 'vampire_gargoyle'); v.keywords = []; v.attack = 2;
+  attack(0, v.uid, f.uid);
+  if (f.health !== 3 || hasKeyword(f, 'Evade')) return `a non-Shark was not Evaded (health ${f.health})`;
+});
+test('Prey-hunting spells no longer reach through Elusive; Megalodon (a minion) still reaches Elusive Prey', () => {
   const e = prey(1, 2); e.keywords = ['Elusive']; e.prey = true;
-  const inst = give(0, 'snap_reaction');
-  // Snap Reaction is a Quick Play; check targeting via Tiger Shark's Arrival instead
-  const t = give(0, 'tiger_shark');
-  if (!getLegalActions(s).some((a) => a.type === 'play' && a.card === t.uid && a.target === e.uid)) return 'cannot target Elusive Prey';
+  const spell = give(0, 'holy_undertow');
+  if (getLegalActions(s).some((a) => a.type === 'play' && a.card === spell.uid && a.target === e.uid)) return 'Holy Undertow (a spell) chose Elusive Prey';
+  const meg = give(0, 'megalodon');
+  if (!getLegalActions(s).some((a) => a.type === 'play' && a.card === meg.uid && a.target === e.uid)) return 'Megalodon cannot reach Elusive Prey';
 });
 
 // ---- Minions -------------------------------------------------------------------------------

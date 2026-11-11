@@ -6110,3 +6110,6 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
    the art sits on that frame's measured picture window (shared.js shardCardHTML, frame-windows.js). */
 .big-card.shard.fit-win.fit-win.fit-win .bc-art { left: var(--win-l) !important; top: var(--win-t) !important;
   width: var(--win-w) !important; height: var(--win-h) !important; border-radius: var(--win-r) !important; transform: none !important; }
+
+/* The Great Chasm Beyond: the Chasm Hero Spell while it is open. */
+.chasm-open-badge { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); padding: 1px 5px; border-radius: 4px; font: 800 9px/1.2 'Cinzel', serif; letter-spacing: 0.08em; color: #e9d8ff; background: #1a0b2e; border: 1px solid #a855f7; box-shadow: 0 0 8px #a855f7; pointer-events: none; z-index: 2; }

@@ -577,7 +577,9 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
     log(state, `${nameOf(state, t)} is Immune.`);
     return 0;
   }
-  if (hasKeyword(t, 'Evade')) {
+  // Sharks: a Shark's hit on Marked Prey ignores its Evade (the Evade isn't used up).
+  const sharkOnPrey = t.prey && sourceId != null && isShark(findCharacter(state, sourceId));
+  if (hasKeyword(t, 'Evade') && !sharkOnPrey) {
     loseKeyword(state, t, 'Evade');
     log(state, `${nameOf(state, t)} Evades the damage.`);
     return 0;

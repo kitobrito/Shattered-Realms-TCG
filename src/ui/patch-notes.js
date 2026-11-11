@@ -41,6 +41,32 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12-chasm',
+    date: 'November 12',
+    title: 'The Great Chasm Beyond',
+    tag: 'New legendary + changes',
+    intro: 'Void gets a new Legendary spell, Sharks hunt Prey past Taunt and Evade, and Meteorite leaves the game to be reworked.',
+    blocks: [
+      { cat: 'legendary', h: 'New Legendary', cards: [
+        { title: 'The Great Chasm Beyond', ids: ['the_great_chasm_beyond'], blurb: 'Void, 1 Mana. Your Hero Spell becomes The Chasm (0 Mana), an on/off switch. While the Chasm is open you no longer draw a card at the start of your turn, and a random friendly minion gains +1/+1 at the start of each of your turns. Cast it again to close it. An empty hand keeps your Hollow bonuses on.' },
+      ] },
+      { cat: 'change', h: 'Sharks', list: [
+        { cards: ['blood_in_the_water'], text: 'Sharks can now attack Marked Prey even when it is in Stealth or behind Taunt, and a Shark\'s hit ignores the Prey\'s Evade (the Evade isn\'t used up). Other targets still wait behind Taunt as usual.',
+          why: 'Prey used to be reachable "through Elusive", but Elusive only stops spells, so minions could always hit it anyway. Getting past Taunt and Evade is what a hunt should feel like.' },
+        { cards: ['holy_undertow'], text: 'Prey-hunting spells still reach Prey in Stealth, but no longer reach Elusive Prey: Elusive works on them like on any other enemy spell.' },
+      ] },
+      { cat: 'change', h: 'Removed', list: [
+        { cards: [], text: 'Meteorite has been removed from Dinosaurs for now. It will come back reworked as something new. If it was in one of your saved decks, that deck now has one empty slot to fill; Dinosaurs always keep Extinction Cycle.' },
+      ] },
+    ],
+    details: [
+      'The Great Chasm Beyond (Void Legendary spell, 1 Mana): your Hero Spell Feed the Void becomes The Chasm (0 Mana). Casting The Chasm opens it; casting it again closes it. While open: no card is drawn at the start of your turn (including The Third Circle\'s extra card), and a random friendly minion gains +1/+1 at the start of each of your turns (nothing happens with an empty board). Opening or closing it does not charge your Fusion. An OPEN tag sits on the Hero Spell while it is open.',
+      'Sharks: Blood in the Water now reads "Your Sharks can attack Marked Prey through Stealth and past Taunt, and their hits ignore its Evade." Goblin Shark still sees every Stealthed minion, but non-Prey ones still wait behind Taunt.',
+      'Shark cards that target Marked Prey reach it through Stealth but no longer through Elusive (Megalodon is a minion, so its Arrival still reaches Elusive Prey).',
+      'Meteorite and its Meteor Strike Hero Spell are removed. Decks that held Meteorite start without it.',
+    ],
+  },
+  {
     id: '2026-11-12',
     date: 'November 12',
     title: 'Acid Hide 2 and Corpses for everyone',

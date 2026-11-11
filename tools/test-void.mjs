@@ -277,9 +277,9 @@ test('Evolved Xenos: Lycanthrope and Void hosts have their own forms', () => {
 const foeDeckHas = (id) => pl(1).deck.some((c) => c.cardId === id);
 function stackFoeDeck(ids) { pl(1).deck = ids.map((id, i) => ({ uid: 9500 + i, cardId: id, owner: 1 })); }
 
-test('Singularity: 15 expansion cards (+ Pulsar) with art; Gargantua is legendary', () => {
+test('Singularity: 15 expansion cards (+ Pulsar and The Great Chasm Beyond) with art; Gargantua is legendary', () => {
   const ids = allCards().filter((c) => c.faction === 'Void' && c.extra).map((c) => c.id);
-  if (ids.length !== 16) return `${ids.length} expansion cards`;
+  if (ids.length !== 17) return `${ids.length} expansion cards`;
   for (const id of ids) if (!ART[id] || !existsSync(new URL(`../${ART[id]}`, import.meta.url))) return `no art for ${id}`;
   if (!getCard('gargantua_the_living_singularity').legendary) return 'Gargantua not legendary';
 });
@@ -415,6 +415,50 @@ test('Hawking Wraith Pulls when it dies', () => {
   play(0, give(0, 'spaghettification'), w.uid);
   play(0, give(0, 'spaghettification'), w.uid);
   if (!pl(0).hand.some((c) => c.pulled)) return 'no Pull';
+});
+
+// ---- The Great Chasm Beyond (legendary) ----
+const endTurns = (n) => { for (let i = 0; i < n; i++) { applyAction(s, { type: 'endTurn', player: s.activePlayer }); settle(); } };
+
+test('The Great Chasm Beyond: a 1-Mana legendary Void spell with art; it swaps Feed the Void for The Chasm (0)', () => {
+  const c = getCard('the_great_chasm_beyond');
+  if (c.cost !== 1 || c.faction !== 'Void' || c.type !== 'spell' || !c.legendary || copyLimit(c.id) !== 1) return JSON.stringify({ cost: c.cost, legendary: c.legendary });
+  if (!ART.the_great_chasm_beyond || !existsSync(new URL(`../${ART.the_great_chasm_beyond}`, import.meta.url))) return 'no art';
+  play(0, give(0, 'the_great_chasm_beyond'));
+  const ids = pl(0).heroSpells.map((h) => h.cardId);
+  if (ids.includes('feed_the_void') || !ids.includes('the_chasm')) return `hero spells ${ids}`;
+  if (getCard('the_chasm').cost !== 0) return 'The Chasm costs Mana';
+  if (pl(0).chasmOpen) return 'opened by itself';
+});
+
+test('The Chasm open: no start-of-turn draw, a random friendly minion gains +1/+1 each turn; cast again to close', () => {
+  play(0, give(0, 'the_great_chasm_beyond'));
+  const m = blank(0, 2, 2);
+  const mana = pl(0).mana.current;
+  heroSpell(0, 'the_chasm');
+  if (!pl(0).chasmOpen || pl(0).mana.current !== mana) return `open ${pl(0).chasmOpen}, mana ${mana} -> ${pl(0).mana.current}`;
+  const hand = pl(0).hand.length, deck = pl(0).deck.length;
+  endTurns(2); // the opponent's turn, then back to player 0
+  if (s.activePlayer !== 0) return 'not my turn';
+  if (pl(0).hand.length !== hand || pl(0).deck.length !== deck) return `drew a card (hand ${hand} -> ${pl(0).hand.length}, deck ${deck} -> ${pl(0).deck.length})`;
+  if (m.attack !== 3 || m.health !== 3) return `minion ${m.attack}/${m.health} (want 3/3)`;
+  heroSpell(0, 'the_chasm');
+  if (pl(0).chasmOpen) return 'did not close';
+  endTurns(2);
+  if (pl(0).deck.length !== deck - 1) return `closed but did not draw (deck ${deck} -> ${pl(0).deck.length})`;
+  if (m.attack !== 3) return 'grew while closed';
+});
+
+test('The Chasm with no minions just skips the draw; toggling it never charges a Fusion', () => {
+  fresh(['Void', 'Sharks']);
+  play(0, give(0, 'the_great_chasm_beyond'));
+  pl(0).fusion = pl(0).fusion ?? { cardId: 'x', charge: 0 };
+  const charge = pl(0).fusion.charge;
+  heroSpell(0, 'the_chasm');
+  if (pl(0).fusion.charge !== charge) return `Fusion charged ${charge} -> ${pl(0).fusion.charge}`;
+  const deck = pl(0).deck.length;
+  endTurns(2);
+  if (pl(0).deck.length !== deck) return 'drew';
 });
 
 console.log(`\n${passed} passed, ${failures} failed`);

@@ -145,7 +145,7 @@ export const FACTION_INFO = {
   },
   Sharks: {
     summary: 'Relentless hunters: wound enemies, mark them as Prey, then execute them.',
-    strengths: ['Finishing off damaged minions', 'Prey can\'t hide in Stealth or behind Elusive', 'Board-wide damage that sets up kills'],
+    strengths: ['Finishing off damaged minions', 'Prey can\'t hide in Stealth, behind Taunt or behind Evade', 'Board-wide damage that sets up kills'],
     weaknesses: ['Big, healthy minions shrug off the hunt', 'Healing removes the mark', 'Few ways to protect their own minions'],
     mechanic: 'Blood in the Water (passive): enemy minions at 3 Health or less become Marked Prey; Sharks get +2 Attack against Prey once per turn.',
     style: 'Aggro · Removal',

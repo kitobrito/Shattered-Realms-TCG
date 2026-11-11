@@ -276,4 +276,18 @@ export const VOID_CARDS = [
       { on: 'startOfTurn', filter: { player: 'friendly' }, effects: [{ op: 'damage', target: { minions: { side: 'enemy' } }, amount: 3, if: HOLLOW }] },
     ],
   },
+  // The Great Chasm Beyond: swaps Feed the Void for a free on/off Hero Spell. While the Chasm is open
+  // you skip your start-of-turn draw (it feeds Hollow) and a random friendly minion grows each turn
+  // (engine.js startTurn, player.chasmOpen). Ruling: opening or closing it doesn't charge a Fusion,
+  // or a free toggle would charge it every turn.
+  {
+    ...S, id: 'the_great_chasm_beyond', name: 'The Great Chasm Beyond', art: '🕳️', extra: true, cost: 1,
+    text: 'Your Hero Spell becomes The Chasm (0): while open, you skip your turn\'s draw and a random friendly minion gains +1/+1 each turn. Cast again to close.',
+    effects: [{ op: 'setHeroSpell', from: 'feed_the_void', to: 'the_chasm' }],
+  },
+  {
+    ...S, id: 'the_chasm', name: 'The Chasm', art: '🕳️', heroSpell: true, altHeroSpell: true, noFusionCharge: true, cost: 0,
+    text: 'Open or close the Chasm. While open, you skip your turn\'s draw and a random friendly minion gains +1/+1 each turn.',
+    effects: [{ op: 'toggleChasm' }],
+  },
 ];

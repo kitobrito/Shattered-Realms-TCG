@@ -988,18 +988,24 @@ export const EFFECT_OPS = {
     });
   },
 
-  // ---- Dinosaurs (Meteorite) ----
-  // Meteor Strike: 1 damage to a random minion (either side) for each Mana spent on it.
-  meteorStrike(state, e, ctx) {
-    const n = ctx.spent ?? 0;
-    log(state, `☄ ${n} meteor${n === 1 ? '' : 's'} fall!`);
-    for (let i = 0; i < n; i++) {
-      const pool = [...state.players[0].board, ...state.players[1].board].filter((m) => m.health > 0 && !m.destroyed);
-      const m = pickRandom(state, pool);
-      if (!m) break;
-      dealDamage(state, ctx.self, m.uid, 1, { sourceController: ctx.controller });
-    }
+  // ---- Void (The Great Chasm Beyond) ----
+  // { from, to } — the player's Hero Spell `from` becomes `to` (added if they don't have `from`).
+  setHeroSpell(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    if (pl.heroSpells.some((h) => h.cardId === e.to)) return;
+    const i = pl.heroSpells.findIndex((h) => h.cardId === e.from);
+    const entry = { cardId: e.to, uses: 0 };
+    if (i >= 0) pl.heroSpells[i] = entry; else pl.heroSpells.push(entry);
+    log(state, `🕳 ${pl.name}'s Hero Spell becomes ${getCard(e.to).name}.`);
   },
+  // Open or close the Chasm (player.chasmOpen; engine.js startTurn applies it).
+  toggleChasm(state, e, ctx) {
+    const pl = state.players[ctx.controller];
+    pl.chasmOpen = !pl.chasmOpen;
+    log(state, pl.chasmOpen ? `🕳 ${pl.name} opens the Chasm: no more draws, and their minions grow.` : `🕳 ${pl.name} closes the Chasm.`);
+    traceFx(state, { type: 'chasm', player: ctx.controller, open: pl.chasmOpen });
+  },
+
   // { cardId } — Bull Ceratosaurus: put a copy of that card from your hand onto the battlefield.
   summonFromHand(state, e, ctx) {
     const pl = state.players[ctx.controller];
