@@ -14,6 +14,7 @@ let r = await (await fetch(base)).json(); ok(r.total === 0 && r.counts['space-co
 r = await (await post({ choice: 'space-cowboys', voter: 'device-aaaaaaaa' })).json(); ok(r.counts['space-cowboys'] === 1 && r.mine === 'space-cowboys', 'a device votes');
 r = await (await post({ choice: 'spirit-clowns', voter: 'device-aaaaaaaa' })).json(); ok(r.total === 1 && r.counts['spirit-clowns'] === 1 && r.counts['space-cowboys'] === 0, 'voting again changes the vote, not adds one');
 r = await (await post({ choice: 'fruit-ninjas', voter: 'device-bbbbbbbb' })).json(); ok(r.total === 2, 'a second device adds a vote');
+r = await (await post({ choice: 'locusts-and-leftovers', voter: 'device-dddddddd' })).json(); ok(r.counts['locusts-and-leftovers'] === 1 && r.total === 3, 'the fourth choice, Locusts and Leftovers, takes votes');
 let res = await post({ choice: 'pirates', voter: 'device-cccccccc' }); ok(res.status === 400, 'an option that isn\'t on the poll is refused');
 res = await post({ choice: 'fruit-ninjas' }); ok(res.status === 400, 'no voter is refused');
 res = await fetch(base.replace('next-faction', 'nope')); ok(res.status === 404, 'unknown poll 404');
@@ -24,6 +25,6 @@ await srv.close?.();
 const srv2 = await startServer({ port: 0, store: await openStore({ dataDir: dir }) });
 const port2 = srv2.port ?? srv2.server?.address().port;
 await new Promise((r) => setTimeout(r, 300));
-r = await (await fetch(`http://localhost:${port2}/poll/next-faction`)).json(); ok(r.total === 2, `votes kept after a restart (${r.total})`);
+r = await (await fetch(`http://localhost:${port2}/poll/next-faction`)).json(); ok(r.total === 3, `votes kept after a restart (${r.total})`);
 await srv2.close?.();
 console.log(fails ? `${fails} FAILED` : 'ALL PASS'); process.exit(fails ? 1 : 0);
