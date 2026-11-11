@@ -1087,6 +1087,13 @@ const STEPS = {
       // It burns down by 1 each time (a minion that dies from this tick still has it, so it's Reduced to Ash).
       if (c.health > 0 && !c.destroyed) c.holyFlame -= 1;
     }
+    // Bleed (Bloodripper's Talon): each bleeding enemy loses its Bleed in Health (as damage). It doesn't fade.
+    for (const c of [state.players[foe].hero, ...state.players[foe].board]) {
+      if (!(c.bleed > 0) || c.health <= 0 || c.destroyed) continue;
+      log(state, `🩸 ${nameOf(state, c)} bleeds.`);
+      traceFx(state, { type: 'bleed', target: c.uid, amount: c.bleed });
+      dealDamage(state, null, c.uid, c.bleed, { sourceController: p });
+    }
   },
 
   extinction(state, { player: p }) {

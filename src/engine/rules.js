@@ -109,6 +109,7 @@ export const KEYWORD_TEXT = {
   'Acid Hide': 'Whatever attacks it melts. A minion that attacks it is Corroded by 1. A Hero that attacks it loses its Weapon (or 2 Armor if it has no Weapon).',
   Meltdown: 'A minion at 0 Attack with 6 or more Corrosion on it is Dissolved by whoever corroded it.',
   Regenerate: 'At the start of your turn, this minion restores that much Health.',
+  Bleed: 'A stacking wound. At the end of its enemy\'s turn (the player who made it bleed) it takes damage equal to its Bleed. While it bleeds, Vampire cards that damage it heal half that damage (however much it bleeds).',
   'Holy Flame': 'Holy fire. At the end of your turn each enemy with Holy Flame takes that much damage (double to Dark minions), then it burns down by 1. It can\'t be healed while it burns.',
   'Reduced to Ash': 'A minion that dies while it has Holy Flame is removed completely: it doesn\'t go to the Graveyard, its Exit doesn\'t happen and it can\'t be Reborn or Haunted.',
   Relic: 'A haunted item. Equip it to your Hero (it works as a Hero Weapon) or to a friendly Ghost (it gives its stats and effect and never wears out). When a Ghost holding it dies, it drifts to your Hero if your Hero has no Weapon.',

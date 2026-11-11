@@ -95,6 +95,7 @@ const kwIcon = (k, title) => `<img class="kw-ico" src="art/icons/${k}.png" alt="
 const STATUS_DEFS = [
   { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
   { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },
+  { k: 'bleed', label: 'Bleed', ico: '🩸', test: (m) => m.bleed > 0, n: (m) => m.bleed, tip: (m) => `Bleed ${m.bleed}: takes ${m.bleed} damage at the end of its enemy's turn; Vampire cards that hit it heal half the damage` },
   { k: 'holyflame', label: 'Holy', ico: '✨', test: (m) => m.holyFlame > 0, n: (m) => m.holyFlame, tip: (m) => `Holy Flame ${m.holyFlame}: takes ${m.holyFlame} damage at the end of its enemy's turn (double if Dark), can't be healed, and is Reduced to Ash if it dies` },
   { k: 'acidhide', label: 'Acid Hide', ico: '🧪', test: (m) => hasKeyword(m, 'Acid Hide'), tip: 'Acid Hide: a minion that fights it is Corroded by 1; a Hero that does loses its Weapon (or 2 Armor)' },
   { k: 'regen', label: 'Regen', ico: '💚', test: (m) => (m.regen ?? getCard(m.cardId).regenerate ?? 0) > 0, n: (m) => m.regen ?? getCard(m.cardId).regenerate, tip: (m) => `Regenerate ${m.regen ?? getCard(m.cardId).regenerate}: heals that much at the start of its turn` },
@@ -414,6 +415,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         ${burnHTML(h)}
         ${spellbookHTML(pl)}
         ${pl.storm > 0 ? `<span class="hero-storm" title="Endless Storm: at the end of each of your turns, Chain ${pl.storm} at a random enemy">⛈${pl.storm}</span>` : ''}
+        ${h.bleed > 0 ? `<span class="hero-bleed" title="Bleed ${h.bleed}: takes ${h.bleed} damage at the end of the enemy's turn; Vampire cards that hit this Hero heal half the damage">🩸${h.bleed}</span>` : ''}
         ${h.holyFlame > 0 ? `<span class="hero-holy" title="Holy Flame ${h.holyFlame}: takes ${h.holyFlame} damage at the end of the enemy's turn and can't be healed">✨${h.holyFlame}</span>` : ''}
         ${radHTML(h)}${radHitHTML(h)}
         ${cracksSVG(crackStage(h))}

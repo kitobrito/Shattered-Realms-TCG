@@ -4658,6 +4658,9 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 .st.st-holyflame b { color: #3a2400; text-shadow: none; }
 .hero-holy { position: absolute; left: 50%; bottom: -4%; transform: translateX(-50%); z-index: 6; padding: 1px 8px; border-radius: 10px; font-family: var(--font-title); font-weight: 900;
   font-size: calc(var(--hero, 120px) * 0.12); color: #3a2400; background: radial-gradient(circle at 40% 35%, #fffbe0, #ffd86a 45%, #c98a1a); box-shadow: 0 0 12px #ffe58a, 0 0 2px #000; pointer-events: auto; }
+/* Bleed on a Hero (Bloodripper's Talon): sits just above Holy Flame's spot. */
+.hero-bleed { position: absolute; left: 50%; bottom: 10%; transform: translateX(-50%); z-index: 6; padding: 1px 8px; border-radius: 10px; font-family: var(--font-title); font-weight: 900;
+  background: linear-gradient(#7a0d16, #3a0408); color: #ffd6d6; border: 1px solid #ff5a6a; box-shadow: 0 0 8px #ff2a3a88; font-size: 12px; pointer-events: none; }
 /* Acidic (The Half-Digested): Acid Hide and Regenerate chips. */
 .st.st-acidhide { background: radial-gradient(circle at 40% 35%, #eaff9a, #9be22a 45%, #4a7a0a); box-shadow: 0 0 8px #b6ff3a; }
 .st.st-regen { background: radial-gradient(circle at 40% 35%, #d8ffe0, #4ad86a 45%, #1a7a3a); }

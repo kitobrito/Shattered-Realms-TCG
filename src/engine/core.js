@@ -284,6 +284,22 @@ export function applyBurn(state, c, amount) {
   emit(state, { type: 'burnApplied', target: c.uid, player: c.controller ?? c.owner, amount: c.burn });
 }
 
+// Bleed (Bloodripper's Talon): a wound that stacks. At the end of the bleeder's turn the character takes
+// its Bleed value as damage. While it bleeds, Vampire cards that damage it heal half that damage (rounded
+// up; however much it bleeds).
+export function applyBleed(state, c, amount, by) {
+  if (!c || amount <= 0 || c.health <= 0 || c.destroyed) return;
+  c.bleed = (c.bleed ?? 0) + amount;
+  c.bleedBy = by;
+  log(state, `🩸 ${nameOf(state, c)} is bleeding (Bleed ${c.bleed}).`);
+}
+// A Vampire card doing the damage: a Vampire minion, or a Hero swinging a Vampire weapon.
+function vampireSource(c) {
+  if (!c) return false;
+  if (c.kind === 'minion') return getCard(c.cardId)?.faction === 'Vampires';
+  return !!c.weapon && getCard(c.weapon.cardId)?.faction === 'Vampires';
+}
+
 // Holy Flame (Divine, The Holy Pyre): a lasting holy fire. At the end of the burner's turn it deals
 // its value as damage (double to Dark / Undead), then burns down by 1; a burning character can't be healed, and a
 // minion that dies while burning is Reduced to Ash (removed: no Graveyard, Exit or Reborn).
@@ -593,6 +609,12 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
   const who = src ? nameOf(state, src) : gone ? `${getCard(gone.cardId).name}'s Exit` : opts.burn ? '🔥 Burn' : 'Effect';
   log(state, `${who} deals ${amount} to ${nameOf(state, t)}.`);
   emit(state, { type: 'damageDealt', source: sourceId, target: t.uid, player: t.controller, amount });
+  // Bleed: a Vampire card that wounds a bleeding enemy drinks half of it back.
+  if ((t.bleed ?? 0) > 0 && src && src.controller !== t.controller && vampireSource(src)) {
+    const back = Math.ceil(amount / 2);
+    log(state, `🩸 ${nameOf(state, src)} drinks from the bleeding ${nameOf(state, t)}.`);
+    heal(state, src.uid, back, { source: src.uid });
+  }
 
   if ((src && hasKeyword(src, 'Lifesteal')) || opts.lifesteal) {
     if (srcController != null) {
