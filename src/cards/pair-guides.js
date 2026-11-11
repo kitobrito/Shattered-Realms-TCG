@@ -20,9 +20,9 @@ export const PAIR_GUIDES = {
     "Formic Swarm gives you two 1/1 Acid Wasps that corrode a minion before attacking it: cheap trades into anything, and two more bodies to guard the Hive.",
     "Neither realm hits the enemy Hero hard, so plan to win the long game. Keep the Queen alive: if she dies, your Hero takes 10 damage."),
   'Acidic+Demons': G(
-    "Demons pay Health for big Arrivals; Acidic's cheap Taunts and Corrosion protect that Health. Shrink the enemy board early so they can't punish your payments, then drop Pit Lord or Archfiend of Ruin to wipe what's left.",
+    "Demons pay Health for big Arrivals; Acidic's cheap Taunts and Corrosion protect that Health. Shrink the enemy board early so they can't punish your payments, then drop Pit Lord to wipe what's left.",
     [["splash_of_acid", "succubus_queen", "Corrode a big minion down to 3 Attack or less, and Succubus Queen can take control of it for the turn and attack with it."],
-      ["infernal_ambush", "false_floor", "Two cheap Traps that blunt attacks: a 3/3 Taunt Demon and a 2-point Corrosion keep your Health high for the next Demon payment."]],
+      ["soul_collector", "false_floor", "Soul Collector gives back Health each time you pay to summon a Demon, and False Floor's 2-point Corrosion blunts the next attack: together they keep your Health high for the next payment."]],
     "Brimstone Bile costs 3 Health but corrodes 3 and deals 3: it kills most mid-sized minions outright, and anything that survives is left nearly harmless.",
     "Your Health is a resource, not a bank. Corrosion buys time, but paying for Demons while the enemy chips at you can end the game fast."),
   'Acidic+Dinosaurs': G(
@@ -340,7 +340,7 @@ export const PAIR_GUIDES = {
   'Demons+Fungus': G(
     "Fungus fills the enemy deck with Mushrooms; Demons pay Health for strong Arrivals and board clears. Clear their board, and let every card they draw hurt.",
     [["pit_lord", "deathspore", "Pit Lord kills small enemies; Deathspore places a Mushroom for each enemy minion that dies."],
-      ["archfiend_of_ruin", "fungus_giant", "Archfiend clears the board and heals you; Fungus Giant costs 1 less for every 2 Mushrooms."]],
+      ["the_world_eater", "fungus_giant", "The World Eater hits every enemy for 5; Fungus Giant costs 1 less for every 2 Mushrooms, so both land in the same late turns."]],
     "Infestation Pact costs 2 Health and places 4 Mushrooms: a big burst of Mushrooms at once.",
     "Fungus is slow and Demons cost Health. Make sure you can survive long enough for the Mushrooms to count."),
   'Demons+Ghosts': G(
@@ -351,7 +351,7 @@ export const PAIR_GUIDES = {
     "Haunts are random. Don't count on getting the exact minion you want back."),
   'Demons+Ice Age': G(
     "Ice Age's Thick Fur Taunts protect your Health while Demons pay for big Arrivals. Freeze their attackers, then wipe the board. Ice Age's Campfire heals back some of what the Demons cost.",
-    [["avalanche", "archfiend_of_ruin", "Freeze the enemy, then Archfiend deals 4 to every enemy minion and heals you for each one destroyed."],
+    [["avalanche", "pit_lord", "Freeze the enemy so they can't strike back, then Pit Lord deals 3 to everything else and clears the small ones."],
       ["giant_ground_sloth", "doom_herald", "The 2/9 Sloth holds the wall; Doom Herald grows your Demons every turn."]],
     "Hellfrost Pact costs 3 Health and gives all your minions +0/+3: your whole board survives their next attack.",
     "The Great Freeze freezes your Demons too (no Thick Fur). Plan your attacks around it."),
@@ -388,7 +388,7 @@ export const PAIR_GUIDES = {
   'Demons+Ultraterrestrials': G(
     "Displace enemy minions for a turn while Demons hit hard. Clear the way, then swing at the Hero while their board is gone. Ultraterrestrial Taunts and Traps also protect your Health between Demon payments.",
     [["rift_hunter", "infernal_ravager", "Rift Hunter Displaces a small blocker for a turn; Infernal Ravager then hits the Hero for 3 while your minions attack freely."],
-      ["the_unplaceable", "archfiend_of_ruin", "Two huge Arrivals that reset the board: Displace everything, or deal 4 to every enemy."]],
+      ["the_unplaceable", "the_world_eater", "Two huge Arrivals that reset the board: Displace everything, or deal 5 to every enemy character."]],
     "Infernal Detour costs 3 Health and Displaces every enemy minion with 3 or less Attack until your next turn.",
     "Displaced enemies come back. Use the turn they're gone to push damage, not to wait."),
   'Demons+Vampires': G(

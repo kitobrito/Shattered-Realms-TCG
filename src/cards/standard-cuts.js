@@ -57,11 +57,12 @@ export const STANDARD_CUTS = {
     'scorched_hand', 'infernos_wake',
   ],
   // Keeps: Health-payment payoffs (Pact Fiend, Blood Ritualist), the Summoning engine, the big Demons.
+  // Balance pass (pair format): Soul Collector (heals as you pay) and Blood Price stay in; Archfiend and Infernal Ambush sit out.
   Demons: [
-    'soul_collector', 'dread_summoner',
+    'archfiend_of_ruin', 'infernal_ambush', 'dread_summoner',
     'infernal_bargain', 'soul_sacrifice',
     'desperate_pact', 'soul_surge', 'pain_into_power',
-    'soul_snare', 'blood_price', 'gateway_collapse',
+    'soul_snare', 'gateway_collapse',
   ],
   // Keeps: healing + Overheal engines, Bonus Health payoffs, the anti-darkness core, the Angels.
   Divine: [
