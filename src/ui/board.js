@@ -2,8 +2,8 @@
 // in drag.js, animation in fx.js, and the action loop in main.js.
 
 import { CIRCLES } from '../engine/rules.js';
-import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, heroSpellCost, mushroomsIn, radiationOf } from '../engine/core.js';
-import { actingPlayer } from '../engine/engine.js';
+import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, heroSpellCost, mushroomsIn, radiationOf, usesCorpses } from '../engine/core.js';
+import { acidHideAmount, actingPlayer } from '../engine/engine.js';
 import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
 import { BOARD_CUTS } from '../cards/board-cuts.js';
@@ -95,9 +95,9 @@ const kwIcon = (k, title) => `<img class="kw-ico" src="art/icons/${k}.png" alt="
 const STATUS_DEFS = [
   { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
   { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },
-  { k: 'bleed', label: 'Bleed', ico: '🩸', test: (m) => m.bleed > 0, n: (m) => m.bleed, tip: (m) => `Bleed ${m.bleed}: takes ${m.bleed} damage at the end of its enemy's turn; Vampire cards that hit it heal half the damage` },
+  { k: 'bleed', label: 'Bleed', ico: '🩸', test: (m) => m.bleed > 0, n: (m) => m.bleed, tip: (m) => `Bleed ${m.bleed}: takes ${m.bleed} damage at the end of its enemy's turn; a Vampire card that hits it heals half the damage it deals` },
   { k: 'holyflame', label: 'Holy', ico: '✨', test: (m) => m.holyFlame > 0, n: (m) => m.holyFlame, tip: (m) => `Holy Flame ${m.holyFlame}: takes ${m.holyFlame} damage at the end of its enemy's turn (double if Dark), can't be healed, and is Reduced to Ash if it dies` },
-  { k: 'acidhide', label: 'Acid Hide', ico: '🧪', test: (m) => hasKeyword(m, 'Acid Hide'), tip: 'Acid Hide: a minion that fights it is Corroded by 1; a Hero that does loses its Weapon (or 2 Armor)' },
+  { k: 'acidhide', label: 'Acid Hide', ico: '🧪', test: (m) => hasKeyword(m, 'Acid Hide'), n: (m) => (acidHideAmount(m) > 1 ? acidHideAmount(m) : null), tip: (m) => `Acid Hide${acidHideAmount(m) > 1 ? ` ${acidHideAmount(m)}` : ''}: a minion that attacks it is Corroded by ${acidHideAmount(m)}; a Hero that does loses its Weapon (or 2 Armor)` },
   { k: 'regen', label: 'Regen', ico: '💚', test: (m) => (m.regen ?? getCard(m.cardId).regenerate ?? 0) > 0, n: (m) => m.regen ?? getCard(m.cardId).regenerate, tip: (m) => `Regenerate ${m.regen ?? getCard(m.cardId).regenerate}: heals that much at the start of its turn` },
   { k: 'infected', label: 'Infected', ico: '🦠', test: (m) => m.infected != null, tip: 'Infected: when it dies, a 2/1 Rage Runner is summoned for the Infecting side' },
   { k: 'implanted', label: 'Implant', ico: '🥚', test: (m) => m.implanted != null, tip: 'Implanted: when it dies, a Chestburster bursts out for the other side' },
@@ -124,7 +124,8 @@ function statusStripHTML(m, s) {
   const chip = (d) => {
     const tip = typeof d.tip === 'function' ? d.tip(m) : d.tip;
     const ico = STATUS_ICONS[d.k] ? `<img src="${STATUS_ICONS[d.k]}" alt="">` : `<span class="st-emo">${d.ico}</span>`;
-    const n = d.n ? `<b>${d.n(m)}</b>` : '';
+    const nv = d.n ? d.n(m) : null;
+    const n = nv != null ? `<b>${nv}</b>` : '';
     return `<i class="st st-${d.k}${before.has(d.k) ? '' : ' new'}" title="${esc(tip)}">${ico}${n}<em>${d.label}</em></i>`;
   };
   return `<div class="status-strip">${shown.map(chip).join('')}${more.length ? `<i class="st st-more" title="${esc(more.map((d) => (typeof d.tip === 'function' ? d.tip(m) : d.tip)).join('\n'))}">+${more.length}</i>` : ''}</div>`;
@@ -284,11 +285,12 @@ function beyondHTML(pl, s) {
     ${art ? `<img src="${art}" alt="" draggable="false">` : '<span>🌀</span>'}<b>${mine.length}</b></div>`;
 }
 
-// Zombies: Corpses left behind (shown once a player has any, or plays Zombies).
+// Corpses: every minion that dies leaves one on its side, but the pile is only shown for a player
+// whose team can use it (Zombies or Fungus).
 function corpseHTML(pl) {
   const n = pl.corpses ?? 0;
-  if (!n && !pl.factions.includes('Zombies') && !pl.factions.includes('Fungus')) return '';
-  return `<div class="corpse-badge ${n ? '' : 'empty'}" title="${n} Corpse${n === 1 ? '' : 's'}: left when a friendly Zombie or Fungus minion dies; some cards spend them"><span>🪦</span><b>${n}</b></div>`;
+  if (!usesCorpses(pl)) return '';
+  return `<div class="corpse-badge ${n ? '' : 'empty'}" title="${n} Corpse${n === 1 ? '' : 's'}: left whenever a minion on this side dies; Zombies and Fungus cards spend them"><span>🪦</span><b>${n}</b></div>`;
 }
 
 // Hero weapons (every realm): one medallion per weapon held (art/ui/weapon-medallion.png). The weapon's
@@ -415,7 +417,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         ${burnHTML(h)}
         ${spellbookHTML(pl)}
         ${pl.storm > 0 ? `<span class="hero-storm" title="Endless Storm: at the end of each of your turns, Chain ${pl.storm} at a random enemy">⛈${pl.storm}</span>` : ''}
-        ${h.bleed > 0 ? `<span class="hero-bleed" title="Bleed ${h.bleed}: takes ${h.bleed} damage at the end of the enemy's turn; Vampire cards that hit this Hero heal half the damage">🩸${h.bleed}</span>` : ''}
+        ${h.bleed > 0 ? `<span class="hero-bleed" title="Bleed ${h.bleed}: takes ${h.bleed} damage at the end of the enemy's turn; a Vampire card that hits this Hero heals half the damage it deals">🩸${h.bleed}</span>` : ''}
         ${h.holyFlame > 0 ? `<span class="hero-holy" title="Holy Flame ${h.holyFlame}: takes ${h.holyFlame} damage at the end of the enemy's turn and can't be healed">✨${h.holyFlame}</span>` : ''}
         ${radHTML(h)}${radHitHTML(h)}
         ${cracksSVG(crackStage(h))}

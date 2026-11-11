@@ -1644,7 +1644,7 @@ const TIPS = [
   'Right-click your hero to send an emote.',
   'Dinosaurs: every 7 turns, Extinction wipes your board, but Eggs hatch when they die.',
   'Fungus: a Mushroom deals 1 damage to its owner when their card is drawn.',
-  'Zombies: every friendly Zombie that dies leaves a Corpse for later.',
+  'Zombies and Fungus: every minion that dies on your side leaves a Corpse for later.',
   'Dragons: Burn grows every turn. Put it on the enemy Hero early and let it climb.',
   'Demons: Infernal Summoning costs more Health each time, and its Demons get bigger. Know when to stop.',
   'Divine: healing a character at full Health raises its maximum Health (Overheal).',

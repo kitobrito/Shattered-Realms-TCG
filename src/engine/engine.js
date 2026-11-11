@@ -13,7 +13,7 @@ import {
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
   traceFx, allKeywords,
-  tagsOf,
+  tagsOf, usesCorpses,
 } from './core.js';
 import { EFFECT_OPS, addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
 import { factionHook } from './factions.js';
@@ -597,11 +597,12 @@ function declareAttack(state, { player: p, attacker, defender }) {
   if (a.kind === 'hero' && (a.weaponUsedSlot === 2 ? a.weapon2 : a.weapon)) state.queue.push({ kind: 'effect', effect: { op: 'wearHeroWeapon', slot: a.weaponUsedSlot }, ctx: { self: a.uid, controller: p } });
 }
 
-// Acid Hide: `hide` touched `other` in a fight. A minion is Corroded by 1; a Hero loses its Weapon,
-// or 2 Armor if it has none.
+// Acid Hide: `hide` touched `other` in a fight. A minion is Corroded by the hide's amount (1, or the
+// card's `acidHide`, e.g. Acid Hide 2); a Hero loses its Weapon, or 2 Armor if it has none.
+export const acidHideAmount = (m) => (m && !m.textLost ? getCard(m.cardId).acidHide : null) ?? 1;
 function acidHideTouch(state, hide, other) {
   if (!hide || !other || hide.kind !== 'minion' || !hasKeyword(hide, 'Acid Hide')) return;
-  if (other.kind === 'minion') { if (other.health > 0 && !other.destroyed) resolveEffect(state, { op: 'corrode', target: { uid: other.uid }, amount: 1 }, { self: hide.uid, controller: hide.controller }); return; }
+  if (other.kind === 'minion') { if (other.health > 0 && !other.destroyed) resolveEffect(state, { op: 'corrode', target: { uid: other.uid }, amount: acidHideAmount(hide) }, { self: hide.uid, controller: hide.controller }); return; }
   if (other.weapon) { log(state, `🧪 ${nameOf(state, hide)}'s Acid Hide melts ${other.weapon.name}!`); dropHeroWeapon(state, other, 'melts'); }
   else if (other.armor > 0) { const n = Math.min(2, other.armor); other.armor -= n; log(state, `🧪 Acid Hide eats ${n} of ${nameOf(state, other)}'s Armor.`); }
 }
@@ -942,18 +943,15 @@ const STEPS = {
       }
       // Ghosts (Cursed Armory): a Relic outlives its Ghost and drifts to its Hero (if the Hero is unarmed).
       if (m.relic) steps.push({ kind: 'effect', effect: { op: 'equipRelic', toHero: true, cardId: m.relic.cardId, lingering: true }, ctx: { controller: m.controller } });
-      // Zombies: a friendly Zombie (or living Infected) that dies leaves a Corpse.
+      // Every minion that dies leaves a Corpse on its side. Only Zombies and Fungus cards spend them,
+      // so the pile is only shown to sides that can use it (ui/board.js corpseHTML).
+      const cp = state.players[m.controller];
+      cp.corpses = (cp.corpses ?? 0) + 1;
+      if (usesCorpses(cp)) log(state, `🪦 ${nameOf(state, m)} leaves a Corpse.`);
+      // Zombies: count the dead Zombies (and living Infected) for Zombie cards.
       if (m.tribes.includes('Zombie') || m.tribes.includes('Infected')) {
-        const zp = state.players[m.controller];
-        zp.corpses = (zp.corpses ?? 0) + 1;
-        (zp.deadZombies ??= []).push(m.cardId);
-        zp.zombieDeathsThisTurn = (zp.zombieDeathsThisTurn ?? 0) + 1;
-        log(state, `🪦 ${nameOf(state, m)} leaves a Corpse.`);
-      } else if (m.tribes.includes('Fungus')) {
-        // Fungus (Rot & Renewal): a friendly Fungus minion that dies also leaves a Corpse.
-        const fp = state.players[m.controller];
-        fp.corpses = (fp.corpses ?? 0) + 1;
-        log(state, `🪦 ${nameOf(state, m)} leaves a Corpse.`);
+        (cp.deadZombies ??= []).push(m.cardId);
+        cp.zombieDeathsThisTurn = (cp.zombieDeathsThisTurn ?? 0) + 1;
       }
       // noExit: destroyed without its Exit (Emergency Hatching).
       if (!m.noExit) steps.push(...selfTriggerSteps(state, card, 'deathrattle', { self: m.uid, controller: m.controller, event }));

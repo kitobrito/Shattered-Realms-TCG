@@ -190,7 +190,7 @@ export const SYNERGY = {
   'Divine+Plants': [5, 'Overheal makes your Seedlings grow into giants.'],
   'Plants+Robots': [3, 'Bio-Mech Seedlings take Upgrades.'],
   'Plants+Radioactive': [2, 'Radiation also drains your own wide board.'],
-  'Fungus+Zombies': [5, 'One shared Corpse pile: Fungus and Zombies both leave Corpses when they die, and both spend them (Sludge Hulk, The Rot King, Silverback Abomination, Raise the Dead).'],
+  'Fungus+Zombies': [5, 'One shared Corpse pile, fed by every minion that dies on your side, and both factions spend it (Sludge Hulk, The Rot King, Silverback Abomination, Raise the Dead).'],
   'Dragons+Fungus': [4, 'Two kinds of damage over time: Burn and Mushrooms.'],
   'Demons+Fungus': [5, 'Tithe makes the enemy draw the cards your Mushrooms are hiding in, every draw feeds Hellbound Scribe and Royal Tax, and Demons that sacrifice Fungus minions leave Corpses for The Rot King.'],
   'Divine+Fungus': [2, 'Different plans.'],

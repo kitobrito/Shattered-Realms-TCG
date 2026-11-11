@@ -75,12 +75,12 @@ test('All 15 Rot & Renewal cards exist, are Fungus expansion cards and have art'
   }
 });
 
-test('A friendly Fungus minion that dies leaves a Corpse; a non-Fungus one does not', () => {
+test('Every minion that dies leaves a Corpse on its side (Fungus or not)', () => {
   const f = put(0, 'rotgrub_cap'), v = blank(0, 1, 1);
   f.health = 0; f.destroyed = true;
   const k = put(1, 'xeno_drone');
   play(0, give(0, 'decompose'), v.uid); // Decompose itself gives 3
-  if (corpses() !== 3 + 1) return `corpses ${corpses()} (expected 3 from Decompose + 1 from the Fungus)`;
+  if (corpses() !== 3 + 1 + 1) return `corpses ${corpses()} (expected 3 from Decompose + 1 from the Fungus + 1 from the other minion)`;
 });
 
 test('Rotgrub Cap: Arrival gains a Corpse', () => {
@@ -133,7 +133,7 @@ test('Grave Gardener: another friendly minion dying gives a Corpse', () => {
   put(0, 'grave_gardener');
   const v = blank(0, 1, 1);
   play(0, give(0, 'decompose'), v.uid);
-  if (corpses() !== 3 + 1) return `corpses ${corpses()}`;
+  if (corpses() !== 3 + 1 + 1) return `corpses ${corpses()} (3 Decompose + 1 for the death + 1 Gardener)`;
 });
 
 test('The Rot King costs 1 less per Corpse and spends them as 1 damage each to enemies', () => {
@@ -162,7 +162,7 @@ test('Feed the Earth (Quick Play): a friendly minion dies, gain 3 Corpses', () =
   endTurn();
   const e = blank(1, 5, 5);
   attack(1, e.uid, v.uid, qp('feed_the_earth'));
-  if (corpses() !== 3) return `corpses ${corpses()}`;
+  if (corpses() !== 3 + 1) return `corpses ${corpses()} (3 + 1 for the death)`;
 });
 
 test('Rot Burst (Quick Play) needs 2 Corpses; spends them for 4 damage to the attacker', () => {
@@ -182,7 +182,8 @@ test('Second Bloom (Quick Play) spends 3 Corpses to bring the minion back at ful
   const e = blank(1, 9, 9);
   attack(1, e.uid, v.uid, qp('second_bloom'));
   const back = find(0, 'vampire_gargoyle');
-  if (!back || back.health !== getCard('vampire_gargoyle').health || corpses() !== 0) return `back ${!!back} hp ${back?.health}, corpses ${corpses()}`;
+  // It dies (leaving a Corpse), then Second Bloom spends 3 of the 4.
+  if (!back || back.health !== getCard('vampire_gargoyle').health || corpses() !== 1) return `back ${!!back} hp ${back?.health}, corpses ${corpses()}`;
 });
 
 test('Fester: an enemy minion that kills a friendly one takes damage equal to your Corpses (max 5)', () => {

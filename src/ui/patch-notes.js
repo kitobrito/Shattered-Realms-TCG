@@ -41,6 +41,33 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12',
+    date: 'November 12',
+    title: 'Acid Hide 2 and Corpses for everyone',
+    tag: 'Balance + rules',
+    intro: 'The Great Dissolution grows a thicker hide, every minion that dies now leaves a Corpse, and the Bleed rule is worded more clearly.',
+    blocks: [
+      { cat: 'balance', h: 'Balance', compare: [
+        { id: 'the_great_dissolution', kind: 'rework', note: 'Now has Acid Hide 2 and 10 Health. It still corrodes a minion it attacks before the hit.',
+          before: { health: 8, keywords: ['Taunt'], acidHide: undefined, text: 'Taunt. Whenever this fights an enemy minion, give that minion Corrosion 2 first.' },
+          why: 'Acid Hide 2 melts whatever attacks it by 2 (and a Hero that hits it loses its Weapon), but only after the hit lands, so it gets 2 more Health to stand up to that first blow.' },
+      ] },
+      { cat: 'change', h: 'Corpses', list: [
+        { cards: ['the_rot_king'], text: 'Every minion that dies now leaves a Corpse on its side, not just Zombies and Fungus. Only Zombies and Fungus cards spend Corpses, so the Corpse pile only shows for players running one of those realms.',
+          why: 'Zombie and Fungus decks can now feed on every trade, including the deaths of their other realm\'s minions.' },
+      ] },
+      { cat: 'fix', h: 'Clearer rules', list: [
+        { cards: ['bloodrippers_talon'], text: 'Bleed: a Vampire card that damages a Bleeding enemy heals half the damage it dealt (rounded up). The size of the Bleed doesn\'t matter, and the Bleed tick itself heals no one. That was always how it worked; the rule text now says so.' },
+      ] },
+    ],
+    details: [
+      'The Great Dissolution (Acidic, 10 Mana): 6/8 Taunt that corroded any minion it fought by 2 before the hit is now a 6/10 with Taunt and Acid Hide 2 (a minion that attacks it is Corroded by 2 after the hit; a Hero that attacks it loses its Weapon, or 2 Armor) that still gives a minion it attacks Corrosion 2 first.',
+      'Acid Hide can now have a number. Acid Hide 2 Corrodes by 2; plain Acid Hide is still 1. The status icon shows the number when it is more than 1.',
+      'Corpses: every minion that dies leaves a Corpse on its controller\'s side. Zombies and Fungus are the only realms that use them; their Corpse counter shows next to the Hero only for those players. Grave Gardener and Feed the Earth still add their own Corpses on top.',
+      'Bleed rule text and tooltips reworded: the heal is half the damage the Vampire card dealt, not half the Bleed.',
+    ],
+  },
+  {
     id: '2026-11-12-playerbase',
     date: 'November 12',
     title: 'The Playerbase',

@@ -110,12 +110,11 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'battlecry', effects: [corrode({ minions: { side: 'enemy', minAttack: 4 } }, 3)] }],
   },
   {
-    // Any enemy minion that would hit it in a fight (attacking it, or hitting back when it attacks) is
-    // corroded first, as the attack is declared, so the Corrosion lands before damage is worked out.
-    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 8, keywords: ['Taunt'],
-    text: 'Taunt. Whenever this fights an enemy minion, give that minion Corrosion 2 first.',
+    // Acid Hide 2: whatever attacks it is Corroded by 2 (a Hero loses its Weapon). When it attacks a
+    // minion, that minion is corroded first, as the attack is declared, before damage is worked out.
+    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 10, keywords: ['Taunt', 'Acid Hide'], acidHide: 2,
+    text: 'Taunt. Acid Hide 2. Whenever this attacks an enemy minion, give that minion Corrosion 2 first.',
     triggers: [
-      { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [corrode('eventSource', 2)] },
       { on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [corrode('eventTarget', 2)] },
     ],
   },
