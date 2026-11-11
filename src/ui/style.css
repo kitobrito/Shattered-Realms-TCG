@@ -6080,7 +6080,7 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 }
 .pn-vote-tab { background: linear-gradient(180deg, #3a1f52, #24123a) !important; border-color: #a77fe0 !important; color: #f4e9ff !important; }
 .pn-vote-tab.on { background: linear-gradient(180deg, #5a2f84, #34185a) !important; border-color: #e2c8ff !important; }
-.pv-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0 10px; }
+.pv-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 16px 0 10px; }
 .pv-option { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 12px 18px !important; border-radius: 16px !important;
   background: radial-gradient(120% 90% at 50% 0%, #3a2456, #1a1024) !important; border: 2px solid #5a4478 !important; color: #f4e9ff !important; box-shadow: 0 8px 22px #0009 !important; transition: transform 0.15s, border-color 0.15s; }
 .pv-option:hover { transform: translateY(-4px); border-color: #c79aff !important; }
@@ -6088,6 +6088,10 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 .pv-icon { font-style: normal; font-size: clamp(46px, 9vh, 84px); line-height: 1; filter: drop-shadow(0 6px 10px #000a); }
 .pv-option b { font-family: var(--font-title); font-size: clamp(16px, 2.6vh, 24px); letter-spacing: 0.05em; color: #fff; }
 .pv-option small { color: #cdbbe8; font-size: 13px; }
+.pv-art { width: clamp(120px, 22vh, 220px); aspect-ratio: 1; object-fit: cover; border-radius: 12px; box-shadow: 0 6px 18px #000a; }
+.m2 .m2-vote-opts button img { width: 1.9em; height: 1.9em; border-radius: 6px; object-fit: cover; }
+.pv-blurb { margin: 0; font-family: var(--font-body) !important; text-transform: none !important; font-variant: normal !important; letter-spacing: 0 !important; color: #e4d6f6; font-size: clamp(12px, 1.7vh, 14px); line-height: 1.4; text-align: center; font-style: italic; max-width: 30ch; }
+@media (max-width: 640px) { .pv-option { flex-direction: column !important; align-items: center !important; padding: 12px 14px !important; gap: 4px !important; } .pv-blurb { max-width: none; } .pv-option .pv-bar { flex: none; } }
 .pv-option em { position: absolute; top: 8px; right: 10px; font-style: normal; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #ffd86a; color: #2a1600; font-weight: 800; }
 .pv-bar { display: block; width: 100%; height: 10px; border-radius: 999px; background: #ffffff14; overflow: hidden; }
 .pv-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #9a62e8, #e2c8ff); transition: width 0.4s ease; }
@@ -6095,3 +6099,6 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 .pv-status { text-align: center; color: #dccaf2; }
 .pv-status.err { color: #ffb0b0; }
 @media (max-width: 640px) { .pv-options { grid-template-columns: 1fr; gap: 10px; } .pv-option { flex-direction: row; justify-content: flex-start; padding: 12px 14px !important; } .pv-icon { font-size: 40px; } .pv-option .pv-bar { flex: 1; } }
+/* Four choices: the vote banner's heading takes its own line, the choices and the button sit below it. */
+.m2 .m2-vote { flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+.m2 .m2-vote-head { flex: 1 1 100%; flex-direction: row !important; flex-wrap: wrap; justify-content: center; align-items: baseline !important; gap: 4px 10px !important; text-align: center; }

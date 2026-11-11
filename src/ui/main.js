@@ -2582,7 +2582,7 @@ function renderMenu() {
         ${PATCH_NOTES[0] ? `<button class="m2-news ${patchUnseen() ? 'unseen' : ''}" data-act="patchNotes" title="Read the patch notes"><b>${patchUnseen() ? 'NEW' : 'Latest'}</b><span>${esc(PATCH_NOTES[0].title)}</span><i>Patch notes ${icon('chevron')}</i></button>` : ''}
         ${POLLS[CURRENT_POLL] ? `<div class="m2-vote ${myVote() ? 'done' : 'open'}">
           <button class="m2-vote-head" data-act="voteNow"><b>🗳️ ${myVote() ? 'You voted!' : 'Vote now'}</b><span>${esc(POLLS[CURRENT_POLL].question)}</span></button>
-          <div class="m2-vote-opts">${POLLS[CURRENT_POLL].options.map((o) => `<button class="${myVote() === o.id ? 'mine' : ''}" data-act="voteFromMenu:${o.id}" title="Vote for ${esc(o.name)}"><i>${o.icon}</i><span>${esc(o.name)}</span></button>`).join('')}</div>
+          <div class="m2-vote-opts">${POLLS[CURRENT_POLL].options.map((o) => `<button class="${myVote() === o.id ? 'mine' : ''}" data-act="voteFromMenu:${o.id}" title="Vote for ${esc(o.name)}${o.blurb ? `: ${esc(o.blurb)}` : ''}">${o.art ? `<img src="${o.art}" alt="" draggable="false">` : `<i>${o.icon}</i>`}<span>${esc(o.name)}</span></button>`).join('')}</div>
           <button class="m2-vote-go" data-act="voteNow">${myVote() ? 'See results' : 'Vote'} ${icon('chevron')}</button>
         </div>` : ''}
         <div class="m2-toggle-row">
