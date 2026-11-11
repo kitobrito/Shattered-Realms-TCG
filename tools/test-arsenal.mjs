@@ -195,5 +195,23 @@ test("Caustic Reservoir spells out the rule: a minion at 0 Attack with 6 Corrosi
   if (!m.destroyed && m.health > 0) return `still alive (attack ${m.attack}, corrosion ${m.corrosion})`;
 });
 
+test('The Great Dissolution: Taunt; an enemy minion that attacks it gets Corrosion 2 before the hit (and so does one it attacks)', 'Acidic', () => {
+  const g = summonMinion(s, 0, 'the_great_dissolution'); g.sick = false;
+  if (!hasKeyword(g, 'Taunt')) return 'no Taunt';
+  // The enemy attacks it: 5 Attack corroded to 3 before damage, so it takes 3.
+  s.activePlayer = 1;
+  const foe = summonMinion(s, 1, 'nightwatch_recruit'); foe.keywords = []; foe.attack = 5; foe.health = foe.maxHealth = 20; foe.sick = false;
+  const hp = g.health;
+  applyAction(s, { type: 'attack', player: 1, attacker: foe.uid, defender: g.uid }); settle();
+  if (foe.attack !== 3) return `attacker Attack ${foe.attack} (want 5 - 2 = 3)`;
+  if (g.health !== hp - 3) return `took ${hp - g.health} (want 3)`;
+  // It attacks an enemy: the defender is corroded first, so it hits back for 2 less.
+  s.activePlayer = 0;
+  const d = summonMinion(s, 1, 'nightwatch_recruit'); d.keywords = []; d.attack = 4; d.health = d.maxHealth = 20;
+  const hp2 = g.health; g.attacksThisTurn = 0;
+  applyAction(s, { type: 'attack', player: 0, attacker: g.uid, defender: d.uid }); settle();
+  if (d.attack !== 2 || g.health !== hp2 - 2) return `defender Attack ${d.attack}, hit back for ${hp2 - g.health} (want 2 and 2)`;
+});
+
 console.log(`\n${passed} passed, ${failures} failed`);
 if (failures) process.exit(1);

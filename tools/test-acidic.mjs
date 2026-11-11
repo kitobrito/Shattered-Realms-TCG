@@ -214,10 +214,12 @@ test('World-Eater Slug corrodes only enemies with 4+ Attack', () => {
   play(0, give(0, 'world_eater_slug'));
   if (atkOf(big) !== 3 || atkOf(small) !== 3) return `big ${atkOf(big)} small ${atkOf(small)}`;
 });
-test('The Great Dissolution: Corrosion 2 to all, then 3 damage to those at 0 Attack', () => {
-  const a = foe(2, 5); const b = foe(5, 5);
+test('The Great Dissolution: Taunt and no Arrival; enemies are corroded only when they fight it (tools/test-arsenal.mjs)', () => {
+  const b = foe(5, 5);
   play(0, give(0, 'the_great_dissolution'));
-  if (a.health !== 2 || b.health !== 5 || atkOf(b) !== 3) return `a ${a.health} b ${b.health}/${atkOf(b)}`;
+  const g = s.players[0].board.find((m) => m.cardId === 'the_great_dissolution');
+  if (!g || !g.keywords.includes('Taunt')) return 'no Taunt';
+  if (atkOf(b) !== 5) return `an enemy was corroded on arrival (${atkOf(b)})`;
 });
 
 // ---- Spells -------------------------------------------------------------------------------

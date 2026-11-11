@@ -110,9 +110,14 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'battlecry', effects: [corrode({ minions: { side: 'enemy', minAttack: 4 } }, 3)] }],
   },
   {
-    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 8,
-    text: 'Arrival: Apply Corrosion 2 to all enemy minions. Then deal 3 damage to each enemy minion with 0 Attack.',
-    triggers: [{ on: 'battlecry', effects: [corrode(ENEMY_MINIONS, 2), { op: 'damage', target: { minions: { side: 'enemy', maxAttack: 0 } }, amount: 3 }] }],
+    // Any enemy minion that would hit it in a fight (attacking it, or hitting back when it attacks) is
+    // corroded first, as the attack is declared, so the Corrosion lands before damage is worked out.
+    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 8, keywords: ['Taunt'],
+    text: 'Taunt. Whenever this fights an enemy minion, give that minion Corrosion 2 first.',
+    triggers: [
+      { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [corrode('eventSource', 2)] },
+      { on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [corrode('eventTarget', 2)] },
+    ],
   },
 
   // ---- Spells (6) ----
