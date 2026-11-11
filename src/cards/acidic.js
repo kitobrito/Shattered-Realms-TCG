@@ -23,7 +23,7 @@ export const ACIDIC_CARDS = [
   // ---- Hero Spell ----
   {
     ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 2, corrodes: true,
-    text: 'Apply Corrosion 1 to an enemy minion.',
+    text: 'Apply Corrosion 1 to an enemy minion. A minion at 0 Attack with 6 or more Corrosion on it is Dissolved.',
     target: ENEMY_MINION,
     effects: [corrode('chosen', 1)],
   },
@@ -181,10 +181,11 @@ export const ACIDIC_CARDS = [
     effects: [corrode('eventSource', 2)],
   },
   {
-    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 8,
-    text: 'Dissolve an enemy minion.',
+    // Legendary: unlike Strip the Plating's one random piece, its Essence holds the whole minion.
+    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 8, legendary: true, frameArt: 'art/frames/legendary-weapon-acidic.png',
+    text: 'Dissolve an enemy minion and gain a card that gives its Attack, Health and keywords to a friendly minion.',
     target: ENEMY_MINION,
-    effects: [dissolve('chosen')],
+    effects: [{ op: 'dissolve', target: 'chosen', whole: true }],
   },
   {
     ...S, id: 'reactive_spill', name: 'Reactive Spill', art: '🧴', cost: 3, corrodes: true,

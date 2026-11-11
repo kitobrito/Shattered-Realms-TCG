@@ -2296,7 +2296,7 @@ export const EFFECT_OPS = {
   },
   // { target } — Dissolve (core dissolve): destroy it, distilling it into a spell for you.
   dissolve(state, e, ctx) {
-    each(state, e.target, ctx, (c) => dissolve(state, c, ctx.controller));
+    each(state, e.target, ctx, (c) => dissolve(state, c, ctx.controller, { whole: !!e.whole }));
   },
   // { target } — Molecular Breakdown: its temporary buffs are removed.
   removeTempBuffs(state, e, ctx) {

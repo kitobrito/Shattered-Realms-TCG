@@ -396,7 +396,7 @@ export const isConductive = (m) => !!m?.conductive;
 export function corrode(state, m, amount, by = null) {
   if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed || amount <= 0) return 0;
   if (m.acidCoated) { amount += 1; m.acidCoated = false; }
-  // Meltdown: Corrosion on a minion already at 0 Attack eats something else instead.
+  // Corrosion on a minion already at 0 Attack still adds up (6 or more Dissolves it).
   if (effectiveAttack(m) <= 0) {
     m.corrosion = (m.corrosion ?? 0) + amount;
     log(state, `🧪 ${nameOf(state, m)} corrodes further (Corrosion ${m.corrosion}).`);
@@ -417,11 +417,11 @@ export function corrode(state, m, amount, by = null) {
   return lost;
 }
 
-// Meltdown (Acidic): a minion at 0 Attack carrying 6 or more Corrosion is Dissolved.
+// Acidic: a minion at 0 Attack carrying 6 or more Corrosion is Dissolved (by whoever corroded it).
 export const MELTDOWN_CORROSION = 6;
 function meltdown(state, m, by) {
   if (effectiveAttack(m) > 0 || (m.corrosion ?? 0) < MELTDOWN_CORROSION) return;
-  log(state, `🧪 Meltdown: ${nameOf(state, m)} has corroded away completely.`);
+  log(state, `🧪 ${nameOf(state, m)} has corroded away completely (6+ Corrosion at 0 Attack).`);
   emit(state, { type: 'meltdown', target: m.uid, player: m.controller, by });
   dissolve(state, m, by);
 }
@@ -513,7 +513,8 @@ export function isBuffed(m) {
 
 // Dissolve: destroy a minion and distill its Attack, Health or keywords into a spell
 // in the dissolver's hand (see distill).
-export function dissolve(state, m, by = null) {
+// opts.whole (Shield-Eater): the Essence holds all of it, Attack, Health and keywords, not one random piece.
+export function dissolve(state, m, by = null, opts = {}) {
   if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed) return null;
   // One random piece of it: its printed Attack, its printed Health, or its keywords.
   const card = getCard(m.cardId);
@@ -524,7 +525,8 @@ export function dissolve(state, m, by = null) {
     ...(keywords.length ? [{ attack: 0, health: 0, keywords }] : []),
   ];
   const taken = { name: nameOf(state, m), cardId: m.cardId,
-    ...(options.length ? options[randomInt(state, options.length)] : { attack: 0, health: 0, keywords: [] }) };
+    ...(opts.whole ? { attack: Math.max(0, card.attack ?? 0), health: Math.max(0, card.health ?? 0), keywords }
+      : options.length ? options[randomInt(state, options.length)] : { attack: 0, health: 0, keywords: [] }) };
   m.destroyed = true;
   if (by != null) { m.lastDamagedByController = by; }
   log(state, `🧪 ${taken.name} dissolves.`);

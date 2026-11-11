@@ -167,5 +167,33 @@ test('Aliens balance pass: Probe Drone 2/3, Gene Mutation +1/+1, Replication cop
   if (!deck.includes('grey_scout') || !deck.includes('gene_thief_operative') || deck.includes('terraform') || deck.includes('experimental_containment')) return 'pair deck swap';
 });
 
+test('Shield-Eater (Legendary): Dissolves an enemy minion; its Essence holds all of it (Attack, Health and keywords)', 'Acidic', () => {
+  const c = getCard('shield_eater');
+  if (!c.legendary || c.frameArt !== 'art/frames/legendary-weapon-acidic.png') return 'not legendary in the Acidic frame';
+  const m = summonMinion(s, 1, 'nightwatch_recruit'); const card = getCard('nightwatch_recruit');
+  m.keywords = ['Taunt'];
+  const before = s.players[0].hand.length;
+  play('shield_eater', m.uid);
+  const ess = s.players[0].hand.slice(before).map((h) => getCard(h.cardId)).find((x) => /^Essence of/.test(x?.name ?? ''));
+  if (!ess) return 'no Essence';
+  const fx = ess.effects[0];
+  if (fx.attack !== card.attack || fx.health !== card.health || !(fx.keywords ?? []).includes('Taunt')) return `Essence gives ${JSON.stringify(fx)}`;
+  // Strip the Plating still gives one random piece.
+  const m2 = summonMinion(s, 1, 'nightwatch_recruit'); m2.keywords = ['Taunt'];
+  s.players[0].mana.current = 10;
+  const b2 = s.players[0].hand.length;
+  play('strip_the_plating', m2.uid);
+  const e2 = s.players[0].hand.slice(b2).map((h) => getCard(h.cardId)).find((x) => /^Essence of/.test(x?.name ?? ''));
+  const pieces = ['attack', 'health', 'keywords'].filter((k) => e2.effects[0][k] != null);
+  if (pieces.length !== 1) return `Strip the Plating gave ${pieces.join('+')}`;
+});
+
+test("Caustic Reservoir spells out the rule: a minion at 0 Attack with 6 Corrosion is Dissolved", 'Acidic', () => {
+  if (!/A minion at 0 Attack with 6 or more Corrosion on it is Dissolved/.test(getCard('caustic_reservoir').text)) return 'text';
+  const m = summonMinion(s, 1, 'nightwatch_recruit'); m.attack = 1; m.corrosion = 5;
+  play('splash_of_acid', m.uid);
+  if (!m.destroyed && m.health > 0) return `still alive (attack ${m.attack}, corrosion ${m.corrosion})`;
+});
+
 console.log(`\n${passed} passed, ${failures} failed`);
 if (failures) process.exit(1);
