@@ -78,6 +78,17 @@ function setToken(t) {
     } catch { /* storage unavailable */ }
   }
 }
+// comic-arena.net embeds the game and hands over the site's Shattered Realms sign-in in the address
+// (#sr-token=...), so a player signed in on the site is signed in here too. Taken once, then wiped
+// from the address bar.
+(function adoptSiteToken() {
+  try {
+    const m = /(?:^#|&)sr-token=([a-f0-9]{64})(?:&|$)/.exec(location.hash);
+    if (!m) return;
+    setToken(m[1]);
+    history.replaceState(null, '', location.pathname + location.search);
+  } catch { /* no address bar (the app) */ }
+}());
 export const hasSavedLogin = () => !!token();
 export const isOpen = () => ws?.readyState === 1;
 
