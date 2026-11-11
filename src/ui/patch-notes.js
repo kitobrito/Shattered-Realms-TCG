@@ -414,7 +414,7 @@ function pollHTML(poll = {}) {
     const n = poll.counts?.[o.id] ?? 0;
     const pct = poll.total ? Math.round((100 * n) / poll.total) : 0;
     return `<button class="pv-option ${poll.mine === o.id ? 'mine' : ''}" data-act="patchVoteFor:${o.id}" ${poll.sending ? 'disabled' : ''}>
-      <i class="pv-icon">${o.icon}</i><b>${esc(o.name)}</b>
+      ${o.art ? `<img class="pv-art" src="${o.art}" alt="" draggable="false">` : `<i class="pv-icon">${o.icon}</i>`}<b>${esc(o.name)}</b>${o.blurb ? `<p class="pv-blurb">${esc(o.blurb)}</p>` : ''}
       ${voted && poll.counts ? `<span class="pv-bar"><span style="width:${pct}%"></span></span><small>${pct}% · ${n} vote${n === 1 ? '' : 's'}</small>` : '<small>Vote</small>'}
       ${poll.mine === o.id ? '<em>Your vote</em>' : ''}</button>`;
   }).join('');
