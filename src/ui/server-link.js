@@ -18,6 +18,36 @@ function serverUrl() {
   return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
 }
 
+// The server's web address (for the polls): its WebSocket address with http(s) and no /ws.
+export function serverHttp() {
+  const u = serverUrl();
+  return u ? u.replace(/^ws/, 'http').replace(/\/ws$/, '') : null;
+}
+// This device's voter id for polls when not signed in (a signed-in player votes as their account).
+function voterId() {
+  try {
+    let id = localStorage.getItem('shattered-voter');
+    if (!id) { id = (crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`).toLowerCase(); localStorage.setItem('shattered-voter', id); }
+    return id;
+  } catch { return null; }
+}
+// Polls: the totals, and casting (or changing) your vote. Both resolve to { counts, total, mine? } or throw.
+export async function fetchPoll(id) {
+  const base = serverHttp();
+  if (!base) throw new Error('offline');
+  const r = await fetch(`${base}/poll/${encodeURIComponent(id)}`, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`poll ${r.status}`);
+  return r.json();
+}
+export async function castVote(id, choice) {
+  const base = serverHttp();
+  if (!base) throw new Error('offline');
+  const r = await fetch(`${base}/poll/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'text/plain' },
+    body: JSON.stringify({ choice, voter: voterId(), token: token() ?? undefined }) });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? `vote ${r.status}`);
+  return r.json();
+}
+
 let ws = null;
 let handlers = {};
 let wanted = false;      // stay connected (reconnect when the line drops)

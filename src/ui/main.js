@@ -34,6 +34,8 @@ import { music, refreshMusic } from './music.js';
 import * as net from './net.js';
 import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
+import { markPatchSeen, PATCH_NOTES, patchNotesHTML, patchUnseen } from './patch-notes.js';
+import { CURRENT_POLL, POLLS } from '../polls.js';
 import { awardUnlocks, boardProgress, isLocked, lockedCount, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
@@ -2481,10 +2483,45 @@ function deckGroups(playable) {
 let playLaunching = false; // the Play button's burst is playing
 let howtoPage = 0; // the How to Play chapter that's open
 let guideOpen = false; // the main menu's realm guide (what the picked factions do)
+// Patch notes on the main menu: open?, which post or category tab, a board shown big, keep the scroll.
+let patch = { open: false, post: 0, tab: null, board: null, keepScroll: false };
+// The community vote (patch notes' Vote tab): what the server says, and your own pick (kept on this device).
+const VOTE_KEY = `shattered-vote-${CURRENT_POLL}`;
+const myVote = () => { try { return localStorage.getItem(VOTE_KEY); } catch { return null; } };
+let poll = { loading: false, error: null, counts: null, total: 0, mine: myVote(), sending: false };
+async function loadPoll() {
+  poll = { ...poll, loading: true, error: null };
+  render();
+  try { const r = await srv.fetchPoll(CURRENT_POLL); poll = { ...poll, loading: false, counts: r.counts, total: r.total }; }
+  catch { poll = { ...poll, loading: false, error: poll.mine ? "Couldn't reach the server to show the results. Try again in a moment." : null }; }
+  if (screen === 'menu' && patch.open && patch.tab === 'vote') render();
+}
+async function vote(choice) {
+  if (poll.sending) return;
+  poll = { ...poll, sending: true, error: null };
+  render();
+  try {
+    const r = await srv.castVote(CURRENT_POLL, choice);
+    try { localStorage.setItem(VOTE_KEY, choice); } catch { /* private mode */ }
+    poll = { ...poll, sending: false, counts: r.counts, total: r.total, mine: choice };
+    sound.play('draw');
+  } catch (e) {
+    poll = { ...poll, sending: false, error: /offline/.test(e.message) ? 'Voting needs an internet connection.' : "Couldn't send your vote (the server may be waking up). Try again in a moment." };
+  }
+  if (screen === 'menu' && patch.open) render();
+}
 function renderMenu() {
   applyJourney();
   // Picking a realm redraws the menu: keep the realm list where it was scrolled.
   const listScroll = app.querySelector('.m2-list')?.scrollTop ?? 0;
+  const patchScroll = patch.keepScroll ? app.querySelector('.pn-post')?.scrollTop ?? 0 : 0;
+  // The faction vote, front and centre: the first time the menu shows in a session, a player who hasn't
+  // voted yet sees it open (not over a brand-new player's first pick or a match being set up).
+  if (POLLS[CURRENT_POLL] && !myVote() && !patch.open && !needsFirstPick() && !matchSetup && !milestone) {
+    let shown = true;
+    try { shown = sessionStorage.getItem('shattered-vote-prompted') === '1'; sessionStorage.setItem('shattered-vote-prompted', '1'); } catch { /* no storage: don't nag */ }
+    if (!shown) { patch = { open: true, post: 0, tab: 'vote', board: null, keepScroll: false }; setTimeout(loadPoll, 0); }
+  }
   const saved = loadSaved();
   showMenuBackdrop(true);
   const roster = [...FACTIONS].sort((a, b) => PLAYABLE_FACTIONS.includes(b) - PLAYABLE_FACTIONS.includes(a));
@@ -2542,6 +2579,12 @@ function renderMenu() {
       <header class="m2-top">
         <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
         <p class="ts-tag">Twenty realms broke apart. Two of them are yours.</p>
+        ${PATCH_NOTES[0] ? `<button class="m2-news ${patchUnseen() ? 'unseen' : ''}" data-act="patchNotes" title="Read the patch notes"><b>${patchUnseen() ? 'NEW' : 'Latest'}</b><span>${esc(PATCH_NOTES[0].title)}</span><i>Patch notes ${icon('chevron')}</i></button>` : ''}
+        ${POLLS[CURRENT_POLL] ? `<div class="m2-vote ${myVote() ? 'done' : 'open'}">
+          <button class="m2-vote-head" data-act="voteNow"><b>🗳️ ${myVote() ? 'You voted!' : 'Vote now'}</b><span>${esc(POLLS[CURRENT_POLL].question)}</span></button>
+          <div class="m2-vote-opts">${POLLS[CURRENT_POLL].options.map((o) => `<button class="${myVote() === o.id ? 'mine' : ''}" data-act="voteFromMenu:${o.id}" title="Vote for ${esc(o.name)}"><i>${o.icon}</i><span>${esc(o.name)}</span></button>`).join('')}</div>
+          <button class="m2-vote-go" data-act="voteNow">${myVote() ? 'See results' : 'Vote'} ${icon('chevron')}</button>
+        </div>` : ''}
         <div class="m2-toggle-row">
           <span class="pick-count">${picked.length}/${pickNeeded()}</span>
           ${pairUnlocked() ? `<div class="format-toggle m2-toggle">
@@ -2565,6 +2608,7 @@ function renderMenu() {
         <div class="m2-diff">${difficultySliderHTML()}</div>
       </nav>
       <footer class="m2-foot">
+        <button data-act="patchNotes" class="m2-link ${patchUnseen() ? 'has-new' : ''}">${icon('log')}<span><b>Patch notes</b><small>What's new</small></span></button>
         <button data-act="tutorial" class="m2-link ${tutorialDone() ? '' : 'new-player'}">${icon('cap')}<span><b>Tutorial</b><small>New? Start here</small></span></button>
         <button data-act="howto" class="m2-link">${icon('book')}<span><b>How to play</b><small>Learn the basics</small></span></button>
         <button data-act="gallery" class="m2-link">${icon('cards')}<span><b>Collection</b><small>View your cards</small></span></button>
@@ -2574,18 +2618,24 @@ function renderMenu() {
         <button data-act="gallery">${icon('cards')}<span>Collection</span></button>
         <button data-act="ai" class="m2-tab-play">${icon('play')}<span>Play</span></button>
         <button data-act="howto">${icon('book')}<span>Guide</span></button>
+        <button data-act="patchNotes" class="${patchUnseen() ? 'has-new' : ''}">${icon('log')}<span>News</span></button>
         <button data-act="settings">${icon('gear')}<span>Settings</span></button>
       </nav>
     </div>
     ${guideOpen && ready ? `<div class="overlay guide-overlay"><div class="guide-backdrop" data-act="closeGuide"></div><div class="guide-panel">
       <button class="ghost guide-close" data-act="closeGuide">✕</button>${format !== 'single' ? pairGuideHTML(picked) : ''}${factionGuideHTML(picked)}
       <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p></div></div>` : ''}
-    ${zoomId && fusion ? zoomHTML(getCard(zoomId)) : ''}
+    ${patch.open ? patchNotesHTML({ ...patch, poll }) : ''}
+    ${zoomId && (fusion || patch.open) ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
     ${needsFirstPick() ? firstPickHTML() : ''}
     ${matchSetup && !needsFirstPick() ? matchSetupHTML() : ''}`;
   const listEl = app.querySelector('.m2-list');
   if (listEl) listEl.scrollTop = listScroll;
+  // Opening a card from the notes and closing it again leaves the notes where you were reading.
+  const pnPost = app.querySelector('.pn-post');
+  if (pnPost) { pnPost.scrollTop = patchScroll; fitAllText(pnPost); setTimeout(() => pnPost.isConnected && fitAllText(pnPost), 400); }
+  patch.keepScroll = true;
   // Phones: bring each strip's picked realm into view.
   app.querySelectorAll('.m2-strip-row').forEach((r) => {
     const on = r.querySelector('.m2-chip.on');
@@ -3945,6 +3995,21 @@ app.addEventListener('click', (e) => {
 
 function onButton(name) {
   const s = game?.state;
+  // Patch notes (main menu): open and close, pick a post or a category tab, see a board big.
+  if (name === 'patchNotes') { sound.play('click'); markPatchSeen(); patch = { open: true, post: 0, tab: null, board: null, keepScroll: false }; return render(); }
+  if (name === 'closePatch') { patch.open = false; return render(); }
+  if (name?.startsWith('patchPost:')) { patch = { ...patch, post: Number(name.slice(10)), tab: null, board: null, keepScroll: false }; sound.play('draw'); return render(); }
+  if (name?.startsWith('patchTab:')) { patch = { ...patch, tab: decodeURIComponent(name.slice(9)), board: null, keepScroll: false }; sound.play('draw'); return render(); }
+  if (name?.startsWith('patchBoard:')) { patch.board = decodeURIComponent(name.slice(11)); return render(); }
+  if (name === 'closePatchBoard') { patch.board = null; return render(); }
+  if (name === 'patchVote' || name === 'voteNow') {
+    sound.play('click'); if (name === 'voteNow') markPatchSeen();
+    patch = { ...patch, open: true, tab: 'vote', board: null, keepScroll: false };
+    return loadPoll();
+  }
+  if (name?.startsWith('patchVoteFor:')) return vote(name.slice(13));
+  // Tapping a faction on the menu's vote banner: vote, and show the results.
+  if (name?.startsWith('voteFromMenu:')) { patch = { ...patch, open: true, tab: 'vote', board: null, keepScroll: false }; return vote(name.slice(13)); }
   switch (name) {
     case 'ai': {
       // From the menu: choose the AI opponent first (the pre-match screen).
