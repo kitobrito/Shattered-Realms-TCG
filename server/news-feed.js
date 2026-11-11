@@ -9,6 +9,8 @@ import { artOf, heroArtOf } from '../src/ui/shared.js';
 import { PATCH_CATS, PATCH_KINDS, PATCH_NOTES } from '../src/ui/patch-notes.js';
 import { CURRENT_POLL, POLLS } from '../src/polls.js';
 import { FACTION_INFO } from '../src/cards/faction-info.js';
+import { DEFAULT_RULES, KEYWORD_TEXT } from '../src/engine/rules.js';
+import { TIERS } from './ladder.js';
 
 const getCard = (id) => { try { return cardById(id); } catch { return null; } };
 const abs = (base, p) => (p ? (/^(https?:|data:)/.test(p) ? p : `${base}/${String(p).replace(/^\.?\/+/, '')}`) : null);
@@ -66,6 +68,11 @@ export function newsFeed(base) {
     game: 'Shattered Realms',
     factions: Object.entries(FACTION_INFO).map(([name, f]) => ({ name, summary: f.summary ?? null, strengths: f.strengths ?? [],
       weaknesses: f.weaknesses ?? [], hero: abs(base, heroArtOf(name)) })),
+    cardCount: allCards().filter((c) => !c.custom && !c.fusion && !c.heroSpell && !c.token).length,
+    keywords: KEYWORD_TEXT,
+    rules: Object.fromEntries(['startingHealth', 'maxMana', 'manaPerTurn', 'startingHandFirst', 'startingHandSecond', 'maxHandSize', 'maxBoardSize',
+      'pairDeckSize', 'minPerFaction', 'maxCopies', 'singleDeckSize', 'factionDeckSize', 'heroSpellUsesPerTurn'].map((k) => [k, DEFAULT_RULES[k]])),
+    tiers: TIERS,
     cats: PATCH_CATS,
     kinds: PATCH_KINDS,
     posts: PATCH_NOTES.map((p) => ({ id: p.id, date: p.date, title: p.title, tag: p.tag ?? null, intro: p.intro ?? null,
