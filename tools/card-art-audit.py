@@ -40,7 +40,9 @@ def window_mask(frame, w, h):
             m = cv2.erode(m.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
         spill = a & ~(labels == best) if best else a
         # Only the inside of the card counts (the outer corners are transparent too).
-        inner = np.zeros_like(a); inner[int(h * 0.04):int(h * 0.96), int(w * 0.04):int(w * 0.96)] = True
+        # Decorations (vines, drips, chains) split some windows into several openings, so only the
+        # lower part of the card (name banner and text box) counts as outside the picture.
+        inner = np.zeros_like(a); inner[int(h * 0.58):int(h * 0.96), int(w * 0.04):int(w * 0.96)] = True
         masks[key] = (m, cv2.erode((spill & inner).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool))
     return masks[key]
 
