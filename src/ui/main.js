@@ -3497,6 +3497,12 @@ function showPreview(target) {
   fitAllText(el);
 }
 
+// Touch or mouse? On touch, a phone keeps "hovering" the last spot you tapped, so the hand's hover
+// lift would stick to whatever card ends up under it (style.css: hover effects need body:not(.touch-ui)).
+if (window.matchMedia?.('(hover: none)').matches) document.body.classList.add('touch-ui');
+document.addEventListener('pointerdown', (e) => document.body.classList.toggle('touch-ui', e.pointerType === 'touch'), true);
+document.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' && document.body.classList.contains('touch-ui')) document.body.classList.remove('touch-ui'); }, true);
+
 // Moving between the parts of one card (art, text, frame) is still hovering that card:
 // only entering a different card (or leaving it) changes or closes the preview.
 document.addEventListener('pointerover', (e) => {

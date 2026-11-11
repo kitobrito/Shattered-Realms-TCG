@@ -162,7 +162,8 @@ button.ghost:hover { background: var(--panel); }
 }
 .overlay { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; z-index: 50; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px 36px; text-align: center; }
-.flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #000d; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; }
+/* The message box stays in the page after it fades: it must never catch a touch (it sits over the hand). */
+.flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #000d; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .flash.show { opacity: 1; }
 
 @media (max-width: 860px) {
@@ -181,7 +182,7 @@ button.ghost:hover { background: var(--panel); }
 .hero-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .hero-extras { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .hero-spell { font-size: 13px; padding: 6px 10px; background: #2d2140; border-color: #7b5fb0; }
-.hero-spell:hover:not(:disabled) { background: #3d2d58; }
+.hero-spell:hover:not([aria-disabled="true"]) { background: #3d2d58; }
 .hero-spell b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--mana); margin-left: 4px; font-size: 12px; }
 .hero-spell.selected { box-shadow: 0 0 0 2px var(--gold), 0 0 12px var(--gold); }
 .extinction { font-size: 12px; color: #ffb37a; border: 1px solid #7a4a2a; border-radius: 8px; padding: 4px 8px; background: #2a160c; }
@@ -229,7 +230,7 @@ button.ghost:hover { background: var(--panel); }
 .my-hand { min-height: 280px; align-items: flex-end; width: 100%; gap: 0; }
 .my-hand .card { margin: 0 0 0 var(--overlap, -12px); }
 .my-hand .card:first-child { margin-left: 0; }
-.my-hand .card:hover { z-index: 6; }
+body:not(.touch-ui) .my-hand .card:hover { z-index: 6; }
 .choice-row .card, .gallery-grid .card { margin: 0; }
 
 .minion { width: 108px; height: 132px; border-radius: 12px; place-items: start center; }
@@ -501,9 +502,9 @@ body.in-game { overflow: hidden; }
   background: #1b0f15; border: 3px solid #6a5434; cursor: pointer; box-shadow: 0 6px 14px #000a; }
 .hero-spell img, .hero-spell > span { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: grid; place-items: center; font-size: calc(var(--hero) * 0.3); }
 .hero-spell.usable { border-color: var(--good); box-shadow: 0 0 0 2px var(--good), 0 0 16px var(--good); }
-.hero-spell:disabled { opacity: 1; cursor: default; }
-.hero-spell:disabled img { filter: grayscale(0.7) brightness(0.6); }
-.hero-spell:hover:not(:disabled) { transform: scale(1.07); background: #1b0f15; }
+.hero-spell[aria-disabled="true"] { opacity: 1; cursor: default; }
+.hero-spell[aria-disabled="true"] img { filter: grayscale(0.7) brightness(0.6); }
+.hero-spell:hover:not([aria-disabled="true"]) { transform: scale(1.07); background: #1b0f15; }
 .hs-cost { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
   background: var(--mana); border: 2px solid #9fc1ff; font-family: var(--font-title); font-size: 14px; }
 .extinction-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
@@ -511,6 +512,13 @@ body.in-game { overflow: hidden; }
 .extinction-badge b { position: absolute; bottom: -6px; right: -6px; background: #ff7a3a; color: #1a0a04; border-radius: 50%; width: 22px; height: 22px;
   display: grid; place-items: center; font-family: var(--font-title); font-size: 13px; }
 .extinction-badge.soon { animation: pulse 0.8s infinite alternate; }
+/* A passive Hero Spell without its own badge (Sharks, Monster Hunter): its art in a ring, hover or hold to read. */
+.passive-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
+  overflow: visible; background: #1a1418; box-shadow: 0 0 0 2px #c9a35a, 0 4px 10px #000a; cursor: help; }
+.passive-badge img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.passive-badge > span { font-size: calc(var(--hero) * 0.24); }
+.passive-badge b { position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); padding: 1px 5px; border-radius: 6px; background: #2a2026;
+  border: 1px solid #c9a35a; color: #ffe2a0; font: 800 8px/1.2 var(--font-title, Georgia), serif; letter-spacing: 0.08em; white-space: nowrap; }
 .freeze-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle, #2c5a78, #08182a); border: 3px solid #9fe0ff; font-size: calc(var(--hero) * 0.18); color: #e8f8ff; }
 .freeze-badge b { position: absolute; bottom: -6px; right: -6px; background: #9fe0ff; color: #08182a; border-radius: 50%; width: 22px; height: 22px;
@@ -530,7 +538,7 @@ body.in-game { overflow: hidden; }
 .arena .my-hand .card { width: var(--card-w); height: calc(var(--card-w) * 1.9); padding: 0 6px 6px; cursor: grab; }
 .arena .my-hand .card .name { font-size: calc(var(--card-w) * 0.085); }
 .arena .my-hand .card .text { font-size: calc(var(--card-w) * 0.08); }
-.arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -6%) rotate(0deg) scale(1.28); z-index: 200 !important; }
+body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -6%) rotate(0deg) scale(1.28); z-index: 200 !important; }
 .arena .my-hand .card.playable { box-shadow: 0 0 0 2px var(--good), 0 0 14px var(--good); }
 .arena .my-hand .card.drag-src { visibility: hidden; }
 .arena .opp-hand { position: absolute; left: 25cqw; right: 25cqw; top: 0; height: calc(var(--card-w) * 0.9); z-index: 5; }
@@ -1170,7 +1178,7 @@ body.in-game { overflow: hidden; }
 /* Hand: lower, so your hero frame stays visible (hover still lifts a card fully). */
 .arena.has-board .my-hand { left: 22cqw; right: 22cqw; }
 .arena.has-board .my-hand .card { transform: translate(calc(-50% + var(--x, 0px)), calc(52% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-.arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -4%) rotate(0deg) scale(1.3); }
+body:not(.touch-ui) .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -4%) rotate(0deg) scale(1.3); }
 .arena.has-board .opp-hand { left: 30cqw; right: 30cqw; }
 
 /* Mana, rope, thinking bubble, history. */
@@ -1206,8 +1214,8 @@ body.in-game { overflow: hidden; }
 
 /* Hover effects only where there is real hover; touch uses the inspect state. */
 @media (hover: none) {
-  .arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(26% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-  .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(60% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+  body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(26% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+  body:not(.touch-ui) .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(60% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 }
 .arena .my-hand .card.inspect { transform: translate(calc(-50% + var(--x, 0px)), -2%) rotate(0deg) scale(1.15) !important; z-index: 200 !important;
   box-shadow: 0 0 0 3px var(--gold), 0 0 22px var(--gold); }
@@ -1420,7 +1428,7 @@ body.in-game { overflow: hidden; }
 .hs-face.back::after { content: '✓'; color: #8a7a60; font-family: var(--font-title); font-size: calc(var(--hero) * 0.24); }
 .hero-spell.usable .hs-face.front { border-color: #57e07a; box-shadow: 0 0 0 2px #1a3a20, 0 0 14px #57e07a, inset 0 0 10px #000a; animation: hs-ready 1.2s ease-in-out infinite alternate; }
 @keyframes hs-ready { to { box-shadow: 0 0 0 2px #1a3a20, 0 0 24px #57e07a, inset 0 0 10px #000a; } }
-.hero-spell:disabled:not(.used) .hs-face.front img { filter: grayscale(0.6) brightness(0.65); }
+.hero-spell[aria-disabled="true"]:not(.used) .hs-face.front img { filter: grayscale(0.6) brightness(0.65); }
 .hero-spell .hs-cost { z-index: 3; }
 .hero-spell.used .hs-cost { opacity: 0; }
 /* Small cards: larger description text (fitText shrinks long text to fit). */
@@ -1469,7 +1477,7 @@ body.in-game { overflow: hidden; }
 .arena .my-hand .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(26% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 .arena.has-board .my-hand .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(60% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 .arena .my-hand .card.dim > .big-card { filter: brightness(0.62) saturate(0.7); }
-.arena .my-hand .card.dim:hover > .big-card { filter: none; }
+body:not(.touch-ui) .arena .my-hand .card.dim:hover > .big-card { filter: none; }
 .card.respond > .big-card { animation: respond-pulse 0.8s ease-in-out infinite alternate;
   box-shadow: 0 0 0 0.12em #000c, inset 0 0 0 0.22em #c9a35a, 0 0 0 0.35em #ffd25a, 0 0 1.6em #ffd25a; }
 @keyframes respond-pulse { to { box-shadow: 0 0 0 0.12em #000c, inset 0 0 0 0.22em #c9a35a, 0 0 0 0.5em #ffe9a0, 0 0 3em #ffd25a; } }
@@ -2403,7 +2411,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 /* Your hand: a fan along the bottom; tap a card to lift it and read it. */
 .arena.portrait .my-hand { left: 2cqw; right: 2cqw; height: calc(var(--card-w) * 1.5); }
 .arena.portrait .my-hand .card { transform: translate(calc(-50% + var(--x, 0px)), calc(28% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-.arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -22%) rotate(0deg) scale(1.45); }
+body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -22%) rotate(0deg) scale(1.45); }
 
 /* Menu buttons: a small column on the left, beside your hero. */
 .arena.portrait .corner-buttons { left: 1.5cqw; top: auto; bottom: calc(var(--card-w) * 0.95 + 1cqh); gap: 4px; }
@@ -2486,7 +2494,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
   font-weight: 900; font-size: clamp(16px, 2.4vw, 30px); box-shadow: 0 0 18px #4cc8ff88; }
 /* Portrait hand: hovering never moves or grows a card (that made full hands flicker between cards);
    it just comes to the front with a glow. Tap lifts it a little; the readable copy opens centred. */
-.arena.portrait .my-hand .card:hover:not(.drag-src) {
+body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) {
   transform: translate(calc(-50% + var(--x, 0px)), calc(28% + var(--y, 0px))) rotate(var(--rot, 0deg));
   z-index: 150 !important; box-shadow: 0 0 0 2px #ffe39a, 0 0 16px #ffd25a; }
 .arena.portrait .my-hand .card.inspect { transform: translate(calc(-50% + var(--x, 0px)), 6%) rotate(0deg) scale(1.08) !important; z-index: 200 !important; }
@@ -2547,11 +2555,11 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 /* Landscape (painted boards): the hand sits a little higher (was 60% of a card below the edge). */
 .arena.has-board .my-hand .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(48% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 @media (hover: none) {
-  .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(48% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+  body:not(.touch-ui) .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(48% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 }
 /* Portrait hand sits a little higher so more of each card shows. */
 .arena.portrait .my-hand .card { transform: translate(calc(-50% + var(--x, 0px)), calc(14% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-.arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(14% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(14% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 /* Portrait, two-row hand: your Mana moves under End Turn so the back row has room. */
 .arena.portrait:has(.my-hand.two-rows) .mana-bar.me { bottom: auto; top: calc(var(--mh-y, 70cqh) + var(--mh-h, 10cqh) / 2 + 26px); right: 2.5cqw; }
 /* Portrait: a tapped card lifts from its own row (back or front). */
@@ -3947,8 +3955,8 @@ body.reduced-motion .arena .minion.can-attack, body.reduced-motion .arena .minio
 
 /* ==== Hand cards tilt toward the pointer, with a glare where the light catches ==== */
 .arena .my-hand .card > .big-card { transition: transform 0.12s ease-out; transform-style: preserve-3d; }
-.arena .my-hand .card:hover:not(.drag-src) > .big-card { transform: perspective(700px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); }
-.arena .my-hand .card:hover:not(.drag-src) > .big-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 30;
+body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) > .big-card { transform: perspective(700px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); }
+body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) > .big-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 30;
   background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), #ffffff40, transparent 45%); mix-blend-mode: screen; }
 
 /* ==== Spell cast flourish ==== */
@@ -5699,13 +5707,13 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 /* Landscape: the hand rests as a small fan in the bottom-right corner (clear of your Hero's
    Health) until you click it; then it rises into the middle at full size (board.js). */
 .arena:not(.portrait) .my-hand.docked .card,
-.arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
+body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
   transform-origin: 50% 100%;
   transform: translate(calc(-50% + var(--x, 0px)), var(--y, 0px)) rotate(var(--rot, 0deg)) scale(var(--s, 0.56));
   cursor: pointer;
 }
-.arena:not(.portrait) .my-hand.docked:hover .card { filter: brightness(1.12); }
-.arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
+body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked:hover .card { filter: brightness(1.12); }
+body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
   transform: translate(calc(-50% + var(--x, 0px)), calc(var(--y, 0px) - 12px)) rotate(var(--rot, 0deg)) scale(var(--s, 0.56));
   filter: brightness(1.25) drop-shadow(0 0 8px rgba(255, 220, 120, 0.7));
 }

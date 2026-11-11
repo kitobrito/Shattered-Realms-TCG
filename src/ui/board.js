@@ -244,7 +244,7 @@ function fusionHTML(pl, legal, mine) {
   const usable = mine && legal.some((a) => a.type === 'heroSpell' && a.card === card.id);
   const art = artOf(card);
   const pips = [0, 1, 2].map((i) => `<i class="${i < pl.fusion.charge ? 'on' : ''}"></i>`).join('');
-  return `<button class="hero-spell fusion-spell ${ready ? 'ready' : ''} ${usable ? 'usable' : ''}" data-hs="${card.id}" data-preview="${card.id}" ${usable ? '' : 'disabled'}
+  return `<button class="hero-spell fusion-spell ${ready ? 'ready' : ''} ${usable ? 'usable' : ''}" data-hs="${card.id}" data-preview="${card.id}" ${usable ? '' : 'aria-disabled="true"'}
       title="Fusion: ${esc(card.name)} (${pl.fusion.charge}/3 charge)">
       <span class="fusion-ring"></span>
       <span class="hs-face front fusion-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span>
@@ -258,7 +258,7 @@ function heroSpellsHTML(pl, legal, mine, s = null) {
     const card = getCard(hs.cardId);
     const usable = mine && legal.some((a) => a.type === 'heroSpell' && a.card === hs.cardId);
     const art = artOf(card);
-    return `<button class="hero-spell ${usable ? 'usable' : ''} ${hs.uses ? 'used' : ''} ${hs.cooldown > 0 ? 'cooling' : ''}" data-hs="${hs.cardId}" data-preview="${card.id}" ${usable ? '' : 'disabled'}>
+    return `<button class="hero-spell ${usable ? 'usable' : ''} ${hs.uses ? 'used' : ''} ${hs.cooldown > 0 ? 'cooling' : ''}" data-hs="${hs.cardId}" data-preview="${card.id}" ${usable ? '' : 'aria-disabled="true"'}>
       ${hs.cooldown > 0 ? `<span class="cooldown-badge" title="Ready in ${hs.cooldown} turn${hs.cooldown === 1 ? '' : 's'}">⏳${hs.cooldown}</span>` : ''}
       <span class="hs-flip"><span class="hs-face front">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span><span class="hs-face back"></span></span>
       <b class="hs-cost ${s && !card.costsAllMana && heroSpellCost(s, card) > card.cost ? 'pricier' : ''}">${s ? heroSpellCost(s, card, pl) : card.cost}</b>
@@ -336,6 +336,19 @@ function spellbookHTML(pl) {
   return `<span class="hero-book" style="--fill:${(b.pages / SPELLBOOK_PAGES) * 100}%" title="Spellbook: ${b.pages}/${SPELLBOOK_PAGES} pages${b.pages >= SPELLBOOK_CARRY ? ' (Wand enchantments carry over)' : ''}">📖<b>${b.pages}</b></span>`;
 }
 
+// A passive Hero Spell with no badge of its own (Sharks' Blood in the Water, Monster Hunter's Dual-Wield):
+// a small round badge with its art, so it can be hovered or held to read like any card.
+const OWN_BADGE = new Set(['extinction_cycle', 'the_great_freeze', 'hive_mind']);
+function passiveBadgesHTML(pl) {
+  return (pl.passives ?? []).filter((id) => !OWN_BADGE.has(id)).map((id) => {
+    const card = getCard(id);
+    if (!card) return '';
+    const art = artOf(card);
+    return `<div class="passive-badge" title="${esc(card.name)} (passive Hero Spell): hover or hold to read" data-preview="${id}">
+      ${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art ?? '✦'}</span>`}<b>PASSIVE</b></div>`;
+  }).join('');
+}
+
 function extinctionHTML(pl, s) {
   const ext = pl.extinction;
   if (!ext) return '';
@@ -410,7 +423,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${extinctionHTML(pl, s)}${freezeHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${passiveBadgesHTML(pl)}${extinctionHTML(pl, s)}${freezeHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
     </div>`;
 }
 
