@@ -20,6 +20,7 @@ import { stateHash } from '../src/ui/net.js';
 import { applyResult, freshLadder, newRating, rankView, START_RATING } from './ladder.js';
 import { openStore } from './store.js';
 import { POLLS } from '../src/polls.js';
+import { newsFeed } from './news-feed.js';
 
 export const PROTOCOL = 2;
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -435,11 +436,85 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     return reply(200, { ...(await totals()), mine: msg.choice });
   }
 
+
+  // ---- Website API (comic-arena.net's Shattered Realms pages). Signing in here hands out a token
+  // like the game's own sign-in, but never touches a game connection: a player in a match on one
+  // device can check their stats on the site without being thrown out. Plain-text JSON bodies
+  // (no preflight); tokens travel in the body, never in cookies, so allowing any origin is safe.
+  //   GET  /api/news          patch notes, factions and the current poll
+  //   GET  /api/leaderboard   the top 50 of the ranked ladder
+  //   POST /api/register      { name, password }  → { token, you }
+  //   POST /api/login         { name, password }  → { token, you }
+  //   POST /api/me            { token }           → { you }
+  //   POST /api/logout        { token }           → { ok }
+  async function onApi(req, res, url) {
+    const head = { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS',
+      'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' };
+    const reply = (code, body, extra = {}) => { res.writeHead(code, { ...head, ...extra }); res.end(JSON.stringify(body)); };
+    if (req.method === 'OPTIONS') { res.writeHead(204, head); return res.end(); }
+    const route = url.pathname.slice('/api/'.length);
+    if (req.method === 'GET') {
+      if (route === 'news') {
+        const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim() || 'http';
+        return reply(200, newsFeed(`${proto}://${req.headers.host}`), { 'cache-control': 'public, max-age=300' });
+      }
+      if (route === 'leaderboard') {
+        const rows = await store.top(50);
+        return reply(200, { rows: rows.map((a, i) => ({ place: i + 1, name: a.name, ...rankView(a.ladder), wins: a.rankedWins, losses: a.rankedLosses })) },
+          { 'cache-control': 'public, max-age=60' });
+      }
+      return reply(404, { error: 'Not found' });
+    }
+    if (req.method !== 'POST') return reply(405, { error: 'GET or POST' });
+    let body = '';
+    for await (const chunk of req) { body += chunk; if (body.length > 4000) return reply(413, { error: 'Too big' }); }
+    let msg;
+    try { msg = JSON.parse(body || '{}'); } catch { return reply(400, { error: 'Bad request' }); }
+    const ip = String(req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
+    const accountOf = async (token) => {
+      const tok = typeof token === 'string' ? await store.getToken(token) : null;
+      return tok && tok.expires > Date.now() ? store.get(tok.key) : null;
+    };
+    if (route === 'register') {
+      const name = String(msg.name ?? '').trim();
+      const password = String(msg.password ?? '');
+      if (!NAME_RE.test(name)) return reply(400, { error: 'Names are 3-16 letters, numbers or _.' });
+      if (password.length < 8 || password.length > 128) return reply(400, { error: 'Passwords need at least 8 characters.' });
+      if (tooManyTries(ip)) return reply(429, { error: 'Too many tries. Wait a few minutes and try again.' });
+      const salt = crypto.randomBytes(16).toString('hex');
+      const acc = { key: name.toLowerCase(), name, salt, hash: await hashPassword(password, salt), created: Date.now(),
+        wins: 0, losses: 0, rankedWins: 0, rankedLosses: 0, rating: START_RATING, ladder: freshLadder() };
+      if (!(await store.create(acc))) return reply(409, { error: 'That name is taken. Try another.' });
+      log(`new account ${name} (website)`);
+      return reply(200, { token: await newToken(acc.key), you: await youOf(acc) });
+    }
+    if (route === 'login') {
+      if (tooManyTries(ip)) return reply(429, { error: 'Too many tries. Wait a few minutes and try again.' });
+      const acc = await store.get(String(msg.name ?? '').trim().toLowerCase());
+      if (!(await passwordOk(acc, msg.password))) return reply(401, { error: 'Wrong name or password.' });
+      return reply(200, { token: await newToken(acc.key), you: await youOf(acc) });
+    }
+    if (route === 'me') {
+      const acc = await accountOf(msg.token);
+      if (!acc) return reply(401, { error: 'Please sign in again.', expired: true });
+      return reply(200, { you: await youOf(acc) });
+    }
+    if (route === 'logout') {
+      if (typeof msg.token === 'string') await store.removeToken(msg.token);
+      return reply(200, { ok: true });
+    }
+    return reply(404, { error: 'Not found' });
+  }
+
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     if (url.pathname === '/health') { res.writeHead(200, { 'content-type': 'text/plain', 'access-control-allow-origin': '*' }); return res.end('ok'); }
     if (url.pathname.startsWith('/poll/')) {
       onPoll(req, res, url).catch((e) => { log(`poll error: ${e.message}`); if (!res.headersSent) { res.writeHead(500, { 'access-control-allow-origin': '*' }); } res.end(); });
+      return;
+    }
+    if (url.pathname.startsWith('/api/')) {
+      onApi(req, res, url).catch((e) => { log(`api error: ${e.message}`); if (!res.headersSent) { res.writeHead(500, { 'access-control-allow-origin': '*' }); } res.end(); });
       return;
     }
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
