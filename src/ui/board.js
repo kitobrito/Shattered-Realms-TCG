@@ -95,6 +95,7 @@ const kwIcon = (k, title) => `<img class="kw-ico" src="art/icons/${k}.png" alt="
 const STATUS_DEFS = [
   { k: 'frozen', label: 'Frozen', ico: '❄', test: (m) => hasKeyword(m, 'Frozen'), tip: "Frozen: can't attack until it thaws" },
   { k: 'burning', label: 'Burn', ico: '🔥', test: (m) => m.burn > 0, n: (m) => m.burn, tip: (m) => `Burning: takes ${m.burn} damage at the end of its enemy's turn` },
+  { k: 'bleed', label: 'Bleed', ico: '🩸', test: (m) => m.bleed > 0, n: (m) => m.bleed, tip: (m) => `Bleed ${m.bleed}: takes ${m.bleed} damage at the end of its enemy's turn; Vampire cards that hit it heal half the damage` },
   { k: 'holyflame', label: 'Holy', ico: '✨', test: (m) => m.holyFlame > 0, n: (m) => m.holyFlame, tip: (m) => `Holy Flame ${m.holyFlame}: takes ${m.holyFlame} damage at the end of its enemy's turn (double if Dark), can't be healed, and is Reduced to Ash if it dies` },
   { k: 'acidhide', label: 'Acid Hide', ico: '🧪', test: (m) => hasKeyword(m, 'Acid Hide'), tip: 'Acid Hide: a minion that fights it is Corroded by 1; a Hero that does loses its Weapon (or 2 Armor)' },
   { k: 'regen', label: 'Regen', ico: '💚', test: (m) => (m.regen ?? getCard(m.cardId).regenerate ?? 0) > 0, n: (m) => m.regen ?? getCard(m.cardId).regenerate, tip: (m) => `Regenerate ${m.regen ?? getCard(m.cardId).regenerate}: heals that much at the start of its turn` },
@@ -244,7 +245,7 @@ function fusionHTML(pl, legal, mine) {
   const usable = mine && legal.some((a) => a.type === 'heroSpell' && a.card === card.id);
   const art = artOf(card);
   const pips = [0, 1, 2].map((i) => `<i class="${i < pl.fusion.charge ? 'on' : ''}"></i>`).join('');
-  return `<button class="hero-spell fusion-spell ${ready ? 'ready' : ''} ${usable ? 'usable' : ''}" data-hs="${card.id}" data-preview="${card.id}" ${usable ? '' : 'disabled'}
+  return `<button class="hero-spell fusion-spell ${ready ? 'ready' : ''} ${usable ? 'usable' : ''}" data-hs="${card.id}" data-preview="${card.id}" ${usable ? '' : 'aria-disabled="true"'}
       title="Fusion: ${esc(card.name)} (${pl.fusion.charge}/3 charge)">
       <span class="fusion-ring"></span>
       <span class="hs-face front fusion-face">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span>
@@ -258,7 +259,7 @@ function heroSpellsHTML(pl, legal, mine, s = null) {
     const card = getCard(hs.cardId);
     const usable = mine && legal.some((a) => a.type === 'heroSpell' && a.card === hs.cardId);
     const art = artOf(card);
-    return `<button class="hero-spell ${usable ? 'usable' : ''} ${hs.uses ? 'used' : ''} ${hs.cooldown > 0 ? 'cooling' : ''}" data-hs="${hs.cardId}" data-preview="${card.id}" ${usable ? '' : 'disabled'}>
+    return `<button class="hero-spell ${usable ? 'usable' : ''} ${hs.uses ? 'used' : ''} ${hs.cooldown > 0 ? 'cooling' : ''}" data-hs="${hs.cardId}" data-preview="${card.id}" ${usable ? '' : 'aria-disabled="true"'}>
       ${hs.cooldown > 0 ? `<span class="cooldown-badge" title="Ready in ${hs.cooldown} turn${hs.cooldown === 1 ? '' : 's'}">⏳${hs.cooldown}</span>` : ''}
       <span class="hs-flip"><span class="hs-face front">${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art}</span>`}</span><span class="hs-face back"></span></span>
       <b class="hs-cost ${s && !card.costsAllMana && heroSpellCost(s, card) > card.cost ? 'pricier' : ''}">${s ? heroSpellCost(s, card, pl) : card.cost}</b>
@@ -336,6 +337,19 @@ function spellbookHTML(pl) {
   return `<span class="hero-book" style="--fill:${(b.pages / SPELLBOOK_PAGES) * 100}%" title="Spellbook: ${b.pages}/${SPELLBOOK_PAGES} pages${b.pages >= SPELLBOOK_CARRY ? ' (Wand enchantments carry over)' : ''}">📖<b>${b.pages}</b></span>`;
 }
 
+// A passive Hero Spell with no badge of its own (Sharks' Blood in the Water, Monster Hunter's Dual-Wield):
+// a small round badge with its art, so it can be hovered or held to read like any card.
+const OWN_BADGE = new Set(['extinction_cycle', 'the_great_freeze', 'hive_mind']);
+function passiveBadgesHTML(pl) {
+  return (pl.passives ?? []).filter((id) => !OWN_BADGE.has(id)).map((id) => {
+    const card = getCard(id);
+    if (!card) return '';
+    const art = artOf(card);
+    return `<div class="passive-badge" title="${esc(card.name)} (passive Hero Spell): hover or hold to read" data-preview="${id}">
+      ${art ? `<img src="${art}" alt="" draggable="false">` : `<span>${card.art ?? '✦'}</span>`}<b>PASSIVE</b></div>`;
+  }).join('');
+}
+
 function extinctionHTML(pl, s) {
   const ext = pl.extinction;
   if (!ext) return '';
@@ -401,6 +415,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         ${burnHTML(h)}
         ${spellbookHTML(pl)}
         ${pl.storm > 0 ? `<span class="hero-storm" title="Endless Storm: at the end of each of your turns, Chain ${pl.storm} at a random enemy">⛈${pl.storm}</span>` : ''}
+        ${h.bleed > 0 ? `<span class="hero-bleed" title="Bleed ${h.bleed}: takes ${h.bleed} damage at the end of the enemy's turn; Vampire cards that hit this Hero heal half the damage">🩸${h.bleed}</span>` : ''}
         ${h.holyFlame > 0 ? `<span class="hero-holy" title="Holy Flame ${h.holyFlame}: takes ${h.holyFlame} damage at the end of the enemy's turn and can't be healed">✨${h.holyFlame}</span>` : ''}
         ${radHTML(h)}${radHitHTML(h)}
         ${cracksSVG(crackStage(h))}
@@ -410,7 +425,7 @@ function heroZoneHTML(pl, s, legal, mine, cls, shattered) {
         <span class="hp ${h.health < h.maxHealth ? 'down' : ''}">${h.health}</span>
         ${h.armor ? `<span class="armor">${h.armor}</span>` : ''}
       </div>
-      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${extinctionHTML(pl, s)}${freezeHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
+      <div class="hero-powers">${heroSpellsHTML(pl, legal, mine, s)}${passiveBadgesHTML(pl)}${extinctionHTML(pl, s)}${freezeHTML(pl, s)}${hiveHTML(pl)}${corpseHTML(pl)}${pl.fusion ? fusionHTML(pl, legal, mine) : ''}${beyondHTML(pl, s)}</div>
     </div>`;
 }
 

@@ -5,6 +5,8 @@
 //                       or on a server with a persistent disk; on a host without one (Render's
 //                       free web services) the file is wiped on every restart.
 //
+// Votes (src/polls.js): one choice per voter per poll; voting again replaces it.
+//
 // An account: { key (lowercase name), name, salt, hash, created, wins, losses,
 //               rankedWins, rankedLosses, rating, ladder }.
 
@@ -30,6 +32,7 @@ async function postgresStore(url) {
   await pool.query('CREATE TABLE IF NOT EXISTS tokens (token text PRIMARY KEY, key text NOT NULL, expires bigint NOT NULL)');
   await pool.query('CREATE INDEX IF NOT EXISTS tokens_key ON tokens (key)');
   await pool.query('DELETE FROM tokens WHERE expires < $1', [Date.now()]);
+  await pool.query('CREATE TABLE IF NOT EXISTS votes (poll text NOT NULL, voter text NOT NULL, choice text NOT NULL, at bigint NOT NULL, PRIMARY KEY (poll, voter))');
   const row = (a) => [a.key, JSON.stringify(a), ladderScore(a.ladder), rankedGames(a)];
   return {
     kind: 'postgres',
@@ -67,6 +70,18 @@ async function postgresStore(url) {
     async removeToken(token) {
       await pool.query('DELETE FROM tokens WHERE token = $1', [token]);
     },
+    async vote(poll, voter, choice) {
+      await pool.query('INSERT INTO votes (poll, voter, choice, at) VALUES ($1, $2, $3, $4) ON CONFLICT (poll, voter) DO UPDATE SET choice = $3, at = $4',
+        [poll, voter, choice, Date.now()]);
+    },
+    async tally(poll) {
+      const r = await pool.query('SELECT choice, count(*)::int AS n FROM votes WHERE poll = $1 GROUP BY choice', [poll]);
+      return Object.fromEntries(r.rows.map((x) => [x.choice, x.n]));
+    },
+    async myVote(poll, voter) {
+      const r = await pool.query('SELECT choice FROM votes WHERE poll = $1 AND voter = $2', [poll, voter]);
+      return r.rows[0]?.choice ?? null;
+    },
     close: () => { if (!pool.ended) return pool.end(); },
   };
 }
@@ -76,7 +91,7 @@ async function postgresStore(url) {
 function fileStore(dir) {
   fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, 'accounts.json');
-  let data = { accounts: {}, tokens: {} };
+  let data = { accounts: {}, tokens: {}, votes: {} };
   try { data = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { /* first run */ }
   let timer = null;
   const flush = () => {
@@ -105,6 +120,13 @@ function fileStore(dir) {
     async addToken(token, key, expires) { data.tokens[token] = { key, expires }; save(); },
     async getToken(token) { return data.tokens[token] ?? null; },
     async removeToken(token) { delete data.tokens[token]; save(); },
+    async vote(poll, voter, choice) { ((data.votes ??= {})[poll] ??= {})[voter] = choice; save(); },
+    async tally(poll) {
+      const out = {};
+      for (const c of Object.values(data.votes?.[poll] ?? {})) out[c] = (out[c] ?? 0) + 1;
+      return out;
+    },
+    async myVote(poll, voter) { return data.votes?.[poll]?.[voter] ?? null; },
     close: () => { if (timer) { clearTimeout(timer); flush(); } },
   };
 }

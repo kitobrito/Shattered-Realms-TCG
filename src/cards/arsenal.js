@@ -3,8 +3,11 @@
 // Weapon triggers act as the Hero ('self' is the Hero); they leave with the weapon (dropHeroWeapon).
 const SET = 'Arsenal';
 const eq = (id, name, attack, durability, extra = {}) => ({ op: 'equipHeroWeapon', cardId: id, name, attack, durability, ...extra });
+// Every Arsenal weapon is a Legendary Weapon (one per deck) in its realm's own legendary weapon frame.
+const FRAME = { Aliens: 'aliens', Demons: 'demons', Acidic: 'acidic', Divine: 'divine', Vampires: 'vampires' };
 const W = (faction, id, name, art, cost, attack, durability, text, weapon = {}) =>
-  ({ faction, type: 'spell', id, name, art, cost, attack, durability, heroWeapon: true, extra: true, set: SET, text, effects: [eq(id, name, attack, durability, weapon)] });
+  ({ faction, type: 'spell', id, name, art, cost, attack, durability, heroWeapon: true, extra: true, set: SET, legendary: true,
+    frameArt: `art/frames/legendary-weapon-${FRAME[faction]}.png`, text, effects: [eq(id, name, attack, durability, weapon)] });
 // The weapon's mark lands as the Hero swings (before the hit), on a minion or the enemy Hero.
 const ON_HIT = (effects, target = 'enemyCharacter') => [{ on: 'attackDeclared', filter: { source: 'self', target }, effects }];
 
@@ -19,5 +22,7 @@ export const ARSENAL_CARDS = [
     { heroShield: true }),
   W('Divine', 'holy_flail_of_righteous_fury', 'Holy Flail of Righteous Fury', '⛓️', 3, 1, 3, 'Whenever your Hero attacks with it, give the target Holy Flame 2.',
     { triggers: ON_HIT([{ op: 'holyFlame', target: 'eventTarget', amount: 2 }]) }),
-  W('Vampires', 'bloodrippers_talon', 'Bloodripper\'s Talon', '🩸', 1, 1, 4, ''),
+  W('Vampires', 'bloodrippers_talon', 'Bloodripper\'s Talon', '🩸', 1, 1, 6,
+    'Twin Strike. Each hit gives the target Bleed 1 (it stacks). Your Vampire cards heal half the damage they deal to Bleeding enemies.',
+    { keywords: ['Twin Strike'], triggers: ON_HIT([{ op: 'bleed', target: 'eventTarget', amount: 1 }]) }),
 ];

@@ -284,6 +284,22 @@ export function applyBurn(state, c, amount) {
   emit(state, { type: 'burnApplied', target: c.uid, player: c.controller ?? c.owner, amount: c.burn });
 }
 
+// Bleed (Bloodripper's Talon): a wound that stacks. At the end of the bleeder's turn the character takes
+// its Bleed value as damage. While it bleeds, Vampire cards that damage it heal half that damage (rounded
+// up; however much it bleeds).
+export function applyBleed(state, c, amount, by) {
+  if (!c || amount <= 0 || c.health <= 0 || c.destroyed) return;
+  c.bleed = (c.bleed ?? 0) + amount;
+  c.bleedBy = by;
+  log(state, `🩸 ${nameOf(state, c)} is bleeding (Bleed ${c.bleed}).`);
+}
+// A Vampire card doing the damage: a Vampire minion, or a Hero swinging a Vampire weapon.
+function vampireSource(c) {
+  if (!c) return false;
+  if (c.kind === 'minion') return getCard(c.cardId)?.faction === 'Vampires';
+  return !!c.weapon && getCard(c.weapon.cardId)?.faction === 'Vampires';
+}
+
 // Holy Flame (Divine, The Holy Pyre): a lasting holy fire. At the end of the burner's turn it deals
 // its value as damage (double to Dark / Undead), then burns down by 1; a burning character can't be healed, and a
 // minion that dies while burning is Reduced to Ash (removed: no Graveyard, Exit or Reborn).
@@ -380,7 +396,7 @@ export const isConductive = (m) => !!m?.conductive;
 export function corrode(state, m, amount, by = null) {
   if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed || amount <= 0) return 0;
   if (m.acidCoated) { amount += 1; m.acidCoated = false; }
-  // Meltdown: Corrosion on a minion already at 0 Attack eats something else instead.
+  // Corrosion on a minion already at 0 Attack still adds up (6 or more Dissolves it).
   if (effectiveAttack(m) <= 0) {
     m.corrosion = (m.corrosion ?? 0) + amount;
     log(state, `🧪 ${nameOf(state, m)} corrodes further (Corrosion ${m.corrosion}).`);
@@ -401,11 +417,11 @@ export function corrode(state, m, amount, by = null) {
   return lost;
 }
 
-// Meltdown (Acidic): a minion at 0 Attack carrying 6 or more Corrosion is Dissolved.
+// Acidic: a minion at 0 Attack carrying 6 or more Corrosion is Dissolved (by whoever corroded it).
 export const MELTDOWN_CORROSION = 6;
 function meltdown(state, m, by) {
   if (effectiveAttack(m) > 0 || (m.corrosion ?? 0) < MELTDOWN_CORROSION) return;
-  log(state, `🧪 Meltdown: ${nameOf(state, m)} has corroded away completely.`);
+  log(state, `🧪 ${nameOf(state, m)} has corroded away completely (6+ Corrosion at 0 Attack).`);
   emit(state, { type: 'meltdown', target: m.uid, player: m.controller, by });
   dissolve(state, m, by);
 }
@@ -497,7 +513,8 @@ export function isBuffed(m) {
 
 // Dissolve: destroy a minion and distill its Attack, Health or keywords into a spell
 // in the dissolver's hand (see distill).
-export function dissolve(state, m, by = null) {
+// opts.whole (Shield-Eater): the Essence holds all of it, Attack, Health and keywords, not one random piece.
+export function dissolve(state, m, by = null, opts = {}) {
   if (!m || m.kind !== 'minion' || m.health <= 0 || m.destroyed) return null;
   // One random piece of it: its printed Attack, its printed Health, or its keywords.
   const card = getCard(m.cardId);
@@ -508,7 +525,8 @@ export function dissolve(state, m, by = null) {
     ...(keywords.length ? [{ attack: 0, health: 0, keywords }] : []),
   ];
   const taken = { name: nameOf(state, m), cardId: m.cardId,
-    ...(options.length ? options[randomInt(state, options.length)] : { attack: 0, health: 0, keywords: [] }) };
+    ...(opts.whole ? { attack: Math.max(0, card.attack ?? 0), health: Math.max(0, card.health ?? 0), keywords }
+      : options.length ? options[randomInt(state, options.length)] : { attack: 0, health: 0, keywords: [] }) };
   m.destroyed = true;
   if (by != null) { m.lastDamagedByController = by; }
   log(state, `🧪 ${taken.name} dissolves.`);
@@ -593,6 +611,12 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
   const who = src ? nameOf(state, src) : gone ? `${getCard(gone.cardId).name}'s Exit` : opts.burn ? '🔥 Burn' : 'Effect';
   log(state, `${who} deals ${amount} to ${nameOf(state, t)}.`);
   emit(state, { type: 'damageDealt', source: sourceId, target: t.uid, player: t.controller, amount });
+  // Bleed: a Vampire card that wounds a bleeding enemy drinks half of it back.
+  if ((t.bleed ?? 0) > 0 && src && src.controller !== t.controller && vampireSource(src)) {
+    const back = Math.ceil(amount / 2);
+    log(state, `🩸 ${nameOf(state, src)} drinks from the bleeding ${nameOf(state, t)}.`);
+    heal(state, src.uid, back, { source: src.uid });
+  }
 
   if ((src && hasKeyword(src, 'Lifesteal')) || opts.lifesteal) {
     if (srcController != null) {

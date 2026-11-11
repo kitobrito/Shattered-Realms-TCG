@@ -1,9 +1,10 @@
 // Rules tests for the Arsenal weapons (Aliens, Demons, Acidic, Divine, Vampires) and the Aliens balance pass.
 //   node tools/test-arsenal.mjs
 
+import { existsSync } from 'node:fs';
 import { buildDeck } from '../src/cards/index.js';
 import { getCard } from '../src/engine/registry.js';
-import { addToHand, dealDamage, radiationOf, summonMinion } from '../src/engine/core.js';
+import { addToHand, dealDamage, hasKeyword, radiationOf, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame } from '../src/engine/engine.js';
 
 let s, failures = 0, passed = 0;
@@ -91,9 +92,47 @@ test('Holy Flail of Righteous Fury: 1/3; gives the target Holy Flame 2', 'Divine
   if ((m.holyFlame ?? 0) !== 2) return `holy flame ${m.holyFlame}`;
 });
 
-test("Bloodripper's Talon: a 1/4 weapon for 1", 'Vampires', () => {
+test("Bloodripper's Talon: 1/6 with Twin Strike; each hit adds Bleed 1 (it stacks)", 'Vampires', () => {
   play('bloodrippers_talon');
-  if (hero(0).weapon?.attack !== 1 || hero(0).weapon.durability !== 4 || getCard('bloodrippers_talon').cost !== 1) return 'not a 1-cost 1/4';
+  const w = hero(0).weapon;
+  if (w?.attack !== 1 || w.durability !== 6 || getCard('bloodrippers_talon').cost !== 1) return `weapon ${JSON.stringify(w)}`;
+  if (!hasKeyword(hero(0), 'Twin Strike')) return 'the Hero has no Twin Strike';
+  const m = dummy(0, 30);
+  attack(m.uid);
+  if (m.bleed !== 1) return `after one hit Bleed ${m.bleed}`;
+  hero(0).attacksThisTurn = 1; // Twin Strike: a second swing this turn
+  attack(m.uid);
+  if (m.bleed !== 2) return `after two hits Bleed ${m.bleed}`;
+});
+
+test('Bleed: at the end of the bleeder\'s turn the target takes its Bleed as damage, and it stays', 'Vampires', () => {
+  const m = dummy(0, 30);
+  m.bleed = 3; m.bleedBy = 0;
+  const hp = m.health;
+  applyAction(s, { type: 'endTurn', player: 0 }); settle();
+  if (m.health !== hp - 3) return `health ${hp} -> ${m.health}`;
+  if (m.bleed !== 3) return `Bleed fell to ${m.bleed}`;
+});
+
+test('Bleed: a Vampire minion that hits a Bleeding enemy heals half the damage (rounded up); others don\'t', 'Vampires', () => {
+  const foe = dummy(0, 30); foe.bleed = 1;
+  const vamp = summonMinion(s, 0, 'blood_drinker'); vamp.health = 1; vamp.maxHealth = 10; vamp.sick = false; vamp.attack = 3;
+  dealDamage(s, vamp.uid, foe.uid, 3);
+  if (vamp.health !== 3) return `Vampire minion health ${vamp.health} (want 1 + ceil(3/2) = 3)`;
+  const plain = dummy(0, 30); // not bleeding
+  dealDamage(s, vamp.uid, plain.uid, 3);
+  if (vamp.health !== 3) return 'healed from a target that wasn\'t bleeding';
+  const bot = summonMinion(s, 0, 'scrapper_spider'); bot.health = 1; bot.maxHealth = 10;
+  dealDamage(s, bot.uid, foe.uid, 2);
+  if (bot.health !== 1) return 'a non-Vampire minion healed';
+});
+
+test("Bleed: the Hero swinging Bloodripper's Talon heals from a Bleeding target", 'Vampires', () => {
+  play('bloodrippers_talon');
+  hero(0).health = 20;
+  const m = dummy(0, 30); m.bleed = 1;
+  attack(m.uid);
+  if (hero(0).health !== 21) return `Hero health ${hero(0).health} (want 20 + ceil(1/2) = 21)`;
 });
 
 test('A weapon effect leaves with the weapon (no Burn from a bare-handed Hero afterwards)', 'Demons', () => {
@@ -106,10 +145,11 @@ test('A weapon effect leaves with the weapon (no Burn from a bare-handed Hero af
   if ((b.burn ?? 0) > 0) return 'the broken Pitchfork still burns';
 });
 
-test('The Arsenal weapons are unlockable (extra) cards in their own set', 'Aliens', () => {
+test('The Arsenal weapons are unlockable Legendary Weapons in their realm\'s legendary weapon frame', 'Aliens', () => {
   for (const id of ['ray_gun', 'satans_infernal_pitchfork', 'liquifier', 'archangels_divine_shield', 'holy_flail_of_righteous_fury', 'bloodrippers_talon']) {
     const c = getCard(id);
-    if (!c.extra || c.set !== 'Arsenal' || !c.heroWeapon) return `${id}: ${JSON.stringify({ extra: c.extra, set: c.set })}`;
+    if (!c.extra || c.set !== 'Arsenal' || !c.heroWeapon || !c.legendary) return `${id}: ${JSON.stringify({ extra: c.extra, set: c.set, legendary: c.legendary })}`;
+    if (!c.frameArt || !existsSync(new URL(`../${c.frameArt}`, import.meta.url))) return `${id}: frame ${c.frameArt}`;
   }
 });
 
@@ -125,6 +165,52 @@ test('Aliens balance pass: Probe Drone 2/3, Gene Mutation +1/+1, Replication cop
   if (copies.length !== 2) return `${copies.length} copies`;
   const deck = buildDeck(['Aliens', 'Robots']);
   if (!deck.includes('grey_scout') || !deck.includes('gene_thief_operative') || deck.includes('terraform') || deck.includes('experimental_containment')) return 'pair deck swap';
+});
+
+test('Shield-Eater (Legendary): Dissolves an enemy minion; its Essence holds all of it (Attack, Health and keywords)', 'Acidic', () => {
+  const c = getCard('shield_eater');
+  if (!c.legendary || c.frameArt !== 'art/frames/legendary-weapon-acidic.png') return 'not legendary in the Acidic frame';
+  const m = summonMinion(s, 1, 'nightwatch_recruit'); const card = getCard('nightwatch_recruit');
+  m.keywords = ['Taunt'];
+  const before = s.players[0].hand.length;
+  play('shield_eater', m.uid);
+  const ess = s.players[0].hand.slice(before).map((h) => getCard(h.cardId)).find((x) => /^Essence of/.test(x?.name ?? ''));
+  if (!ess) return 'no Essence';
+  const fx = ess.effects[0];
+  if (fx.attack !== card.attack || fx.health !== card.health || !(fx.keywords ?? []).includes('Taunt')) return `Essence gives ${JSON.stringify(fx)}`;
+  // Strip the Plating still gives one random piece.
+  const m2 = summonMinion(s, 1, 'nightwatch_recruit'); m2.keywords = ['Taunt'];
+  s.players[0].mana.current = 10;
+  const b2 = s.players[0].hand.length;
+  play('strip_the_plating', m2.uid);
+  const e2 = s.players[0].hand.slice(b2).map((h) => getCard(h.cardId)).find((x) => /^Essence of/.test(x?.name ?? ''));
+  const pieces = ['attack', 'health', 'keywords'].filter((k) => e2.effects[0][k] != null);
+  if (pieces.length !== 1) return `Strip the Plating gave ${pieces.join('+')}`;
+});
+
+test("Caustic Reservoir spells out the rule: a minion at 0 Attack with 6 Corrosion is Dissolved", 'Acidic', () => {
+  if (!/A minion at 0 Attack with 6 or more Corrosion on it is Dissolved/.test(getCard('caustic_reservoir').text)) return 'text';
+  const m = summonMinion(s, 1, 'nightwatch_recruit'); m.attack = 1; m.corrosion = 5;
+  play('splash_of_acid', m.uid);
+  if (!m.destroyed && m.health > 0) return `still alive (attack ${m.attack}, corrosion ${m.corrosion})`;
+});
+
+test('The Great Dissolution: Taunt; an enemy minion that attacks it gets Corrosion 2 before the hit (and so does one it attacks)', 'Acidic', () => {
+  const g = summonMinion(s, 0, 'the_great_dissolution'); g.sick = false;
+  if (!hasKeyword(g, 'Taunt')) return 'no Taunt';
+  // The enemy attacks it: 5 Attack corroded to 3 before damage, so it takes 3.
+  s.activePlayer = 1;
+  const foe = summonMinion(s, 1, 'nightwatch_recruit'); foe.keywords = []; foe.attack = 5; foe.health = foe.maxHealth = 20; foe.sick = false;
+  const hp = g.health;
+  applyAction(s, { type: 'attack', player: 1, attacker: foe.uid, defender: g.uid }); settle();
+  if (foe.attack !== 3) return `attacker Attack ${foe.attack} (want 5 - 2 = 3)`;
+  if (g.health !== hp - 3) return `took ${hp - g.health} (want 3)`;
+  // It attacks an enemy: the defender is corroded first, so it hits back for 2 less.
+  s.activePlayer = 0;
+  const d = summonMinion(s, 1, 'nightwatch_recruit'); d.keywords = []; d.attack = 4; d.health = d.maxHealth = 20;
+  const hp2 = g.health; g.attacksThisTurn = 0;
+  applyAction(s, { type: 'attack', player: 0, attacker: g.uid, defender: d.uid }); settle();
+  if (d.attack !== 2 || g.health !== hp2 - 2) return `defender Attack ${d.attack}, hit back for ${hp2 - g.health} (want 2 and 2)`;
 });
 
 console.log(`\n${passed} passed, ${failures} failed`);

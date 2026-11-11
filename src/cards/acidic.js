@@ -23,7 +23,7 @@ export const ACIDIC_CARDS = [
   // ---- Hero Spell ----
   {
     ...S, id: 'caustic_reservoir', name: 'Caustic Reservoir', art: '⚗️', heroSpell: true, cost: 2, corrodes: true,
-    text: 'Apply Corrosion 1 to an enemy minion.',
+    text: 'Apply Corrosion 1 to an enemy minion. A minion at 0 Attack with 6 or more Corrosion on it is Dissolved.',
     target: ENEMY_MINION,
     effects: [corrode('chosen', 1)],
   },
@@ -110,9 +110,14 @@ export const ACIDIC_CARDS = [
     triggers: [{ on: 'battlecry', effects: [corrode({ minions: { side: 'enemy', minAttack: 4 } }, 3)] }],
   },
   {
-    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 8,
-    text: 'Arrival: Apply Corrosion 2 to all enemy minions. Then deal 3 damage to each enemy minion with 0 Attack.',
-    triggers: [{ on: 'battlecry', effects: [corrode(ENEMY_MINIONS, 2), { op: 'damage', target: { minions: { side: 'enemy', maxAttack: 0 } }, amount: 3 }] }],
+    // Any enemy minion that would hit it in a fight (attacking it, or hitting back when it attacks) is
+    // corroded first, as the attack is declared, so the Corrosion lands before damage is worked out.
+    ...K, id: 'the_great_dissolution', name: 'The Great Dissolution', art: '🌋', cost: 10, attack: 6, health: 8, keywords: ['Taunt'],
+    text: 'Taunt. Whenever this fights an enemy minion, give that minion Corrosion 2 first.',
+    triggers: [
+      { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'self' }, effects: [corrode('eventSource', 2)] },
+      { on: 'attackDeclared', filter: { source: 'self', target: 'enemyMinion' }, effects: [corrode('eventTarget', 2)] },
+    ],
   },
 
   // ---- Spells (6) ----
@@ -181,10 +186,11 @@ export const ACIDIC_CARDS = [
     effects: [corrode('eventSource', 2)],
   },
   {
-    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 8,
-    text: 'Dissolve an enemy minion.',
+    // Legendary: unlike Strip the Plating's one random piece, its Essence holds the whole minion.
+    ...S, id: 'shield_eater', name: 'Shield-Eater', art: '🛡️', cost: 8, legendary: true, frameArt: 'art/frames/legendary-weapon-acidic.png',
+    text: 'Dissolve an enemy minion and gain a card that gives its Attack, Health and keywords to a friendly minion.',
     target: ENEMY_MINION,
-    effects: [dissolve('chosen')],
+    effects: [{ op: 'dissolve', target: 'chosen', whole: true }],
   },
   {
     ...S, id: 'reactive_spill', name: 'Reactive Spill', art: '🧴', cost: 3, corrodes: true,

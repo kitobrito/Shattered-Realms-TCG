@@ -19,6 +19,7 @@ import { checkDeck } from '../src/cards/deck-check.js';
 import { stateHash } from '../src/ui/net.js';
 import { applyResult, freshLadder, newRating, rankView, START_RATING } from './ladder.js';
 import { openStore } from './store.js';
+import { POLLS } from '../src/polls.js';
 
 export const PROTOCOL = 2;
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -393,9 +394,54 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
     '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
     '.gif': 'image/gif', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.ico': 'image/x-icon' };
+  // ---- Polls (src/polls.js): GET /poll/<id> for the totals, POST /poll/<id> { choice, voter, token } to vote.
+  // A signed-in player votes as their account; anyone else as their device id. Voting again replaces the
+  // old vote. Plain-text JSON bodies, so a page on another site (itch.io) can call it without a preflight.
+  const pollHits = new Map(); // ip -> recent vote times (at most 30 an hour)
+  async function onPoll(req, res, url) {
+    const head = { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS',
+      'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' };
+    const reply = (code, body) => { res.writeHead(code, head); res.end(JSON.stringify(body)); };
+    if (req.method === 'OPTIONS') { res.writeHead(204, head); return res.end(); }
+    const id = decodeURIComponent(url.pathname.slice('/poll/'.length));
+    const poll = POLLS[id];
+    if (!poll) return reply(404, { error: 'No such poll' });
+    const totals = async () => {
+      const counts = await store.tally(id);
+      const valid = Object.fromEntries(poll.options.map((o) => [o.id, counts[o.id] ?? 0]));
+      return { poll: id, counts: valid, total: Object.values(valid).reduce((a, b) => a + b, 0) };
+    };
+    if (req.method === 'GET') return reply(200, await totals());
+    if (req.method !== 'POST') return reply(405, { error: 'GET or POST' });
+    let body = '';
+    for await (const chunk of req) { body += chunk; if (body.length > 2000) return reply(413, { error: 'Too big' }); }
+    let msg;
+    try { msg = JSON.parse(body); } catch { return reply(400, { error: 'Bad request' }); }
+    if (!poll.options.some((o) => o.id === msg.choice)) return reply(400, { error: 'Not an option' });
+    const ip = String(req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
+    const now = Date.now();
+    const hits = (pollHits.get(ip) ?? []).filter((t) => now - t < 3600e3);
+    if (hits.length >= 30) return reply(429, { error: 'Too many votes from here; try again later' });
+    hits.push(now); pollHits.set(ip, hits);
+    let voter = null;
+    if (typeof msg.token === 'string') {
+      const tok = await store.getToken(msg.token);
+      if (tok && tok.expires > now) voter = `acct:${tok.key}`;
+    }
+    if (!voter && typeof msg.voter === 'string' && /^[a-z0-9-]{8,64}$/i.test(msg.voter)) voter = `dev:${msg.voter.toLowerCase()}`;
+    if (!voter) return reply(400, { error: 'No voter' });
+    await store.vote(id, voter, msg.choice);
+    log(`vote ${id}: ${msg.choice}`);
+    return reply(200, { ...(await totals()), mine: msg.choice });
+  }
+
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     if (url.pathname === '/health') { res.writeHead(200, { 'content-type': 'text/plain', 'access-control-allow-origin': '*' }); return res.end('ok'); }
+    if (url.pathname.startsWith('/poll/')) {
+      onPoll(req, res, url).catch((e) => { log(`poll error: ${e.message}`); if (!res.headersSent) { res.writeHead(500, { 'access-control-allow-origin': '*' }); } res.end(); });
+      return;
+    }
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
     let rel = decodeURIComponent(url.pathname).replace(/^\/+/, '') || 'index.html';
     if (!(rel === 'index.html' || rel.startsWith('src/') || rel.startsWith('art/'))) { res.writeHead(404); return res.end('Not found'); }

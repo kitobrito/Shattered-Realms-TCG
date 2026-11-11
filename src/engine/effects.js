@@ -43,7 +43,7 @@ import {
   hooks, log, loseHealth, loseKeyword, nameOf, opponentOf, pushFront, removeKeyword, summonMinion, createMinion,
   applyBurn, burnCards, hasTribe, isBurning, isDarkOrUndead,
   applyRadiation, clearRadiation, radiationOf, reduceHealthStat, markPrey, checkPrey, isShark,
-  corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, dropMinionRelic,
+  corrode, acidCoat, dissolve, removeTempBuffs, applyHolyFlame, applyBleed, dropMinionRelic,
   descentDepth, maxHand, sinkOneCircle,
   traceFx, gainVolts, isConductive,
 } from './core.js';
@@ -1496,6 +1496,11 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (c) => applyRadiation(state, c, e.amount, { turns: e.turns, by: ctx.controller }));
   },
 
+  // { target, amount } Bleed (Bloodripper's Talon): adds to the character's Bleed.
+  bleed(state, e, ctx) {
+    each(state, e.target, ctx, (c) => applyBleed(state, c, e.amount ?? 1, ctx.controller));
+  },
+
   // { target } — remove all Radiation (Radiation Surgeon).
   // { target } Cleanse: remove Burn, Radiation and harmful keywords (Frozen, Burned, Blind).
   cleanse(state, e, ctx) {
@@ -1503,6 +1508,7 @@ export const EFFECT_OPS = {
     each(state, e.target, ctx, (c) => {
       let any = false;
       if ((c.burn ?? 0) > 0) { c.burn = 0; c.burnLeft = 0; any = true; }
+      if ((c.bleed ?? 0) > 0) { c.bleed = 0; any = true; }
       if (radiationOf(c)) { clearRadiation(state, c); any = true; }
       for (const k of ['keywords', 'tempKeywords']) {
         if (Array.isArray(c[k]) && c[k].some((x) => BAD.includes(x))) { c[k] = c[k].filter((x) => !BAD.includes(x)); any = true; }
@@ -2290,7 +2296,7 @@ export const EFFECT_OPS = {
   },
   // { target } — Dissolve (core dissolve): destroy it, distilling it into a spell for you.
   dissolve(state, e, ctx) {
-    each(state, e.target, ctx, (c) => dissolve(state, c, ctx.controller));
+    each(state, e.target, ctx, (c) => dissolve(state, c, ctx.controller, { whole: !!e.whole }));
   },
   // { target } — Molecular Breakdown: its temporary buffs are removed.
   removeTempBuffs(state, e, ctx) {

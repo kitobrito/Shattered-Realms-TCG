@@ -162,7 +162,8 @@ button.ghost:hover { background: var(--panel); }
 }
 .overlay { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; z-index: 50; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px 36px; text-align: center; }
-.flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #000d; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; }
+/* The message box stays in the page after it fades: it must never catch a touch (it sits over the hand). */
+.flash { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #000d; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .flash.show { opacity: 1; }
 
 @media (max-width: 860px) {
@@ -181,7 +182,7 @@ button.ghost:hover { background: var(--panel); }
 .hero-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .hero-extras { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .hero-spell { font-size: 13px; padding: 6px 10px; background: #2d2140; border-color: #7b5fb0; }
-.hero-spell:hover:not(:disabled) { background: #3d2d58; }
+.hero-spell:hover:not([aria-disabled="true"]) { background: #3d2d58; }
 .hero-spell b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--mana); margin-left: 4px; font-size: 12px; }
 .hero-spell.selected { box-shadow: 0 0 0 2px var(--gold), 0 0 12px var(--gold); }
 .extinction { font-size: 12px; color: #ffb37a; border: 1px solid #7a4a2a; border-radius: 8px; padding: 4px 8px; background: #2a160c; }
@@ -229,7 +230,7 @@ button.ghost:hover { background: var(--panel); }
 .my-hand { min-height: 280px; align-items: flex-end; width: 100%; gap: 0; }
 .my-hand .card { margin: 0 0 0 var(--overlap, -12px); }
 .my-hand .card:first-child { margin-left: 0; }
-.my-hand .card:hover { z-index: 6; }
+body:not(.touch-ui) .my-hand .card:hover { z-index: 6; }
 .choice-row .card, .gallery-grid .card { margin: 0; }
 
 .minion { width: 108px; height: 132px; border-radius: 12px; place-items: start center; }
@@ -501,9 +502,9 @@ body.in-game { overflow: hidden; }
   background: #1b0f15; border: 3px solid #6a5434; cursor: pointer; box-shadow: 0 6px 14px #000a; }
 .hero-spell img, .hero-spell > span { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: grid; place-items: center; font-size: calc(var(--hero) * 0.3); }
 .hero-spell.usable { border-color: var(--good); box-shadow: 0 0 0 2px var(--good), 0 0 16px var(--good); }
-.hero-spell:disabled { opacity: 1; cursor: default; }
-.hero-spell:disabled img { filter: grayscale(0.7) brightness(0.6); }
-.hero-spell:hover:not(:disabled) { transform: scale(1.07); background: #1b0f15; }
+.hero-spell[aria-disabled="true"] { opacity: 1; cursor: default; }
+.hero-spell[aria-disabled="true"] img { filter: grayscale(0.7) brightness(0.6); }
+.hero-spell:hover:not([aria-disabled="true"]) { transform: scale(1.07); background: #1b0f15; }
 .hs-cost { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
   background: var(--mana); border: 2px solid #9fc1ff; font-family: var(--font-title); font-size: 14px; }
 .extinction-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
@@ -511,6 +512,13 @@ body.in-game { overflow: hidden; }
 .extinction-badge b { position: absolute; bottom: -6px; right: -6px; background: #ff7a3a; color: #1a0a04; border-radius: 50%; width: 22px; height: 22px;
   display: grid; place-items: center; font-family: var(--font-title); font-size: 13px; }
 .extinction-badge.soon { animation: pulse 0.8s infinite alternate; }
+/* A passive Hero Spell without its own badge (Sharks, Monster Hunter): its art in a ring, hover or hold to read. */
+.passive-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
+  overflow: visible; background: #1a1418; box-shadow: 0 0 0 2px #c9a35a, 0 4px 10px #000a; cursor: help; }
+.passive-badge img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.passive-badge > span { font-size: calc(var(--hero) * 0.24); }
+.passive-badge b { position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); padding: 1px 5px; border-radius: 6px; background: #2a2026;
+  border: 1px solid #c9a35a; color: #ffe2a0; font: 800 8px/1.2 var(--font-title, Georgia), serif; letter-spacing: 0.08em; white-space: nowrap; }
 .freeze-badge { position: relative; width: calc(var(--hero) * 0.5); height: calc(var(--hero) * 0.5); border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle, #2c5a78, #08182a); border: 3px solid #9fe0ff; font-size: calc(var(--hero) * 0.18); color: #e8f8ff; }
 .freeze-badge b { position: absolute; bottom: -6px; right: -6px; background: #9fe0ff; color: #08182a; border-radius: 50%; width: 22px; height: 22px;
@@ -530,7 +538,7 @@ body.in-game { overflow: hidden; }
 .arena .my-hand .card { width: var(--card-w); height: calc(var(--card-w) * 1.9); padding: 0 6px 6px; cursor: grab; }
 .arena .my-hand .card .name { font-size: calc(var(--card-w) * 0.085); }
 .arena .my-hand .card .text { font-size: calc(var(--card-w) * 0.08); }
-.arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -6%) rotate(0deg) scale(1.28); z-index: 200 !important; }
+body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -6%) rotate(0deg) scale(1.28); z-index: 200 !important; }
 .arena .my-hand .card.playable { box-shadow: 0 0 0 2px var(--good), 0 0 14px var(--good); }
 .arena .my-hand .card.drag-src { visibility: hidden; }
 .arena .opp-hand { position: absolute; left: 25cqw; right: 25cqw; top: 0; height: calc(var(--card-w) * 0.9); z-index: 5; }
@@ -1170,7 +1178,7 @@ body.in-game { overflow: hidden; }
 /* Hand: lower, so your hero frame stays visible (hover still lifts a card fully). */
 .arena.has-board .my-hand { left: 22cqw; right: 22cqw; }
 .arena.has-board .my-hand .card { transform: translate(calc(-50% + var(--x, 0px)), calc(52% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-.arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -4%) rotate(0deg) scale(1.3); }
+body:not(.touch-ui) .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -4%) rotate(0deg) scale(1.3); }
 .arena.has-board .opp-hand { left: 30cqw; right: 30cqw; }
 
 /* Mana, rope, thinking bubble, history. */
@@ -1206,8 +1214,8 @@ body.in-game { overflow: hidden; }
 
 /* Hover effects only where there is real hover; touch uses the inspect state. */
 @media (hover: none) {
-  .arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(26% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-  .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(60% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+  body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(26% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+  body:not(.touch-ui) .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(60% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 }
 .arena .my-hand .card.inspect { transform: translate(calc(-50% + var(--x, 0px)), -2%) rotate(0deg) scale(1.15) !important; z-index: 200 !important;
   box-shadow: 0 0 0 3px var(--gold), 0 0 22px var(--gold); }
@@ -1420,7 +1428,7 @@ body.in-game { overflow: hidden; }
 .hs-face.back::after { content: '✓'; color: #8a7a60; font-family: var(--font-title); font-size: calc(var(--hero) * 0.24); }
 .hero-spell.usable .hs-face.front { border-color: #57e07a; box-shadow: 0 0 0 2px #1a3a20, 0 0 14px #57e07a, inset 0 0 10px #000a; animation: hs-ready 1.2s ease-in-out infinite alternate; }
 @keyframes hs-ready { to { box-shadow: 0 0 0 2px #1a3a20, 0 0 24px #57e07a, inset 0 0 10px #000a; } }
-.hero-spell:disabled:not(.used) .hs-face.front img { filter: grayscale(0.6) brightness(0.65); }
+.hero-spell[aria-disabled="true"]:not(.used) .hs-face.front img { filter: grayscale(0.6) brightness(0.65); }
 .hero-spell .hs-cost { z-index: 3; }
 .hero-spell.used .hs-cost { opacity: 0; }
 /* Small cards: larger description text (fitText shrinks long text to fit). */
@@ -1469,7 +1477,7 @@ body.in-game { overflow: hidden; }
 .arena .my-hand .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(26% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 .arena.has-board .my-hand .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(60% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 .arena .my-hand .card.dim > .big-card { filter: brightness(0.62) saturate(0.7); }
-.arena .my-hand .card.dim:hover > .big-card { filter: none; }
+body:not(.touch-ui) .arena .my-hand .card.dim:hover > .big-card { filter: none; }
 .card.respond > .big-card { animation: respond-pulse 0.8s ease-in-out infinite alternate;
   box-shadow: 0 0 0 0.12em #000c, inset 0 0 0 0.22em #c9a35a, 0 0 0 0.35em #ffd25a, 0 0 1.6em #ffd25a; }
 @keyframes respond-pulse { to { box-shadow: 0 0 0 0.12em #000c, inset 0 0 0 0.22em #c9a35a, 0 0 0 0.5em #ffe9a0, 0 0 3em #ffd25a; } }
@@ -2403,7 +2411,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 /* Your hand: a fan along the bottom; tap a card to lift it and read it. */
 .arena.portrait .my-hand { left: 2cqw; right: 2cqw; height: calc(var(--card-w) * 1.5); }
 .arena.portrait .my-hand .card { transform: translate(calc(-50% + var(--x, 0px)), calc(28% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-.arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -22%) rotate(0deg) scale(1.45); }
+body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), -22%) rotate(0deg) scale(1.45); }
 
 /* Menu buttons: a small column on the left, beside your hero. */
 .arena.portrait .corner-buttons { left: 1.5cqw; top: auto; bottom: calc(var(--card-w) * 0.95 + 1cqh); gap: 4px; }
@@ -2486,7 +2494,7 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
   font-weight: 900; font-size: clamp(16px, 2.4vw, 30px); box-shadow: 0 0 18px #4cc8ff88; }
 /* Portrait hand: hovering never moves or grows a card (that made full hands flicker between cards);
    it just comes to the front with a glow. Tap lifts it a little; the readable copy opens centred. */
-.arena.portrait .my-hand .card:hover:not(.drag-src) {
+body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) {
   transform: translate(calc(-50% + var(--x, 0px)), calc(28% + var(--y, 0px))) rotate(var(--rot, 0deg));
   z-index: 150 !important; box-shadow: 0 0 0 2px #ffe39a, 0 0 16px #ffd25a; }
 .arena.portrait .my-hand .card.inspect { transform: translate(calc(-50% + var(--x, 0px)), 6%) rotate(0deg) scale(1.08) !important; z-index: 200 !important; }
@@ -2547,11 +2555,11 @@ body.reduced-motion .mbg-slide:first-child { opacity: 1; }
 /* Landscape (painted boards): the hand sits a little higher (was 60% of a card below the edge). */
 .arena.has-board .my-hand .card { transform: translate(calc(-50% + var(--x, 0px) + var(--push, 0px)), calc(48% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 @media (hover: none) {
-  .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(48% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+  body:not(.touch-ui) .arena.has-board .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(48% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 }
 /* Portrait hand sits a little higher so more of each card shows. */
 .arena.portrait .my-hand .card { transform: translate(calc(-50% + var(--x, 0px)), calc(14% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
-.arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(14% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
+body:not(.touch-ui) .arena.portrait .my-hand .card:hover:not(.drag-src) { transform: translate(calc(-50% + var(--x, 0px)), calc(14% + var(--y, 0px))) rotate(var(--rot, 0deg)); }
 /* Portrait, two-row hand: your Mana moves under End Turn so the back row has room. */
 .arena.portrait:has(.my-hand.two-rows) .mana-bar.me { bottom: auto; top: calc(var(--mh-y, 70cqh) + var(--mh-h, 10cqh) / 2 + 26px); right: 2.5cqw; }
 /* Portrait: a tapped card lifts from its own row (back or front). */
@@ -3947,8 +3955,8 @@ body.reduced-motion .arena .minion.can-attack, body.reduced-motion .arena .minio
 
 /* ==== Hand cards tilt toward the pointer, with a glare where the light catches ==== */
 .arena .my-hand .card > .big-card { transition: transform 0.12s ease-out; transform-style: preserve-3d; }
-.arena .my-hand .card:hover:not(.drag-src) > .big-card { transform: perspective(700px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); }
-.arena .my-hand .card:hover:not(.drag-src) > .big-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 30;
+body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) > .big-card { transform: perspective(700px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); }
+body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) > .big-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 30;
   background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), #ffffff40, transparent 45%); mix-blend-mode: screen; }
 
 /* ==== Spell cast flourish ==== */
@@ -4650,6 +4658,9 @@ body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 .st.st-holyflame b { color: #3a2400; text-shadow: none; }
 .hero-holy { position: absolute; left: 50%; bottom: -4%; transform: translateX(-50%); z-index: 6; padding: 1px 8px; border-radius: 10px; font-family: var(--font-title); font-weight: 900;
   font-size: calc(var(--hero, 120px) * 0.12); color: #3a2400; background: radial-gradient(circle at 40% 35%, #fffbe0, #ffd86a 45%, #c98a1a); box-shadow: 0 0 12px #ffe58a, 0 0 2px #000; pointer-events: auto; }
+/* Bleed on a Hero (Bloodripper's Talon): sits just above Holy Flame's spot. */
+.hero-bleed { position: absolute; left: 50%; bottom: 10%; transform: translateX(-50%); z-index: 6; padding: 1px 8px; border-radius: 10px; font-family: var(--font-title); font-weight: 900;
+  background: linear-gradient(#7a0d16, #3a0408); color: #ffd6d6; border: 1px solid #ff5a6a; box-shadow: 0 0 8px #ff2a3a88; font-size: 12px; pointer-events: none; }
 /* Acidic (The Half-Digested): Acid Hide and Regenerate chips. */
 .st.st-acidhide { background: radial-gradient(circle at 40% 35%, #eaff9a, #9be22a 45%, #4a7a0a); box-shadow: 0 0 8px #b6ff3a; }
 .st.st-regen { background: radial-gradient(circle at 40% 35%, #d8ffe0, #4ad86a 45%, #1a7a3a); }
@@ -5375,7 +5386,7 @@ body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .a
   .m2 .m2-bar [data-act="ai"] { display: none; }
   .m2 .m2-play, .m2 .m2-play.gold { height: 44px; font-size: 14px !important; padding: 0 16px !important; }
   .m2 .m2-diff { flex: 1 1 100%; }
-  .m2 .m2-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: grid; grid-template-columns: repeat(4, 1fr); align-items: end;
+  .m2 .m2-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); background: linear-gradient(rgba(10, 14, 32, 0.92), rgba(6, 8, 20, 0.98)); border-top: 1px solid var(--line); box-shadow: 0 -8px 20px #0009; }
   .m2 .m2-tabbar button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 !important; border: 0 !important; background: none !important; box-shadow: none !important;
     color: #d8ccb4 !important; font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px !important; }
@@ -5699,13 +5710,13 @@ body:not(.in-game) #app > .coll2 { background: radial-gradient(120% 80% at 70% 0
 /* Landscape: the hand rests as a small fan in the bottom-right corner (clear of your Hero's
    Health) until you click it; then it rises into the middle at full size (board.js). */
 .arena:not(.portrait) .my-hand.docked .card,
-.arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
+body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
   transform-origin: 50% 100%;
   transform: translate(calc(-50% + var(--x, 0px)), var(--y, 0px)) rotate(var(--rot, 0deg)) scale(var(--s, 0.56));
   cursor: pointer;
 }
-.arena:not(.portrait) .my-hand.docked:hover .card { filter: brightness(1.12); }
-.arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
+body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked:hover .card { filter: brightness(1.12); }
+body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-src) {
   transform: translate(calc(-50% + var(--x, 0px)), calc(var(--y, 0px) - 12px)) rotate(var(--rot, 0deg)) scale(var(--s, 0.56));
   filter: brightness(1.25) drop-shadow(0 0 8px rgba(255, 220, 120, 0.7));
 }
@@ -5925,3 +5936,162 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 /* Two medallions need more room before the traps. */
 .arena.has-board .hero-zone:has(.weapon-medal + .weapon-medal) .traps { margin-right: calc(var(--hero) * 1.4 + 2cqw); }
 .arena.p-board .hero-zone:has(.weapon-medal + .weapon-medal) .traps { margin-right: calc(var(--hero) * 1.4 + 18px); }
+
+/* ==== Patch notes (main menu) ================================================ */
+.m2 .m2-news { display: inline-flex; align-items: center; gap: 10px; margin: 0.6vh auto 0; padding: 5px 14px 5px 6px !important; border-radius: 999px !important;
+  background: linear-gradient(180deg, #2a2230ee, #17121ccc) !important; border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent) !important;
+  color: #f3e6c8 !important; font-size: clamp(11px, 1.5vh, 14px); max-width: min(92vw, 640px); box-shadow: 0 4px 14px #0008 !important; }
+.m2 .m2-news b { padding: 2px 9px; border-radius: 999px; background: #3a3040; color: #e8d9b8; font-family: var(--font-title); font-size: 0.85em; letter-spacing: 0.08em; }
+.m2 .m2-news.unseen b { background: linear-gradient(180deg, #ffd86a, #e09a2a); color: #2a1600; box-shadow: 0 0 10px #ffb63a99; animation: pn-pulse 1.8s ease-in-out infinite; }
+.m2 .m2-news span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m2 .m2-news i { font-style: normal; display: inline-flex; align-items: center; gap: 2px; color: var(--gold-hi); white-space: nowrap; }
+.m2 .m2-news i .ui-ico { width: 14px; height: 14px; }
+.m2 .m2-news:hover { border-color: var(--gold-hi) !important; }
+@keyframes pn-pulse { 50% { box-shadow: 0 0 18px #ffcf5acc; } }
+.m2 .m2-link.has-new b::after, .m2 .m2-tabbar .has-new span::after { content: ' ●'; color: #ffb63a; }
+
+.patch-overlay { position: fixed; inset: 0; z-index: 55; display: grid; place-items: center; }
+.patch-panel { position: relative; z-index: 1; width: min(1120px, 96vw); height: min(92vh, 980px); display: flex; flex-direction: column; overflow: hidden;
+  background: linear-gradient(180deg, #1d1820f7, #120e14f7); border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); border-radius: 16px;
+  box-shadow: 0 20px 60px #000c, inset 0 1px 0 #ffffff14; color: #ece2cf; }
+.pn-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px 6px; }
+.pn-head h3 { margin: 0; font-family: var(--font-title); letter-spacing: 0.06em; color: #fff1d0; font-size: clamp(18px, 2.6vh, 26px); }
+.pn-close { min-width: 40px; }
+.pn-tabs, .pn-cattabs { display: flex; gap: 8px; padding: 4px 18px; overflow-x: auto; scrollbar-width: thin; flex: none; }
+.pn-tab { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 7px 12px !important; border-radius: 10px !important; text-align: left;
+  background: #2a2330 !important; border: 1px solid #4a3e52 !important; color: #d9ccb4 !important; box-shadow: none !important; }
+.pn-tab b { font-family: var(--font-title); font-size: 13px; letter-spacing: 0.03em; white-space: nowrap; }
+.pn-tab small { font-size: 11px; color: #a8997f; white-space: nowrap; }
+.pn-tab.on { background: linear-gradient(180deg, #4a3a22, #2c2216) !important; border-color: var(--gold) !important; color: #fff1d0 !important; }
+.pn-cattabs { padding-bottom: 8px; border-bottom: 1px solid #3a3040; }
+.pn-cattab { flex: none; padding: 4px 11px !important; border-radius: 999px !important; font-size: 12px !important; white-space: nowrap;
+  background: #231d28 !important; border: 1px solid #45394d !important; color: #cdbfa6 !important; box-shadow: none !important; }
+.pn-cattab.on { background: #3d3146 !important; border-color: #c9a35a !important; color: #fff3d6 !important; }
+.pn-post { flex: 1; overflow-y: auto; padding: 14px 22px 26px; scrollbar-width: thin; }
+.pn-post-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.pn-post-head h3 { margin: 0; font-family: var(--font-title); font-size: clamp(20px, 3vh, 30px); color: #fff3d6; }
+.pn-post-head small { color: #a8997f; }
+.pn-tag { padding: 2px 9px; border-radius: 999px; background: #3a2e18; border: 1px solid #c9a35a; color: #ffd98a; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.pn-intro { font-size: clamp(13px, 1.8vh, 16px); line-height: 1.45; color: #e4d8c0; max-width: 820px; }
+.pn-block { margin: 18px 0 6px; padding: 12px 14px 14px; border-radius: 12px; background: #ffffff06; border: 1px solid #ffffff10; }
+.pn-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pn-banner h4 { margin: 0; font-family: var(--font-title); font-size: clamp(15px, 2.1vh, 20px); color: #fff1d0; letter-spacing: 0.03em; }
+.pn-from { color: #9d8f78; font-size: 12px; }
+.pn-cat { padding: 3px 10px; border-radius: 6px; font: 800 11px/1.2 var(--font-title), serif; letter-spacing: 0.1em; text-transform: uppercase; color: #160f0a;
+  background: linear-gradient(180deg, #ffe08a, #d79a2e); box-shadow: 0 2px 6px #0007; }
+.cat-faction .pn-cat { background: linear-gradient(180deg, #ff9ad6, #b8338a); color: #fff; }
+.cat-expansion .pn-cat { background: linear-gradient(180deg, #9ad0ff, #2f6fc0); color: #fff; }
+.cat-legendary .pn-cat { background: linear-gradient(180deg, #ffe9a0, #c98a1a); color: #2a1600; }
+.cat-board .pn-cat { background: linear-gradient(180deg, #a6f0c0, #2f9a5a); color: #062012; }
+.cat-keyword .pn-cat { background: linear-gradient(180deg, #ff9a9a, #b8282f); color: #fff; }
+.cat-change .pn-cat { background: linear-gradient(180deg, #d6b8ff, #6c3fc0); color: #fff; }
+.cat-balance .pn-cat { background: linear-gradient(180deg, #f2d7a8, #9a7442); color: #1a0f04; }
+.cat-qol .pn-cat { background: linear-gradient(180deg, #b8f6ff, #2a9ab0); color: #04202a; }
+.cat-gameplay .pn-cat { background: linear-gradient(180deg, #e0e0e0, #8a8a96); color: #111; }
+.cat-fix .pn-cat { background: linear-gradient(180deg, #d0d0d0, #5a5a66); color: #fff; }
+.pn-block-why { margin: 0 0 8px; }
+.pn-why { display: block; margin-top: 4px; font-size: 0.9em; font-style: italic; color: #b9ab92; }
+.pn-why b { font-style: normal; color: #ffd98a; }
+.pn-kind { display: inline-block; margin-right: 7px; padding: 1px 7px; border-radius: 5px; font: 800 10px/1.4 var(--font-title), serif; letter-spacing: 0.08em; text-transform: uppercase; vertical-align: 1px; }
+.pn-kind.k-buff { background: #1f6a3a; color: #c8ffd8; border: 1px solid #4fd17f; }
+.pn-kind.k-nerf { background: #7a1e22; color: #ffd6d6; border: 1px solid #ff6a6a; }
+.pn-kind.k-tweak { background: #1d4a7a; color: #d6ecff; border: 1px solid #6ab6ff; }
+.pn-kind.k-rework { background: #4f2a7a; color: #ecdcff; border: 1px solid #b98aff; }
+/* Card galleries (new cards): a row you can scroll sideways; tap a card to see it big. */
+.pn-set + .pn-set { margin-top: 14px; }
+.pn-set-head { display: flex; align-items: baseline; gap: 10px; }
+.pn-set-head b { font-family: var(--font-title); color: #fff3d6; }
+.pn-set-head small { color: #9d8f78; }
+.pn-set p { margin: 4px 0 8px; color: #d8ccb4; font-size: 14px; }
+.pn-gallery { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: thin; }
+.pn-gcard { flex: none; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; border-radius: 10px !important; transition: transform 0.15s; }
+.pn-gcard:hover { transform: translateY(-4px) scale(1.03); }
+.pn-gcard .pn-big { --h: clamp(170px, 26vh, 240px); pointer-events: none; }
+/* Before → now. */
+.pn-compare { padding: 10px 0 4px; }
+.pn-compare + .pn-compare { border-top: 1px dashed #ffffff18; }
+.pn-compare-name b { font-family: var(--font-title); font-size: 16px; color: #fff3d6; margin-right: 8px; }
+.pn-compare-name span { color: #d8ccb4; font-size: 14px; }
+.pn-compare-row { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 26px); margin-top: 8px; }
+.pn-side { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; }
+.pn-side small { font-family: var(--font-title); letter-spacing: 0.12em; text-transform: uppercase; font-size: 11px; color: #a8997f; }
+.pn-side.now small { color: #9dffb8; }
+.pn-side.was .pn-big { filter: saturate(0.55) brightness(0.82); }
+.pn-side .pn-big { --h: clamp(220px, 40vh, 360px); pointer-events: none; }
+.pn-arrow { font-style: normal; font-size: clamp(28px, 5vh, 52px); color: var(--gold-hi); text-shadow: 0 0 14px #ffc35a88; }
+/* Boards. */
+.pn-boards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.pn-board { display: flex; flex-direction: column; gap: 6px; padding: 6px !important; border-radius: 10px !important; text-align: left;
+  background: #1b161f !important; border: 1px solid #3a3040 !important; box-shadow: none !important; color: #e6dcc8 !important; }
+.pn-board img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; display: block; }
+.pn-board b { display: block; font-family: var(--font-title); color: #fff3d6; font-size: 14px; }
+.pn-board small { display: block; color: #b0a38b; font-size: 12px; line-height: 1.35; }
+.pn-board:hover { border-color: var(--gold) !important; }
+.pn-board-view { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; align-content: center; gap: 8px; background: #0a080ce8; cursor: zoom-out; padding: 16px; }
+.pn-board-view img { max-width: 100%; max-height: calc(100% - 40px); border-radius: 10px; box-shadow: 0 10px 40px #000; }
+.pn-board-view small { color: #b0a38b; }
+/* Lines with card chips. */
+.pn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.pn-list li { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; line-height: 1.4; font-size: clamp(13px, 1.75vh, 15px); }
+.pn-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.pn-text { flex: 1 1 320px; color: #e8dcc4; }
+.pn-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 2px !important; border-radius: 999px !important; font-size: 12px !important;
+  background: #2b2431 !important; border: 1px solid #4a3e52 !important; color: #f0e4cc !important; box-shadow: none !important; }
+.pn-chip img, .pn-chip i { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; font-style: normal; display: grid; place-items: center; }
+.pn-chip.legend { border-color: #c9a35a !important; }
+.pn-chip:hover { border-color: var(--gold-hi) !important; }
+.pn-details { margin-top: 20px; padding: 10px 14px; border-radius: 10px; background: #ffffff06; border: 1px solid #ffffff12; }
+.pn-details summary { cursor: pointer; font-family: var(--font-title); color: #ffd98a; }
+.pn-details ul { margin: 10px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; color: #ddd1b9; font-size: 14px; line-height: 1.45; }
+.pn-foot { margin-top: 18px; color: #8f826d; font-size: 12px; text-align: center; }
+@media (max-width: 640px) {
+  .patch-panel { width: 100vw; height: 100dvh; border-radius: 0; }
+  .pn-post { padding: 10px 12px 24px; }
+  .pn-side .pn-big { --h: clamp(170px, 30vh, 260px); }
+  .pn-compare-row { gap: 6px; }
+  .pn-arrow { font-size: 24px; }
+  .pn-boards { grid-template-columns: 1fr 1fr; }
+}
+
+/* ==== The faction vote: a glowing banner on the main menu, and the Vote tab ==== */
+.m2 .m2-vote { display: flex; align-items: center; gap: 10px; margin: 0.8vh auto 0; padding: 6px 8px 6px 12px; width: fit-content; max-width: min(96vw, 820px);
+  border-radius: 14px; background: linear-gradient(180deg, #3a1f52f0, #1e1030f0); border: 1px solid #c79aff; box-shadow: 0 0 0 1px #00000080, 0 6px 22px #000a, 0 0 22px #a86bff66; }
+.m2 .m2-vote.open { animation: vote-glow 2.4s ease-in-out infinite; }
+@keyframes vote-glow { 50% { box-shadow: 0 0 0 1px #00000080, 0 6px 22px #000a, 0 0 34px #c79affcc; } }
+.m2 .m2-vote button { box-shadow: none !important; }
+.m2 .m2-vote-head { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 0 !important; background: none !important; border: 0 !important; color: #f4e9ff !important; text-align: left; }
+.m2 .m2-vote-head b { font-family: var(--font-title); letter-spacing: 0.08em; font-size: clamp(13px, 1.9vh, 18px); color: #fff; text-shadow: 0 0 10px #c79aff; }
+.m2 .m2-vote-head span { font-size: clamp(11px, 1.45vh, 13px); color: #dccaf2; }
+.m2 .m2-vote-opts { display: flex; gap: 6px; }
+.m2 .m2-vote-opts button { display: flex; align-items: center; gap: 6px; padding: 5px 10px !important; border-radius: 10px !important; background: #2a1840 !important;
+  border: 1px solid #7a5aa8 !important; color: #f4e9ff !important; font-size: clamp(11px, 1.5vh, 14px) !important; white-space: nowrap; transition: transform 0.12s; }
+.m2 .m2-vote-opts button i { font-style: normal; font-size: 1.35em; }
+.m2 .m2-vote-opts button:hover { transform: translateY(-2px); border-color: #e2c8ff !important; background: #3a2258 !important; }
+.m2 .m2-vote-opts button.mine { border-color: #ffd86a !important; background: #4a3416 !important; }
+.m2 .m2-vote-go { display: inline-flex; align-items: center; gap: 2px; padding: 7px 12px !important; border-radius: 10px !important; font-family: var(--font-title); letter-spacing: 0.06em;
+  background: linear-gradient(180deg, #e2c8ff, #9a62e8) !important; border: 0 !important; color: #1c0b30 !important; white-space: nowrap; }
+.m2 .m2-vote-go .ui-ico { width: 14px; height: 14px; stroke: #1c0b30; }
+.m2 .m2-vote.done { background: linear-gradient(180deg, #2a2234ee, #17121ccc); border-color: #6a5a80; }
+@media (max-width: 700px) {
+  .m2 .m2-vote { flex-wrap: wrap; justify-content: center; padding: 8px; gap: 6px; }
+  .m2 .m2-vote-head { align-items: center; text-align: center; width: 100%; }
+  .m2 .m2-vote-opts button span { display: none; }
+  .m2 .m2-vote-opts button i { font-size: 1.6em; }
+}
+.pn-vote-tab { background: linear-gradient(180deg, #3a1f52, #24123a) !important; border-color: #a77fe0 !important; color: #f4e9ff !important; }
+.pn-vote-tab.on { background: linear-gradient(180deg, #5a2f84, #34185a) !important; border-color: #e2c8ff !important; }
+.pv-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0 10px; }
+.pv-option { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 12px 18px !important; border-radius: 16px !important;
+  background: radial-gradient(120% 90% at 50% 0%, #3a2456, #1a1024) !important; border: 2px solid #5a4478 !important; color: #f4e9ff !important; box-shadow: 0 8px 22px #0009 !important; transition: transform 0.15s, border-color 0.15s; }
+.pv-option:hover { transform: translateY(-4px); border-color: #c79aff !important; }
+.pv-option.mine { border-color: #ffd86a !important; box-shadow: 0 0 0 2px #ffd86a55, 0 0 26px #ffcf5a55 !important; }
+.pv-icon { font-style: normal; font-size: clamp(46px, 9vh, 84px); line-height: 1; filter: drop-shadow(0 6px 10px #000a); }
+.pv-option b { font-family: var(--font-title); font-size: clamp(16px, 2.6vh, 24px); letter-spacing: 0.05em; color: #fff; }
+.pv-option small { color: #cdbbe8; font-size: 13px; }
+.pv-option em { position: absolute; top: 8px; right: 10px; font-style: normal; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #ffd86a; color: #2a1600; font-weight: 800; }
+.pv-bar { display: block; width: 100%; height: 10px; border-radius: 999px; background: #ffffff14; overflow: hidden; }
+.pv-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #9a62e8, #e2c8ff); transition: width 0.4s ease; }
+.pv-option.mine .pv-bar span { background: linear-gradient(90deg, #e09a2a, #ffd86a); }
+.pv-status { text-align: center; color: #dccaf2; }
+.pv-status.err { color: #ffb0b0; }
+@media (max-width: 640px) { .pv-options { grid-template-columns: 1fr; gap: 10px; } .pv-option { flex-direction: row; justify-content: flex-start; padding: 12px 14px !important; } .pv-icon { font-size: 40px; } .pv-option .pv-bar { flex: 1; } }

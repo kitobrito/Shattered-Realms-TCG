@@ -59,20 +59,20 @@ export const DEMON_CARDS = [
     triggers: [{ on: 'battlecry', effects: [pay(2), { op: 'buff', target: 'self', attack: 2, temporary: true }] }],
   },
   {
-    ...DM, id: 'blood_ritualist', name: 'Blood Ritualist', art: '🕯️', cost: 3, attack: 2, health: 4,
+    ...DM, id: 'blood_ritualist', name: 'Blood Ritualist', art: '🕯️', cost: 3, attack: 3, health: 4,
     text: 'Whenever you lose Health from your own card effects, give a random friendly Demon +1 Attack.',
     triggers: [{ on: 'heroLostHealth', filter: PAID, effects: [{ op: 'buff', target: { randomOf: { minions: { side: 'friendly', tribe: 'Demon' } } }, attack: 1 }] }],
   },
   {
     ...DM, id: 'abyssal_brute', name: 'Abyssal Brute', art: '👹', cost: 4, attack: 4, health: 4,
-    text: 'Arrival: Lose 3 Health. Gain +2/+2.',
-    triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'buff', target: 'self', attack: 2, health: 2 }] }],
+    text: 'Arrival: Lose 2 Health. Gain +2/+2.',
+    triggers: [{ on: 'battlecry', effects: [pay(2), { op: 'buff', target: 'self', attack: 2, health: 2 }] }],
   },
   {
     ...DM, id: 'soulflayer', name: 'Soulflayer', art: '🦑', cost: 4, attack: 3, health: 5,
-    text: 'Arrival: Lose 2 Health. Deal 2 damage to an enemy minion and restore 2 Health to this minion.',
+    text: 'Arrival: Lose 2 Health. Deal 3 damage to an enemy minion and restore 2 Health to this minion.',
     target: { type: 'minion', side: 'enemy' },
-    triggers: [{ on: 'battlecry', effects: [pay(2), { op: 'damage', target: 'chosen', amount: 2 }, { op: 'heal', target: 'self', amount: 2 }] }],
+    triggers: [{ on: 'battlecry', effects: [pay(2), { op: 'damage', target: 'chosen', amount: 3 }, { op: 'heal', target: 'self', amount: 2 }] }],
   },
   {
     ...DM, id: 'dread_summoner', name: 'Dread Summoner', art: '🔮', cost: 5, attack: 4, health: 5,
@@ -98,21 +98,21 @@ export const DEMON_CARDS = [
     triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'damage', target: { characters: { side: 'any', excludeSelf: true } }, amount: 3 }] }],
   },
   {
-    ...DM, id: 'doom_herald', name: 'Doom Herald', art: '📯', cost: 7, attack: 6, health: 6,
-    text: 'At the end of your turn, lose 2 Health. Give your other Demons +1/+1.',
+    ...DM, id: 'doom_herald', name: 'Doom Herald', art: '📯', cost: 6, attack: 6, health: 6,
+    text: 'At the end of your turn, lose 1 Health. Give your other Demons +1/+1.',
     triggers: [{ on: 'endOfTurn', filter: { player: 'friendly' }, effects: [
-      pay(2), { op: 'buff', target: { minions: { side: 'friendly', tribe: 'Demon', excludeSelf: true } }, attack: 1, health: 1 },
+      pay(1), { op: 'buff', target: { minions: { side: 'friendly', tribe: 'Demon', excludeSelf: true } }, attack: 1, health: 1 },
     ] }],
   },
   {
-    ...DM, id: 'demon_prince', name: 'Demon Prince', art: '👑', cost: 8, attack: 7, health: 8,
-    text: 'Arrival: Lose 5 Health. Summon a random Demon that costs 5 Mana or less.',
-    triggers: [{ on: 'battlecry', effects: [paySummon(5), randomDemon(5)] }],
+    ...DM, id: 'demon_prince', name: 'Demon Prince', art: '👑', cost: 7, attack: 7, health: 8,
+    text: 'Arrival: Lose 3 Health. Summon a random Demon that costs 5 Mana or less.',
+    triggers: [{ on: 'battlecry', effects: [paySummon(3), randomDemon(5)] }],
   },
   {
-    ...DM, id: 'archfiend_of_ruin', name: 'Archfiend of Ruin', art: '💀', cost: 9, attack: 8, health: 8,
-    text: 'Arrival: Lose 4 Health. Deal 4 damage to all enemy minions. For each enemy minion destroyed, restore 2 Health to your Hero.',
-    triggers: [{ on: 'battlecry', effects: [pay(4), { op: 'damageAll', side: 'enemy', amount: 4, perEnemyKilled: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }] }],
+    ...DM, id: 'archfiend_of_ruin', name: 'Archfiend of Ruin', art: '💀', cost: 8, attack: 8, health: 8,
+    text: 'Arrival: Lose 3 Health. Deal 4 damage to all enemy minions. For each enemy minion destroyed, restore 2 Health to your Hero.',
+    triggers: [{ on: 'battlecry', effects: [pay(3), { op: 'damageAll', side: 'enemy', amount: 4, perEnemyKilled: [{ op: 'heal', target: 'friendlyHero', amount: 2 }] }] }],
   },
   {
     ...DM, id: 'the_world_eater', name: 'The World Eater', art: '🌑', cost: 10, attack: 10, health: 10,
@@ -152,12 +152,12 @@ export const DEMON_CARDS = [
     effects: [pay(3), { op: 'buff', target: 'chosen', attack: 3, health: 3, temporaryKeywords: ['Lifesteal'] }],
   },
   {
-    ...S, id: 'open_the_abyss', name: 'Open the Abyss', art: '🌀', cost: 5, needsBoardSpace: true,
-    text: 'Lose 5 Health. Summon a random Demon that costs 5 Mana or less.',
-    effects: [paySummon(5), randomDemon(5)],
+    ...S, id: 'open_the_abyss', name: 'Open the Abyss', art: '🌀', cost: 4, needsBoardSpace: true,
+    text: 'Lose 3 Health. Summon a random Demon that costs 5 Mana or less.',
+    effects: [paySummon(3), randomDemon(5)],
   },
   {
-    ...S, id: 'infernal_ascension', name: 'Infernal Ascension', art: '⬆️', cost: 7,
+    ...S, id: 'infernal_ascension', name: 'Infernal Ascension', art: '⬆️', cost: 6,
     text: 'Lose 4 Health. Give all friendly Demons +3/+3. If your Hero has 10 Health or less afterward, give them Taunt as well.',
     effects: [
       pay(4),
@@ -202,8 +202,8 @@ export const DEMON_CARDS = [
   // ---- Traps (4) ----
   {
     ...T, id: 'infernal_ambush', name: 'Infernal Ambush', art: '🪤', cost: 2,
-    text: 'When an enemy minion attacks your Hero, lose 2 Health to summon a 3/3 Demon with Taunt.',
-    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [paySummon(2), { op: 'summon', cardId: 'lesser_demon' }] },
+    text: 'When an enemy minion attacks your Hero, lose 1 Health to summon a 3/3 Demon with Taunt.',
+    trap: { on: 'attackDeclared', filter: { source: 'enemyMinion', target: 'friendlyHero' }, effects: [paySummon(1), { op: 'summon', cardId: 'lesser_demon' }] },
   },
   {
     ...T, id: 'soul_snare', name: 'Soul Snare', art: '🕸️', cost: 3,
