@@ -622,3 +622,195 @@ export function heroSilenced(el, rect) {
     ])),
   ]);
 }
+
+// ---- Fruit Ninjas ------------------------------------------------------------------------------
+// Slice: a blade flashes across the Fruit, it bursts in its own juice, and a twice-worked Slice
+// (Twin-Slice Trainee, Emperor Pomelo) cuts a second time.
+const JUICE = {
+  blitz_cherry: ['#ff2a4a', '#ff8aa0'], thunder_lemon: ['#ffe84a', '#fff6a8'], healing_peach: ['#ffb08a', '#ffe0c8'],
+  shadow_kiwi: ['#7dd84a', '#2a4a1a'], iron_coconut: ['#f4ecd8', '#8a5a2a'], inferno_pineapple: ['#ffa21a', '#ff5a1a'],
+  frost_grape_cluster: ['#a86aff', '#c8f0ff'], phantom_dragonfruit: ['#ff3aa8', '#d8a8ff'], titan_watermelon: ['#ff3a5a', '#4ad84a'],
+  chrono_starfruit: ['#ffd84a', '#fff0a0'],
+};
+// The designer's Slice sprites (art/fx/fruit): each Fruit whole, a juice splash and a blade streak.
+const FRUIT_FX = 'art/fx/fruit/';
+let fruitFxLoaded = false;
+export function preloadFruitFx() {
+  if (fruitFxLoaded) return;
+  fruitFxLoaded = true;
+  for (const n of [...Object.keys(JUICE), 'juice_splash', 'blade_slash']) { const i = new Image(); i.src = `${FRUIT_FX}${n}.webp`; }
+}
+
+// One picture split along a line through its middle at `ang` degrees: two clipped copies that fly
+// apart along the cut's normal, spinning away from each other, and fall.
+function splitPicture(c, size, src, ang, { delay = 0, duration = 760, cls = 'fx-slice-half', fit = 'cover', push = 0.55, fall = 0.35 } = {}) {
+  const rad = (ang * Math.PI) / 180;
+  const nx = -Math.sin(rad), ny = Math.cos(rad);
+  const half = (side) => {
+    const el = addFx(cls, { left: `${c.x - size / 2}px`, top: `${c.y - size / 2}px`, width: `${size}px`, height: `${size}px` });
+    el.style.backgroundImage = `url("${src}")`;
+    el.style.backgroundSize = fit;
+    const pts = [];
+    for (const [u, v] of [[-2, 0], [2, 0], [2, 2 * side], [-2, 2 * side]]) {
+      const x = 0.5 + (u * Math.cos(rad) - v * Math.sin(rad)) * 0.5;
+      const y = 0.5 + (u * Math.sin(rad) + v * Math.cos(rad)) * 0.5;
+      pts.push(`${(x * 100).toFixed(1)}% ${(y * 100).toFixed(1)}%`);
+    }
+    el.style.clipPath = `polygon(${pts.join(',')})`;
+    const d = size * push, spin = side * (20 + Math.random() * 25);
+    return done(el, animate(el, [
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${nx * side * d * 0.22}px, ${ny * side * d * 0.22}px) rotate(${spin * 0.25}deg)`, opacity: 1, offset: 0.2 },
+      { transform: `translate(${nx * side * d}px, ${ny * side * d + size * fall}px) rotate(${spin}deg)`, opacity: 0 },
+    ], { duration, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' }));
+  };
+  return Promise.all([half(1), half(-1)]);
+}
+
+// The blade streak sweeping along the cut line (the sprite drawn left-to-right, so it is turned to
+// the angle and, half the time, flipped so the blade travels the other way along the line).
+function bladeStreak(c, len, ang, { delay = 0 } = {}) {
+  const el = addFx('fx-slice-blade', { left: `${c.x - len / 2}px`, top: `${c.y - len * 0.26}px`, width: `${len}px`, height: `${len * 0.52}px` });
+  el.style.backgroundImage = `url("${FRUIT_FX}blade_slash.webp")`;
+  const flip = Math.random() < 0.5 ? -1 : 1;
+  return done(el, animate(el, [
+    { transform: `rotate(${ang}deg) scaleX(${flip}) translateX(-35%) scale(0.7)`, opacity: 0 },
+    { transform: `rotate(${ang}deg) scaleX(${flip}) translateX(0) scale(1)`, opacity: 1, offset: 0.35 },
+    { transform: `rotate(${ang}deg) scaleX(${flip}) translateX(25%) scale(1.05)`, opacity: 0 },
+  ], { duration: 380, delay, easing: 'cubic-bezier(.15,.85,.25,1)', fill: 'both' }));
+}
+
+// The juice splash sprite bursting out from the cut, tinted towards the Fruit's juice.
+function juiceSplash(c, size, ang, juice, { delay = 0 } = {}) {
+  const el = addFx('fx-slice-splash', { left: `${c.x - size / 2}px`, top: `${c.y - size * 0.27}px`, width: `${size}px`, height: `${size * 0.54}px` });
+  el.style.backgroundImage = `url("${FRUIT_FX}juice_splash.webp")`;
+  el.style.setProperty('--juice', juice);
+  return done(el, animate(el, [
+    { transform: `rotate(${ang}deg) scale(0.2)`, opacity: 0 },
+    { transform: `rotate(${ang}deg) scale(1)`, opacity: 1, offset: 0.3 },
+    { transform: `rotate(${ang}deg) scale(1.35)`, opacity: 0 },
+  ], { duration: 640, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }));
+}
+
+// Slice: the Fruit's card turns into the fruit itself, right where it stands (the card flashes and
+// shrinks away as the fruit grows out of it, rising a touch), then the blade sweeps through it from a
+// random direction (any angle round the circle), the fruit splits along that line, the halves spin
+// away and juice sprays. A Slice that works twice cuts again across the first. `img`: the card's art.
+const MORPH_MS = 300, HOVER_MS = 120;
+export function sliced(rect, cardId, times = 1, img = null) {
+  if (!rect) return Promise.resolve();
+  preloadFruitFx();
+  const size = sizeOf(rect);
+  const [juice, light] = JUICE[cardId] ?? ['#ff9a5a', '#ffe0a0'];
+  const sprite = JUICE[cardId] ? `${FRUIT_FX}${cardId}.webp` : null;
+  const from = center(rect);
+  const lift = size * 0.22;
+  const at = { x: from.x, y: from.y - lift };
+  const fruitSize = size * 1.2;
+  const ang = Math.random() * 360;
+  const cutAt = MORPH_MS + HOVER_MS;
+  const jobs = [];
+  // The card: a copy of its picture over it flashes bright and shrinks away into the fruit.
+  if (img) {
+    const card = addFx('fx-slice-card', { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+    card.style.backgroundImage = `url("${img}")`;
+    jobs.push(done(card, animate(card, [
+      { transform: 'scale(1) rotate(0deg)', opacity: 1, filter: 'brightness(1)' },
+      { transform: 'scale(1.06) rotate(0deg)', opacity: 1, filter: 'brightness(2.2) saturate(0.6)', offset: 0.35 },
+      { transform: `translate(0, ${-lift * 0.6}px) scale(0.2) rotate(${(Math.random() - 0.5) * 50}deg)`, opacity: 0, filter: 'brightness(3) saturate(0)' },
+    ], { duration: MORPH_MS, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards' })));
+  }
+  jobs.push(glowBall(from, size * 1.1, light, `${juice}77`, { duration: 460, delay: MORPH_MS * 0.4 }));
+  if (sprite) {
+    const fruit = addFx('fx-slice-fruit', { left: `${at.x - fruitSize / 2}px`, top: `${at.y - fruitSize / 2}px`, width: `${fruitSize}px`, height: `${fruitSize}px` });
+    fruit.style.backgroundImage = `url("${sprite}")`;
+    fruit.style.backgroundSize = 'contain';
+    const tilt = (Math.random() - 0.5) * 30;
+    jobs.push(done(fruit, animate(fruit, [
+      { transform: `translate(0, ${lift}px) scale(0.25) rotate(${-tilt}deg)`, opacity: 0 },
+      { transform: `translate(0, ${lift}px) scale(0.35) rotate(${-tilt}deg)`, opacity: 0, offset: 0.3 },
+      { transform: `translate(0, ${lift * 0.2}px) scale(1.1) rotate(${tilt * 0.4}deg)`, opacity: 1, offset: 0.72 },
+      { transform: 'translate(0, -4px) scale(1) rotate(0deg)', opacity: 1, offset: 0.88 },
+      { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+    ], { duration: cutAt, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'forwards' })));
+    // The whole fruit is swapped for its two halves the instant the blade lands.
+    wait(cutAt).then(() => fruit.remove());
+  }
+  const cut = (a, delay) => [
+    bladeStreak(at, size * 2.3, a, { delay: delay - 60 }),
+    juiceSplash(at, size * 2, a + 90, juice, { delay: delay + 20 }),
+    sprite ? splitPicture(at, fruitSize, sprite, a, { delay, duration: 860, cls: 'fx-slice-fruit', fit: 'contain', push: 0.8, fall: 0.7 }) : Promise.resolve(),
+    ring(at, size * 0.8, juice, { width: 4, to: 1.9, duration: 480, delay: delay + 20 }),
+    glowBall(at, size * 1.1, light, `${juice}88`, { duration: 460, delay: delay + 10 }),
+  ];
+  jobs.push(...cut(ang, cutAt));
+  jobs.push(wait(cutAt).then(() => fling({ left: at.x - size / 2, top: at.y - size / 2, width: size, height: size }, '💦', 5, { rise: 0.3, spread: 1.4, size: 13, duration: 760 })));
+  if (times > 1) jobs.push(wait(cutAt + 230).then(() => Promise.all(cut(ang + 60 + Math.random() * 60, 0))));
+  return Promise.all(jobs);
+}
+
+// What each Fruit's Slice gives, as the words that pop up when it's cut.
+const SLICE_WORDS = {
+  blitz_cherry: '+2 Attack', thunder_lemon: '⚡ 2 Damage', healing_peach: '+3 Health', shadow_kiwi: 'Stealth',
+  iron_coconut: '+3 Health · Taunt', inferno_pineapple: '🔥 2 Damage + Splash', frost_grape_cluster: '❄ Freeze · -1 Attack',
+  phantom_dragonfruit: 'Phantom Shinobi!', titan_watermelon: '+2 / +2', chrono_starfruit: 'Back to Hand · 2 Cheaper',
+};
+
+// A magical wisp: a glowing orb that arcs from the cut to the card that gets the bonus, trailing
+// sparkles, and lands in a flash and a ring on that card.
+function wisp(from, toRect, color, light, { delay = 0 } = {}) {
+  if (!toRect) return Promise.resolve();
+  const to = center(toRect);
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  // A bend to one side, so several wisps fan out instead of overlapping.
+  const bend = (Math.random() < 0.5 ? -1 : 1) * Math.min(140, dist * 0.35);
+  const ctrl = { x: from.x + dx / 2 - (dy / dist) * bend, y: from.y + dy / 2 + (dx / dist) * bend - dist * 0.15 };
+  const at = (t) => ({ x: (1 - t) ** 2 * from.x + 2 * (1 - t) * t * ctrl.x + t * t * to.x, y: (1 - t) ** 2 * from.y + 2 * (1 - t) * t * ctrl.y + t * t * to.y });
+  const dur = Math.min(900, 420 + dist * 0.7);
+  const path = Array.from({ length: 13 }, (_, i) => at(i / 12));
+  const orb = addFx('fx-wisp', { left: `${from.x}px`, top: `${from.y}px`, '--c': color, '--l': light });
+  const jobs = [done(orb, animate(orb, path.map((p, i) => ({
+    transform: `translate(calc(-50% + ${p.x - from.x}px), calc(-50% + ${p.y - from.y}px)) scale(${i === 0 ? 0.3 : i === 12 ? 0.6 : 1 + Math.sin((i / 12) * Math.PI) * 0.35})`,
+    opacity: i === 0 ? 0 : 1,
+  })), { duration: dur, delay, easing: 'cubic-bezier(.45,.05,.55,.95)', fill: 'both' }))];
+  // The trail: little sparks dropped along the path, each fading where it was left.
+  for (let i = 1; i < 12; i++) {
+    const p = path[i];
+    const sp = addFx('fx-wisp-spark', { left: `${p.x + (Math.random() - 0.5) * 10}px`, top: `${p.y + (Math.random() - 0.5) * 10}px`, '--c': color });
+    jobs.push(done(sp, animate(sp, [
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 0 },
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 0.9, offset: 0.05 },
+      { transform: `translate(-50%, calc(-50% + ${8 + Math.random() * 10}px)) scale(0.2)`, opacity: 0 },
+    ], { duration: 520, delay: delay + (dur * i) / 12, easing: 'ease-out', fill: 'both' })));
+  }
+  // Landing: the card flashes in the fruit's colour.
+  jobs.push(wait(delay + dur).then(() => Promise.all([
+    ring(to, sizeOf(toRect) * 0.8, color, { width: 4, to: 1.6, duration: 460 }),
+    glowBall(to, sizeOf(toRect) * 1.1, light, `${color}66`, { duration: 480 }),
+  ])));
+  return Promise.all(jobs);
+}
+
+// The Slice's bonus: its words pop up out of the cut, then a wisp flies to every card it changed
+// (a card that went back to the hand gets its wisp sent to the hand).
+export function sliceBonus(rect, cardId, targetRects = [], { handRect = null, delay = 0 } = {}) {
+  if (!rect) return Promise.resolve();
+  const size = sizeOf(rect);
+  const c = center(rect);
+  const at = { x: c.x, y: c.y - size * 0.22 };
+  const [juice, light] = JUICE[cardId] ?? ['#ff9a5a', '#ffe0a0'];
+  const words = SLICE_WORDS[cardId] ?? 'Slice!';
+  const jobs = [];
+  const label = addFx('fx-slice-text', { left: `${at.x}px`, top: `${at.y - size * 0.55}px`, '--c': juice, '--l': light });
+  label.textContent = words;
+  jobs.push(done(label, animate(label, [
+    { transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0 },
+    { transform: 'translate(-50%, -60%) scale(1.15)', opacity: 1, offset: 0.18 },
+    { transform: 'translate(-50%, -70%) scale(1)', opacity: 1, offset: 0.7 },
+    { transform: 'translate(-50%, -110%) scale(0.95)', opacity: 0 },
+  ], { duration: 1500, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' })));
+  const targets = [...targetRects.filter(Boolean), ...(handRect ? [handRect] : [])];
+  targets.forEach((r, i) => jobs.push(wisp(at, r, juice, light, { delay: delay + 260 + i * 90 })));
+  return Promise.all(jobs);
+}

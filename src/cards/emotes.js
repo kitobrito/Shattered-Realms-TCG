@@ -69,6 +69,14 @@ export const EMOTES = {
     oops: "Oops. Wrong end of the wand.",
     threaten: "Say your spell. I'll unsay it.",
   },
+  'Fruit Ninjas': {
+    greetings: "Greetings from the orchard.",
+    wellPlayed: "Well played. A clean cut.",
+    thanks: "Thank you. Have a peach.",
+    wow: "Now that was a juicy play!",
+    oops: "Oops. Sliced the wrong fruit.",
+    threaten: "I've got a blade for every fruit... and one for you.",
+  },
   Eels: {
     greetings: "Bzzt! Hello there.",
     wellPlayed: "Well played. That was electric.",

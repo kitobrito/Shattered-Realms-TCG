@@ -41,6 +41,39 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-13-fruit-ninjas',
+    date: 'November 13',
+    title: 'Fruit Ninjas won the vote!',
+    tag: 'New faction + boards',
+    intro: 'The vote is in, and Fruit Ninjas won! Thank you to everyone who voted. Voting is now closed, and the winners are here: shinobi of the enchanted orchard who grow magic Fruits, slice them open, and unleash their power. Two new boards, ten Legendaries and 22 new Fusion Hero Spells come with them.',
+    blocks: [
+      { cat: 'faction', h: 'Fruit Ninjas', cards: [
+        { title: 'Fruit Ninjas', faction: 'Fruit Ninjas', blurb: 'Grow Fruit, Slice Fruit, unleash its power. 30 cards plus the 20-card Shadow Orchard expansion (stealth, Combo and the big legends), and five Legendary Weapons.' },
+      ] },
+      { cat: 'keyword', h: 'Fruits and Slice', list: [
+        { cards: ['harvest'], text: 'Harvest (Hero Spell, 1 Mana): Slice your leftmost Fruit, then summon a random Fruit. Fruits are 0/1 minions that can\'t attack, each with a Slice effect.' },
+        { cards: ['thunder_lemon', 'titan_watermelon'], text: 'Slice: destroy one of your Fruits to unleash its power (damage, buffs, Taunts, healing, Stealth and more). Its targets are picked at random. A Fruit the enemy kills just dies, and a Silenced Fruit unleashes nothing.' },
+        { cards: ['kenzaru_the_thousand_slice_master', 'blender_barrage'], text: 'Multislice (X): Slice up to X of your Fruits, leftmost first. Combo: a bonus when you played another card earlier this turn.' },
+        { cards: [], text: 'Slicing has its own animation: the card turns into its fruit, a blade cuts it from a random direction, the halves fly apart, and the bonus pops up and flies as a wisp into the card that gets it.' },
+      ] },
+      { cat: 'legendary', h: 'New Legendaries', cards: [
+        { title: 'Fruit Ninjas', legendaryOf: { factions: ['Fruit Ninjas'] } },
+      ] },
+      { cat: 'board', h: 'New boards', boards: [
+        { name: 'Fruit Ninjas', title: 'The Orchard Dojo', realm: 'Fruit Ninjas', unlock: 'Fruit Ninjas\' board: a sunset orchard dojo with glowing lantern fruit, cherry petals on the wind, fireflies, a koi pond and a fruit press. Tap the corners.' },
+        { name: 'The Moonlit Dojo', realm: 'Fruit Ninjas', unlock: 'Unlocks with the Shadow Orchard cards: a stone dojo floating above the clouds, with a turning shuriken ring, a crystal dragon and a fox-spirit lantern.' },
+      ] },
+      { cat: 'gameplay', h: 'Every realm', list: [
+        { cards: ['genetic_fruit_splicing', 'feeding_frenzy_fruitcut'], text: 'A Fusion Hero Spell for Fruit Ninjas with each of the 22 other realms, plus a two-realm deck guide for every pairing.' },
+        { cards: ['xeno_shinobi'], text: 'The Xeno Shinobi bursts out of Fruit Ninjas minions, and the Rage Runner and Clicker have Fruit Ninjas looks.' },
+      ] },
+    ],
+    details: [
+      'Balance: in simulated games against every realm, Fruit Ninjas win about half.',
+      'Kagehana gives your Hero Stealth until your next turn: a Hero in Stealth can\'t be attacked or chosen by enemy cards.',
+    ],
+  },
+  {
     id: '2026-11-12-bleed-prey',
     date: 'November 12',
     title: 'Bleed marks Prey, healing stops Bleed',

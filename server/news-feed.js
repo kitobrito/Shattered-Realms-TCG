@@ -77,6 +77,14 @@ export function newsFeed(base) {
     kinds: PATCH_KINDS,
     posts: PATCH_NOTES.map((p) => ({ id: p.id, date: p.date, title: p.title, tag: p.tag ?? null, intro: p.intro ?? null,
       blocks: p.blocks.map((b) => blockView(base, b)), details: p.details ?? [] })),
+    // The latest closed poll's result (the website shows it when no poll is open).
+    pollResult: (() => {
+      const done = Object.entries(POLLS).filter(([, q]) => q.closed && q.winner);
+      if (!done.length) return null;
+      const [id, q] = done[done.length - 1];
+      const w = q.options.find((o) => o.id === q.winner);
+      return w ? { id, question: q.question ?? null, winner: { id: w.id, name: w.name, blurb: w.blurb ?? null, art: abs(base, w.art) } } : null;
+    })(),
     poll: poll ? { id: CURRENT_POLL, title: poll.title ?? null, question: poll.question ?? null, blurb: poll.blurb ?? null,
       options: poll.options.map((o) => ({ id: o.id, name: o.name, blurb: o.blurb ?? null, art: abs(base, o.art) })) } : null,
   };

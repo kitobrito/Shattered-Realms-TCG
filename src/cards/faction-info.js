@@ -1,6 +1,13 @@
 // Short faction guides shown on the main menu under your matchup.
 // Designer: rewrite freely. Keep `strengths` and `weaknesses` to 3 short points each.
 export const FACTION_INFO = {
+  'Fruit Ninjas': {
+    summary: 'Shinobi of the enchanted orchard: grow magic Fruits, slice them open, and unleash their power.',
+    strengths: ['Every Slice is a free spell: damage, buffs, Taunts or healing', 'Flexible: Harvest a new Fruit every turn', 'Stealth and Combo tricks that are hard to pin down'],
+    weaknesses: ['Fruits are 0/1 and die to any ping or board wipe', 'Slice effects pick random targets', 'Silence turns a Fruit into nothing'],
+    mechanic: "Harvest (1 Mana): Slice your leftmost Fruit, then summon a random Fruit. Fruits are 0/1 minions that can't attack. Slice: destroy one of your Fruits to unleash its power. Multislice (X): Slice up to X of your Fruits. Combo: a bonus if you played another card first this turn.",
+    style: 'Tempo · Combo',
+  },
   'Monster Hunter': { summary: 'A weapon-first hunter who brings a specialized answer to every kind of monster.', strengths: ['Hero-led weapon damage', 'Tools tailored to particular prey', 'Strong pairings with other weapon factions'], weaknesses: ['Needs weapons to deal damage', 'Specialist tools can be narrow', 'Attacking exposes the Hero to retaliation'], mechanic: 'Dual-Wield (passive): equip two different weapons. While both are equipped, attack twice, using the first weapon for the first attack and the second for the next.', style: 'Hero combat · Weapons' },
   Vampires: {
     summary: 'Drain life to outlast anyone, and turn your own lost Health into power.',
@@ -370,6 +377,28 @@ export const SYNERGY = {
 };
 
 Object.assign(SYNERGY, {
+  'Acidic+Fruit Ninjas': [3, 'Corrosion shrinks the enemy while Slices pick off what is left.'],
+  'Aliens+Fruit Ninjas': [3, 'Keywords and bounces open the board for Slice damage.'],
+  'Bees+Fruit Ninjas': [3, 'The Hive holds the line while Fruits are grown and sliced behind it.'],
+  'Demons+Fruit Ninjas': [4, 'Healing Peaches pay back the Health Demons spend.'],
+  'Dinosaurs+Fruit Ninjas': [3, 'Slice buffs make huge Dinosaurs even bigger.'],
+  'Divine+Fruit Ninjas': [4, 'Healing, Taunts and steady Slices win the long game.'],
+  'Dragons+Fruit Ninjas': [4, 'Burn weakens the board and Slices finish it.'],
+  'Eels+Fruit Ninjas': [4, 'Chains and Slices both pick apart a wide enemy board.'],
+  'Fruit Ninjas+Fungus': [3, 'Fruits and Taunts buy time while the Mushrooms tick.'],
+  'Fruit Ninjas+Ghosts': [3, 'Fruits fill the Graveyard and the board keeps refilling.'],
+  'Fruit Ninjas+Ice Age': [4, 'Frozen enemies stand still while the Slices land.'],
+  'Fruit Ninjas+Lycanthropes': [3, 'Slice buffs turn a fresh Beast Form into a huge hit.'],
+  'Fruit Ninjas+Monster Hunter': [4, 'Two weapon realms: every Hero swing can slice another Fruit.'],
+  'Fruit Ninjas+Plants': [4, 'A wide board of Seedlings and Fruits that grows every turn.'],
+  'Fruit Ninjas+Radioactive': [3, 'Radiation lowers Health so small Slice hits kill.'],
+  'Fruit Ninjas+Robots': [3, 'Upgrades and Slice buffs stack on the same machines.'],
+  'Fruit Ninjas+Sharks': [5, 'Slice damage wounds enemies into Prey for the Sharks.'],
+  'Fruit Ninjas+Ultraterrestrials': [3, 'Displace the blocker, slice through the rest.'],
+  'Fruit Ninjas+Vampires': [4, 'Lifesteal and Healing Peaches keep your Hero topped up.'],
+  'Fruit Ninjas+Void': [4, 'Cheap Fruits empty your hand fast for Hollow.'],
+  'Fruit Ninjas+Witches': [3, 'Silence the threats, slice the rest; Slices dodge Counters.'],
+  'Fruit Ninjas+Zombies': [3, 'Reborn bodies and Fruits keep the board full.'],
   'Acidic+Monster Hunter': [4, 'Corrosion strips Attack while the Hunter answers a specific prey type with the right weapon.'],
   'Aliens+Monster Hunter': [4, 'Implants and stolen forms create targets for a weapon-focused Hero to finish.'],
   'Bees+Monster Hunter': [4, 'The Hive and its defenders protect the Hunter while weapons control priority threats.'],
@@ -400,7 +429,7 @@ export const DECK_TYPES = [
   { name: 'Aggro', blurb: 'Hit hard, hit fast, end it early.', factions: ['Demons', 'Sharks', 'Void', 'Monster Hunter'] },
   { name: 'Swarm', blurb: 'Flood the board with many small minions.', factions: ['Zombies', 'Plants', 'Bees'] },
   { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs'] },
-  { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials', 'Lycanthropes'] },
+  { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials', 'Lycanthropes', 'Fruit Ninjas'] },
   { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts', 'Eels', 'Witches'] },
   { name: 'Attrition', blurb: 'Protect, outlast and wear them down.', factions: ['Divine', 'Fungus', 'Acidic', 'Ice Age'] },
 ];
@@ -410,5 +439,5 @@ export const EXPANSION_NAMES = {
   Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
   Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
   Divine: 'The Holy Pyre', Acidic: 'The Half-Digested', Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
-  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time', Eels: 'Storm Season', Witches: 'Spellbound', 'Monster Hunter': 'The Final Hunt',
+  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time', Eels: 'Storm Season', Witches: 'Spellbound', 'Monster Hunter': 'The Final Hunt', 'Fruit Ninjas': 'Shadow Orchard',
 };

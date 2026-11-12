@@ -95,6 +95,8 @@ function minionValue(m, W, discount = 1) {
   let v = effectiveAttack(m) * W.atk + m.health * W.health;
   // Eels: stored Volts are damage banked for later (they go off even when it dies).
   v += (m.volts ?? 0) * 0.9;
+  // Fruit Ninjas: an unsliced Fruit is a spell waiting to go off (worth about its Mana Cost).
+  if (card.slice?.length && !hasKeyword(m, 'Silenced')) v += 0.8 + card.cost * 0.9;
   for (const k of allKeywords(m)) v += (KEYWORD_VALUE[k]?.(m) ?? 0) * W.keyword;
   // Ongoing abilities (triggers, auras) are worth more on pricier cards.
   if ((card.triggers ?? []).some((t) => t.on !== 'battlecry' && t.on !== 'summon') || card.aura || card.costAura) v += W.ongoing + card.cost * W.ongoingCost;

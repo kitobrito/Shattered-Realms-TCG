@@ -1,10 +1,12 @@
 // Community polls, shared by the game (the Vote tab in the patch notes) and the server (which counts the
 // votes). One vote per player: a signed-in account votes as itself, anyone else as their device; voting
 // again changes your vote. An option can have `art` (a square picture); until then its `icon` emoji shows.
-// To start a new poll, add it here and point CURRENT_POLL at it.
+// To start a new poll, add it here and point CURRENT_POLL at it. A closed poll (`closed: true`) takes no
+// more votes; its `winner` is announced in the patch notes.
 export const POLLS = {
   'next-faction': {
     question: 'Which faction should join the realms next?',
+    closed: true, winner: 'fruit-ninjas', // November 13: Fruit Ninjas won and joined the realms.
     blurb: 'Your vote picks the next realm we build. You can change your vote until the poll closes.',
     options: [
       { id: 'space-cowboys', art: 'art/ui/vote-space-cowboys.jpg', name: 'Space Cowboys', icon: '🤠', blurb: 'Six-shooters, star-sabers and a showdown under three moons. Who says you can\'t bring a blade to a gunfight?' },
@@ -14,4 +16,5 @@ export const POLLS = {
     ],
   },
 };
-export const CURRENT_POLL = 'next-faction';
+// No poll is open right now (the menu's vote box and the patch notes' Vote tab only show for an open one).
+export const CURRENT_POLL = null;

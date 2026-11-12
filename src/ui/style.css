@@ -4978,6 +4978,11 @@ body.reduced-motion .descent { display: none; }
 .big-card.t-trap.f-eels { --frame: #3a2410; --frame-hi: #e0904a; --body: #120a04; }
 .big-card.shard.f-eels, .minion.shardm.f-eels { --accent: #5ae8ff; }
 .arena.f-eels { --felt: #12303a; --felt-2: #04121a; --rim: #5ae8ff; }
+.big-card.f-fruit-ninjas { --frame: #3a1e10; --frame-hi: #ff9a5a; --body: #140a04; }
+.big-card.t-spell.f-fruit-ninjas { --frame: #1e3a12; --frame-hi: #7dff6a; --body: #081404; }
+.big-card.t-trap.f-fruit-ninjas { --frame: #3a1024; --frame-hi: #ff6aa0; --body: #12040a; }
+.big-card.shard.f-fruit-ninjas, .minion.shardm.f-fruit-ninjas { --accent: #ff7a3a; }
+.arena.f-fruit-ninjas { --felt: #2a1a10; --felt-2: #0e0804; --rim: #ff9a5a; }
 .medallion.f-eels { --fc: #5ae8ff; } .ts-guide.f-eels { --fc: #5ae8ff; }
 .fx-p.voltspark { width: 7px; height: 7px; background: #fffbe0; clip-path: polygon(40% 0, 70% 0, 52% 42%, 85% 42%, 30% 100%, 45% 55%, 15% 55%); filter: drop-shadow(0 0 4px #5ae8ff); }
 .big-card.f-ice-age { --frame: #2a4258; --frame-hi: #c8f0ff; --body: #0a141c; }
@@ -5791,6 +5796,28 @@ body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-
 /* ---- Witches: curse runes, three-stage smoke, cauldron bubbles, wand bolt, Counter, witchflame ----
    Palette: deep violet #2b0938, emerald #10b981, eldritch magenta #d946ef, spectral white. */
 .fx-p.hexrune { width: 8px; height: 8px; background: #f5d0ff; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); filter: drop-shadow(0 0 4px #d946ef) drop-shadow(0 0 2px #10b981); }
+.fx-slice-half { position: fixed; pointer-events: none; z-index: 60; background-size: cover; background-position: center; border-radius: 8%;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.55)); will-change: transform, opacity; }
+.fx-slice-text { position: fixed; pointer-events: none; z-index: 70; white-space: nowrap; font-family: 'Cinzel', 'Georgia', serif; font-weight: 800;
+  font-size: clamp(20px, 2.8vw, 36px); letter-spacing: 0.04em; color: #fff8e6;
+  text-shadow: 0 0 6px var(--c, #ff9a5a), 0 0 16px var(--c, #ff9a5a), 0 2px 0 #0008, 0 0 2px #000; will-change: transform, opacity; }
+.fx-wisp { position: fixed; pointer-events: none; z-index: 69; width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, var(--l, #ffe0a0) 35%, var(--c, #ff9a5a) 65%, transparent 72%);
+  box-shadow: 0 0 14px 6px var(--c, #ff9a5a), 0 0 30px 10px var(--l, #ffe0a0); will-change: transform, opacity; }
+.fx-wisp-spark { position: fixed; pointer-events: none; z-index: 68; width: 6px; height: 6px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 6px 2px var(--c, #ff9a5a); will-change: transform, opacity; }
+.fx-slice-card { position: fixed; pointer-events: none; z-index: 60; background: center / cover no-repeat; border-radius: 14%;
+  clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%); will-change: transform, opacity, filter; }
+.fx-slice-fruit { position: fixed; pointer-events: none; z-index: 62; background-repeat: no-repeat; background-position: center;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5)); will-change: transform, opacity; }
+.fx-slice-blade { position: fixed; pointer-events: none; z-index: 63; background: center / contain no-repeat; transform-origin: 50% 50%;
+  mix-blend-mode: screen; filter: drop-shadow(0 0 8px rgba(160,220,255,0.9)); will-change: transform, opacity; }
+.fx-slice-splash { position: fixed; pointer-events: none; z-index: 61; background: center / contain no-repeat; transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 6px var(--juice, #ff9a5a)) sepia(0.4) saturate(2.2) hue-rotate(0deg); will-change: transform, opacity; }
+.fx-slice-streak { position: fixed; pointer-events: none; z-index: 61; transform-origin: 50% 50%; border-radius: 3px;
+  background: linear-gradient(90deg, transparent, #fff 18%, #fff 82%, transparent);
+  box-shadow: 0 0 10px 3px var(--juice, #ff9a5a), 0 0 22px 6px rgba(255,255,255,0.5); will-change: transform, opacity; }
+.fx-p.petal { width: 9px; height: 6px; background: #ffb7c9; border-radius: 80% 0 80% 0; filter: drop-shadow(0 0 3px #ff7a9a) drop-shadow(0 0 2px #ffd25a); }
 .fx-hex-smoke { position: fixed; z-index: 906; pointer-events: none; border-radius: 50%;
   background: radial-gradient(circle at 50% 55%, #6b2a8ccc 0%, #2b0938aa 38%, #10b98144 62%, transparent 72%); filter: blur(2px); }
 .fx-hex-ember { position: fixed; z-index: 909; pointer-events: none; width: 3px; height: 3px; border-radius: 50%; background: #eafff5; box-shadow: 0 0 6px #10b981, 0 0 2px #d946ef; }

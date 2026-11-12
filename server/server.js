@@ -659,15 +659,17 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     const reply = (code, body) => { res.writeHead(code, head); res.end(JSON.stringify(body)); };
     if (req.method === 'OPTIONS') { res.writeHead(204, head); return res.end(); }
     const id = decodeURIComponent(url.pathname.slice('/poll/'.length));
-    const poll = POLLS[id];
+    const poll = POLLS[id] ?? (process.env.POLL_TEST && id === 'test-poll' ? { ...POLLS['next-faction'], closed: false } : null);
     if (!poll) return reply(404, { error: 'No such poll' });
     const totals = async () => {
       const counts = await store.tally(id);
       const valid = Object.fromEntries(poll.options.map((o) => [o.id, counts[o.id] ?? 0]));
       return { poll: id, counts: valid, total: Object.values(valid).reduce((a, b) => a + b, 0) };
     };
-    if (req.method === 'GET') return reply(200, await totals());
+    if (req.method === 'GET') return reply(200, { ...(await totals()), ...(poll.closed ? { closed: true, winner: poll.winner ?? null } : {}) });
     if (req.method !== 'POST') return reply(405, { error: 'GET or POST' });
+    // A closed poll takes no more votes (its totals can still be read).
+    if (poll.closed) return reply(403, { error: 'This poll has closed', winner: poll.winner ?? null });
     let body = '';
     for await (const chunk of req) { body += chunk; if (body.length > 2000) return reply(413, { error: 'Too big' }); }
     let msg;

@@ -282,7 +282,7 @@ export const XENO_FORMS = {
   Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
   Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
   Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
-  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno', Eels: 'xeno_voltwyrm', Witches: 'xeno_hexmorph',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno', Eels: 'xeno_voltwyrm', Witches: 'xeno_hexmorph', 'Fruit Ninjas': 'xeno_shinobi',
 };
 const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
 export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
@@ -474,6 +474,13 @@ export function checkCondition(state, cond, ctx) {
   if (!cond) return true;
   // { all: [conditions] } — every one must hold.
   if (cond.all) return cond.all.every((c) => checkCondition(state, c, ctx));
+  // Fruit Ninjas: { combo } — you played another card earlier this turn; { slicedThisTurn } — you
+  // Sliced a Fruit this turn; { lastSliced: cardId } — the Fruit this effect just Sliced was that one.
+  if (cond.combo != null) return !!ctx.combo === cond.combo;
+  // { enemyHasFaction: [factions] } — the opponent controls a minion from one of these realms.
+  if (cond.enemyHasFaction) return state.players[opponentOf(ctx.controller)].board.some((m) => m.health > 0 && !m.destroyed && cond.enemyHasFaction.includes(getCard(m.cardId).faction));
+  if (cond.slicedThisTurn != null) return (slicesThisTurn(state, ctx.controller) > 0) === cond.slicedThisTurn;
+  if (cond.lastSliced) return ctx.lastSliced === cond.lastSliced;
   // Robots (Arsenal): { armorAtLeast: N } — your Hero has N+ Armor; { heroHasWeapon } — your Hero holds a Weapon.
   if (cond.armorAtLeast != null) return (heroOf(state, ctx.controller).armor ?? 0) >= cond.armorAtLeast;
   // { eventTargetGone } — the attacked character is dead or already off the board (Power Fist).
@@ -753,6 +760,71 @@ export function dischargeMinion(state, m, opts = {}) {
 }
 const CHAIN_OPTS = ['lifesteal', 'burn', 'corrode', 'radiate', 'preyLast', 'healPerHit', 'freeze', 'lossless'];
 
+// ---- Fruit Ninjas: Slice ------------------------------------------------------------
+// A Fruit is a 0/1 minion (tribe Fruit) that can't attack. Slicing it destroys it and runs its
+// `slice` effects for the slicer's controller. Only a Slice does that: a Fruit killed any other way
+// (an enemy attack or spell, a board wipe) just dies. A Silenced Fruit is sliced for nothing.
+// Slice effects choose their targets at random (a friendly buff never lands on another Fruit).
+// Counters: the player's Slices this turn (Twin-Slice Trainee, Miyori, "if you Sliced a Fruit this
+// turn"), Emperor Pomelo's double Slices, Razorleaf Apprentice's bonus on the next Slice.
+export const isFruitMinion = (m) => !!m && m.kind === 'minion' && hasTribe(m.tribes, 'Fruit');
+const sliceable = (m, p) => isFruitMinion(m) && m.controller === p && m.health > 0 && !m.destroyed;
+
+export function slicesThisTurn(state, p) {
+  const pl = state.players[p];
+  return pl.sliceTurn === state.turn ? (pl.slices ?? 0) : 0;
+}
+
+// Your Fruits, leftmost first (what Multislice and "Slice a friendly Fruit" without a choice take).
+export function friendlyFruits(state, p) {
+  return state.players[p].board.filter((m) => sliceable(m, p));
+}
+
+export function sliceFruit(state, fruit, ctx) {
+  const p = ctx.controller;
+  if (!sliceable(fruit, p)) return false;
+  const pl = state.players[p];
+  if (pl.sliceTurn !== state.turn) { pl.sliceTurn = state.turn; pl.slices = 0; }
+  const first = pl.slices === 0;
+  pl.slices += 1;
+  const live = (m) => m.health > 0 && !m.destroyed && !m.textLost && !hasKeyword(m, 'Silenced');
+  let times = 1;
+  // Twin-Slice Trainee: the first Fruit you Slice each turn works twice.
+  if (first && pl.board.some((m) => live(m) && getCard(m.cardId).doubleFirstSlice)) times = 2;
+  // Emperor Pomelo: your next N Slices this turn work twice.
+  if (pl.doubleSlices?.turn === state.turn && pl.doubleSlices.left > 0) { pl.doubleSlices.left -= 1; times = 2; }
+  const card = getCard(fruit.cardId);
+  // extraSlice: powers a card added to this Fruit (fusions: a spliced Slice, a Bee on the Slice).
+  const effects = fruit.textLost || hasKeyword(fruit, 'Silenced') ? [] : [...(card.slice ?? []), ...(fruit.extraSlice ?? [])];
+  fruit.destroyed = true;
+  fruit.sliced = true;
+  fruit.lastDamagedBy = ctx.self;
+  fruit.lastDamagedByController = p;
+  log(state, `🔪 ${pl.name} Slices ${card.name}${times > 1 ? ' (twice!)' : ''}.`);
+  traceFx(state, { type: 'slice', source: ctx.self, target: fruit.uid, cardId: fruit.cardId, times });
+  const sctx = { self: fruit.uid, controller: p, cardId: fruit.cardId, slicer: ctx.self };
+  // Which characters the Slice changed (for the bonus wisp the UI flies into each of them): a snapshot
+  // of every character before, compared after. New minions (a Phantom Shinobi) count too.
+  const snap = (c) => `${c.attack}|${c.tempAttack ?? 0}|${c.health}|${c.maxHealth}|${allKeywords(c).join(',')}|${(c.lingerKeywords ?? []).length}|${(c.lingerAttack ?? []).length}`;
+  const before = new Map(state.players.flatMap((pl) => [pl.hero, ...pl.board]).map((c) => [c.uid, snap(c)]));
+  const handBefore = state.players[p].hand.length;
+  for (let i = 0; i < times; i++) for (const e of effects) resolveEffect(state, e, sctx);
+  const touched = state.players.flatMap((pl) => [pl.hero, ...pl.board])
+    .filter((c) => c.uid !== fruit.uid && before.get(c.uid) !== snap(c)).map((c) => c.uid);
+  traceFx(state, { type: 'sliceBonus', source: fruit.uid, cardId: fruit.cardId, player: p, targets: touched,
+    toHand: state.players[p].hand.length > handBefore, extra: (fruit.extraSlice ?? []).length > 0 });
+  // Razorleaf Apprentice: your next Slice this turn also deals damage to a random enemy minion.
+  if (pl.sliceBonus?.turn === state.turn && pl.sliceBonus.damage > 0) {
+    const dmg = pl.sliceBonus.damage;
+    pl.sliceBonus = null;
+    resolveEffect(state, { op: 'damage', target: { randomOf: { minions: { side: 'enemy', alive: true } } }, amount: dmg }, { self: ctx.self, controller: p });
+  }
+  ctx.sliced = (ctx.sliced ?? 0) + 1;
+  ctx.lastSliced = fruit.cardId;
+  emit(state, { type: 'fruitSliced', source: fruit.uid, player: p, cardId: fruit.cardId, first });
+  return true;
+}
+
 function syncDualWield(hero) {
   const keywords = (hero.auraKeywords ?? []).filter((k) => k !== 'Twin Strike');
   if (hero.dualWield && hero.weapon && hero.weapon2 && hero.weapon.cardId !== hero.weapon2.cardId) keywords.push('Twin Strike');
@@ -760,6 +832,74 @@ function syncDualWield(hero) {
 }
 
 export const EFFECT_OPS = {
+  // ---- Fruit Ninjas ----
+  // { target? } — Slice the chosen friendly Fruit (or your leftmost Fruit when nothing was chosen,
+  // e.g. a Weapon or Quick Play). Sets ctx.sliced so "If you do" effects can check { ctxFlag: 'sliced' }.
+  slice(state, e, ctx) {
+    let fruit = e.target ? findCharacter(state, resolveSelector(state, e.target, ctx)[0]) : null;
+    if (!e.target || (e.fallback && !sliceable(fruit, ctx.controller))) fruit = friendlyFruits(state, ctx.controller)[0] ?? null;
+    if (!fruit) { if (!e.quiet) log(state, 'No Fruit to Slice.'); return; }
+    sliceFruit(state, fruit, ctx);
+  },
+  // { count, perSlice? } — Multislice (X): Slice up to X of your Fruits (leftmost first), each one
+  // working separately; perSlice effects run once for every Fruit sliced (Kenzaru, Blender Barrage).
+  multislice(state, e, ctx) {
+    const fruits = friendlyFruits(state, ctx.controller).slice(0, e.count ?? 1);
+    if (!fruits.length) { log(state, 'No Fruit to Slice.'); return; }
+    for (const f of fruits) {
+      if (!sliceFruit(state, f, ctx)) continue;
+      for (const sub of e.perSlice ?? []) resolveEffect(state, sub, ctx);
+    }
+  },
+  // { from: selector, as? } — pick one random character now and remember it as ctx.chosen (or `as`),
+  // so several effects can land on the same random target (Inferno Pineapple, Frost Grape Cluster).
+  pickRandom(state, e, ctx) {
+    const pool = resolveSelector(state, e.from, ctx).filter((id) => { const c = findCharacter(state, id); return c && c.health > 0 && !c.destroyed; });
+    ctx[e.as ?? 'chosen'] = pool.length ? pickRandom(state, pool) : null;
+  },
+  // { target, effects?, randomFruit? } — the Fruit gains more Slice effects: the given ones, or (randomFruit)
+  // the Slice effect of a random different Fruit (Genetic Fruit Splicing, Swarming Harvest).
+  addSliceEffect(state, e, ctx) {
+    each(state, e.target, ctx, (m) => {
+      if (!isFruitMinion(m)) return;
+      let add = e.effects ?? [];
+      if (e.randomFruit) {
+        const pool = allCards().filter((c) => c.slice?.length && c.id !== m.cardId && !c.token).map((c) => c.id);
+        const id = pickRandom(state, pool);
+        if (!id) return;
+        add = getCard(id).slice;
+        log(state, `🧬 ${nameOf(state, m)} also carries ${getCard(id).name}'s power.`);
+      }
+      m.extraSlice = [...(m.extraSlice ?? []), ...add];
+    });
+  },
+  // { count } — Emperor Pomelo: your next N Slices this turn work twice.
+  doubleSlices(state, e, ctx) {
+    state.players[ctx.controller].doubleSlices = { turn: state.turn, left: e.count ?? 1 };
+  },
+  // { damage } — Razorleaf Apprentice: your next Slice this turn deals damage to a random enemy minion.
+  sliceBonus(state, e, ctx) {
+    state.players[ctx.controller].sliceBonus = { turn: state.turn, damage: e.damage ?? 1 };
+  },
+  // { effects, max } — The Thousand Cuts: run the effects again once for each Fruit you Sliced this
+  // turn (up to max more times). A repeat that finds its first target gone takes a random enemy minion.
+  repeatPerSlice(state, e, ctx) {
+    const n = Math.min(e.max ?? 99, slicesThisTurn(state, ctx.controller));
+    for (let i = 0; i < n; i++) {
+      const t = findCharacter(state, ctx.chosen);
+      if (!t || t.health <= 0 || t.destroyed) {
+        const pool = state.players[opponentOf(ctx.controller)].board.filter((m) => m.health > 0 && !m.destroyed);
+        if (!pool.length) return;
+        ctx.chosen = pickRandom(state, pool).uid;
+      }
+      for (const sub of e.effects) resolveEffect(state, sub, ctx);
+    }
+  },
+  // { target } — the minion may attack once more this turn (Raiketsu).
+  extraAttack(state, e, ctx) {
+    each(state, e.target, ctx, (m) => { m.bonusAttacks = (m.bonusAttacks ?? 0) + (e.count ?? 1); });
+  },
+
   // { target, from } — a Beast Form steals the dead minion's hide.
   takeHide(state, e, ctx) {
     const victim = findCharacter(state, resolveSelector(state, e.from, ctx)[0]);
@@ -1461,6 +1601,8 @@ export const EFFECT_OPS = {
   // { cardId } — put a card into your hand.
   addToHand(state, e, ctx) {
     let cardId = e.cardId;
+    // pool: a random card from this list (Fruit Ninjas: "add a random Fruit to your hand").
+    if (e.pool) cardId = pickRandom(state, e.pool);
     // fromGraveyard: a random friendly minion that died this game, not a token (Corpse Bloom).
     if (e.fromGraveyard) {
       const pool = [...new Set(state.players[ctx.controller].graveyard.filter((g) => g.died).map((g) => g.cardId)

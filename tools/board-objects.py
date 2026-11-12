@@ -43,6 +43,10 @@ SHIMMER = {'method': 'hsv', 'hsv': [[105, 178, 22, 120, 105, 238]], 'close': 1, 
 CHAINS = {'method': 'hsv', 'hsv': [[0, 180, 0, 255, 0, 62], [0, 180, 0, 40, 120, 255], [0, 14, 90, 255, 60, 200]], 'close': 1, 'expand': 4, 'within': {'method': 'model'}}
 BONE_CUT = {'within': {'method': 'hsv', 'hsv': [[0, 180, 0, 115, 115, 255], [0, 180, 0, 255, 0, 50]], 'close': 2, 'grow': 1, 'expand': 0}}
 HINTS = {
+    # Fruit Ninjas: every moving prop is cut by colour from its box (grabcut).
+    **{f'{k}/{i}': {'method': 'grabcut'} for k, ids in {
+        'fruit-ninjas-land': ['bonsai', 'dummy', 'koi', 'press'], 'fruit-ninjas-portrait': ['bonsai', 'dummy', 'koi', 'press'],
+        'fruit-ninjas-night-land': ['dragon', 'banners'], 'fruit-ninjas-night-portrait': ['dragon']}.items() for i in ids},
     # Sundown Street: the noose's shadow is a soft dark loop on the sand (no edge for the model to find).
     'mh-sundown-street-land/hand': {'method': 'hsv', 'hsv': [[0, 180, 0, 110, 140, 255]], 'keep': [[853, 445, 884, 486]], 'close': 2, 'expand': 0},
     'mh-sundown-street-land/posterV': {'keep': [[819, 24, 862, 81]]},
