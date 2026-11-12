@@ -4,7 +4,8 @@
 // category tabs, which gather one kind of news across every post. Block contents:
 //   cards:   [{ title, blurb, set | faction | ids | legendaryOf: { sets, factions } }]  a gallery of cards
 //   compare: [{ id, before: {...}, note }]   the card as it was, an arrow, the card now (tap to see it big)
-//   boards:  [{ name, realm, unlock }]        board paintings (tap to see one big)
+//   boards:  [{ name, realm, unlock, src? }]  board paintings (tap to see one big); src: a preview painting not in the game yet
+//   art:     [{ src, title, caption }]        preview art for something coming soon (tap to see it big)
 //   list:    [{ cards: [ids], text }]         lines, each led by small tappable card chips
 // A balance change (compare item or list line) carries `kind`: buff, nerf, tweak or rework.
 // Any block, compare item or list line can carry `why`: the reason for the change, in a line under it.
@@ -19,6 +20,7 @@ import { artOf, bigCardHTML, esc } from './shared.js';
 import { CURRENT_POLL, POLLS } from '../polls.js';
 
 export const PATCH_CATS = {
+  preview: { label: 'Coming soon', tab: 'Coming soon' },
   faction: { label: 'New faction', tab: 'New factions' },
   expansion: { label: 'New expansion', tab: 'Expansions' },
   legendary: { label: 'New legendary', tab: 'Legendaries' },
@@ -40,6 +42,28 @@ export const PATCH_KINDS = {
 };
 
 export const PATCH_NOTES = [
+  {
+    id: '2026-11-13-swine-butchers-preview',
+    date: 'November 13',
+    title: 'Coming soon: the Swine Butchers',
+    tag: 'Faction preview',
+    intro: 'The next realm is on its way. Pigmen in fine suits run the most exclusive restaurant in the realms, and its patrons rave about the meat. They never ask where it comes from. They really should.',
+    blocks: [
+      { cat: 'preview', h: 'The Swine Butchers', list: [
+        { cards: [], text: 'A new mid-range Bleed deck. The Swine Butchers open wounds that keep on bleeding, carve their enemies down a little more every turn, and serve up what is left.' },
+        { cards: [], text: 'The Golden Trough is the finest dining in the realms. Its meat comes fresh every day from the butcher downstairs, and nobody wants to know what he butchers.' },
+      ] },
+      { cat: 'preview', h: 'First cards', art: [
+        { src: 'art/ui/swine-preview-head-chef.jpg', title: 'The Head Chef', caption: "Tonight's special is fresh. Very fresh." },
+        { src: 'art/ui/swine-preview-butcher-apprentice.jpg', title: 'The Butcher\'s Apprentice', caption: 'Learning the trade, one cut at a time.' },
+        { src: 'art/ui/swine-preview-maitre-d.jpg', title: 'The Maître d\'', caption: 'Your table is ready. Your dinner is... someone.' },
+      ] },
+      { cat: 'preview', h: 'First boards', boards: [
+        { name: 'The Golden Trough', src: 'art/ui/swine-preview-board-restaurant.jpg', realm: 'Swine Butchers', unlock: 'The restaurant: candlelit tables, silver cloches and a grinder that never stops.' },
+        { name: 'The Cold Room', src: 'art/ui/swine-preview-board-kitchen.jpg', realm: 'Swine Butchers', unlock: 'Downstairs, where the meat comes from.' },
+      ] },
+    ],
+  },
   {
     id: '2026-11-13-fruit-ninjas',
     date: 'November 13',
@@ -610,7 +634,7 @@ function beforeCard(id, before) {
 const kindHTML = (k) => (PATCH_KINDS[k] ? `<span class="pn-kind k-${k}">${PATCH_KINDS[k].label}</span>` : '');
 const whyHTML = (why) => (why ? `<small class="pn-why"><b>Why:</b> ${esc(why)}</small>` : '');
 const sized = (html) => html.replace('class="big-card', 'class="big-card pn-big');
-const boardSrc = (b) => BOARD_ART[b.name];
+const boardSrc = (b) => b.src ?? BOARD_ART[b.name];
 
 function bodyHTML(b) {
   if (b.cards) {
@@ -634,8 +658,13 @@ function bodyHTML(b) {
     }).join('');
   }
   if (b.boards) {
-    return `<div class="pn-boards">${b.boards.filter(boardSrc).map((x) => `<button class="pn-board" data-act="patchBoard:${encodeURIComponent(x.name)}" title="See ${esc(x.title ?? x.name)}">
+    return `<div class="pn-boards">${b.boards.filter(boardSrc).map((x) => `<button class="pn-board" data-act="patchBoard:${encodeURIComponent(x.src ?? x.name)}" title="See ${esc(x.title ?? x.name)}">
       <img src="${boardSrc(x)}" alt="" loading="lazy" draggable="false"><span><b>${esc(x.title ?? x.name)}</b><small>${esc(x.realm)} · ${esc(x.unlock)}</small></span></button>`).join('')}</div>`;
+  }
+  // Preview art (coming soon): square paintings with a caption, tap for the big one.
+  if (b.art) {
+    return `<div class="pn-art">${b.art.map((x) => `<button class="pn-art-item" data-act="patchBoard:${encodeURIComponent(x.src)}" title="See ${esc(x.title)}">
+      <img src="${x.src}" alt="" loading="lazy" draggable="false"><span><b>${esc(x.title)}</b>${x.caption ? `<small>${esc(x.caption)}</small>` : ''}</span></button>`).join('')}</div>`;
   }
   return `<ul class="pn-list">${b.list.map((it) => `<li>${it.cards?.length ? `<span class="pn-chips">${it.cards.map(chip).join('')}</span>` : ''}<span class="pn-text">${kindHTML(it.kind)}${esc(it.text)}${whyHTML(it.why)}</span></li>`).join('')}</ul>`;
 }
@@ -703,7 +732,9 @@ export function patchNotesHTML({ post = 0, tab = null, board = null, poll = null
       <p class="pn-intro">${esc(p.intro)}</p>${p.blocks.map((b) => blockHTML(b)).join('')}
       ${p.details?.length ? `<details class="pn-details"><summary>Every change in this update (${p.details.length})</summary><ul>${p.details.map((d) => `<li>${esc(d)}</li>`).join('')}</ul></details>` : ''}`;
   }
-  const big = board && BOARD_ART[board] ? `<div class="pn-board-view" data-act="closePatchBoard"><img src="${BOARD_ART[board]}" alt=""><small>Tap to close</small></div>` : '';
+  // A board by name, or a preview painting by its path (art/previews/...).
+  const bigSrc = board ? BOARD_ART[board] ?? (board.startsWith('art/') ? board : null) : null;
+  const big = bigSrc ? `<div class="pn-board-view" data-act="closePatchBoard"><img src="${bigSrc}" alt=""><small>Tap to close</small></div>` : '';
   return `<div class="overlay patch-overlay"><div class="guide-backdrop" data-act="closePatch"></div>
     <div class="patch-panel" role="dialog" aria-label="Patch notes">
       <header class="pn-head"><h3>Patch notes</h3><button class="ghost pn-close" data-act="closePatch" aria-label="Close">✕</button></header>
