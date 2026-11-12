@@ -10,6 +10,7 @@ import { allCards, getCard } from '../engine/registry.js';
 import { PLAYABLE_FACTIONS } from '../cards/index.js';
 import { ALT_BOARDS, BOARD_ART } from '../cards/board-art.js';
 import { boardProgress } from './unlocks.js';
+import { missionCardHTML } from './missions.js';
 import { artOf, cardHTML, esc, icon } from './shared.js';
 
 const extras = () => allCards().filter((c) => c.extra && !c.token && !c.custom && !c.alwaysUnlocked);
@@ -52,10 +53,8 @@ export function shopHTML(shop, signedIn) {
 function dailiesHTML(e) {
   return `<section class="sh-panel"><div class="sh-row"><h2>Daily missions</h2><span class="sh-sub">New missions in ${hhmm(e.resetsIn)}</span></div>
     <p class="sh-sub">Win Quick Match or Ranked games to complete them. Each pays <b>${e.rules.dailyPoints} points</b>. Missions you don't finish today are replaced tomorrow.</p>
-    <ul class="sh-dailies">${e.dailies.map((m) => `<li class="${m.done ? 'done' : ''}">
-      <span class="sh-check">${m.done ? '✔' : ''}</span>
-      <div><b>${esc(m.text)}</b><div class="sh-bar"><i style="width:${(m.progress / m.need) * 100}%"></i></div><small>${m.progress} / ${m.need}</small></div>
-      <span class="sh-reward">+${price(m.points)}</span></li>`).join('')}</ul>
+    <ul class="dm-list sh-dailies-big">${e.dailies.map((m, i) => `<li class="dm-mission ${m.done ? 'done' : ''}" style="--i:${i}">
+      ${missionCardHTML(m)}${m.done ? '<em class="dm-done">✔ Done</em>' : ''}</li>`).join('')}</ul>
     <p class="sh-sub">Winning still unlocks cards too, until you own ${e.rules.freePerFaction} of a realm's expansion cards. The rest of a realm come from its packs.</p></section>`;
 }
 

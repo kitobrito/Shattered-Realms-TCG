@@ -51,6 +51,7 @@ export const PATCH_NOTES = [
         { cards: [], text: 'A glowing Daily Missions button on the main menu shows how many missions you have left today. Open it to see all of them.' },
         { cards: [], text: 'Every mission has a Play button that sets up the game it asks for: the right fusion or realm, then Quick Match (or Ranked for the Ranked mission). Before the match starts you choose your deck: your current deck, the default deck or one of your saved decks, or edit the deck first.' },
         { cards: [], text: 'You now get 5 daily missions a day instead of 4, each still worth 80 points. If you already had today\'s 4, the fifth has been added.' },
+        { cards: [], text: 'Missions are easier to read: bigger, centred, with the numbers, realms and kind of game glowing so you can see at a glance what each one asks for.' },
       ] },
       { cat: 'qol', h: 'Main menu', list: [
         { cards: [], text: 'Your name, rank and points now show at the top of the main menu.' },

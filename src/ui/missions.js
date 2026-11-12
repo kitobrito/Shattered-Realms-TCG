@@ -6,6 +6,28 @@
 // missions: { open, step: 'list' | 'setup', mission, deck: index into the deck options } | null
 
 import { esc, icon, rankBadgeHTML } from './shared.js';
+import { factionColor } from './fx.js';
+
+// A mission's text with its key words picked out: the numbers, the realms (in their own colour), and
+// what kind of game or deck it asks for. The highlights glow and pulse (style.css .dm-hl).
+const MISSION_WORDS = ['Quick Match', 'Ranked', 'fusion', 'two-realm deck', 'single-realm deck', 'public games', 'in your deck'];
+export function missionTextHTML(m) {
+  const realms = [...(Array.isArray(m.factions) ? m.factions : []), ...(m.faction ? [m.faction] : [])];
+  const tokens = [
+    ...realms.map((f) => ({ word: f, html: `<span class="dm-hl dm-realm" style="--fc:${factionColor(f)}">${esc(f)}</span>` })),
+    ...MISSION_WORDS.map((w) => ({ word: w, html: `<span class="dm-hl dm-kind">${esc(w)}</span>` })),
+  ].sort((a, b) => b.word.length - a.word.length);
+  const text = String(m.text || '');
+  let out = '', i = 0;
+  while (i < text.length) {
+    const t = tokens.find((x) => text.startsWith(x.word, i));
+    if (t) { out += t.html; i += t.word.length; continue; }
+    const num = /^\d+/.exec(text.slice(i));
+    if (num && (i === 0 || /\W/.test(text[i - 1]))) { out += `<span class="dm-hl dm-num">${num[0]}</span>`; i += num[0].length; continue; }
+    out += esc(text[i]); i += 1;
+  }
+  return out;
+}
 
 // What a mission needs: the format (one realm or two), which realms, and Quick Match or Ranked.
 // `current` = { format, picked }, `open` = realms the player can play, `pairOk` = two-realm decks unlocked.
@@ -72,6 +94,13 @@ export function missionsButtonHTML(dailies) {
   </button>`;
 }
 
+// The centred body of a mission card: the big highlighted text, the progress bar, progress and reward.
+export function missionCardHTML(m) {
+  return `<p class="dm-mtext">${missionTextHTML(m)}</p>
+    <div class="dm-bar"><i style="width:${Math.min(100, (m.progress / m.need) * 100)}%"></i></div>
+    <div class="dm-meta"><span>${m.progress} / ${m.need}</span><span class="dm-reward">+<img src="art/ui/shop/coin.webp" alt="" draggable="false">${m.points}</span></div>`;
+}
+
 const hhmm = (ms) => { const m = Math.max(0, Math.round(ms / 60000)); return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`; };
 
 // The panel: the day's missions with a Play button each, or the set-up step for one of them.
@@ -101,10 +130,9 @@ export function missionsPanelHTML(state, ctx) {
     const e = ctx.economy;
     body = `<div class="dm-row"><h2>Daily missions</h2><span class="dm-sub">New missions in ${hhmm(e.resetsIn)}</span></div>
       <p class="dm-sub">Win Quick Match or Ranked games to complete them. Each pays <b>${e.rules.dailyPoints} points</b>.</p>
-      <ul class="dm-list">${e.dailies.map((m, i) => `<li class="${m.done ? 'done' : ''}">
-        <span class="dm-check">${m.done ? '✔' : ''}</span>
-        <div class="dm-text"><b>${esc(m.text)}</b><div class="dm-bar"><i style="width:${(m.progress / m.need) * 100}%"></i></div><small>${m.progress} / ${m.need} · +${m.points} pts</small></div>
-        ${m.done ? '<em class="dm-done">Done</em>' : `<button class="gold dm-play" data-act="dmPlay:${i}">${icon('play')}<span>Play</span></button>`}
+      <ul class="dm-list">${e.dailies.map((m, i) => `<li class="dm-mission ${m.done ? 'done' : ''}" style="--i:${i}">
+        ${missionCardHTML(m)}
+        ${m.done ? '<em class="dm-done">✔ Done</em>' : `<button class="gold dm-play" data-act="dmPlay:${i}">${icon('play')}<span>Play</span></button>`}
       </li>`).join('')}</ul>`;
   }
   return `<div class="overlay dm-overlay"><div class="guide-backdrop" data-act="dmClose"></div><div class="dm-panel">${close}${body}</div></div>`;
