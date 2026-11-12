@@ -56,6 +56,7 @@ export const PATCH_NOTES = [
       { cat: 'qol', h: 'The Quick Play prompt', list: [
         { cards: [], text: 'When you can answer, the Quick Play shows big on the left with a glowing arrow to a big card of the minion it would act on (the attacker, the one about to be hit, the one just played). Each option shows its cost and how much is borrowed from next turn.' },
         { cards: [], text: 'A tap on a Quick Play or Pass always counts, even while your opponent\'s move is still animating (it used to be ignored).' },
+        { cards: [], text: 'You get 8 seconds to decide on a Quick Play against other players. Against the computer there is no time limit.' },
       ] },
       { cat: 'gameplay', h: 'A gentler AI', list: [
         { cards: [], text: 'Medium plans a shorter way ahead and slips now and then: still a fair fight, but beatable while you learn.' },

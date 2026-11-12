@@ -3708,8 +3708,9 @@ function syncReactionTimer() {
   const key = open ? `${s.turn}|${s.log.length}|${s.pending.window}|${s.pending.player}` : null;
   if (reactionTimer && reactionTimer.key !== key) { clearInterval(reactionTimer.interval); reactionTimer = null; }
   if (!open || reactionTimer) { paintCountdown(); return; }
-  // Untimed vs the AI (Settings → Turn timer vs AI): no countdown, no auto-pass.
-  if (game.mode === 'ai' && !getSettings().turnTimerVsAI) {
+  // Quick Plays: 8 seconds to decide (rules.quickPlaySeconds) against people, including the online
+  // stand-in opponents, who play like people; against the computer you can take as long as you like.
+  if (game.mode === 'ai') {
     if (reactionPrompted !== key) { reactionPrompted = key; sound.play('quickPlay'); }
     const cd = app.querySelector('.countdown');
     if (cd) cd.style.display = 'none';

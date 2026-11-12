@@ -102,7 +102,7 @@ export const KEYWORD_TEXT = {
   Summon: 'Happens whenever this enters the battlefield, including when played.',
   'Exit': 'Happens when this dies.',
   Discover: 'Choose 1 of up to 3 options.',
-  'Quick Play': "Can be played during your opponent's turn, in the window after they act (8 seconds). On their turn it costs 1 less (never below 1), and it is paid with any Mana you have left, then borrowed from your next turn: what you borrow comes off your next refill.",
+  'Quick Play': "Can be played during your opponent's turn, in the window after they act (8 seconds to decide; as long as you like against the computer). On their turn it costs 1 less (never below 1), and it is paid with any Mana you have left, then borrowed from your next turn: what you borrow comes off your next refill.",
   Trap: 'Set face-down beside your Hero (a purple ? token). Your opponent can\'t see which Trap it is. It goes off automatically when its condition happens.',
   'Hero Spell': 'Always available outside your deck. Once per turn.',
   'Hero Weapon': 'Your Hero equips it and gains its Attack, so your Hero can attack once a turn. Each attack uses 1 Durability; at 0 the Weapon breaks. A new Weapon replaces the old one.',
