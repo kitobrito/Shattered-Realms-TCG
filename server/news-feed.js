@@ -52,7 +52,10 @@ function blockView(base, b) {
         before: cardView(base, was), now: cardView(base, now) };
     }).filter(Boolean);
   } else if (b.boards) {
-    out.boards = b.boards.map((x) => ({ name: x.name, title: x.title ?? x.name, realm: x.realm ?? null, unlock: x.unlock ?? null, art: abs(base, BOARD_ART[x.name]) }));
+    out.boards = b.boards.map((x) => ({ name: x.name, title: x.title ?? x.name, realm: x.realm ?? null, unlock: x.unlock ?? null, art: abs(base, x.src ?? BOARD_ART[x.name]) }));
+  } else if (b.art) {
+    // Preview art (coming soon): shown on the site like a board gallery.
+    out.boards = b.art.map((x) => ({ name: x.title, title: x.title, realm: null, unlock: x.caption ?? null, art: abs(base, x.src) }));
   } else if (b.list) {
     out.list = b.list.map((it) => ({ kind: it.kind ?? null, kindLabel: PATCH_KINDS[it.kind]?.label ?? null, text: it.text, why: it.why ?? null,
       cards: (it.cards ?? []).map((id) => cardView(base, getCard(id))).filter(Boolean) }));

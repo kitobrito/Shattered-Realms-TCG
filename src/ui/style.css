@@ -5865,6 +5865,12 @@ body:not(.touch-ui) .arena:not(.portrait) .my-hand.docked .card:hover:not(.drag-
 .fx-slice-streak { position: fixed; pointer-events: none; z-index: 61; transform-origin: 50% 50%; border-radius: 3px;
   background: linear-gradient(90deg, transparent, #fff 18%, #fff 82%, transparent);
   box-shadow: 0 0 10px 3px var(--juice, #ff9a5a), 0 0 22px 6px rgba(255,255,255,0.5); will-change: transform, opacity; }
+.pn-art { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.pn-art-item { display: flex; flex-direction: column; gap: 6px; padding: 0; border: 1px solid #ffd25a55; border-radius: 12px; overflow: hidden; background: #0006; cursor: zoom-in; text-align: left; }
+.pn-art-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; transition: transform .25s; }
+.pn-art-item:hover img { transform: scale(1.04); }
+.pn-art-item span { padding: 0 10px 10px; display: grid; gap: 2px; } .pn-art-item small { opacity: .8; font-style: italic; }
+.pn-block.cat-preview .pn-cat { background: linear-gradient(90deg, #8a1020, #c0303a); color: #fff; }
 .fx-p.petal { width: 9px; height: 6px; background: #ffb7c9; border-radius: 80% 0 80% 0; filter: drop-shadow(0 0 3px #ff7a9a) drop-shadow(0 0 2px #ffd25a); }
 .fx-hex-smoke { position: fixed; z-index: 906; pointer-events: none; border-radius: 50%;
   background: radial-gradient(circle at 50% 55%, #6b2a8ccc 0%, #2b0938aa 38%, #10b98144 62%, transparent 72%); filter: blur(2px); }
