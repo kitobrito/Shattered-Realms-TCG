@@ -30,7 +30,7 @@ export const LEGENDARY_PACK_COST = 640;
 export const PACK_SIZE = 7;
 export const LEGENDARY_CHANCE = 0.01;
 export const NEW_CARD_BIAS = 0.65; // chance a pack card is drawn from the cards you don't own (when there are any)
-export const RECYCLE = { normal: 15, legendary: 100 };
+export const RECYCLE = { normal: 20, legendary: 400 };
 export const FREE_PER_FACTION = 10;
 // Every account starts with START_POINTS (accounts made before points existed get them once, on sign-in).
 export const START_POINTS = 1000;

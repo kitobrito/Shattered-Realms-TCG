@@ -124,7 +124,7 @@ await test('Legendary Pack: 640 points, 7 cards from any realm, always at least 
   if (realms.size < 10) return `only ${realms.size} realms seen: not random across realms`;
 });
 
-await test('Duplicates recycle: 15 points each, 100 for a legendary; recycle all', () => {
+await test('Duplicates recycle: 20 points each, 400 for a legendary; recycle all', () => {
   const a = acc(['x'], 0);
   const leg = expansionOf('Demons').find((c) => c.legendary).id, norm = expansionOf('Demons').find((c) => !c.legendary).id;
   a.dupes = { [leg]: 1, [norm]: 2 };

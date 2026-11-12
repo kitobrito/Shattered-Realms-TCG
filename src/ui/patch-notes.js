@@ -65,7 +65,7 @@ export const PATCH_NOTES = [
         { cards: [], text: 'Each realm\'s alternate board can be bought for 1600 points. Collecting all of its cards still unlocks it for free.' },
       ] },
       { cat: 'change', h: 'Duplicates', list: [
-        { cards: [], text: 'Packs can give you cards you already own. Duplicates go to the Duplicates tab: recycle them for 15 points each (100 for a legendary), or trade them.' },
+        { cards: [], text: 'Packs can give you cards you already own. Duplicates go to the Duplicates tab: recycle them for 20 points each (400 for a legendary), or trade them.' },
       ] },
       { cat: 'change', h: 'The trade board', list: [
         { cards: [], text: 'Put up to 4 cards on the public trade board and say what you\'d take for them: up to 6 options, like "this card, OR that card, OR these two cards together".' },
@@ -82,7 +82,7 @@ export const PATCH_NOTES = [
       'Win unlocks: 2 per win from the realms you won with, legendaries last, only while you own fewer than 10 of that realm\'s expansion cards. Wins against the computer still unlock cards (at most one claim a minute) but never earn points.',
       'Realm pack: 160 points, 7 cards, each with a 65% lean toward cards you don\'t own and a 1% legendary chance. Legendary Pack: 640 points, 7 cards from every realm, one guaranteed legendary in a random slot.',
       'Single cards: 100 points, legendaries 1600, only cards you don\'t own. Alternate boards: 1600 points, not sold once you already have them.',
-      'Recycling: 15 points per duplicate, 100 for a legendary duplicate.',
+      'Recycling: 20 points per duplicate, 400 for a legendary duplicate.',
       'Trade board: up to 5 trades up at once, up to 4 cards per trade, up to 6 options, up to 4 cards per option. Every option, offer and counter needs at least one card. Giving a card uses a duplicate first.',
       'Guests (not signed in) keep their browser unlocks with the same 10-card win limit; the Shop needs an account.',
     ],
