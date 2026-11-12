@@ -21,6 +21,10 @@ import { applyResult, freshLadder, ladderScore, newRating, rankView, START_RATIN
 import { openStore } from './store.js';
 import { POLLS } from '../src/polls.js';
 import { newsFeed } from './news-feed.js';
+import { chooseAction } from '../src/ai/smart.js';
+import { awardWinUnlocks, buyBoard, buyCard, economyView, grantStartPoints, importCards, openLegendaryPack, openPack, recordPublicWin, recycle } from './economy.js';
+import { botEntry, botThinkMs, ensureBots, simulateBotGames } from './bots.js';
+import { addOffer, bundleText, cleanBundle, counter, giveCard, listingView, newListing, removeOffer, swap } from './trades.js';
 
 export const PROTOCOL = 2;
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -45,8 +49,11 @@ async function passwordOk(acc, password) {
 
 // ---- Server ---------------------------------------------------------------------------
 
+// bots: stand-in opponents for Quick Match and Ranked (server/bots.js). waitMin/waitMax: seconds a player
+// waits in the queue before one is found for them; think: ms a stand-in takes per move (tests pass small numbers).
 export async function startServer({ port = Number(process.env.PORT) || 8080, store: givenStore, awaySeconds = AWAY_SECONDS,
-  idleSeconds = IDLE_SECONDS, mulliganSeconds = MULLIGAN_SECONDS } = {}) {
+  idleSeconds = IDLE_SECONDS, mulliganSeconds = MULLIGAN_SECONDS, bots = {} } = {}) {
+  const botCfg = { enabled: process.env.NO_BOTS !== '1', waitMin: 8, waitMax: 22, think: null, ladderEveryMs: 25 * 60000, ...bots };
   const store = givenStore ?? await openStore();
   if (store.kind === 'file') {
     log(`Accounts are saved in ${store.file}.`);
@@ -57,6 +64,15 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   const queue = [];          // waiting players: { key, conn, mode, friendKey, friend, format, factions, deck, rating, since }
   const games = new Map();   // account key → game
   const loginTries = new Map(); // ip → [times]
+  // Card economy and trades change two accounts at once: run those changes one at a time.
+  let lockChain = Promise.resolve();
+  const withLock = (fn) => { const run = lockChain.then(fn, fn); lockChain = run.catch(() => {}); return run; };
+  // Stand-in opponents (created on start; see server/bots.js).
+  const botKeys = new Set(botCfg.enabled ? await ensureBots(store) : []);
+  const isBot = (key) => botKeys.has(key);
+  const botLadder = botCfg.enabled && botCfg.ladderEveryMs ? setInterval(() => {
+    simulateBotGames(store, [...botKeys].filter((k) => !games.has(k)), 1 + Math.floor(Math.random() * 2)).catch((e) => log('bot ladder failed', e.message));
+  }, botCfg.ladderEveryMs) : null;
 
   // Admin accounts (every card and board unlocked on any device they sign in from). Names,
   // comma-separated, from ADMIN_NAMES; the game's owner, Kito, by default.
@@ -67,6 +83,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       name: acc.name, admin: ADMINS.has(acc.key), ...rankView(acc.ladder), rating: acc.rating,
       wins: acc.wins, losses: acc.losses, rankedWins: acc.rankedWins, rankedLosses: acc.rankedLosses,
       place: await store.place(acc),
+      economy: economyView(acc),
     };
   }
   // What anyone can see about a player (the website's playerbase and profile pages). Never the
@@ -107,6 +124,8 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   }
 
   async function welcome(conn, acc, token) {
+    // An account made before points existed gets its starting points once.
+    if (!acc.startPoints && !acc.bot) acc = await withLock(async () => { const a = await store.get(acc.key); if (grantStartPoints(a)) await store.save(a); return a; });
     await attach(conn, acc);
     send(conn, { t: 'welcome', token, you: await youOf(acc) });
     const game = games.get(acc.key);
@@ -142,6 +161,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       key: name.toLowerCase(), name, salt, hash: await hashPassword(password, salt), created: Date.now(),
       wins: 0, losses: 0, rankedWins: 0, rankedLosses: 0, rating: START_RATING, ladder: freshLadder(),
     };
+    grantStartPoints(acc);
     if (!(await store.create(acc))) return send(conn, { t: 'authError', msg: 'That name is taken. Try another.' });
     log(`new account ${name}`);
     await welcome(conn, acc, await newToken(acc.key));
@@ -200,7 +220,8 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       if (!(await store.get(friend.toLowerCase()))) return send(conn, { t: 'reject', msg: `There's no player called ${friend}.` });
     }
     leaveQueue(acc.key);
-    queue.push({ key: acc.key, conn, mode, friend, friendKey: friend?.toLowerCase() ?? null, ...entry, rating: acc.rating, since: Date.now() });
+    const botAt = botCfg.enabled && mode !== 'private' ? Date.now() + (botCfg.waitMin + Math.random() * (botCfg.waitMax - botCfg.waitMin)) * 1000 : null;
+    queue.push({ key: acc.key, conn, mode, friend, friendKey: friend?.toLowerCase() ?? null, ...entry, rating: acc.rating, since: Date.now(), botAt });
     send(conn, { t: 'queued', mode, friend });
     await matchmake();
   }
@@ -230,6 +251,17 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
         for (const q of pair) leaveQueue(q.key);
         await startGame(pair[0], pair[1]);
       }
+      // Nobody to play after a short wait: a stand-in opponent takes the seat.
+      if (botKeys.size) {
+        const now = Date.now();
+        for (const q of queue.filter((x) => x.botAt && now >= x.botAt)) {
+          const accounts = (await Promise.all([...botKeys].map((k) => store.get(k)))).filter(Boolean);
+          const bot = botEntry(q, accounts, new Set(games.keys()));
+          if (!bot) continue;
+          leaveQueue(q.key);
+          await startGame(q, bot);
+        }
+      }
     } finally { matching = false; }
   }
 
@@ -250,10 +282,75 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       seats: seats.map((q) => q.key), names: seatAccs.map((x) => x.name), factions: seats.map((q) => q.factions),
       labels: seatAccs.map((x) => rankView(x.ladder).label),
       over: false, away: [null, null], lastMove: Date.now(), turnKey: null,
+      bots: seats.map((q) => (q.bot ? q.difficulty : null)), botTimer: null,
     };
     for (const k of game.seats) games.set(k, game);
     log(`game ${game.id} ${game.mode} ${game.names.join(' vs ')}`);
-    for (let seat = 0; seat < 2; seat++) send(conns.get(game.seats[seat]), await startMsg(game, seat, false));
+    for (let seat = 0; seat < 2; seat++) if (!game.bots[seat]) send(conns.get(game.seats[seat]), await startMsg(game, seat, false));
+    driveBot(game);
+  }
+
+  // A stand-in's turn: think for a moment like a person, then make the AI's move.
+  function driveBot(game) {
+    if (game.over || game.botTimer) return;
+    const seat = actingPlayer(game.state);
+    if (seat == null || !game.bots[seat]) return;
+    const wait = botCfg.think ?? botThinkMs(game.state.pending?.type);
+    game.botTimer = setTimeout(() => { game.botTimer = null; botStep(game, seat).catch((e) => log(`game ${game.id}: bot failed: ${e.message}`)); }, wait);
+  }
+  async function botStep(game, seat) {
+    if (game.over) return;
+    const s = game.state;
+    restoreCustomCards(s);
+    if (actingPlayer(s) !== seat) return driveBot(game);
+    const action = legalMatch(s, chooseAction(structuredClone(s), game.bots[seat]));
+    if (!action) { log(`game ${game.id}: bot found no move`); return finish(game, 1 - seat, 'concede'); }
+    const before = structuredClone(s);
+    try { applyAction(s, action); } catch (err) {
+      game.state = before;
+      log(`game ${game.id}: bot engine error: ${err.message}`);
+      return finish(game, 1 - seat, 'concede');
+    }
+    game.lastMove = Date.now();
+    sendTo(game.seats[1 - seat], { t: 'act', action, h: stateHash(s) });
+    if (s.gameOver) return finish(game, s.winner, 'normal');
+    driveBot(game);
+  }
+
+  // ---- Trade board helpers.
+  // Listings still up (an expired one is taken down and its card returned to its owner).
+  async function liveTrades() {
+    const all = await store.trades();
+    const live = [];
+    for (const t of all) {
+      if (t.expires > Date.now()) { live.push(t); continue; }
+      const owner = await store.get(t.owner);
+      if (owner) { for (const id of t.give) giveCard(owner, id); await store.save(owner); }
+      await store.removeTrade(t.id);
+    }
+    return live;
+  }
+  async function sendTrades(conn) {
+    const acc = conn.key ? await store.get(conn.key) : null;
+    send(conn, { t: 'trades', listings: (await liveTrades()).map((t) => listingView(t, conn.key, acc)), you: acc ? await youOf(acc) : null });
+  }
+  async function completeTrade(conn, t, bidderKey, bundle) {
+    const owner = await store.get(t.owner);
+    const bidder = await store.get(bidderKey);
+    if (!owner || !bidder) return send(conn, { t: 'reject', msg: 'That player is gone.' });
+    if (owner.key === bidder.key) return send(conn, { t: 'reject', msg: "That's your own trade." });
+    const r = swap(t, owner, bidder, bundle);
+    if (r.error) return send(conn, { t: 'reject', msg: r.error });
+    await store.save(owner);
+    await store.save(bidder);
+    await store.removeTrade(t.id);
+    const listed = { cards: t.give, points: 0 };
+    log(`trade ${t.id}: ${owner.name} (${bundleText(listed)}) <-> ${bidder.name} (${bundleText(bundle)})`);
+    for (const [acc, got, gave] of [[owner, bundle, listed], [bidder, listed, bundle]]) {
+      sendTo(acc.key, { t: 'traded', got, gave, you: await youOf(acc) });
+    }
+    for (const o of t.offers) if (o.bidder !== bidder.key) sendTo(o.bidder, { t: 'tradeUpdate', msg: `${owner.name}'s trade went to someone else.` });
+    return sendTrades(conn);
   }
 
   async function startMsg(game, seat, resume) {
@@ -292,6 +389,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     sendTo(game.seats[1 - seat], { t: 'act', action, h });
     if (msg.h && msg.h !== h) send(conn, { t: 'sync', state: s });
     if (s.gameOver) await finish(game, s.winner, 'normal');
+    else driveBot(game);
   }
 
   // The game is over: record it and tell both players.
@@ -299,8 +397,10 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     if (game.over) return;
     game.over = true;
     for (const t of game.away) clearTimeout(t);
+    clearTimeout(game.botTimer);
     const accs = await Promise.all(game.seats.map((k) => store.get(k)));
     const ladder = [null, null];
+    const unlocked = [[], []], dailies = [[], []];
     if (winner === 0 || winner === 1) {
       const ratings = accs.map((x) => x?.rating ?? START_RATING);
       for (let seat = 0; seat < 2; seat++) {
@@ -315,13 +415,18 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
           if (won) acc.rankedWins++; else acc.rankedLosses++;
           acc.rating = newRating(ratings[seat], ratings[1 - seat], won);
         }
+        // A win unlocks cards (up to the free 10 per realm) and, in Quick Match or Ranked, counts for dailies.
+        if (won && !acc.bot) {
+          unlocked[seat] = awardWinUnlocks(acc, game.factions[seat]);
+          dailies[seat] = recordPublicWin(acc, { mode: game.mode, factions: game.factions[seat] });
+        }
         await store.save(acc);
       }
     }
     log(`game ${game.id} over: ${winner == null ? 'draw' : game.names[winner]} (${reason})`);
     for (let seat = 0; seat < 2; seat++) {
       const acc = accs[seat];
-      sendTo(game.seats[seat], { t: 'result', winner, mode: game.mode, reason, you: acc ? await youOf(acc) : null, ladder: ladder[seat] });
+      if (!game.bots[seat]) sendTo(game.seats[seat], { t: 'result', winner, mode: game.mode, reason, you: acc ? await youOf(acc) : null, ladder: ladder[seat], unlocked: unlocked[seat], dailies: dailies[seat] });
       if (games.get(game.seats[seat]) === game) games.delete(game.seats[seat]);
     }
   }
@@ -347,7 +452,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     game.away[seat] = setTimeout(() => {
       game.away[seat] = null;
       // Both gone: nobody to award it to, so it just ends.
-      if (!conns.has(game.seats[1 - seat])) { game.over = true; for (const k of game.seats) if (games.get(k) === game) games.delete(k); return; }
+      if (!conns.has(game.seats[1 - seat]) && !isBot(game.seats[1 - seat])) { game.over = true; clearTimeout(game.botTimer); for (const k of game.seats) if (games.get(k) === game) games.delete(k); return; }
       finish(game, 1 - seat, 'disconnect').catch((e) => log('finish failed', e));
     }, awaySeconds * 1000);
   }
@@ -398,6 +503,125 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
         return sendTo(g.seats[1 - g.seats.indexOf(conn.key)], { t: 'emote', kind: msg.kind });
       }
       case 'concede': return onConcede(conn);
+      // ---- Card economy (server/economy.js).
+      case 'buyPack': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        // faction 'legendary': the Legendary Pack (any realm, a guaranteed legendary).
+        const r = msg.faction === 'legendary' ? openLegendaryPack(acc) : openPack(acc, String(msg.faction ?? ''));
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.save(acc);
+        send(conn, { t: 'pack', faction: msg.faction, cards: r.cards, you: await youOf(acc) });
+      });
+      // Buy a single card ({ id }) or an alternate board ({ board }) for points.
+      case 'buyCard': case 'buyBoard': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        const r = msg.t === 'buyCard' ? buyCard(acc, msg.id) : buyBoard(acc, msg.board);
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.save(acc);
+        send(conn, { t: 'bought', kind: msg.t === 'buyCard' ? 'card' : 'board', ...r, you: await youOf(acc) });
+      });
+      case 'recycle': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        const r = recycle(acc, { id: typeof msg.id === 'string' ? msg.id : null, count: Number.isInteger(msg.count) ? msg.count : null, all: msg.all === true });
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.save(acc);
+        send(conn, { t: 'recycled', ...r, you: await youOf(acc) });
+      });
+      case 'importCards': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        const added = importCards(acc, msg.ids);
+        await store.save(acc);
+        send(conn, { t: 'me', you: await youOf(acc), imported: added.length });
+      });
+      // A win against the game's AI (played on the player's device) still unlocks cards up to the free
+      // 10 per realm. It can't earn points, and at most one claim a minute is accepted.
+      case 'claimWin': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        if (Date.now() - (acc.lastWinClaim ?? 0) < 60000) return;
+        acc.lastWinClaim = Date.now();
+        const factions = Array.isArray(msg.factions) ? msg.factions.map(String).slice(0, 2) : [];
+        const unlocked = awardWinUnlocks(acc, factions);
+        await store.save(acc);
+        send(conn, { t: 'winClaimed', unlocked, you: await youOf(acc) });
+      });
+      // ---- Trades (server/trades.js).
+      case 'trades': return sendTrades(conn);
+      case 'postTrade': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        const open = (await liveTrades()).filter((t) => t.owner === acc.key).length;
+        const r = newListing(acc, msg.give, msg.wants, open);
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.save(acc);
+        await store.putTrade(r.listing);
+        send(conn, { t: 'tradePosted', id: r.listing.id, you: await youOf(acc) });
+        return sendTrades(conn);
+      });
+      case 'cancelTrade': return withLock(async () => {
+        const t = await store.getTrade(String(msg.id ?? ''));
+        if (!t || t.owner !== conn.key) return send(conn, { t: 'reject', msg: 'That trade is gone.' });
+        const acc = await store.get(conn.key);
+        for (const id of t.give) giveCard(acc, id); // the held cards come back
+        await store.save(acc);
+        await store.removeTrade(t.id);
+        for (const o of t.offers) sendTo(o.bidder, { t: 'tradeUpdate', msg: `${acc.name} took down their trade.` });
+        send(conn, { t: 'tradeCancelled', you: await youOf(acc) });
+        return sendTrades(conn);
+      });
+      // Trade on the spot with one of the options the lister asked for (msg.option: its index).
+      case 'takeTrade': return withLock(async () => {
+        const t = await store.getTrade(String(msg.id ?? ''));
+        if (!t) return send(conn, { t: 'reject', msg: 'That trade is gone.' });
+        const option = t.wants[msg.option];
+        if (!Number.isInteger(msg.option) || !option) return send(conn, { t: 'reject', msg: 'Pick one of the options they asked for, or make an offer.' });
+        return completeTrade(conn, t, conn.key, option);
+      });
+      case 'offerTrade': return withLock(async () => {
+        const t = await store.getTrade(String(msg.id ?? ''));
+        if (!t) return send(conn, { t: 'reject', msg: 'That trade is gone.' });
+        const acc = await store.get(conn.key);
+        const r = addOffer(t, acc, cleanBundle(msg));
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.putTrade(t);
+        sendTo(t.owner, { t: 'tradeUpdate', msg: `${acc.name} made an offer on your trade.` });
+        send(conn, { t: 'tradeOffered' });
+        return sendTrades(conn);
+      });
+      case 'counterTrade': return withLock(async () => {
+        const t = await store.getTrade(String(msg.id ?? ''));
+        if (!t || t.owner !== conn.key) return send(conn, { t: 'reject', msg: 'That trade is gone.' });
+        const offer = t.offers.find((o) => o.id === msg.offer);
+        const r = counter(t, msg.offer, cleanBundle(msg), offer ? await store.get(offer.bidder) : null);
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.putTrade(t);
+        sendTo(offer.bidder, { t: 'tradeUpdate', msg: `${t.ownerName} sent you a counter-offer.` });
+        return sendTrades(conn);
+      });
+      // Accept an offer: the lister accepts a player's offer, or a player accepts the lister's counter.
+      case 'acceptOffer': return withLock(async () => {
+        const t = await store.getTrade(String(msg.id ?? ''));
+        const offer = t?.offers.find((o) => o.id === msg.offer);
+        if (!t || !offer) return send(conn, { t: 'reject', msg: 'That offer is gone.' });
+        const mayAccept = offer.by === 'bidder' ? conn.key === t.owner : conn.key === offer.bidder;
+        if (!mayAccept) return send(conn, { t: 'reject', msg: 'Waiting for the other player to answer.' });
+        return completeTrade(conn, t, offer.bidder, offer.bundle);
+      });
+      case 'declineOffer': return withLock(async () => {
+        const t = await store.getTrade(String(msg.id ?? ''));
+        const offer = t?.offers.find((o) => o.id === msg.offer);
+        if (!t || !offer || (conn.key !== t.owner && conn.key !== offer.bidder)) return send(conn, { t: 'reject', msg: 'That offer is gone.' });
+        removeOffer(t, offer.id);
+        await store.putTrade(t);
+        sendTo(conn.key === t.owner ? offer.bidder : t.owner, { t: 'tradeUpdate', msg: conn.key === t.owner ? `${t.ownerName} declined your offer.` : `${offer.bidderName} withdrew their offer.` });
+        return sendTrades(conn);
+      });
+      case 'tradeCollection': {
+        // The lister may look at the cards of a player who made them an offer (to counter with one).
+        const t = await store.getTrade(String(msg.id ?? ''));
+        const offer = t?.offers.find((o) => o.id === msg.offer);
+        if (!t || !offer || t.owner !== conn.key) return;
+        const bidder = await store.get(offer.bidder);
+        return send(conn, { t: 'tradeCollection', id: t.id, offer: offer.id, cards: bidder ? [...new Set([...(bidder.cards ?? []), ...Object.keys(bidder.dupes ?? {})])] : [] });
+      }
       case 'deleteAccount': {
         const acc = await store.get(conn.key);
         if (!(await passwordOk(acc, msg.password))) return send(conn, { t: 'reject', msg: 'Wrong password.' });
@@ -480,6 +704,11 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
         const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim() || 'http';
         return reply(200, newsFeed(`${proto}://${req.headers.host}`), { 'cache-control': 'public, max-age=300' });
       }
+      if (route === 'trades') {
+        // The public trade board (no offers: those are private to the two players).
+        const rows = (await liveTrades()).map((t) => ({ id: t.id, owner: t.ownerName, give: t.give, wants: t.wants, created: t.created, expires: t.expires, offerCount: t.offers.length }));
+        return reply(200, { listings: rows }, { 'cache-control': 'public, max-age=30' });
+      }
       if (route === 'players') {
         const accounts = await store.all(PLAYERBASE_LIMIT);
         const places = placesOf(accounts);
@@ -519,6 +748,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       const salt = crypto.randomBytes(16).toString('hex');
       const acc = { key: name.toLowerCase(), name, salt, hash: await hashPassword(password, salt), created: Date.now(),
         wins: 0, losses: 0, rankedWins: 0, rankedLosses: 0, rating: START_RATING, ladder: freshLadder() };
+      grantStartPoints(acc);
       if (!(await store.create(acc))) return reply(409, { error: 'That name is taken. Try another.' });
       log(`new account ${name} (website)`);
       return reply(200, { token: await newToken(acc.key), you: await youOf(acc) });
@@ -599,6 +829,8 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   return {
     port: server.address().port,
     async close() {
+      clearInterval(botLadder);
+      for (const g of new Set(games.values())) clearTimeout(g.botTimer);
       clearInterval(idleCheck); clearInterval(heartbeat);
       for (const ws of wss.clients) ws.terminate();
       await new Promise((r) => wss.close(r));

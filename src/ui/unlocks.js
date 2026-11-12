@@ -1,13 +1,27 @@
-// Expansion cards (`extra: true`) start locked. Each match the player wins
-// (vs the AI or online) unlocks two from the factions they won with, legendaries last;
-// a pop-up shows them.
-// Saved in this browser (localStorage).
+// Expansion cards (`extra: true`) start locked. Each match the player wins (vs the AI or online)
+// unlocks two from the factions they won with, legendaries last, but only until they own
+// FREE_PER_FACTION (10) of that realm's expansion cards; the rest come from card packs (server/economy.js).
+// Signed in, the account on the server holds the cards (mirrored here by setOwnedCards); a guest's are
+// saved in this browser (localStorage).
 
 import { allCards, getCard } from '../engine/registry.js';
 import { cardHTML, esc } from './shared.js';
 
 const KEY = 'shattered-unlocks';
 export const UNLOCKS_PER_WIN = 2;
+export const FREE_PER_FACTION = 10;
+
+// The account's cards (from the server) replace this browser's list.
+export function setOwnedCards(ids) {
+  try { localStorage.setItem(KEY, JSON.stringify([...new Set(ids ?? [])])); } catch { /* storage unavailable */ }
+}
+// Alternate boards bought in the Shop (the account's `boards`, mirrored here like the cards).
+const BOARDS_KEY = 'shattered-boards';
+export function setOwnedBoards(ids) {
+  try { localStorage.setItem(BOARDS_KEY, JSON.stringify([...new Set(ids ?? [])])); } catch { /* storage unavailable */ }
+}
+export const ownedBoards = () => { try { return JSON.parse(localStorage.getItem(BOARDS_KEY) ?? '[]'); } catch { return []; } };
+export const localOwnedCards = () => { try { return JSON.parse(localStorage.getItem(KEY) ?? '[]'); } catch { return []; } };
 
 // Signed in as an admin (server-link.js): everything counts as unlocked.
 const isAdmin = () => { try { return localStorage.getItem('shattered-admin') === '1'; } catch { return false; } };
@@ -51,15 +65,12 @@ export function awardUnlocks(n = UNLOCKS_PER_WIN, factions = []) {
   };
   const won = [];
   const mine = [...new Set(factions)];
+  // Wins only unlock a realm's cards until you own FREE_PER_FACTION of them; the rest come from packs.
+  const ownedIn = (f) => extras().filter((c) => c.faction === f && (have.has(c.id) || won.includes(c.id))).length;
   for (let i = 0; won.length < n && mine.length; i++) {
-    const open = mine.filter((f) => left.some((c) => c.faction === f && !won.includes(c.id)));
+    const open = mine.filter((f) => ownedIn(f) < FREE_PER_FACTION && left.some((c) => c.faction === f && !won.includes(c.id)));
     if (!open.length) break;
     won.push(take(left.filter((c) => c.faction === open[i % open.length])));
-  }
-  while (won.length < n) {
-    const id = take(left);
-    if (!id) break;
-    won.push(id);
   }
   for (const id of won) have.add(id);
   try { localStorage.setItem(KEY, JSON.stringify([...have])); } catch { /* storage unavailable */ }

@@ -41,6 +41,53 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12-shop',
+    date: 'November 12',
+    title: 'The Shop: points, packs and trading',
+    tag: 'New feature',
+    intro: 'A new Shop on the main menu. Complete daily missions to earn points, then spend them on card packs, single cards and boards, or trade cards with other players. Every account starts with 1000 points.',
+    blocks: [
+      { cat: 'change', h: 'Points and daily missions', list: [
+        { cards: [], text: 'Every day you get 4 daily missions, like "Win 3 public games with the Vampires + Ghosts fusion" or "Win 3 public games with Bees in your deck". Each one you complete pays 80 points.' },
+        { cards: [], text: 'Only wins in Quick Match and Ranked count. Missions you don\'t finish are replaced by new ones the next day (they reset at midnight UTC).' },
+        { cards: [], text: 'Points are only earned from daily missions (and recycling duplicates), never just for playing.' },
+        { cards: [], text: 'Every account starts with 1000 points, including accounts made before today.' },
+      ] },
+      { cat: 'change', h: 'Unlocking expansion cards', list: [
+        { cards: [], text: 'Winning matches still unlocks expansion cards, 2 per win, until you own 10 of a realm\'s expansion cards. The rest of that realm\'s cards come from the Shop.', why: 'Cards you already unlocked stay yours. Signed in, your cards now live on your account, so they follow you to any device.' },
+      ] },
+      { cat: 'change', h: 'Packs', list: [
+        { cards: [], text: 'Realm packs cost 160 points: 7 random expansion cards from the realm you pick, mostly cards you don\'t have yet. Each card has a 1% chance to be a legendary.' },
+        { cards: [], text: 'The Legendary Pack costs 640 points: 7 completely random cards from any realm, with at least one guaranteed legendary (one you don\'t own yet, while there are any).' },
+      ] },
+      { cat: 'change', h: 'Buy single cards and boards', list: [
+        { cards: [], text: 'Want one card in particular? Buy it outright: 100 points for a normal card, 1600 for a legendary.' },
+        { cards: [], text: 'Each realm\'s alternate board can be bought for 1600 points. Collecting all of its cards still unlocks it for free.' },
+      ] },
+      { cat: 'change', h: 'Duplicates', list: [
+        { cards: [], text: 'Packs can give you cards you already own. Duplicates go to the Duplicates tab: recycle them for 20 points each (400 for a legendary), or trade them.' },
+      ] },
+      { cat: 'change', h: 'The trade board', list: [
+        { cards: [], text: 'Put up to 4 cards on the public trade board and say what you\'d take for them: up to 6 options, like "this card, OR that card, OR these two cards together".' },
+        { cards: [], text: 'Points can sweeten a trade ("this card + 300 points") but can\'t be the whole price. To buy a card with points, use Buy cards.' },
+        { cards: [], text: 'Anyone who has one of your options can trade on the spot. Players can also make you a different offer, and you can accept it, decline it or counter with what you\'d want instead.' },
+        { cards: [], text: 'Cards you put up are held until the trade ends, so they can\'t be traded twice. Trades last 7 days; take one down any time and your cards come back.' },
+      ] },
+      { cat: 'qol', h: 'Matchmaking', list: [
+        { cards: [], text: 'Quick Match and Ranked find you an opponent faster. The "play a bot while you wait" button has been retired for now.' },
+      ] },
+    ],
+    details: [
+      'Daily missions: 4 per day per player, one of which is always a fusion mission. Mission types: win with a given fusion, win with a realm in your deck, win Ranked games, win with a single-realm deck, win with a two-realm deck, or win any public games.',
+      'Win unlocks: 2 per win from the realms you won with, legendaries last, only while you own fewer than 10 of that realm\'s expansion cards. Wins against the computer still unlock cards (at most one claim a minute) but never earn points.',
+      'Realm pack: 160 points, 7 cards, each with a 65% lean toward cards you don\'t own and a 1% legendary chance. Legendary Pack: 640 points, 7 cards from every realm, one guaranteed legendary in a random slot.',
+      'Single cards: 100 points, legendaries 1600, only cards you don\'t own. Alternate boards: 1600 points, not sold once you already have them.',
+      'Recycling: 20 points per duplicate, 400 for a legendary duplicate.',
+      'Trade board: up to 5 trades up at once, up to 4 cards per trade, up to 6 options, up to 4 cards per option. Every option, offer and counter needs at least one card. Giving a card uses a duplicate first.',
+      'Guests (not signed in) keep their browser unlocks with the same 10-card win limit; the Shop needs an account.',
+    ],
+  },
+  {
     id: '2026-11-12-lycan',
     date: 'November 12',
     title: 'Beast Form wears off',

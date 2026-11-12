@@ -33,6 +33,7 @@ async function postgresStore(url) {
   await pool.query('CREATE INDEX IF NOT EXISTS tokens_key ON tokens (key)');
   await pool.query('DELETE FROM tokens WHERE expires < $1', [Date.now()]);
   await pool.query('CREATE TABLE IF NOT EXISTS votes (poll text NOT NULL, voter text NOT NULL, choice text NOT NULL, at bigint NOT NULL, PRIMARY KEY (poll, voter))');
+  await pool.query('CREATE TABLE IF NOT EXISTS trades (id text PRIMARY KEY, data jsonb NOT NULL, created bigint NOT NULL)');
   const row = (a) => [a.key, JSON.stringify(a), ladderScore(a.ladder), rankedGames(a)];
   return {
     kind: 'postgres',
@@ -86,6 +87,11 @@ async function postgresStore(url) {
       const r = await pool.query('SELECT choice FROM votes WHERE poll = $1 AND voter = $2', [poll, voter]);
       return r.rows[0]?.choice ?? null;
     },
+    // Trade listings (server/trades.js), each with its offers inside.
+    async trades() { const r = await pool.query('SELECT data FROM trades ORDER BY created DESC'); return r.rows.map((x) => x.data); },
+    async getTrade(id) { const r = await pool.query('SELECT data FROM trades WHERE id = $1', [id]); return r.rows[0]?.data ?? null; },
+    async putTrade(t) { await pool.query('INSERT INTO trades (id, data, created) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET data = $2', [t.id, JSON.stringify(t), t.created]); },
+    async removeTrade(id) { await pool.query('DELETE FROM trades WHERE id = $1', [id]); },
     close: () => { if (!pool.ended) return pool.end(); },
   };
 }
@@ -132,6 +138,10 @@ function fileStore(dir) {
       return out;
     },
     async myVote(poll, voter) { return data.votes?.[poll]?.[voter] ?? null; },
+    async trades() { return Object.values(data.trades ?? {}).sort((a, b) => b.created - a.created).map(clone); },
+    async getTrade(id) { return clone(data.trades?.[id] ?? null); },
+    async putTrade(t) { (data.trades ??= {})[t.id] = clone(t); save(); },
+    async removeTrade(id) { if (data.trades) delete data.trades[id]; save(); },
     close: () => { if (timer) { clearTimeout(timer); flush(); } },
   };
 }

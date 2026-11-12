@@ -11,7 +11,7 @@ import { MASTERY_NAMES, SPELLBOOK_CARRY, SPELLBOOK_PAGES, WAND_ENCHANTS } from '
 import { ALT_BOARDS, BOARD_ART, boardKey, CIRCLE_BOARDS, LANDSCAPE_BOARDS, LANDSCAPE_SIZE, PORTRAIT_BOARDS, PORTRAIT_SIZE } from '../cards/board-art.js';
 import { hasBoardFx } from './circle-fx.js';
 import { getSettings } from './settings.js';
-import { boardProgress } from './unlocks.js';
+import { boardProgress, ownedBoards } from './unlocks.js';
 import { isMuted, play as playSound } from './sound.js';
 import { artOf, minionArtOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
@@ -642,7 +642,8 @@ function gameOverHTML(s, me, stats, ctx = {}) {
 // The board a player's matches are played on: their first realm's, or the Basic board (Settings).
 // A realm with an unlocked alternate board (ALT_BOARDS) plays on the one picked for it in the
 // collection's board picker (settings.boards: { faction: board id }).
-export const boardUnlocked = (b, faction) => { const p = boardProgress(b, faction); return p.total > 0 && p.have === p.total; };
+// Unlocked by owning every card of its set, or bought in the Shop.
+export const boardUnlocked = (b, faction) => { if (ownedBoards().includes(b.id)) return true; const p = boardProgress(b, faction); return p.total > 0 && p.have === p.total; };
 export function chosenBoard(faction) {
   const pick = getSettings().boards?.[faction];
   const alt = (ALT_BOARDS[faction] ?? []).find((b) => b.id === pick);

@@ -5,7 +5,7 @@ process.env.QUIET = '1';
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'poll-'));
 const { startServer } = await import('../server/server.js');
 const { openStore } = await import('../server/store.js');
-const srv = await startServer({ port: 0, store: await openStore({ dataDir: dir }) });
+const srv = await startServer({ port: 0, store: await openStore({ dataDir: dir }), bots: { enabled: false } });
 const port = srv.port ?? srv.address?.().port ?? srv.server?.address().port;
 const base = `http://localhost:${port}/poll/next-faction`;
 let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
@@ -22,7 +22,7 @@ ok(res.headers.get('access-control-allow-origin') === '*' || (await fetch(base))
 res = await fetch(base, { method: 'OPTIONS' }); ok(res.status === 204, 'preflight answered');
 // the votes survive a restart (file store)
 await srv.close?.();
-const srv2 = await startServer({ port: 0, store: await openStore({ dataDir: dir }) });
+const srv2 = await startServer({ port: 0, store: await openStore({ dataDir: dir }), bots: { enabled: false } });
 const port2 = srv2.port ?? srv2.server?.address().port;
 await new Promise((r) => setTimeout(r, 300));
 r = await (await fetch(`http://localhost:${port2}/poll/next-faction`)).json(); ok(r.total === 3, `votes kept after a restart (${r.total})`);

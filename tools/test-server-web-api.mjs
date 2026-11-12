@@ -7,7 +7,7 @@ process.env.QUIET = '1';
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'webapi-'));
 const { startServer, PROTOCOL } = await import('../server/server.js');
 const { openStore } = await import('../server/store.js');
-const srv = await startServer({ port: 0, store: await openStore({ dataDir: dir }) });
+const srv = await startServer({ port: 0, store: await openStore({ dataDir: dir }), bots: { enabled: false } });
 const port = srv.port ?? srv.address?.().port ?? srv.server?.address().port;
 const base = `http://localhost:${port}/api`;
 let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
