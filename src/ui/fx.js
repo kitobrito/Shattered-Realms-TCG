@@ -507,6 +507,7 @@ const PARTICLES = {
   'Ice Age': { cls: 'snowflake', gravity: 0.25, spin: true },
   Eels: { cls: 'voltspark', gravity: 0.1 },
   Witches: { cls: 'hexrune', gravity: -0.25, spin: true },
+  'Fruit Ninjas': { cls: 'petal', gravity: 0.15, spin: true },
 };
 export function particles(rect, faction, power = 1) {
   const kind = PARTICLES[faction] ?? { cls: 'spark', gravity: 0.3 };
@@ -710,7 +711,7 @@ export function flashScreen(color = '#ff7a3a') {
 
 // ---- Spells ------------------------------------------------------------------
 
-const FACTION_COLOR = { Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff', Eels: '#5ae8ff', Witches: '#10b981' };
+const FACTION_COLOR = { 'Fruit Ninjas': '#ff7a3a', Vampires: '#ff3a52', Plants: '#7dff6a', Aliens: '#5affd8', Dinosaurs: '#ffa23a', Fungus: '#c98cff', Zombies: '#9cff4a', Dragons: '#ff7a1a', Demons: '#ff2a3a', Divine: '#ffe08a', Robots: '#4ab0ff', Radioactive: '#a8ff3a', Bees: '#ffc21a', Ghosts: '#8ff0ff', Ultraterrestrials: '#b48cff', Sharks: '#ff3a3a', Acidic: '#c8ff2a', Lycanthropes: '#c8d8ff', Void: '#9a6aff', 'Ice Age': '#9fe0ff', Eels: '#5ae8ff', Witches: '#10b981' };
 export const factionColor = (f) => FACTION_COLOR[f] ?? '#ffe39a';
 
 // A glowing bolt flies from one element to another (targeted spells and Hero Spells).
@@ -1123,6 +1124,8 @@ export function deathFx(rect, faction) {
     // Witches: unwritten in a puff of violet smoke, runes scattering upward.
     case 'Witches': { particles(rect, 'Witches', 12); const c = center(rect); hexSmoke(c, Math.max(rect.width, rect.height)); ring(c, Math.max(rect.width, rect.height) * 1.05, '#d946ef', { width: 3, to: 1.4, duration: 600 }); break; }
     case 'Lycanthropes': particles(rect, 'Lycanthropes', 12); fling(rect, '🐾', 3, { rise: 0.8, spread: 0.9 }); break;
+    // Fruit Ninjas: a shower of cherry petals and a slash ring as the shinobi vanish.
+    case 'Fruit Ninjas': { particles(rect, 'Fruit Ninjas', 12); const c = center(rect); ring(c, Math.max(rect.width, rect.height) * 1.05, '#ff9a5a', { width: 3, to: 1.4, duration: 520 }); break; }
     case 'Ghosts': particles(rect, 'Ghosts', 12); fling(rect, '👻', 1, { rise: 1.4, spread: 0.2, size: 26, duration: 1300 }); break;
     case 'Robots': particles(rect, 'Robots', 14); fling(rect, '⚙️', 3, { rise: 0.5, spread: 0.9 }); fling(rect, '🔩', 2, { rise: 0.4 }); break;
     case 'Divine': particles(rect, 'Divine', 12); fling(rect, '🪶', 4, { rise: 1.1, spread: 0.8 }); break;
@@ -1153,6 +1156,7 @@ const KILL_COLOR = {
   'Ice Age': ['#c8f0ff', '#5a8aaa'],
   Eels: ['#5ae8ff', '#ffe84a'],
   Witches: ['#d946ef', '#10b981'],
+  'Fruit Ninjas': ['#ff7a3a', '#7dff6a'],
 };
 
 function addFx(cls, style) {
@@ -1806,6 +1810,7 @@ const HITS = {
   Eels: ({ c, rect }) => { particles(rect, 'Eels', 5); return zapAcross(c, rect, '#5ae8ff'); },
   // Witches: an eldritch cauldron blast — an emerald core, a magenta shockwave, bubbles that rise and pop.
   Witches: ({ c, rect, size, dmg }) => cauldronBlast(c, rect, size, dmg),
+  'Fruit Ninjas': ({ c, rect, size }) => { particles(rect, 'Fruit Ninjas', 5); return ring(c, size * 0.85, '#ff9a5a', { width: 3, to: 1.3, duration: 400 }); },
   'Ice Age': ({ c, rect, size }) => { particles(rect, 'Ice Age', 5); return ring(c, size * 0.95, '#9fe0ff', { width: 3, to: 1.3, duration: 460 }); },
   Lycanthropes: ({ c, rect, size }) => { fling(rect, '🐾', 2, { rise: 0.5, spread: 0.8, size: 14 }); return ring(c, size * 0.85, '#c8d8ff', { width: 3, to: 1.3, duration: 460 }); },
   Ghosts: ({ c, size }) => ring(c, size * 0.85, '#8ff0ff', { width: 3, to: 1.35, duration: 520 }),

@@ -340,6 +340,8 @@ function enterGame(isNew = false) {
   concedeAsk = false;
   descentOpen = false;
   restoreCustomCards(game.state); // Hybrids etc. from a saved game
+  // Fruit Ninjas: load the Slice sprites up front so the first cut doesn't flicker.
+  if (game.state.players.some((pl) => pl.factions?.includes('Fruit Ninjas'))) kfx.preloadFruitFx();
   screen = 'game';
   history = [];
   undoStack = []; recap = null; recapFrom = 0;
@@ -1105,6 +1107,14 @@ function keywordTraceFx(trace, rects, oldMinions, action) {
       case 'remade': jobs.push(kfx.remade(el(t), rectOf(t))); break;
       case 'weaponEquipped': jobs.push(kfx.weaponEquipped(rectOf(e.source))); break;
       case 'regenerated': jobs.push(kfx.regenerated(rectOf(e.source))); break;
+      // Fruit Ninjas: a Fruit is Sliced: the blade flashes, it bursts in juice, and a living board (the orchard dojo) answers.
+      // The Slice's bonus pops up as words and flies as a wisp into each card it changed (after the cut lands).
+      case 'sliceBonus': {
+        const hand = e.toHand ? app.querySelector(e.player === viewer ? '.my-hand' : '.opp-hand')?.getBoundingClientRect() ?? null : null;
+        jobs.push(kfx.sliceBonus(oldRect(e.source), e.cardId, e.targets.map((u) => rectOf(u) ?? oldRect(u)), { handRect: hand, delay: 430 }));
+        break;
+      }
+      case 'slice': sound.play('whoosh'); jobs.push(kfx.sliced(oldRect(e.target), e.cardId, e.times, minionArtOf({}, getCard(e.cardId)))); boardReact('slice'); break;
       // Eels: charge-ups, Conductive, Discharges and Chains play in order (a Chain waits for the
       // Discharge that fires it, and several Chains in one move go one after another).
       case 'voltsGained': if (once(`v${t}`)) jobs.push(fx.wait(eelAt).then(() => { sound.play('charge'); return kfx.voltsGained(el(t), rectOf(t), e.amount); })); break;

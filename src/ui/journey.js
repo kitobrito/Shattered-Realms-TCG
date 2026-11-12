@@ -23,7 +23,7 @@ const PER_MATCH = 2;    // realms that open after each later match
 export const STARTERS = ['Vampires', 'Dragons', 'Plants', 'Zombies', 'Divine', 'Robots'];
 export const FIRST_PICKS = 3;
 // After the starters, the other realms open in this order (most straightforward first).
-const LATER = ['Demons', 'Sharks', 'Dinosaurs', 'Bees', 'Aliens', 'Fungus', 'Ghosts', 'Radioactive', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Ultraterrestrials'];
+const LATER = ['Demons', 'Sharks', 'Dinosaurs', 'Bees', 'Aliens', 'Fungus', 'Ghosts', 'Radioactive', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Ultraterrestrials', 'Fruit Ninjas'];
 
 // Anything only someone who has played leaves behind (tips seen in a match, decks, settings...).
 const PLAYED_BEFORE = ['shattered-unlocks', 'shattered-tips-seen', 'shattered-token', 'faction-ccg-decks', 'faction-ccg-save',

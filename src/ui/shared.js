@@ -82,7 +82,7 @@ export const playerPortraitHTML = (factions) => {
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter', 'Fruit Ninjas'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${fslug(faction)}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
@@ -209,7 +209,9 @@ function sigilHTML(card) {
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes', 'Monster Hunter',
-  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels']);
+  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels', 'Fruit Ninjas']);
+// Realms whose Legendary spells (and Legendary Weapons) wear their own painted frame.
+const LEGEND_SPELL_FRAMES = new Set(['Witches', 'Fruit Ninjas']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null, weaponStatsHTML = '' }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
@@ -221,7 +223,8 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
   // Witches have their own painted legendary frames: one for their Legendary Weapons (legendary spells) and
   // one for a legendary Trap. Their ordinary traps and spells wear the normal frames like every realm.
   const witchFrame = card.faction === 'Witches' && !card.fusion && legend && (type === 'trap' || type === 'spell')
-    ? (type === 'trap' ? 'trap-witches' : 'legendary-spell-witches') : null;
+    ? (type === 'trap' ? 'trap-witches' : 'legendary-spell-witches')
+    : LEGEND_SPELL_FRAMES.has(card.faction) && !card.fusion && legend && type === 'spell' ? `legendary-spell-${fslug(card.faction)}` : null;
   // A card can bring its own frame (the Sun and Moon revolvers).
   const hunterFrame = card.frameArt ?? (card.faction === 'Monster Hunter' && legend
     ? (type === 'minion' ? 'art/frames/legendary-minion-monster-hunter.png' : type === 'spell' ? 'art/frames/legendary-spell-monster-hunter.png' : null) : null);

@@ -5,6 +5,8 @@
 // which spends the charge. See docs/FUSION_HERO_SPELLS.md for the design list;
 // simplifications made while building are marked "Ruling:".
 
+import { FRUIT_IDS } from './fruit-ninjas.js';
+
 const F = (a, b) => ({ faction: 'Fusion', type: 'spell', heroSpell: true, fusion: [a, b] });
 
 const pay = (amount) => ({ op: 'loseHealth', target: 'friendlyHero', amount });
@@ -846,4 +848,67 @@ FUSION_CARDS.push(
   hunterFusion('Void', 'null_silver', 'Null Silver', 3, 'Give your Hero +3 Attack this turn. If your hand is empty, gain 4 Armor.', [{ op: 'buff', target: 'friendlyHero', attack: 3, temporary: true }, { op: 'gainArmor', amount: 4, if: { handEmpty: true } }], '🌑'),
   hunterFusion('Witches', 'countershot', 'Countershot', 3, 'Give your Hero +2 Attack this turn and gain 3 Armor.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'gainArmor', amount: 3 }], '🪄'),
   hunterFusion('Zombies', 'last_round_protocol', 'Last-Round Protocol', 4, 'Give your Hero +2 Attack this turn. Summon a 3/2 Rush Rage Runner Hunter and a 2/5 Taunt Clicker Hybrid.', [{ op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }, { op: 'summon', cardId: 'rage_runner_hunter' }, { op: 'summon', cardId: 'clicker_hybrid' }], '🧟'),
+);
+
+// ---- Fruit Ninjas (Slice your Fruits, or Harvest new ones) ----
+// "Slice a friendly Fruit" spells need a Fruit to choose. Their other targets are random, like a Slice.
+const FN_FRUIT = { type: 'minion', side: 'friendly', tribe: 'Fruit' };
+const fnSlice = { op: 'slice', target: 'chosen' };
+const fnHarvest = { op: 'summon', pool: FRUIT_IDS };
+const FN_ENEMY_MINION = { randomOf: { minions: { side: 'enemy', alive: true } }, aliveOnly: true };
+const FN_FRIENDLY = { randomOf: { minions: { side: 'friendly', notTribe: 'Fruit', alive: true } }, aliveOnly: true };
+const fnS = (partner, id, name, art, text, effects, extra = {}) => ({
+  ...F(...[partner, 'Fruit Ninjas'].sort()), id, name, art, cost: 2, text, effects, target: FN_FRUIT, ...extra,
+});
+const fnH = (partner, id, name, art, text, effects, extra = {}) => ({
+  ...F(...[partner, 'Fruit Ninjas'].sort()), id, name, art, cost: 2, text, effects: [fnHarvest, ...effects], needsBoardSpace: true, ...extra,
+});
+FUSION_CARDS.push(
+  fnS('Acidic', 'corrosive_fruitcut', 'Corrosive Fruitcut', '🧪', 'Slice a friendly Fruit. Corrosion 2 to a random enemy minion.',
+    [fnSlice, { op: 'corrode', target: FN_ENEMY_MINION, amount: 2 }], { corrodes: true }),
+  fnH('Aliens', 'genetic_fruit_splicing', 'Genetic Fruit Splicing', '🧬', 'Summon a random Fruit. It also carries the Slice effect of another random Fruit.',
+    [{ op: 'addSliceEffect', target: 'summoned', randomFruit: true }]),
+  fnH('Bees', 'swarming_harvest', 'Swarming Harvest', '🐝', 'Summon a random Fruit. When you Slice it, also summon a 1/1 Worker Bee.',
+    [{ op: 'addSliceEffect', target: 'summoned', effects: [{ op: 'summon', cardId: 'worker_bee' }] }]),
+  { ...F('Demons', 'Fruit Ninjas'), id: 'infernal_fruit_sacrifice', name: 'Infernal Fruit Sacrifice', art: '😈', cost: 2, needsBoardSpace: true,
+    text: 'Pay 2 Health. Summon a random Fruit and a random 1-Cost Demon.',
+    effects: [pay(2), fnHarvest, { op: 'summon', randomMinion: { faction: 'Demons', cost: 1 } }] },
+  fnS('Dinosaurs', 'extinction_fruitcut', 'Extinction Fruitcut', '🦖', 'Slice a friendly Fruit. Gain 1 Mana this turn.',
+    [fnSlice, { op: 'gainMana', amount: 1 }]),
+  fnH('Divine', 'heavenly_fruit_blessing', 'Heavenly Fruit Blessing', '✨', 'Summon a random Fruit. Restore 2 Health to your Hero.',
+    [{ op: 'heal', target: 'friendlyHero', amount: 2 }]),
+  fnS('Dragons', 'dragonfruit_inferno', 'Dragonfruit Inferno', '🐉', 'Slice a friendly Fruit. Burn 2 on a random enemy minion.',
+    [fnSlice, burn(FN_ENEMY_MINION, 2)]),
+  fnS('Eels', 'voltage_slice', 'Voltage Slice', '⚡', 'Slice a friendly Fruit. Deal 1 damage to two different random enemy minions.',
+    [fnSlice, { op: 'damage', target: { randomOf: { minions: { side: 'enemy', alive: true } }, count: 2, aliveOnly: true }, amount: 1 }]),
+  fnH('Fungus', 'sporefruit_infection', 'Sporefruit Infection', '🍄', 'Summon a random Fruit. Put 2 Mushrooms in your opponent\'s deck.',
+    [mushrooms(2)]),
+  fnS('Ghosts', 'spectral_fruitcut', 'Spectral Fruitcut', '👻', 'Slice a friendly Fruit. Summon a 1/1 Spectral Insect with Reborn.',
+    [fnSlice, { op: 'summon', cardId: 'spectral_insect', keywords: ['Reborn'] }]),
+  fnH('Ice Age', 'glacial_harvest', 'Glacial Harvest', '❄️', 'Summon a random Fruit. Freeze a random enemy minion.',
+    [{ op: 'buff', target: FN_ENEMY_MINION, keywords: ['Frozen'] }]),
+  fnS('Lycanthropes', 'lunar_fruit_frenzy', 'Lunar Fruit Frenzy', '🌕', 'Slice a friendly Fruit. Give your Hero +2 Attack this turn.',
+    [fnSlice, { op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }]),
+  fnS('Monster Hunter', 'silver_citrus_execution', 'Silver Citrus Execution', '🗡️', 'Slice a friendly Fruit. Give your Hero +1 Attack this turn (+3 instead if the enemy has a Demon, Vampire or Lycanthrope minion).',
+    [fnSlice, { op: 'buff', target: 'friendlyHero', attack: 3, temporary: true, if: { enemyHasFaction: ['Demons', 'Vampires', 'Lycanthropes'] },
+      else: [{ op: 'buff', target: 'friendlyHero', attack: 1, temporary: true }] }]),
+  fnH('Plants', 'thousand_branch_harvest', 'Thousand-Branch Harvest', '🌳', 'Summon a random Fruit and a 0/1 Seedling.',
+    [seedling()]),
+  fnS('Radioactive', 'nuclear_fruitcut', 'Nuclear Fruitcut', '☢️', 'Slice a friendly Fruit. Give a random friendly minion Radiation 1.',
+    [fnSlice, { op: 'radiate', target: FN_FRIENDLY, amount: 1 }]),
+  fnH('Robots', 'precision_laser_harvest', 'Precision Laser Harvest', '🤖', 'Summon a random Fruit. Give a random friendly minion +1 Attack.',
+    [{ op: 'buff', target: FN_FRIENDLY, attack: 1 }]),
+  fnS('Sharks', 'feeding_frenzy_fruitcut', 'Feeding Frenzy Fruitcut', '🦈', 'Slice a friendly Fruit. Deal 1 damage to the lowest-Health enemy minion.',
+    [fnSlice, { op: 'damage', target: { weakest: { side: 'enemy' } }, amount: 1 }]),
+  fnS('Ultraterrestrials', 'fourth_dimensional_fruitcut', 'Fourth-Dimensional Fruitcut', '🌀', 'Slice a friendly Fruit. Return a random enemy minion to its owner\'s hand.',
+    [fnSlice, { op: 'returnToHand', target: FN_ENEMY_MINION }]),
+  fnS('Vampires', 'bloodfruit_harvest', 'Bloodfruit Harvest', '🩸', 'Slice a friendly Fruit. Your Hero gets +1 Attack and Lifesteal this turn.',
+    [fnSlice, { op: 'buff', target: 'friendlyHero', attack: 1, temporary: true, temporaryKeywords: ['Lifesteal'] }]),
+  fnS('Void', 'event_horizon_fruitcut', 'Event Horizon Fruitcut', '🌑', 'Slice a friendly Fruit. Deal 2 damage to a random enemy. If it dies, draw a card.',
+    [fnSlice, { op: 'pickRandom', from: { characters: { side: 'enemy' } } }, { op: 'damage', target: 'chosen', amount: 2 },
+      { op: 'draw', count: 1, if: { subject: 'chosen', dead: true, kind: 'minion' } }]),
+  fnH('Witches', 'hexed_fruitcut', 'Hexed Fruitcut', '🪄', 'Summon a random Fruit. Give a random friendly minion Elusive until your next turn.',
+    [{ op: 'buff', target: FN_FRIENDLY, lingerKeywords: ['Elusive'], untilYourNextTurn: true }]),
+  fnH('Zombies', 'rotten_harvest', 'Rotten Harvest', '🧟', 'Summon a random Fruit. It gets "Exit: Summon a 1/2 Zombie."',
+    [{ op: 'grantTrigger', target: 'summoned', trigger: { on: 'deathrattle', effects: [{ op: 'summon', cardId: 'zombie', health: 2 }] } }]),
 );

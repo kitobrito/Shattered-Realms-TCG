@@ -131,7 +131,8 @@ export function costOf(state, inst) {
   }
   for (const m of state?.players[inst.owner]?.board ?? []) {
     const a = getCard(m.cardId).costAura;
-    if (a && a.type === card.type) aura += a.amount;
+    // tribe: only cards of that tribe (Grand Orchard Sensei: your Fruits cost 1 less).
+    if (a && a.type === card.type && (!a.tribe || hasTribe(card.tribes, a.tribe)) && !(a.tribe && (m.textLost || (m.keywords ?? []).includes('Silenced')))) aura += a.amount;
   }
   // Dinosaurs: Brood Architect — the first Egg you play each turn costs less.
   if ((card.tribes ?? []).includes('Egg') && state && state.players[inst.owner]?.eggPlayedTurn !== state.turn) {
@@ -626,6 +627,12 @@ export function dealDamage(state, sourceId, targetId, amount, opts = {}) {
   }
   // Ice Age: Hardy takes 1 less damage from each hit (never below 1).
   if (amount > 1 && hasKeyword(t, 'Hardy')) amount -= 1;
+  // Fruit Ninjas: Coconut Ironfist — the first damage it takes each turn is 1 less.
+  if (t.kind === 'minion' && amount > 0 && getCard(t.cardId).firstHitEachTurnLess && !t.textLost && !hasKeyword(t, 'Silenced') && t.firstHitTurn !== state.turn) {
+    t.firstHitTurn = state.turn;
+    amount -= getCard(t.cardId).firstHitEachTurnLess;
+    if (amount <= 0) { log(state, `${nameOf(state, t)} shrugs off the hit.`); return 0; }
+  }
   const src = findCharacter(state, sourceId);
   const srcController = src ? src.controller : (opts.sourceController ?? null);
   // Archangel's Divine Shield: the Hero's weapon takes the hit (1 Durability) and the damage is gone.

@@ -199,7 +199,9 @@ export function attackTargets(state, p) {
   if (taunts.length) return taunts.map((m) => m.uid);
   // Hive Enforcer: while it's in play, the enemy Hive can't be attacked.
   const guarded = enemy.board.some((m) => getCard(m.cardId).guardsHive && m.health > 0 && !m.destroyed);
-  return [enemy.hero.uid, ...visible.filter((m) => !(guarded && getCard(m.cardId).isHive)).map((m) => m.uid)];
+  // Fruit Ninjas (Kagehana): a Hero in Stealth can't be attacked either.
+  const heroes = hasKeyword(enemy.hero, 'Stealth') ? [] : [enemy.hero.uid];
+  return [...heroes, ...visible.filter((m) => !(guarded && getCard(m.cardId).isHive)).map((m) => m.uid)];
 }
 
 // Rush: on the turn it arrives, a minion may attack only minions.
@@ -421,6 +423,10 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
   const chosen = target ?? null;
   const chosen2 = target2 ?? null;
   log(state, `${pl.name} plays ${card.type === 'trap' ? 'a Trap' : card.name}.`);
+  // Fruit Ninjas: Combo — this card counts as a Combo if you played another card earlier this turn.
+  if (pl.playedTurn !== state.turn) { pl.playedTurn = state.turn; pl.playedCount = 0; }
+  const combo = pl.playedCount > 0;
+  pl.playedCount += 1;
 
   // Brood Architect: the first Egg you play each turn costs less.
   if ((card.tribes ?? []).includes('Egg')) pl.eggPlayedTurn = state.turn;
@@ -433,7 +439,7 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
     // Void (Singularity): a Pulled minion that Collapsed keeps the keyword it was given.
     for (const k of inst.bonusKeywords ?? []) addKeyword(m, k, false, state);
     const event = { type: 'cardPlayed', source: m.uid, player: p, cardId: card.id, cardType: 'minion', target: chosen, pulled: !!inst.pulled };
-    const ctx = { self: m.uid, controller: p, chosen, chosen2 };
+    const ctx = { self: m.uid, controller: p, chosen, chosen2, combo };
     const steps = [
       { kind: 'event', event },
       { kind: 'window', name: 'cardPlayed', priority: opponentOf(p), ctx: { event } },
@@ -446,7 +452,7 @@ function playCard(state, { player: p, card: uid, target, target2, position }) {
     // The Fourth Circle (Greed): casting a spell costs 1 Health (not a paid cost: it doesn't drive the Descent).
     if (descentDepth(state) === 4) { log(state, '💰 Greed takes its due.'); loseHealth(state, pl.hero.uid, 1, { paid: false }); }
     const event = { type: 'cardPlayed', source: inst.uid, player: p, cardId: card.id, cardType: 'spell', target: chosen, pulled: !!inst.pulled };
-    state.queue.push(...spellSteps(card, { self: inst.uid, controller: p, chosen, chosen2, cardId: card.id }, event, p));
+    state.queue.push(...spellSteps(card, { self: inst.uid, controller: p, chosen, chosen2, cardId: card.id, combo }, event, p));
     pl.graveyard.push(inst);
   } else if (card.type === 'trap') {
     pl.traps.push(inst);
@@ -574,7 +580,7 @@ function declareAttack(state, { player: p, attacker, defender }) {
   if (a.kind === 'hero') a.weaponUsedSlot = a.weapon2 && a.attacksThisTurn % 2 === 0 ? 2 : 1;
   // Stealth lasts until the minion attacks. A Burrowed minion that attacks Surfaces first.
   if (a.kind === 'minion' && a.burrowed) surfaceMinion(state, a);
-  if (a.kind === 'minion' && hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); traceFx(state, { type: 'stealthLost', target: a.uid }); }
+  if (hasKeyword(a, 'Stealth')) { removeKeyword(a, 'Stealth'); log(state, `👁 ${nameOf(state, a)} leaves Stealth.`); traceFx(state, { type: 'stealthLost', target: a.uid }); }
   // Blind: the attack hits a random character, friend or foe.
   let blind = false;
   if (hasKeyword(a, 'Blind')) {
@@ -877,6 +883,12 @@ const STEPS = {
         }
       }
       if (ac.killGrow) applyBuff(state, a, ac.killGrow);
+      // Dragonfruit Duelist: every kill adds a random card from this list to its controller's hand.
+      if (ac.killAddsFrom?.length && !a.textLost && !hasKeyword(a, 'Silenced')) {
+        const id = pickRandom(state, ac.killAddsFrom);
+        addToHand(state, a.controller, id);
+        log(state, `${nameOf(state, a)} takes a ${getCard(id).name}.`);
+      }
       if (ac.stealKeywordsOnKill) {
         const taken = allKeywords(d).filter((k) => !NEGATIVE_KEYWORDS.includes(k) && !hasKeyword(a, k));
         for (const k of taken) addKeyword(a, k, false, state);
