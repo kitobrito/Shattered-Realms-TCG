@@ -41,6 +41,29 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-13-quick-plays',
+    date: 'November 13',
+    title: 'Quick Plays for everyone, and a gentler AI',
+    tag: 'Change',
+    intro: 'Quick Plays now borrow Mana from your next turn, so you can actually answer on your opponent\'s turn. Every realm has them, they get a big new prompt, and the Easy and Medium AI calm down.',
+    blocks: [
+      { cat: 'change', h: 'Quick Plays', list: [
+        { cards: ['flint_spear_volley'], text: 'On your opponent\'s turn, a Quick Play is paid with any Mana you have left, then borrowed from your next turn. What you borrow comes off your next refill (your Mana bar shows it, like "-2 next").',
+          why: 'You usually spend all your Mana on your own turn, so Quick Plays almost never had anything to be paid with.' },
+        { cards: ['glacial_fortress'], text: 'Quick Plays cast on your opponent\'s turn cost 1 less (never below 1).' },
+        { cards: ['hunger_of_the_void', 'swallow_whole', 'static_spark', 'copper_coil', 'silencing_charm', 'hex_of_withering', 'garlic_and_salt', 'holy_water_flask'], text: 'Every realm now has Quick Plays. New ones: Void (Hunger of the Void, Swallow Whole), Ice Age (Flint Spear Volley, Glacial Fortress), Eels (Static Spark, Copper Coil), Witches (Silencing Charm, Hex of Withering) and Monster Hunter (Garlic and Salt, Holy Water Flask).' },
+      ] },
+      { cat: 'qol', h: 'The Quick Play prompt', list: [
+        { cards: [], text: 'When you can answer, the Quick Play shows big on the left with a glowing arrow to a big card of the minion it would act on (the attacker, the one about to be hit, the one just played). Each option shows its cost and how much is borrowed from next turn.' },
+        { cards: [], text: 'A tap on a Quick Play or Pass always counts, even while your opponent\'s move is still animating (it used to be ignored).' },
+      ] },
+      { cat: 'gameplay', h: 'A gentler AI', list: [
+        { cards: [], text: 'Medium plans a shorter way ahead and slips now and then: still a fair fight, but beatable while you learn.' },
+        { cards: [], text: 'Easy makes plenty of mistakes and its Hero starts with 25 Health (yours has 30). The tutorial\'s rival is gentler still once its scripted turns are over.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-12-bleed-prey',
     date: 'November 12',
     title: 'Bleed marks Prey, healing stops Bleed',

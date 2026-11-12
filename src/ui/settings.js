@@ -15,8 +15,8 @@ export const AI_SPEEDS = { same: 1, fast: 0.55, turbo: 0.3 };
 
 // AI difficulty, easiest first (keys match DIFFICULTIES in ai/smart.js).
 export const DIFFICULTY_LEVELS = [
-  ['easy', 'Easy', 'Makes mistakes. Good for learning.'],
-  ['medium', 'Medium', 'Plans its turn sensibly. A fair fight.'],
+  ['easy', 'Easy', 'Makes plenty of mistakes, and its Hero starts with 25 Health (yours has 30). Good for learning.'],
+  ['medium', 'Medium', 'Plans its turn sensibly but slips now and then. A fair fight.'],
   ['hard', 'Hard', 'Trained by machine learning. Its Hero starts with 38 Health (yours has 30) and it gets 1 extra starting card.'],
   ['veryHard', 'Very Hard', 'Trained, plans further ahead. Its Hero starts with 42 Health and it gets 2 extra starting cards.'],
   ['impossible', 'Impossible', '⚠ This AI has big advantages: it can see your hand, its Hero starts with 50 Health (yours has 30), and it gets 3 extra starting cards.'],

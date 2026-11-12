@@ -122,7 +122,7 @@ export const VOID_CARDS = [
     effects: [discard([{ op: 'buff', target: 'chosen', attack: 2, temporary: true }])],
   },
   {
-    ...S, id: 'hunger_of_the_void', name: 'Hunger of the Void', art: '🦷', cost: 1,
+    ...S, quickPlay: {}, id: 'hunger_of_the_void', name: 'Hunger of the Void', art: '🦷', cost: 1,
     text: 'Deal 2 damage. Hollow: Deal 4 instead.',
     target: { type: 'character', side: 'any' },
     effects: [{ op: 'damage', target: 'chosen', amount: 2, amountIf: { if: HOLLOW, amount: 4 } }],
@@ -139,7 +139,7 @@ export const VOID_CARDS = [
     effects: [{ op: 'discardHand', then: [{ op: 'buff', target: 'chosen', perDiscarded: {} }] }],
   },
   {
-    ...S, id: 'swallow_whole', name: 'Swallow Whole', art: '🌀', cost: 3,
+    ...S, quickPlay: {}, id: 'swallow_whole', name: 'Swallow Whole', art: '🌀', cost: 3,
     text: 'Destroy an enemy minion with 3 or less Attack. Discard a card.',
     target: { type: 'minion', side: 'enemy', maxAttack: 3 },
     effects: [{ op: 'destroy', target: 'chosen' }, discard()],

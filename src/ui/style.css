@@ -606,6 +606,54 @@ body:not(.touch-ui) .arena .my-hand .card:hover:not(.drag-src) { transform: tran
 
 /* Reaction / overlays inside the arena */
 .arena .reaction { z-index: 80; }
+/* Quick Play prompt: the Quick Play big on the left, a glowing arrow, the minion it acts on on the right. */
+.reaction.qp-prompt { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 12px; padding: 16px 20px 18px; width: min(760px, 94vw);
+  background: radial-gradient(120% 90% at 50% 0%, #3a1a2cf5, #140a10f5); box-shadow: 0 0 0 1px #0008, 0 18px 60px #000c, 0 0 40px #ffd25a33;
+  animation: qp-in .32s cubic-bezier(.2,1.2,.4,1) both; }
+@keyframes qp-in { from { transform: translate(-50%, -46%) scale(.92); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+.qp-head { display: flex; align-items: center; gap: 10px; }
+.qp-head b { font-family: var(--font-title); font-size: 22px; color: var(--gold); letter-spacing: .04em; }
+.qp-head .sub { opacity: .85; }
+.qp-stage { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.qp-card { --qpw: clamp(130px, 22vw, 200px); position: relative; width: var(--qpw); height: calc(var(--qpw) * 1.4066); flex: none; }
+.qp-card .big-card { --h: calc(var(--qpw) * 1.4066); position: absolute; inset: 0; width: 100%; height: 100%; }
+.qp-mine { filter: drop-shadow(0 0 14px #ffd25aaa); animation: qp-glow 1.6s ease-in-out infinite; }
+.qp-focus { filter: drop-shadow(0 0 12px #ff5a5a88); }
+@keyframes qp-glow { 50% { filter: drop-shadow(0 0 24px #ffd25a); } }
+.qp-hero { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; border: 2px solid var(--gold); border-radius: 14px; background: #0006; }
+.qp-hero b { font-family: var(--font-title); font-size: 20px; } .qp-hero span { opacity: .8; }
+.qp-arrow { position: relative; width: clamp(60px, 10vw, 110px); height: 26px; flex: none; }
+.qp-arrow::before { content: ''; position: absolute; left: 0; right: 14px; top: 50%; height: 6px; transform: translateY(-50%); border-radius: 3px;
+  background: linear-gradient(90deg, #ffd25a00, #ffd25a 40%, #fff3c4); box-shadow: 0 0 12px #ffd25a; }
+.qp-arrow::after { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); border: 13px solid transparent; border-left: 18px solid #fff3c4; border-right: 0;
+  filter: drop-shadow(0 0 6px #ffd25a); }
+.qp-arrow i { position: absolute; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px #ffd25a;
+  animation: qp-dot 1.1s linear infinite; }
+.qp-arrow i:nth-child(2) { animation-delay: .37s; } .qp-arrow i:nth-child(3) { animation-delay: .74s; }
+@keyframes qp-dot { from { left: 0; opacity: 0; } 20% { opacity: 1; } to { left: calc(100% - 22px); opacity: 0; } }
+.qp-options { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.qp-options .qp-option { flex: 1 1 220px; max-width: 360px; }
+.mana-text .qp-debt { color: #ffb070; }
+.qp-options .chosen { outline: 3px solid #fff3c4; box-shadow: 0 0 16px #ffd25a; }
+.qp-borrow { margin-left: 6px; font-style: normal; font-size: 11px; padding: 1px 6px; border-radius: 6px; background: #5a3a10; color: #ffe0a0; vertical-align: middle; }
+@media (max-width: 700px), (max-height: 540px) {
+  .arena .reaction.qp-prompt { padding: 10px 12px; gap: 8px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; font-size: 13px; }
+  .qp-head { flex-wrap: wrap; gap: 4px 8px; }
+  .qp-head b { font-size: 17px; }
+  .qp-head .sub { font-size: 12px; }
+  .qp-card { --qpw: clamp(92px, 30vw, 140px); }
+  .qp-arrow { width: clamp(36px, 10vw, 70px); }
+  /* The big card already shows the text: the options stay one short line each. */
+  .qp-options .qp-option { flex: 1 1 100%; max-width: none; padding: 6px 10px; }
+  .qp-options .qp-option b { font-size: 13px; line-height: 1.25; }
+  .qp-options .qp-option small { display: none; }
+  .qp-options [data-act="pass"] { flex: 1 1 100%; padding: 8px; }
+  .qp-borrow { font-size: 10px; }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .qp-card { --qpw: clamp(80px, 16vh, 120px); }
+  .qp-options .qp-option { flex: 1 1 45%; }
+}
 .arena .overlay { z-index: 90; }
 .game-over h2 { font-size: 48px; margin: 0 0 6px; }
 

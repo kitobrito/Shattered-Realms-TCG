@@ -146,13 +146,13 @@ export const WITCH_CARDS = [
 
   // ---- Spells (6) ----
   {
-    ...S, id: 'silencing_charm', name: 'Silencing Charm', art: '🔇', cost: 1,
+    ...S, quickPlay: {}, id: 'silencing_charm', name: 'Silencing Charm', art: '🔇', cost: 1,
     text: 'Permanently Silence a minion. Draw a card.',
     target: { type: 'minion', side: 'any' },
     effects: [SILENCE('chosen'), { op: 'draw', count: 1 }],
   },
   {
-    ...S, id: 'hex_of_withering', name: 'Hex of Withering', art: '🥀', cost: 2,
+    ...S, quickPlay: {}, id: 'hex_of_withering', name: 'Hex of Withering', art: '🥀', cost: 2,
     text: "Deal 3 damage to a minion. If it's Silenced, deal 5 instead.",
     target: { type: 'minion', side: 'any' },
     effects: [{ op: 'damage', target: 'chosen', amount: 5, if: { subject: 'chosen', keyword: 'Silenced' }, else: [{ op: 'damage', target: 'chosen', amount: 3 }] }],
