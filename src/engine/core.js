@@ -285,8 +285,8 @@ export function applyBurn(state, c, amount) {
 }
 
 // Bleed (Bloodripper's Talon): a wound that stacks. At the end of the bleeder's turn the character takes
-// its Bleed value as damage. While it bleeds, Vampire cards that damage it heal half that damage (rounded
-// up; however much it bleeds).
+// its Bleed value as damage. While it bleeds, a Vampire card that damages it heals half the damage it
+// dealt (rounded up), whatever the size of the Bleed. The Bleed tick itself heals no one.
 export function applyBleed(state, c, amount, by) {
   if (!c || amount <= 0 || c.health <= 0 || c.destroyed) return;
   c.bleed = (c.bleed ?? 0) + amount;
@@ -766,3 +766,7 @@ export function summonMinion(state, p, cardId, opts = {}) {
   if (getCard(cardId).thawing) m.encased = getCard(cardId).thawing;
   return m;
 }
+
+// Corpses: every minion that dies leaves one, but only Zombies and Fungus cards use them.
+export const CORPSE_FACTIONS = ['Zombies', 'Fungus'];
+export const usesCorpses = (pl) => (pl?.factions ?? []).some((f) => CORPSE_FACTIONS.includes(f));

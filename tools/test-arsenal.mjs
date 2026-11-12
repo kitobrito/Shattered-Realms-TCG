@@ -127,6 +127,18 @@ test('Bleed: a Vampire minion that hits a Bleeding enemy heals half the damage (
   if (bot.health !== 1) return 'a non-Vampire minion healed';
 });
 
+test('Bleed: the Vampire heals half the damage IT deals, not half the Bleed; the Bleed tick heals no one', 'Vampires', () => {
+  const foe = dummy(0, 40); foe.bleed = 6; foe.bleedBy = 0;
+  const vamp = summonMinion(s, 0, 'blood_drinker'); vamp.health = 1; vamp.maxHealth = 20; vamp.sick = false;
+  dealDamage(s, vamp.uid, foe.uid, 2);
+  if (vamp.health !== 2) return `after a 2-damage hit on Bleed 6: health ${vamp.health} (want 1 + ceil(2/2) = 2, not 1 + 3)`;
+  dealDamage(s, vamp.uid, foe.uid, 7);
+  if (vamp.health !== 6) return `after a 7-damage hit: health ${vamp.health} (want 2 + ceil(7/2) = 6)`;
+  const hpBefore = vamp.health, heroBefore = hero(0).health;
+  applyAction(s, { type: 'endTurn', player: 0 }); settle();
+  if (vamp.health !== hpBefore || hero(0).health !== heroBefore) return 'the Bleed tick healed a Vampire or the Hero';
+});
+
 test("Bleed: the Hero swinging Bloodripper's Talon heals from a Bleeding target", 'Vampires', () => {
   play('bloodrippers_talon');
   hero(0).health = 20;
@@ -195,16 +207,16 @@ test("Caustic Reservoir spells out the rule: a minion at 0 Attack with 6 Corrosi
   if (!m.destroyed && m.health > 0) return `still alive (attack ${m.attack}, corrosion ${m.corrosion})`;
 });
 
-test('The Great Dissolution: Taunt; an enemy minion that attacks it gets Corrosion 2 before the hit (and so does one it attacks)', 'Acidic', () => {
+test('The Great Dissolution: Taunt and Acid Hide 2 (an attacker is Corroded by 2 after its hit); one it attacks is corroded first', 'Acidic', () => {
   const g = summonMinion(s, 0, 'the_great_dissolution'); g.sick = false;
-  if (!hasKeyword(g, 'Taunt')) return 'no Taunt';
-  // The enemy attacks it: 5 Attack corroded to 3 before damage, so it takes 3.
+  if (!hasKeyword(g, 'Taunt') || !hasKeyword(g, 'Acid Hide')) return 'no Taunt / Acid Hide';
+  // The enemy attacks it: Acid Hide 2 melts the attacker after the hit, so it takes the full 5.
   s.activePlayer = 1;
   const foe = summonMinion(s, 1, 'nightwatch_recruit'); foe.keywords = []; foe.attack = 5; foe.health = foe.maxHealth = 20; foe.sick = false;
   const hp = g.health;
   applyAction(s, { type: 'attack', player: 1, attacker: foe.uid, defender: g.uid }); settle();
   if (foe.attack !== 3) return `attacker Attack ${foe.attack} (want 5 - 2 = 3)`;
-  if (g.health !== hp - 3) return `took ${hp - g.health} (want 3)`;
+  if (g.health !== hp - 5) return `took ${hp - g.health} (want 5: Acid Hide melts after the hit)`;
   // It attacks an enemy: the defender is corroded first, so it hits back for 2 less.
   s.activePlayer = 0;
   const d = summonMinion(s, 1, 'nightwatch_recruit'); d.keywords = []; d.attack = 4; d.health = d.maxHealth = 20;
