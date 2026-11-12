@@ -2319,6 +2319,7 @@ function shopButton(name) {
     case 'shopClose': screen = 'menu'; return render();
     case 'shopBuy': shop.busy = true; sound.play('click'); srv.send({ t: 'buyPack', faction: name.slice(8) }); return render();
     case 'shopOpenedOk': shop.opened = null; return render();
+    case 'shopOpen': shop.busy = true; sound.play('click'); srv.send({ t: 'openPack', kind: name.slice(9) }); return render();
     case 'shopBuyCard': {
       const c = getCard(name.slice(12));
       const price = c?.legendary ? shop.you.economy.rules.cardPrice.legendary : shop.you.economy.rules.cardPrice.normal;
@@ -2382,6 +2383,11 @@ function onServerMessage(msg) {
       shop.busy = false;
       shop.opened = { title: msg.faction === 'legendary' ? 'Legendary Pack' : `${msg.faction} pack`, cards: msg.cards, pack: msg.faction };
       sound.play('victory');
+      return onShop && render();
+    case 'packBought':
+      shop.busy = false;
+      sound.play('draw');
+      flash(`${msg.kind === 'legendary' ? 'Legendary Pack' : `${msg.kind} pack`} added to Your packs. Open it whenever you like.`);
       return onShop && render();
     case 'bought':
       shop.busy = false;
