@@ -10,18 +10,22 @@ import { allCards, getCard } from '../engine/registry.js';
 import { PLAYABLE_FACTIONS } from '../cards/index.js';
 import { ALT_BOARDS, BOARD_ART } from '../cards/board-art.js';
 import { boardProgress } from './unlocks.js';
-import { artOf, cardHTML, esc, FACTION_ICONS, heroArtOf, icon } from './shared.js';
+import { artOf, cardHTML, esc, icon } from './shared.js';
 
 const extras = () => allCards().filter((c) => c.extra && !c.token && !c.custom && !c.alwaysUnlocked);
 const ofRealm = (f) => extras().filter((c) => c.faction === f);
 const nameOf = (id) => getCard(id)?.name ?? id;
+// Shop art (art/ui/shop): a pack wrapper per realm plus the Legendary Pack, the points coin and the opening burst.
+const packArt = (f) => `art/ui/shop/pack-${String(f).toLowerCase().replace(/\s+/g, '-')}.webp`;
+const COIN = '<img class="sh-coin" src="art/ui/shop/coin.webp" alt="" draggable="false">';
+const price = (n) => `${COIN}<span>${n}</span>`;
 
 const chip = (id, extra = '') => {
   const c = getCard(id);
   const art = c && artOf(c);
   return `<span class="sh-chip ${c?.legendary ? 'legendary' : ''}" data-preview="${esc(id)}" ${extra}>${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${esc(c?.art ?? '?')}</b>`}<span>${esc(nameOf(id))}</span></span>`;
 };
-const bundleHTML = (b) => [...(b.cards ?? []).map((id) => chip(id)), ...(b.points ? [`<span class="sh-pts">${b.points} pts</span>`] : [])].join('<i class="sh-plus">+</i>') || '<em>nothing</em>';
+const bundleHTML = (b) => [...(b.cards ?? []).map((id) => chip(id)), ...(b.points ? [`<span class="sh-pts">${COIN}${b.points}</span>`] : [])].join('<i class="sh-plus">+</i>') || '<em>nothing</em>';
 const hhmm = (ms) => { const m = Math.max(0, Math.round(ms / 60000)); return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`; };
 
 export function shopHTML(shop, signedIn) {
@@ -30,7 +34,7 @@ export function shopHTML(shop, signedIn) {
   const head = `<header class="sh-head">
       <button class="ghost sh-back" data-act="shopClose">${icon('chevron')}<span>Menu</span></button>
       <h1>Shop</h1>
-      <div class="sh-points" title="Points: earned by completing daily missions">${e ? `<b>${e.points}</b><span>points</span>` : ''}</div>
+      <div class="sh-points" title="Points: earned by completing daily missions">${e ? `${COIN}<b>${e.points}</b><span>points</span>` : ''}</div>
     </header>
     <nav class="sh-tabs">${tabs.map(([k, l]) => `<button data-act="shopTab:${k}" class="${shop.tab === k ? 'on' : 'ghost'}">${l}${k === 'dupes' && e && Object.keys(e.dupes).length ? ` <i class="sh-count">${Object.values(e.dupes).reduce((a, b) => a + b, 0)}</i>` : ''}</button>`).join('')}</nav>`;
   if (!signedIn) {
@@ -51,7 +55,7 @@ function dailiesHTML(e) {
     <ul class="sh-dailies">${e.dailies.map((m) => `<li class="${m.done ? 'done' : ''}">
       <span class="sh-check">${m.done ? '✔' : ''}</span>
       <div><b>${esc(m.text)}</b><div class="sh-bar"><i style="width:${(m.progress / m.need) * 100}%"></i></div><small>${m.progress} / ${m.need}</small></div>
-      <span class="sh-reward">+${m.points}</span></li>`).join('')}</ul>
+      <span class="sh-reward">+${price(m.points)}</span></li>`).join('')}</ul>
     <p class="sh-sub">Winning still unlocks cards too, until you own ${e.rules.freePerFaction} of a realm's expansion cards. The rest of a realm come from its packs.</p></section>`;
 }
 
@@ -61,12 +65,13 @@ function packsHTML(shop, e) {
   const realm = (f) => {
     const all = ofRealm(f), have = all.filter((c) => owned.has(c.id)).length;
     return `<div class="sh-pack ${have === all.length ? 'complete' : ''}">
-      <span class="sh-pack-ico">${heroArtOf(f) ? `<img src="${heroArtOf(f)}" alt="" draggable="false">` : FACTION_ICONS[f] ?? '✦'}</span><b>${esc(f)}</b><small>${have} / ${all.length} owned</small>
-      <button data-act="shopBuy:${esc(f)}" class="${e.points >= r.packCost ? 'gold' : 'ghost'}" ${e.points >= r.packCost && !shop.busy ? '' : 'disabled'}>${r.packCost} pts</button></div>`;
+      <img class="sh-pack-art" src="${packArt(f)}" alt="" draggable="false"><b>${esc(f)}</b><small>${have} / ${all.length} owned</small>
+      <button data-act="shopBuy:${esc(f)}" class="${e.points >= r.packCost ? 'gold' : 'ghost'}" ${e.points >= r.packCost && !shop.busy ? '' : 'disabled'}>${price(r.packCost)}</button></div>`;
   };
   return `<section class="sh-panel sh-legendary">
+      <img class="sh-legend-art" src="${packArt('legendary')}" alt="" draggable="false">
       <div><h2>Legendary Pack</h2><p>${r.packSize} cards from <b>any realm</b>, completely random, with at least one <b>guaranteed legendary</b> (one you don't own yet, while there are any).</p></div>
-      <button data-act="shopBuy:legendary" class="${e.points >= r.legendaryPackCost ? 'gold' : 'ghost'}" ${e.points >= r.legendaryPackCost && !shop.busy ? '' : 'disabled'}>${r.legendaryPackCost} pts</button>
+      <button data-act="shopBuy:legendary" class="${e.points >= r.legendaryPackCost ? 'gold' : 'ghost'}" ${e.points >= r.legendaryPackCost && !shop.busy ? '' : 'disabled'}>${price(r.legendaryPackCost)}</button>
     </section>
     <section class="sh-panel"><div class="sh-row"><h2>Realm packs</h2><span class="sh-sub">${r.packSize} cards · ${Math.round(r.legendaryChance * 100)}% legendary chance per card</span></div>
     <p class="sh-sub">Cards from the realm you pick, mostly ones you don't have yet. A card you already own is a duplicate: recycle it for points or trade it.</p>
@@ -81,7 +86,7 @@ function cardsHTML(shop, e) {
   const realm = PLAYABLE_FACTIONS.includes(shop.cardRealm) ? shop.cardRealm : PLAYABLE_FACTIONS.find((f) => ofRealm(f).some((c) => !owned.has(c.id))) ?? PLAYABLE_FACTIONS[0];
   const left = ofRealm(realm).filter((c) => !owned.has(c.id)).sort((a, b) => (a.legendary ? 1 : 0) - (b.legendary ? 1 : 0) || a.cost - b.cost);
   const price = (c) => (c.legendary ? r.cardPrice.legendary : r.cardPrice.normal);
-  const buy = (act, cost, label = `${cost} pts`) => `<button data-act="${act}" class="${e.points >= cost ? 'gold' : 'ghost'}" ${e.points >= cost && !shop.busy ? '' : 'disabled'}>${label}</button>`;
+  const buy = (act, cost, label = price(cost)) => `<button data-act="${act}" class="${e.points >= cost ? 'gold' : 'ghost'}" ${e.points >= cost && !shop.busy ? '' : 'disabled'}>${label}</button>`;
   const boards = (ALT_BOARDS[realm] ?? []).map((b) => {
     const p = boardProgress(b, realm);
     const have = (e.boards ?? []).includes(b.id) || (p.total > 0 && p.have === p.total);
@@ -104,9 +109,9 @@ function dupesHTML(e) {
   if (!ids.length) return `<section class="sh-panel sh-empty"><h2>No duplicates</h2><p>Cards you already own that come out of packs land here. Recycle them for points, or offer them on the trade board.</p></section>`;
   const value = (id) => (getCard(id)?.legendary ? e.rules.recycle.legendary : e.rules.recycle.normal);
   const total = ids.reduce((n, id) => n + value(id) * e.dupes[id], 0);
-  return `<section class="sh-panel"><div class="sh-row"><h2>Duplicates</h2><button class="gold" data-act="shopRecycleAll">Recycle all for ${total} pts</button></div>
+  return `<section class="sh-panel"><div class="sh-row"><h2>Duplicates</h2><button class="gold" data-act="shopRecycleAll">Recycle all for ${price(total)}</button></div>
     <p class="sh-sub">${e.rules.recycle.normal} points each, ${e.rules.recycle.legendary} for a legendary. Or trade them on the trade board.</p>
-    <ul class="sh-dupes">${ids.map((id) => `<li>${chip(id)}<span class="sh-x">×${e.dupes[id]}</span><button class="ghost" data-act="shopRecycle:${esc(id)}">Recycle 1 (+${value(id)})</button></li>`).join('')}</ul></section>`;
+    <ul class="sh-dupes">${ids.map((id) => `<li>${chip(id)}<span class="sh-x">×${e.dupes[id]}</span><button class="ghost" data-act="shopRecycle:${esc(id)}">Recycle 1 (+${price(value(id))})</button></li>`).join('')}</ul></section>`;
 }
 
 function tradesHTML(shop, e) {
@@ -130,8 +135,11 @@ function tradesHTML(shop, e) {
     <section class="sh-panel"><h2>Open trades</h2>${theirs.length ? theirs.map(listing).join('') : '<p class="sh-sub">No trades up right now. Post the first one.</p>'}</section>`;
 }
 
+// A pack opened: the wrapper shakes and bursts open in a flash, then the cards are dealt out.
 function openedHTML(o) {
-  return `<div class="overlay unlock-overlay sh-opened"><div class="unlock-panel">
+  return `<div class="overlay unlock-overlay sh-opened ${o.seen ? 'seen' : ''}">
+    ${o.pack && !o.seen ? `<div class="sh-rip" aria-hidden="true"><img class="sh-burst" src="art/ui/shop/burst.webp" alt=""><img class="sh-rip-pack" src="${packArt(o.pack)}" alt=""></div>` : ''}
+    <div class="unlock-panel">
     <div class="unlock-burst"></div>
     <h2>${esc(o.title)}</h2>
     <div class="unlock-row">${o.cards.map((c, k) => `<div class="unlock-card ${c.duplicate ? 'dupe' : 'new'}" style="--k:${k}">${cardHTML(getCard(c.id))}<span class="unlock-faction">${c.duplicate ? 'Duplicate' : 'New!'} · ${esc(getCard(c.id).faction)}</span></div>`).join('')}</div>
