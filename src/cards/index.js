@@ -129,6 +129,7 @@ export const LEGENDARY = new Set([
   'the_pale_wanderer',
   'face_that_comes_back',
   'pulsar_the_neutron_heart',
+  'the_great_chasm_beyond',
   'rex_the_tyrant_king',
   'the_night_captain',
   'cross_hilt_longsword',

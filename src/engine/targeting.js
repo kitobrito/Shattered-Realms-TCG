@@ -9,8 +9,9 @@ import { pickRandom } from './rng.js';
 // Elusive: enemy spells cannot choose it.
 export function canBeChosenBy(target, controller, bySpell = false, spec = null) {
   if (target.kind !== 'minion' || target.controller === controller) return true;
-  // Sharks: cards that hunt Marked Prey reach it through Stealth and Elusive; some track any hidden minion.
-  if (spec?.prey && target.prey) return true;
+  // Sharks: cards that hunt Marked Prey reach it through Stealth (not Elusive: a spell still can't
+  // choose an Elusive minion); some track any hidden minion.
+  if (spec?.prey && target.prey && !(bySpell && hasKeyword(target, 'Elusive'))) return true;
   if (spec?.ignoreStealth && !(bySpell && hasKeyword(target, 'Elusive'))) return true;
   if (hasKeyword(target, 'Stealth')) return false;
   if (bySpell && hasKeyword(target, 'Elusive')) return false;

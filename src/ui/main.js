@@ -160,7 +160,9 @@ function storeDeck(factions, deck) {
 // builder and pressing Save deck makes it the deck you play.
 const SLOTS_KEY = 'faction-ccg-deckslots';
 function allSlots() { try { return JSON.parse(localStorage.getItem(SLOTS_KEY) ?? '{}'); } catch { return {}; } }
-const deckSlots = (factions) => (Array.isArray(allSlots()[pairKey(factions)]) ? allSlots()[pairKey(factions)] : []);
+// A saved deck keeps only cards that still exist (a removed card, like Meteorite, just leaves a gap).
+const deckSlots = (factions) => (Array.isArray(allSlots()[pairKey(factions)]) ? allSlots()[pairKey(factions)] : [])
+  .filter((d) => d && Array.isArray(d.deck)).map((d) => ({ ...d, deck: d.deck.filter((id) => hasCard(id)) }));
 function storeSlots(factions, list) {
   const all = allSlots();
   all[pairKey(factions)] = list;

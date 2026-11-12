@@ -53,7 +53,7 @@ export function expansionLineup(f) {
 
 function autoExpansionLineup(f) {
   const size = FACTION_DECKS[f].length;
-  // Deck-rule cards (Meteorite) change how the realm plays: players add them on purpose.
+  // Deck-rule cards change how the realm plays: players add them on purpose.
   // The main expansion first, then mini-set cards (Harvest Moon, The Silent Choir...) while they fit.
   const extras = expansionCards(f).filter((id) => !getCard(id).deckRule).sort((a, b) => (getCard(a).set ? 1 : 0) - (getCard(b).set ? 1 : 0));
   const cut = new Set(STANDARD_CUTS[f] ?? []);

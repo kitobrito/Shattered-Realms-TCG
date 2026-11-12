@@ -16,7 +16,8 @@ const post = (route, b) => fetch(`${base}/${route}`, { method: 'POST', body: JSO
 let res = await fetch(`${base}/news`); let news = await res.json();
 ok(res.status === 200 && news.posts.length >= 4 && news.posts.at(-1).title.includes('Halloween'), `news has every post back to Halloween (${news.posts.length})`);
 ok(res.headers.get('access-control-allow-origin') === '*', 'news readable from other sites');
-const cmp = news.posts[0].blocks.find((b) => b.compare)?.compare[0];
+// The newest post with a before/after card comparison (not every post has one).
+const cmp = news.posts.flatMap((p) => p.blocks).find((b) => b.compare)?.compare[0];
 ok(cmp && cmp.before && cmp.now && cmp.before.text !== cmp.now.text, 'a change carries before and now cards');
 ok(/^http:\/\/localhost:\d+\/art\//.test(cmp.now.art), `card art is an absolute address (${cmp.now.art})`);
 ok(news.factions.length >= 20 && news.poll?.options.length === 4, 'factions and the current poll are included');

@@ -4,7 +4,8 @@
 // Marked Prey (core.js markPrey / checkPrey): while a player has Sharks, an enemy minion
 // brought to 3 Health or less becomes Marked Prey. Cards can also mark minions directly.
 // The mark stays until it leaves play or is healed above 3 Health. Sharks can attack Prey
-// in Stealth and their cards reach Prey through Stealth and Elusive (targeting.js); the
+// through Stealth and past Taunt and ignore its Evade (engine.js defendersFor, core.js dealDamage);
+// their cards reach Prey through Stealth (targeting.js); the
 // first time each turn a Shark attacks Prey it gets +2 Attack (engine.js huntDamage).
 // Rulings made while building are marked "Ruling:".
 
@@ -25,7 +26,7 @@ export const SHARK_CARDS = [
   // ---- Hero Spell (passive) ----
   {
     ...S, id: 'blood_in_the_water', name: 'Blood in the Water', art: '🩸', heroSpell: true, passive: true, cost: 0,
-    text: 'Passive. Enemy minions brought to 3 Health or less become Marked Prey. Your Sharks can hit Marked Prey through Stealth and Elusive. Once per turn, a Shark attacking Marked Prey gets +2 Attack.',
+    text: 'Passive. Enemy minions brought to 3 Health or less become Marked Prey. Your Sharks can attack Marked Prey through Stealth and past Taunt, and their hits ignore its Evade. Once per turn, a Shark attacking Marked Prey gets +2 Attack.',
     effects: [],
   },
 

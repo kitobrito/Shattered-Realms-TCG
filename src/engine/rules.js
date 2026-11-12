@@ -64,7 +64,7 @@ export const KEYWORD_TEXT = {
   'Spell Ward': 'The next enemy spell that would affect this minion has no effect on it; then Spell Ward is removed.',
   Haunt: "Summon a minion that died this game from either player's Graveyard onto your side. It still belongs to its owner, so if it dies again it goes back to their Graveyard.",
   Graveyard: 'Where minions go when they die. Minions that were Obliterated never get there.',
-  Prey: "Marked Prey: an enemy minion at 3 Health or less, marked by a Shark player (Blood in the Water) or a card. Sharks can reach it through Stealth and Elusive and hit it harder. The mark lasts until it leaves play or is healed above 3 Health.",
+  Prey: "Marked Prey: an enemy minion at 3 Health or less, marked by a Shark player (Blood in the Water) or a card. Sharks can attack it through Stealth and past Taunt, their hits ignore its Evade, and they hit it harder. The mark lasts until it leaves play or is healed above 3 Health.",
   Corrosion: "Corrosion X: permanently lower a minion's Attack by X (never its Health). At 0 Attack it can't attack until its Attack rises again. A minion at 0 Attack with 6 or more Corrosion on it Dissolves. It lasts while the minion stays in play; a minion that leaves and comes back is fresh.",
   Dissolve: 'Destroy a minion. You get a 2-Mana Essence spell holding one random piece of it: its original Attack, its original Health, or its keywords. Cast the Essence to give that to one of your minions for good. A minion at 0 Attack with 6 or more Corrosion on it is Dissolved too (whoever corroded it gets the Essence).',
   'Acid-coated': "The next Corrosion on this minion lowers its Attack by 1 more, then the coating is gone.",

@@ -1,4 +1,4 @@
-// Rules tests for Meteorite and the new Dinosaurs (Ceratosaurus family, Dive Bomber and others).
+// Rules tests for the new Dinosaurs (Ceratosaurus family, Dive Bomber and others).
 //   node tools/test-dinosaurs-additions.mjs
 
 import { buildDeck, copyLimit, FACTION_DECKS, PLAYABLE_FACTIONS } from '../src/cards/index.js';
@@ -64,52 +64,19 @@ function test(name, fn) {
 
 
 
-const IDS = ['meteorite', 'meteor_strike', 'ankylosaurus_bone_crusher', 'dilophosaurus_venom_spitter', 'pachycephalosaurus', 'juvenile_ceratosaurus', 'bull_ceratosaurus', 'female_ceratosaurus', 'pterodactyl_dive_bomber', 'pterodactyl_diveling'];
-// A game where player 0's deck holds Meteorite.
-function freshMeteorite() {
-  const fa = ['Dinosaurs', 'Sharks'], fb = ['Vampires', 'Robots'];
-  const deck = ['meteorite', ...buildDeck(fa).slice(1)];
-  s = createGame({ seed: 7, rules: { mulligan: false, secondPlayerPotions: false, openingHandHelp: false }, players: [{ name: 'A', factions: fa, deck }, { name: 'B', factions: fb, deck: buildDeck(fb) }] });
-}
-
+const IDS = ['ankylosaurus_bone_crusher', 'dilophosaurus_venom_spitter', 'pachycephalosaurus', 'juvenile_ceratosaurus', 'bull_ceratosaurus', 'female_ceratosaurus', 'pterodactyl_dive_bomber', 'pterodactyl_diveling'];
 test('all new cards exist with art; the two Ceratosaurus parents are legendary', () => {
   for (const id of IDS) if (!getCard(id) || !ART[id] || !existsSync(new URL(`../${ART[id]}`, import.meta.url))) return `missing ${id}`;
   if (!getCard('bull_ceratosaurus').legendary || !getCard('female_ceratosaurus').legendary) return 'not legendary';
 });
 
-test('Meteorite is never drawn: it leaves the deck and swaps the Hero Spell', () => {
-  freshMeteorite();
-  const all = [...pl(0).deck, ...pl(0).hand];
-  if (all.some((c) => c.cardId === 'meteorite')) return 'Meteorite is in deck or hand';
-  if (!pl(0).heroSpells.some((h) => h.cardId === 'meteor_strike')) return 'no Meteor Strike';
-  if (pl(0).passives.includes('extinction_cycle')) return 'still has Extinction Cycle';
-  if (pl(0).extinction) return 'Extinction still counting';
-});
-
-test('Meteorite: normal Mana growth, no Primal Mana', () => {
-  freshMeteorite();
-  for (let i = 0; i < 6; i++) { applyAction(s, { type: 'endTurn', player: s.activePlayer }); settle(); }
-  const m = pl(0).mana;
-  if ((m.primal ?? 0) !== 0) return `primal ${m.primal}`;
-  if (m.max !== pl(1).mana.max && m.max !== pl(1).mana.max + 1 && m.max !== pl(1).mana.max - 1) return `max ${m.max} vs ${pl(1).mana.max}`;
-});
-
-test('Meteor Strike spends all Mana for that many 1-damage hits on minions only', () => {
-  freshMeteorite();
-  for (const p of s.players) { p.hand = []; }
-  s.activePlayer = 0; pl(0).mana.max = 6; pl(0).mana.current = 6; pl(0).mana.primal = 0; pl(0).mana.temp = 0;
-  const a = blank(0, 1, 20), b = blank(1, 1, 20);
-  const heroes = [hero(0).health, hero(1).health];
-  applyAction(s, { type: 'heroSpell', player: 0, card: 'meteor_strike' }); settle();
-  const hits = (20 - a.health) + (20 - b.health);
-  if (hits !== 6) return `hits ${hits}`;
-  if (pl(0).mana.current !== 0) return `mana left ${pl(0).mana.current}`;
-  if (hero(0).health !== heroes[0] || hero(1).health !== heroes[1]) return 'a Hero was hit';
-});
-
-test('without Meteorite, Dinosaurs keep Extinction Cycle (and Meteor Strike is not a normal Hero Spell)', () => {
-  if (pl(0).heroSpells.some((h) => h.cardId === 'meteor_strike')) return 'Meteor Strike leaked';
+test('Meteorite is gone: not a card, Dinosaurs keep Extinction Cycle, and an old deck holding it still starts', () => {
+  if (allCards().some((c) => c.id === 'meteorite' || c.id === 'meteor_strike')) return 'Meteorite still exists';
   if (!pl(0).extinction) return 'no Extinction';
+  const fa = ['Dinosaurs', 'Sharks'], fb = ['Vampires', 'Robots'];
+  const old = createGame({ seed: 7, rules: { mulligan: false, secondPlayerPotions: false, openingHandHelp: false }, players: [{ name: 'A', factions: fa, deck: ['meteorite', ...buildDeck(fa).slice(1)] }, { name: 'B', factions: fb, deck: buildDeck(fb) }] });
+  if ([...old.players[0].deck, ...old.players[0].hand].some((c) => c.cardId === 'meteorite')) return 'Meteorite was dealt';
+  if (!old.players[0].extinction) return 'old deck lost Extinction';
 });
 
 test('Juvenile Ceratosaurus draws the Bull from the deck', () => {

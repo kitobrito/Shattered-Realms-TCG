@@ -66,7 +66,7 @@ export function validateCard(card) {
     checkEffects(card, t.effects, `trigger ${i} (${t.on})`, errors);
   }
   for (const a of [].concat(card.aura ?? [])) if (!(a.target && (a.health || a.attack || a.attackPerDepth || a.attackPerPages || a.keywords?.length))) errors.push('aura needs a target and health, attack (or attackPerDepth) or keywords');
-  // deckRule (Meteorite): never cast, so it has no effects of its own.
+  // deckRule: a card that changes how the realm plays, never cast, so it has no effects of its own.
   if (card.type === 'spell' && !card.passive && !card.deckRule) checkEffects(card, card.effects, 'spell', errors);
   if (card.type === 'trap') {
     if (!card.trap || !BOARD_EVENTS.includes(card.trap.on)) errors.push('trap needs trap.on with a board event');
