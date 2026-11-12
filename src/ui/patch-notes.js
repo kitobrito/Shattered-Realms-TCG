@@ -41,6 +41,27 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12-dailies-menu',
+    date: 'November 12',
+    title: 'Daily missions on the main menu',
+    tag: 'Quality of life',
+    intro: 'Your daily missions are now one tap away, there are 5 of them a day, and the main menu shows your name, rank and points.',
+    blocks: [
+      { cat: 'qol', h: 'Daily missions', list: [
+        { cards: [], text: 'A glowing Daily Missions button on the main menu shows how many missions you have left today. Open it to see all of them.' },
+        { cards: [], text: 'Every mission has a Play button that sets up the game it asks for: the right fusion or realm, then Quick Match (or Ranked for the Ranked mission). Before the match starts you choose your deck: your current deck, the default deck or one of your saved decks, or edit the deck first.' },
+        { cards: [], text: 'You now get 5 daily missions a day instead of 4, each still worth 80 points. If you already had today\'s 4, the fifth has been added.' },
+      ] },
+      { cat: 'qol', h: 'Main menu', list: [
+        { cards: [], text: 'Your name, rank and points now show at the top of the main menu.' },
+        { cards: [], text: 'Bees and Monster Hunter packs now have their own pack art in the Shop.' },
+      ] },
+    ],
+    details: [
+      'The mission Play button picks the realms the mission needs (a fusion mission uses that exact pair; a realm mission uses that realm on its own) and keeps your current realms for the others. Decks with cards you have not unlocked yet are greyed out until you edit them.',
+    ],
+  },
+  {
     id: '2026-11-12-shop',
     date: 'November 12',
     title: 'The Shop: points, packs and trading',
@@ -48,7 +69,7 @@ export const PATCH_NOTES = [
     intro: 'A new Shop on the main menu. Complete daily missions to earn points, then spend them on card packs, single cards and boards, or trade cards with other players. Every account starts with 1000 points.',
     blocks: [
       { cat: 'change', h: 'Points and daily missions', list: [
-        { cards: [], text: 'Every day you get 4 daily missions, like "Win 3 public games with the Vampires + Ghosts fusion" or "Win 3 public games with Bees in your deck". Each one you complete pays 80 points.' },
+        { cards: [], text: 'Every day you get daily missions (5 a day now), like "Win 3 public games with the Vampires + Ghosts fusion" or "Win 3 public games with Bees in your deck". Each one you complete pays 80 points.' },
         { cards: [], text: 'Only wins in Quick Match and Ranked count. Missions you don\'t finish are replaced by new ones the next day (they reset at midnight UTC).' },
         { cards: [], text: 'Points are only earned from daily missions (and recycling duplicates), never just for playing.' },
         { cards: [], text: 'Every account starts with 1000 points, including accounts made before today.' },

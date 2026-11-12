@@ -38,6 +38,7 @@ import { markPatchSeen, PATCH_NOTES, patchNotesHTML, patchUnseen } from './patch
 import { CURRENT_POLL, POLLS } from '../polls.js';
 import { awardUnlocks, boardProgress, isLocked, localOwnedCards, lockedCount, setOwnedBoards, setOwnedCards, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
 import { shopHTML } from './shop.js';
+import { missionPlan, missionsButtonHTML, missionsPanelHTML, playerBoxHTML } from './missions.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
@@ -2183,7 +2184,8 @@ function queueMatch(mode) {
   const friend = mode === 'private' ? app.querySelector('#friend-input')?.value.trim() : undefined;
   if (mode === 'private' && !friend) return flash("Type your friend's name.");
   link = srv;
-  srv.send({ t: 'queue', mode, friend, format, factions: picked, deck: deckFor(picked, true) });
+  srv.send({ t: 'queue', mode, friend, format, factions: picked, deck: missionDeck ?? deckFor(picked, true) });
+  missionDeck = null;
 }
 
 function applySync(state) {
@@ -2198,6 +2200,86 @@ function applySync(state) {
 
 // ---- Shop: dailies, packs, duplicates and the trade board (shop.js draws it) ----
 let shop = { tab: 'dailies', you: null, trades: [], opened: null, draft: null, busy: false, msg: null };
+// Daily missions on the main menu (missions.js draws them).
+let missions = null;           // { open, step: 'list' | 'setup', mission, deck } | null
+let missionQueue = null;       // 'quick' | 'ranked': queue as soon as the server knows who we are
+let missionDeck = null;        // the deck picked for a mission, used by the next queue
+let menuConnectTried = false;  // the menu connects once (when signed in) to show your name, rank and points
+const currentEconomy = () => shop.you?.economy ?? srv.user?.economy ?? null;
+// The decks a mission can be played with: your current deck, the default, then premade and saved decks.
+function missionDeckOptions(factions) {
+  if (!factions.length) return [];
+  const opts = [];
+  const custom = customDeckFor(factions);
+  if (custom) opts.push({ label: 'Your deck', blurb: 'The deck you play with these realms now.', deck: custom });
+  opts.push({ label: 'Default deck', blurb: 'The recommended deck for these realms.', deck: recommendedDeck(factions) });
+  deckChoices(factions).forEach((d) => {
+    if (opts.some((o) => sameDeck(o.deck, d.deck))) return;
+    opts.push({ label: d.name, blurb: d.blurb || (d.mine ? 'One of your saved decks.' : 'A premade deck.'), deck: d.deck });
+  });
+  return opts.map((o) => {
+    const lk = lockedIn(o.deck).length;
+    return { ...o, problem: lk ? `${lk} locked card${lk === 1 ? '' : 's'}: edit it first` : null };
+  });
+}
+const missionPlanFor = (m) => missionPlan(m, { format, picked }, availableFactions(), pairUnlocked() || format === 'pair');
+// Set the realms (and format) a mission asks for.
+function applyMissionRealms(plan) {
+  setFormat(plan.format);
+  picked = plan.factions.slice();
+  pickCleared = false;
+}
+function startMission() {
+  const m = missions?.mission;
+  if (!m) return;
+  const plan = missionPlanFor(m);
+  if (plan.problem) return flash(plan.problem);
+  const opt = missionDeckOptions(plan.factions)[missions.deck ?? 0];
+  if (opt?.problem) return flash(opt.problem);
+  applyMissionRealms(plan);
+  missionDeck = opt?.deck ?? null;
+  missions = null;
+  sound.play('click');
+  lobby = { status: 'choose' }; screen = 'online'; app.scrollTop = 0;
+  connectServer();
+  if (srv.user) queueMatch(plan.mode); else missionQueue = plan.mode;
+  render();
+}
+function missionButton(name) {
+  const [cmd, arg] = name.split(':');
+  switch (cmd) {
+    case 'dmOpen':
+      sound.play('click');
+      missions = { open: true, step: 'list', mission: null, deck: 0 };
+      if (srv.token()) { connectServer(); srv.send({ t: 'me' }); }
+      return render();
+    case 'dmClose': missions = null; return render();
+    case 'dmBack': if (missions) { missions.step = 'list'; missions.mission = null; } return render();
+    case 'dmPlay': {
+      const m = currentEconomy()?.dailies?.[Number(arg)];
+      if (!m || !missions) return;
+      sound.play('click');
+      missions.step = 'setup'; missions.mission = m;
+      const opts = missionDeckOptions(missionPlanFor(m).factions);
+      missions.deck = Math.max(0, opts.findIndex((o) => !o.problem));
+      return render();
+    }
+    case 'dmDeck': if (missions) missions.deck = Number(arg); return render();
+    case 'dmStart': return startMission();
+    case 'dmEdit': {
+      const m = missions?.mission;
+      if (!m) return;
+      const plan = missionPlanFor(m);
+      if (plan.problem) return flash(plan.problem);
+      applyMissionRealms(plan);
+      const opt = missionDeckOptions(plan.factions)[missions.deck ?? 0];
+      replaceFor = null; builderFrom = 'mission'; builderMode = 'cut';
+      draftDeck = countsOf(opt?.deck ?? pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0;
+      return render();
+    }
+  }
+  return false;
+}
 let importSent = false;
 // The account's cards are the ones that count: mirror them into this browser (the deck builder and
 // collection read them from there). The first time an account is seen, the cards this browser had
@@ -2349,7 +2431,8 @@ function onServerMessage(msg) {
         flash(`Welcome, ${msg.you?.name ?? 'traveller'}!`);
         return;
       }
-      if (onAcctScreen() || onShop) render();
+      if (missionQueue && screen === 'online' && srv.user) { const mode = missionQueue; missionQueue = null; queueMatch(mode); }
+      if (onAcctScreen() || onShop || screen === 'menu') render();
       return;
     case 'authError':
       acct.msg = msg.msg;
@@ -2651,8 +2734,15 @@ async function vote(choice) {
   }
   if (screen === 'menu' && patch.open) render();
 }
+function missionPanelCtx() {
+  const plan = missions?.mission ? missionPlanFor(missions.mission) : null;
+  return { signedIn: !!srv.token(), economy: currentEconomy(), plan, deckOptions: plan ? missionDeckOptions(plan.factions) : [] };
+}
+
 function renderMenu() {
   applyJourney();
+  // Signed in: connect once so the menu can show your name, rank, points and daily missions.
+  if (BUILD.online && srv.token() && !srv.user && !menuConnectTried) { menuConnectTried = true; setTimeout(connectServer, 0); }
   // Picking a realm redraws the menu: keep the realm list where it was scrolled.
   const listScroll = app.querySelector('.m2-list')?.scrollTop ?? 0;
   const patchScroll = patch.keepScroll ? app.querySelector('.pn-post')?.scrollTop ?? 0 : 0;
@@ -2720,6 +2810,7 @@ function renderMenu() {
       <header class="m2-top">
         <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
         <p class="ts-tag">Twenty realms broke apart. Two of them are yours.</p>
+        ${BUILD.online ? `<div class="m2-acct-row"><div class="m2-acct-l">${playerBoxHTML(srv.user, currentEconomy()?.points)}</div><div class="m2-acct-r">${missionsButtonHTML(srv.user ? currentEconomy()?.dailies : null)}</div></div>` : ''}
         ${PATCH_NOTES[0] ? `<button class="m2-news ${patchUnseen() ? 'unseen' : ''}" data-act="patchNotes" title="Read the patch notes"><b>${patchUnseen() ? 'NEW' : 'Latest'}</b><span>${esc(PATCH_NOTES[0].title)}</span><i>Patch notes ${icon('chevron')}</i></button>` : ''}
         ${POLLS[CURRENT_POLL] ? `<div class="m2-vote ${myVote() ? 'done' : 'open'}">
           <button class="m2-vote-head" data-act="voteNow"><b>🗳️ ${myVote() ? 'You voted!' : 'Vote now'}</b><span>${esc(POLLS[CURRENT_POLL].question)}</span></button>
@@ -2769,6 +2860,7 @@ function renderMenu() {
       <button class="ghost guide-close" data-act="closeGuide">✕</button>${format !== 'single' ? pairGuideHTML(picked) : ''}${factionGuideHTML(picked)}
       <p class="sub">${starterMode() ? 'The rival plays one of the open realms.' : format === 'single' ? 'The rival plays a random faction with its recommended 30.' : 'The rival plays a random pair with the standard cut.'}</p></div></div>` : ''}
     ${patch.open ? patchNotesHTML({ ...patch, poll }) : ''}
+    ${missions?.open ? missionsPanelHTML(missions, missionPanelCtx()) : ''}
     ${zoomId && (fusion || patch.open) ? zoomHTML(getCard(zoomId)) : ''}
     ${milestone ? milestoneHTML(milestone) : ''}
     ${needsFirstPick() ? firstPickHTML() : ''}
@@ -4158,6 +4250,7 @@ function onButton(name) {
   const s = game?.state;
   if (name === 'shop') { sound.play('click'); return openShop(); }
   if (screen === 'shop' && name && shopButton(name) !== false) return;
+  if (name && /^dm[A-Z]/.test(name) && missionButton(name) !== false) return;
   // Patch notes (main menu): open and close, pick a post or a category tab, see a board big.
   if (name === 'patchNotes') { sound.play('click'); markPatchSeen(); patch = { open: true, post: 0, tab: null, board: null, keepScroll: false }; return render(); }
   if (name === 'closePatch') { patch.open = false; return render(); }
@@ -4257,6 +4350,8 @@ function onButton(name) {
       if (same) storeCuts(picked, null);
       flash(same ? 'Saved: recommended deck.' : 'Deck saved.');
       screen = builderFrom === 'online' ? 'online' : 'menu';
+      // Opened from a daily mission: back to that mission, ready to play the deck just saved.
+      if (builderFrom === 'mission' && missions?.mission) { missions.open = true; missions.step = 'setup'; missions.deck = 0; }
       builderFrom = null;
       return render();
     }
@@ -4271,6 +4366,7 @@ function onButton(name) {
       if (screen === 'game' && waitingInQueue()) { screen = 'online'; return render(); }
       // The deck builder opened from the online screen goes back there.
       if (screen === 'builder' && builderFrom === 'online') { builderFrom = null; screen = 'online'; return render(); }
+      if (screen === 'builder' && builderFrom === 'mission') { builderFrom = null; screen = 'menu'; if (missions?.mission) { missions.open = true; missions.step = 'setup'; } return render(); }
       if (game?.mode === 'online' || screen === 'online') leaveOnline();
       screen = 'menu';
       return render();
