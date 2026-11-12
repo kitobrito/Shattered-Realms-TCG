@@ -6328,3 +6328,26 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
   .m2-dailies-ico { display: none; }
   .m2-dailies-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 }
+
+/* Daily mission cards (Shop Dailies tab and the menu's Daily Missions panel): big centred text with
+   the key words glowing (missions.js missionTextHTML / missionCardHTML). */
+.dm-list .dm-mission { display: grid; grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 8px; padding: 16px 18px 14px;
+  border-radius: 14px; background: radial-gradient(ellipse at 50% 0%, rgba(255, 211, 106, .1), transparent 70%), rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 211, 106, .28); animation: dm-card-in .5s calc(var(--i, 0) * .07s) both; }
+.dm-list .dm-mission.done { border-color: rgba(124, 252, 124, .45); background: rgba(76, 175, 80, .1); }
+.dm-mtext { margin: 0; font: 700 clamp(18px, 2.6vh, 23px)/1.35 'Cinzel', serif; color: #f3ead6; letter-spacing: .01em; text-wrap: balance; }
+.dm-hl { display: inline-block; padding: 0 .12em; border-radius: 6px; font-weight: 800; animation: dm-pulse 2.2s ease-in-out infinite; }
+.dm-num { color: #ffd36a; font-size: 1.15em; text-shadow: 0 0 10px rgba(255, 196, 70, .75); }
+.dm-kind { color: #ffe7a0; text-shadow: 0 0 10px rgba(255, 210, 110, .6); animation-delay: .4s; }
+.dm-realm { color: var(--fc, #ffe7a0); text-shadow: 0 0 12px var(--fc, #ffe7a0), 0 0 2px rgba(0, 0, 0, .9); animation-delay: .8s; }
+.dm-mission.done .dm-hl { animation: none; text-shadow: none; }
+.dm-mission.done .dm-mtext { opacity: .75; }
+@keyframes dm-pulse { 0%, 100% { filter: brightness(1); transform: scale(1); } 50% { filter: brightness(1.35); transform: scale(1.06); } }
+@keyframes dm-card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.dm-mission .dm-bar { width: min(420px, 90%); height: 8px; margin: 2px 0 0; }
+.dm-meta { display: flex; justify-content: center; align-items: center; gap: 14px; font-size: 14px; color: #d9c08a; font-weight: 700; }
+.dm-reward { display: inline-flex; align-items: center; gap: 4px; color: #ffd36a; font: 800 17px/1 'Cinzel', serif; text-shadow: 0 0 8px rgba(255, 196, 70, .6); }
+.dm-reward img { width: 22px; height: 22px; filter: drop-shadow(0 1px 2px #000); }
+.dm-mission .dm-play { margin-top: 4px; }
+.dm-mission .dm-done { font-size: 15px; }
+@media (prefers-reduced-motion: reduce) { .dm-hl, .dm-list .dm-mission { animation: none; } }
