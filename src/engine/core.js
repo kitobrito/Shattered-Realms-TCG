@@ -285,13 +285,19 @@ export function applyBurn(state, c, amount) {
 }
 
 // Bleed (Bloodripper's Talon): a wound that stacks. At the end of the bleeder's turn the character takes
-// its Bleed value as damage. While it bleeds, a Vampire card that damages it heals half the damage it
+// its Bleed value as damage. Any healing stops it (heal). While it bleeds, a Vampire card that damages it heals half the damage it
 // dealt (rounded up), whatever the size of the Bleed. The Bleed tick itself heals no one.
 export function applyBleed(state, c, amount, by) {
   if (!c || amount <= 0 || c.health <= 0 || c.destroyed) return;
   c.bleed = (c.bleed ?? 0) + amount;
   c.bleedBy = by;
   log(state, `🩸 ${nameOf(state, c)} is bleeding (Bleed ${c.bleed}).`);
+  // A bleeding minion is instantly Marked Prey for the Sharks hunting it (whatever its Health), and
+  // stays Prey while it bleeds (checkPrey). Heroes can't be Prey.
+  if (c.kind === 'minion') {
+    const hunter = opponentOf(c.controller);
+    if (huntsPrey(state, hunter) || state.players[hunter]?.board.some(isShark)) markPrey(state, c, true);
+  }
 }
 // A Vampire card doing the damage: a Vampire minion, or a Hero swinging a Vampire weapon.
 function vampireSource(c) {
@@ -346,7 +352,8 @@ export function pushFront(state, steps) {
 // follow-up steps the step queued.
 // ---- Sharks: Marked Prey ---------------------------------------------------------
 // Blood in the Water (the Sharks' passive Hero Spell): an enemy minion brought to 3 Health
-// or less becomes Marked Prey. The mark stays until it leaves play or is healed above 3.
+// or less becomes Marked Prey, and so does an enemy minion that starts to Bleed. The mark stays until
+// it leaves play or is healed above 3 while not bleeding.
 // Cards can also mark minions directly (markPrey with force).
 export const PREY_HEALTH = 3;
 export const isShark = (c) => c?.kind === 'minion' && (c.tribes ?? []).includes('Shark');
@@ -362,7 +369,8 @@ export function markPrey(state, m, force = false) {
 // healed: Health went up (healing or a buff), which can lift the mark; damage never does.
 export function checkPrey(state, m, healed = false) {
   if (!m || m.kind !== 'minion') return;
-  if (m.prey && healed && m.health > PREY_HEALTH) { m.prey = false; log(state, `${nameOf(state, m)} is no longer Prey.`); return; }
+  // Healed above 3 lifts the mark, unless it is still bleeding (Bleed keeps a minion Prey).
+  if (m.prey && healed && m.health > PREY_HEALTH && !(m.bleed > 0)) { m.prey = false; log(state, `${nameOf(state, m)} is no longer Prey.`); return; }
   if (!m.prey && m.health > 0 && m.health <= PREY_HEALTH && huntsPrey(state, opponentOf(m.controller))) markPrey(state, m);
 }
 
@@ -646,6 +654,8 @@ export function heal(state, targetId, amount, opts = {}) {
   // (ignoreRadiation: Irradiated Behemoth's heal still works).
   if ((t.radReduction ?? 0) > 0 && !opts.ignoreRadiation) { log(state, `☢ ${nameOf(state, t)} can't be healed while irradiated.`); return 0; }
   if ((t.holyFlame ?? 0) > 0) { log(state, `✨ ${nameOf(state, t)} can't be healed while it burns with Holy Flame.`); return 0; }
+  // Any healing that reaches it (even at full Health) stops a Bleed.
+  if ((t.bleed ?? 0) > 0) { t.bleed = 0; t.bleedBy = null; log(state, `🩸 ${nameOf(state, t)} stops bleeding.`); }
   let healed = 0;
   if (t.health >= t.maxHealth) {
     if (!opts.overheal) return 0;

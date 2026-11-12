@@ -41,6 +41,23 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12-bleed-prey',
+    date: 'November 12',
+    title: 'Bleed marks Prey, healing stops Bleed',
+    tag: 'Rules change',
+    intro: 'A bleeding enemy minion is now instantly Prey for the Sharks, and any healing washes a Bleed away.',
+    blocks: [
+      { cat: 'change', h: 'Bleed', list: [
+        { cards: ['bloodrippers_talon', 'blood_in_the_water'], text: 'An enemy minion that starts to Bleed instantly becomes Marked Prey for the Sharks (when you play Sharks or have a Shark on the board), whatever its Health. It stays Prey while it bleeds.',
+          why: 'Sharks smell blood in the water. This gives Vampires + Sharks and any deck with Bleed a real way to open up targets for the Sharks.' },
+        { cards: ['bloodrippers_talon'], text: 'Any healing that reaches a bleeding character stops its Bleed, even if it was already at full Health. Once the Bleed is gone, a healed minion above 3 Health is no longer Prey.' },
+      ] },
+    ],
+    details: [
+      'Heroes can\'t be Prey, so a bleeding Hero is not marked. Healing that is blocked (Radiation, Holy Flame) doesn\'t stop the Bleed.',
+    ],
+  },
+  {
     id: '2026-11-12-dailies-play',
     date: 'November 12',
     title: 'Daily missions: just play, and a pack collection',

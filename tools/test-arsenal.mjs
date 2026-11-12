@@ -4,7 +4,7 @@
 import { existsSync } from 'node:fs';
 import { buildDeck } from '../src/cards/index.js';
 import { getCard } from '../src/engine/registry.js';
-import { addToHand, dealDamage, hasKeyword, radiationOf, summonMinion } from '../src/engine/core.js';
+import { addToHand, applyBleed, checkPrey, dealDamage, heal, hasKeyword, radiationOf, summonMinion } from '../src/engine/core.js';
 import { applyAction, createGame } from '../src/engine/engine.js';
 
 let s, failures = 0, passed = 0;
@@ -112,6 +112,44 @@ test('Bleed: at the end of the bleeder\'s turn the target takes its Bleed as dam
   applyAction(s, { type: 'endTurn', player: 0 }); settle();
   if (m.health !== hp - 3) return `health ${hp} -> ${m.health}`;
   if (m.bleed !== 3) return `Bleed fell to ${m.bleed}`;
+});
+
+test('Bleed makes an enemy minion Marked Prey at once for a Sharks player, whatever its Health', 'Sharks', () => {
+  const m = dummy(0, 20);
+  applyBleed(s, m, 1, 0);
+  if (!m.prey) return 'a bleeding 20-Health minion is not Prey';
+});
+
+test('A bleeding Prey stays Prey when its Health goes up while it still bleeds', 'Sharks', () => {
+  const m = dummy(0, 2);
+  applyBleed(s, m, 1, 0);
+  m.maxHealth = 20; m.health = 15; checkPrey(s, m, true); // e.g. a buff, which is not healing
+  if (!m.prey) return 'the mark was lifted while it still bleeds';
+});
+
+test('Any healing stops a Bleed (even at full Health); a healed minion above 3 then stops being Prey', 'Sharks', () => {
+  const m = dummy(0, 10);
+  applyBleed(s, m, 2, 0);
+  m.health = 4; // 4 of 10
+  heal(s, m.uid, 3);
+  if (m.bleed) return `still bleeding (${m.bleed}) after a heal`;
+  if (m.prey) return 'still Prey at 7 Health after the Bleed was healed away';
+  const full = dummy(0, 10);
+  applyBleed(s, full, 1, 0);
+  heal(s, full.uid, 2); // already at full Health
+  if (full.bleed) return 'a heal at full Health did not stop the Bleed';
+});
+
+test('Bleed marks Prey only when Sharks are hunting: a Sharks player, or a Shark on the board', 'Vampires', () => {
+  const m = dummy(0, 20);
+  applyBleed(s, m, 1, 0);
+  if (m.prey) return 'marked Prey with no Sharks around';
+  summonMinion(s, 0, 'bull_shark');
+  const n = dummy(0, 20);
+  applyBleed(s, n, 1, 0);
+  if (!n.prey) return 'a Shark on the board did not make the bleeding minion Prey';
+  applyBleed(s, hero(1), 1, 0);
+  if (hero(1).prey) return 'a Hero became Prey';
 });
 
 test('Bleed: a Vampire minion that hits a Bleeding enemy heals half the damage (rounded up); others don\'t', 'Vampires', () => {
