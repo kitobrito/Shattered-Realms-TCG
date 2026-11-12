@@ -35,8 +35,9 @@ import { VAMPIRE_CARDS } from './vampires.js';
 import { MONSTER_HUNTER_CARDS, MONSTER_HUNTER_EXPANSION } from './monster-hunter.js';
 import { applyWeaponCardTemplate } from './weapon-template.js';
 import { ARSENAL_CARDS } from './arsenal.js';
+import { FRUIT_NINJA_CARDS } from './fruit-ninjas.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...MONSTER_HUNTER_EXPANSION, ...ARSENAL_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...MONSTER_HUNTER_EXPANSION, ...ARSENAL_CARDS, ...FRUIT_NINJA_CARDS, ...FUSION_CARDS]);
 applyWeaponCardTemplate(allCards());
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
@@ -135,6 +136,17 @@ export const LEGENDARY = new Set([
   'cross_hilt_longsword',
   'hidden_hand_cannon',
   'xenomorph_trophy',
+  // Fruit Ninjas: five Legendary Shinobi and five Legendary Weapons.
+  'kenzaru_the_thousand_slice_master',
+  'miyori_the_blossom_blade',
+  'raiketsu_the_citrus_thunder',
+  'shizuka_the_phantom_orchard',
+  'emperor_pomelo_the_forbidden_harvest',
+  'murakiri_the_forbidden_edge',
+  'the_eightfold_harvest',
+  'kagehana_the_silent_bloom',
+  'raijins_fang',
+  'kusanagi_no_kajitsu_the_divine_harvest',
 ]);
 for (const c of allCards()) if (LEGENDARY.has(c.id) || LEGENDARY.has(c.humanForm)) c.legendary = true;
 // How many copies of a card a deck may hold: legendaries are one of a kind (like Hearthstone).

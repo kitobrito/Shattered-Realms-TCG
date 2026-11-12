@@ -6,6 +6,7 @@ export const FACTIONS = [
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Lycanthropes', 'Aquatic', 'Radioactive', 'Old Gods',
   'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter',
+  'Fruit Ninjas',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).
@@ -45,6 +46,10 @@ export const KEYWORDS = [...POSITIVE_KEYWORDS, 'Reborn', 'Immune', 'Spell Ward',
 // Player-facing rules text for keywords and card terms (collection glossary, tooltips).
 export const KEYWORD_TEXT = {
   Taunt: 'A blocker: enemies must attack this minion before your other minions or your Hero.',
+  Fruit: "Fruit Ninjas: a magic 0/1 Fruit that can't attack. It takes a board space like any minion. Slice it to unleash its power.",
+  Slice: 'Fruit Ninjas: destroy one of your Fruits to unleash its Slice effect. Its targets are picked at random (a friendly boost never lands on another Fruit). A Fruit killed any other way (an enemy attack or spell, a board wipe) just dies, and a Silenced Fruit unleashes nothing.',
+  Multislice: 'Fruit Ninjas: Multislice (X) Slices up to X of your Fruits (leftmost first). Each one unleashes its own Slice effect.',
+  Combo: 'A bonus that happens only if you played another card earlier this turn.',
   Radiation: "While a character with Radiation X is alive, every other character without Radiation has X less Health (sources stack). Characters losing Health to Radiation can't be healed. Health reduction isn't damage.",
   Obliterate: 'Removed from the game entirely: no Exit, no Reborn, nothing that needs it to die.',
   Upgrade: 'A Robot card that improves a friendly Robot. Robots count how many Upgrades they have.',
@@ -216,6 +221,7 @@ export const BOARD_EVENTS = [
   'heroLethal',       // Traps only: the Hero would take lethal damage (Last Resort Protocol)
   'wandWouldBreak',   // Traps only (Witches): the Hero's Wand would break (Ward of Binding)
   'spellInscribed',   // Witches (Spellbound): a spell was Inscribed onto a Wand ({ player, cardId })
+  'fruitSliced',      // Fruit Ninjas: a Fruit was Sliced ({ source: the Fruit, player, cardId, first: its player's first Slice this turn })
 ];
 
 export const TRIGGER_EVENTS = [...SELF_TRIGGERS, ...BOARD_EVENTS];

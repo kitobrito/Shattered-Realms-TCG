@@ -65,6 +65,13 @@ export const FRAME_WINDOWS = {
     "h": 39.84,
     "round": true
   },
+  "art/frames/legendary-minion-fruit-ninjas.webp": {
+    "l": 12.77,
+    "t": 10.74,
+    "w": 74.04,
+    "h": 39.65,
+    "round": true
+  },
   "art/frames/legendary-minion-fungus.webp": {
     "l": 13.19,
     "t": 10.55,
@@ -182,6 +189,13 @@ export const FRAME_WINDOWS = {
     "t": 13.38,
     "w": 49.79,
     "h": 35.64,
+    "round": true
+  },
+  "art/frames/legendary-spell-fruit-ninjas.webp": {
+    "l": 25.41,
+    "t": 13.57,
+    "w": 49.45,
+    "h": 35.45,
     "round": true
   },
   "art/frames/legendary-spell-monster-hunter.png": {

@@ -8,6 +8,8 @@ import { pickRandom } from './rng.js';
 // Stealth: enemy cards and abilities cannot choose a Stealthed minion.
 // Elusive: enemy spells cannot choose it.
 export function canBeChosenBy(target, controller, bySpell = false, spec = null) {
+  // Fruit Ninjas (Kagehana): an enemy Hero in Stealth can't be chosen.
+  if (target.kind === 'hero' && (target.controller ?? target.owner) !== controller && hasKeyword(target, 'Stealth')) return false;
   if (target.kind !== 'minion' || target.controller === controller) return true;
   // Sharks: cards that hunt Marked Prey reach it through Stealth (not Elusive: a spell still can't
   // choose an Elusive minion); some track any hidden minion.
@@ -126,6 +128,15 @@ export function resolveSelector(state, sel, ctx) {
     return [...out, ...minionsInOrder(state).filter((m) => matchesMinionFilter(m, mf, ctx)).map((m) => m.uid)]
       .filter((id) => !(sel.characters.excludeSelf && id === ctx.self));
   }
+  // { mostDamaged: 'friendly' | 'enemy' } — the character on that side missing the most Health
+  // (a random one on a tie); your Hero when nobody is hurt (Healing Peach).
+  if (sel.mostDamaged) {
+    const p = sel.mostDamaged === 'enemy' ? opponentOf(ctx.controller) : ctx.controller;
+    const pool = [heroOf(state, p), ...state.players[p].board].filter((c) => c.health > 0 && !c.destroyed && c.health < c.maxHealth);
+    if (!pool.length) return [heroOf(state, p).uid];
+    const top = Math.max(...pool.map((c) => c.maxHealth - c.health));
+    return [pickRandom(state, pool.filter((c) => c.maxHealth - c.health === top)).uid];
+  }
   if (sel.minions) {
     return minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.minions, ctx)).map((m) => m.uid);
   }
@@ -147,6 +158,13 @@ export function resolveSelector(state, sel, ctx) {
     if (!pool.length) return [];
     const top = Math.max(...pool.map((m) => effectiveAttack(m)));
     return [pickRandom(state, pool.filter((m) => effectiveAttack(m) === top)).uid];
+  }
+  // { weakest: minion filter } — the matching minion with the lowest Health (random on a tie). Feeding Frenzy Fruitcut.
+  if (sel.weakest) {
+    const pool = minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.weakest, ctx) && m.health > 0 && !m.destroyed);
+    if (!pool.length) return [];
+    const low = Math.min(...pool.map((m) => m.health));
+    return [pickRandom(state, pool.filter((m) => m.health === low)).uid];
   }
   if (sel.costliest) {
     const pool = minionsInOrder(state).filter((m) => matchesMinionFilter(m, sel.costliest, ctx));
@@ -236,6 +254,11 @@ export function matchFilter(state, filter, ctx) {
     // Void (Singularity): the played card was Pulled from the enemy deck (Pulsar Hound).
     if (key === 'pulled') {
       if (!!ev.pulled !== want) return false;
+      continue;
+    }
+    // Fruit Ninjas: the first Fruit its player Sliced this turn (Peach Blossom Disciple, Miyori).
+    if (key === 'firstSlice') {
+      if (!!ev.first !== want) return false;
       continue;
     }
     if (key === 'cardType') {

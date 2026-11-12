@@ -2778,6 +2778,154 @@ export const BOARD_FX = {
     },
   },
 
+  // ---- Fruit Ninjas: the orchard dojo at sunset. Lantern-fruit glow on the bonsai, cherry petals
+  // on the wind, fireflies, a koi pond, a training dummy and a fruit press. Every motion is a glow,
+  // a particle or a small cut-out of the painting itself, so the painting never drifts. ----------
+  'fruit-ninjas-land': {
+    wind: { dir: 1, every: [6, 11], speed: [110, 160], width: [200, 300], lean: 0.25 },
+    layers: [
+      // Sky: the setting sun breathes and its light falls across the mat.
+      { id: 'sun', type: 'glow', points: [[515, 32, 70]], color: [255, 200, 110], anim: 'pulse', period: 8, alpha: [0.12, 0.3], kickDur: 2.5 },
+      { type: 'rays', beams: [[515, 0, 14, 470, 120], [515, 0, -18, 470, 110]], color: [255, 200, 120], alpha: [0.02, 0.07], period: 10 },
+      // The mat: a slow warm sheen moves over the boards.
+      { id: 'mat', type: 'glow', points: [[512, 300, 260]], color: [255, 190, 120], anim: 'pulse', period: 9, alpha: [0.02, 0.07], kickDur: 2 },
+      // Top-left: the bonsai's lantern fruits glow on their own clocks.
+      { id: 'lanternFruit', type: 'glow', points: [[72, 105, 14], [130, 60, 12], [180, 60, 12], [212, 102, 13], [104, 84, 10], [228, 64, 10]], color: [255, 170, 80], anim: 'flicker', speed: 2.4, alpha: [0.25, 0.7], kickDur: 2 },
+      { id: 'bonsaiPetals', type: 'particles', kind: 'petal', from: [[140, 80, 70]], rate: 0, max: 8, color: [255, 190, 210], size: [2, 3.5], life: [2.5, 4], speed: 0.8 },
+      // Lanterns round the garden flicker.
+      { id: 'lanterns', type: 'glow', points: [[113, 366, 16], [390, 100, 10], [598, 106, 10], [838, 140, 12]], color: [255, 190, 100], anim: 'flicker', speed: 3.2, alpha: [0.3, 0.8], kickDur: 2 },
+      // Top-right: the waterfalls shimmer; the fruit tree glows; straw flies off the training dummy when it's struck.
+      { id: 'falls', type: 'particles', kind: 'drip', from: [[722, 108, 8], [930, 272, 8]], rate: 3, max: 12, color: [200, 240, 255], size: [1, 1.6], life: [0.5, 0.9], fall: 20, splash: false },
+      { id: 'fallsMist', type: 'particles', kind: 'smoke', from: [[722, 135, 14], [930, 305, 14]], rate: 0.8, max: 6, color: [220, 245, 255], size: [6, 11], life: [1.8, 3], alpha: 0.14 },
+      { id: 'dummy', type: 'glow', points: [[918, 120, 40]], color: [255, 220, 160], anim: 'pulse', period: 6, alpha: [0, 0.06], kickDur: 1.5 },
+      { id: 'straw', type: 'particles', kind: 'petal', from: [[918, 120, 30]], rate: 0, max: 10, color: [220, 190, 120], size: [1.5, 3], life: [1, 2], speed: 1 },
+      { id: 'fruitTree', type: 'glow', points: [[768, 36, 14], [820, 18, 12], [736, 76, 10], [852, 40, 10], [882, 12, 9], [955, 250, 12], [992, 226, 13], [1010, 285, 12], [976, 325, 14]], color: [255, 230, 140], anim: 'pulse', period: 4.2, alpha: [0.1, 0.38], kickDur: 2 },
+      // Bottom-left: lotus glow on the koi pond, the water ripples and sparkles.
+      { id: 'lotus', type: 'glow', points: [[75, 483, 14], [52, 535, 12]], color: [255, 170, 220], anim: 'pulse', period: 5, alpha: [0.1, 0.35], kickDur: 2 },
+      { id: 'ripples', type: 'particles', kind: 'ripple', from: [[60, 500, 0, 30], [150, 535, 0, 40], [230, 548, 0, 22]], rate: 0.5, max: 4, color: [200, 245, 255], size: [6, 12], life: [1.8, 2.8], alpha: 0.25 },
+      { id: 'pondGlint', type: 'particles', kind: 'glint', area: [10, 470, 260, 572], rate: 1, max: 4, color: [230, 250, 255], size: [1, 1.8], life: [0.4, 0.9] },
+      // Bottom-right: the fruit press: crystals hum, juice drips.
+      { id: 'crystals', type: 'glow', points: [[935, 356, 16], [998, 455, 14], [895, 540, 13]], color: [140, 230, 255], anim: 'pulse', period: 3.2, alpha: [0.15, 0.5], kickDur: 2 },
+      { id: 'juice', type: 'particles', kind: 'drip', from: [[905, 500, 4]], rate: 0.6, max: 4, color: [255, 170, 60], size: [1.2, 2], life: [0.8, 1.2], fall: 14, splash: true },
+      { id: 'juiceBurst', type: 'particles', kind: 'spark', from: [[905, 470, 20]], rate: 0, max: 12, color: [255, 190, 70], size: [1, 2.2], life: [0.4, 0.8], speed: 1 },
+      // Air: cherry petals drift across, fireflies glow over the grass.
+      { id: 'petals', type: 'particles', kind: 'petal', area: [-40, 0, 1064, 560], rate: 1.6, max: 18, color: [255, 190, 210], size: [2, 3.5], life: [5, 8], speed: 0.9 },
+      { id: 'fireflies', type: 'particles', kind: 'mote', area: [0, 120, 1024, 572], rate: 1, max: 14, color: [255, 230, 120], size: [1, 2], life: [3, 6], speed: 0.4 },
+    ],
+    pokes: [
+      { area: [20, 0, 260, 220], sound: 'rustle', kick: ['lanternFruit'], flare: [255, 170, 80], glyph: '🌸', burst: { layer: 'bonsaiPetals', n: 8, spread: 50 } },
+      { area: [850, 30, 990, 240], sound: 'knock', kick: ['dummy'], flare: [255, 220, 160], glyph: '🥋', burst: { layer: 'straw', n: 8, spread: 24 } },
+      { area: [700, 0, 900, 110], sound: 'chime', kick: ['fruitTree'], flare: [255, 230, 140], glyph: '🍒' },
+      { area: [0, 440, 300, 572], sound: 'splash', kick: ['lotus'], flare: [200, 245, 255], glyph: '🐟', burst: { layer: 'ripples', n: 3, spread: 30 } },
+      { area: [780, 330, 1024, 572], sound: 'squelch', kick: ['crystals'], flare: [255, 190, 70], glyph: '🍹', burst: { layer: 'juiceBurst', n: 10, spread: 18 } },
+      { area: [420, 0, 610, 80], sound: 'chime', kick: ['sun'], flare: [255, 200, 110], glyph: '☀️' },
+    ],
+    reactions: { slice: { kick: ['lanternFruit', 'fruitTree', 'sun', 'mat'], burst: [{ layer: 'bonsaiPetals', n: 6 }, { layer: 'juiceBurst', n: 6 }] } },
+  },
+  'fruit-ninjas-portrait': {
+    wind: { dir: 1, every: [6, 11], speed: [90, 140], width: [160, 240], lean: 0.15 },
+    layers: [
+      { id: 'sun', type: 'glow', points: [[232, 62, 56]], color: [255, 200, 110], anim: 'pulse', period: 8, alpha: [0.12, 0.3], kickDur: 2.5 },
+      { type: 'rays', beams: [[232, 20, 10, 600, 90], [232, 20, -10, 600, 90]], color: [255, 200, 120], alpha: [0.02, 0.06], period: 10 },
+      { id: 'mat', type: 'glow', points: [[230, 520, 200]], color: [255, 190, 120], anim: 'pulse', period: 9, alpha: [0.02, 0.06], kickDur: 2 },
+      { id: 'lanternFruit', type: 'glow', points: [[40, 50, 10], [86, 70, 10], [118, 118, 11]], color: [255, 170, 80], anim: 'flicker', speed: 2.4, alpha: [0.25, 0.7], kickDur: 2 },
+      { id: 'bonsaiPetals', type: 'particles', kind: 'petal', from: [[70, 80, 50]], rate: 0, max: 8, color: [255, 190, 210], size: [2, 3], life: [2.5, 4], speed: 0.8 },
+      { id: 'lanterns', type: 'glow', points: [[20, 378, 12], [45, 756, 12], [150, 112, 8], [292, 120, 8], [392, 172, 10]], color: [255, 190, 100], anim: 'flicker', speed: 3.2, alpha: [0.3, 0.8], kickDur: 2 },
+      { id: 'falls', type: 'particles', kind: 'drip', from: [[385, 125, 6]], rate: 2.4, max: 10, color: [200, 240, 255], size: [1, 1.5], life: [0.5, 0.9], fall: 16, splash: false },
+      { id: 'dummy', type: 'glow', points: [[430, 170, 30]], color: [255, 220, 160], anim: 'pulse', period: 6, alpha: [0, 0.06], kickDur: 1.5 },
+      { id: 'straw', type: 'particles', kind: 'petal', from: [[430, 170, 24]], rate: 0, max: 10, color: [220, 190, 120], size: [1.5, 3], life: [1, 2], speed: 1 },
+      { id: 'fruitTree', type: 'glow', points: [[318, 36, 10], [352, 58, 10], [378, 86, 8], [410, 30, 10], [445, 20, 10], [450, 682, 12]], color: [255, 230, 140], anim: 'pulse', period: 4.2, alpha: [0.1, 0.38], kickDur: 2 },
+      { id: 'lotus', type: 'glow', points: [[12, 878, 12], [10, 990, 12]], color: [255, 170, 220], anim: 'pulse', period: 5, alpha: [0.1, 0.35], kickDur: 2 },
+      { id: 'ripples', type: 'particles', kind: 'ripple', from: [[60, 930, 0, 30], [140, 980, 0, 30]], rate: 0.5, max: 4, color: [200, 245, 255], size: [6, 11], life: [1.8, 2.8], alpha: 0.25 },
+      { id: 'pondGlint', type: 'particles', kind: 'glint', area: [0, 880, 220, 1024], rate: 1, max: 4, color: [230, 250, 255], size: [1, 1.8], life: [0.4, 0.9] },
+      { id: 'crystals', type: 'glow', points: [[430, 800, 14], [383, 975, 10]], color: [140, 230, 255], anim: 'pulse', period: 3.2, alpha: [0.15, 0.5], kickDur: 2 },
+      { id: 'juiceBurst', type: 'particles', kind: 'spark', from: [[400, 930, 18]], rate: 0, max: 12, color: [255, 190, 70], size: [1, 2], life: [0.4, 0.8], speed: 1 },
+      { id: 'petals', type: 'particles', kind: 'petal', area: [-30, 0, 489, 1000], rate: 1.4, max: 16, color: [255, 190, 210], size: [2, 3.2], life: [5, 8], speed: 0.9 },
+      { id: 'fireflies', type: 'particles', kind: 'mote', area: [0, 150, 459, 1024], rate: 0.9, max: 12, color: [255, 230, 120], size: [1, 2], life: [3, 6], speed: 0.4 },
+    ],
+    pokes: [
+      { area: [0, 0, 150, 220], sound: 'rustle', kick: ['lanternFruit'], flare: [255, 170, 80], glyph: '🌸', burst: { layer: 'bonsaiPetals', n: 8, spread: 40 } },
+      { area: [390, 80, 459, 260], sound: 'knock', kick: ['dummy'], flare: [255, 220, 160], glyph: '🥋', burst: { layer: 'straw', n: 8, spread: 24 } },
+      { area: [0, 830, 230, 1024], sound: 'splash', kick: ['lotus'], flare: [200, 245, 255], glyph: '🐟', burst: { layer: 'ripples', n: 3, spread: 30 } },
+      { area: [280, 780, 459, 1024], sound: 'squelch', kick: ['crystals'], flare: [255, 190, 70], glyph: '🍹', burst: { layer: 'juiceBurst', n: 10, spread: 18 } },
+      { area: [170, 10, 300, 110], sound: 'chime', kick: ['sun'], flare: [255, 200, 110], glyph: '☀️' },
+    ],
+    reactions: { slice: { kick: ['lanternFruit', 'fruitTree', 'sun', 'mat'], burst: [{ layer: 'bonsaiPetals', n: 6 }, { layer: 'juiceBurst', n: 6 }] } },
+  },
+  // ---- Fruit Ninjas (unlockable): The Moonlit Dojo, a stone mat floating above the clouds. The
+  // shuriken ring turns, crystals hum, the moon glows, mist rolls, the dragon breathes. ------------
+  'fruit-ninjas-night-land': {
+    wind: { dir: -1, every: [7, 12], speed: [90, 140], width: [220, 320], lean: 0.2 },
+    layers: [
+      { id: 'moon', type: 'glow', points: [[512, 48, 90]], color: [200, 225, 255], anim: 'pulse', period: 9, alpha: [0.1, 0.28], kickDur: 2.5 },
+      { type: 'rays', beams: [[512, 30, 12, 480, 110], [512, 30, -12, 480, 110]], color: [190, 210, 255], alpha: [0.02, 0.06], period: 11 },
+      { id: 'matRunes', type: 'glow', points: [[397, 225, 12], [627, 225, 12], [370, 345, 12], [655, 345, 12], [512, 405, 14], [512, 188, 12], [255, 280, 10], [770, 280, 10]], color: [190, 110, 255], anim: 'pulse', period: 4.4, alpha: [0.06, 0.32], kickDur: 2 },
+      { id: 'matEdge', type: 'glow', points: [[300, 175, 10], [725, 175, 10], [210, 420, 12], [820, 420, 12]], color: [170, 90, 255], anim: 'pulse', period: 3.4, alpha: [0.1, 0.4], kickDur: 2 },
+      // Top-left: the shuriken ring turns over its altar.
+      { id: 'ring', type: 'vortex', center: [112, 100], rx: 80, ry: 30, count: 18, speed: 0.9, color: [210, 140, 255], alpha: 0.26 },
+      { id: 'ringGlow', type: 'glow', points: [[112, 112, 40]], color: [200, 110, 255], anim: 'pulse', period: 3, alpha: [0.12, 0.42], kickDur: 2 },
+      { id: 'shuriken', type: 'particles', kind: 'glint', area: [30, 20, 200, 120], rate: 1, max: 4, color: [230, 220, 255], size: [1, 2], life: [0.4, 0.8] },
+      // Crystal braziers round the mat hum, each on its own clock.
+      { id: 'braziers', type: 'glow', points: [[290, 150, 16], [735, 146, 16], [180, 388, 18], [845, 388, 18]], color: [120, 230, 255], anim: 'pulse', period: 3.8, alpha: [0.15, 0.5], kickDur: 2 },
+      // Top-right: the dragon's crystal glows and the dragon breathes.
+      { id: 'dragon', type: 'echo', box: [858, 18, 990, 182], feather: 6, motion: { kind: 'breathe', amp: 1, period: 4.6, kickAmp: 3 } },
+      { id: 'dragonCrystal', type: 'glow', points: [[918, 136, 26]], color: [210, 110, 255], anim: 'pulse', period: 2.8, alpha: [0.2, 0.55], kickDur: 2.5 },
+      { id: 'dragonSmoke', type: 'particles', kind: 'smoke', from: [[882, 62, 8]], rate: 0, max: 8, color: [200, 140, 255], size: [5, 10], life: [1.5, 2.5], alpha: 0.25 },
+      // Waterfalls pour off the floating stones.
+      { id: 'falls', type: 'particles', kind: 'drip', from: [[300, 440, 10], [735, 440, 14], [910, 325, 8]], rate: 3, max: 14, color: [200, 225, 255], size: [1, 1.6], life: [0.6, 1], fall: 24, splash: false },
+      // Bottom-left: the katana shrine's crystals glow, the blade glints.
+      { id: 'shrine', type: 'glow', points: [[92, 400, 16], [60, 520, 13], [185, 490, 12]], color: [120, 230, 255], anim: 'pulse', period: 3.2, alpha: [0.15, 0.5], kickDur: 2 },
+      { id: 'blade', type: 'particles', kind: 'glint', area: [30, 455, 180, 480], rate: 0.8, max: 3, color: [235, 245, 255], size: [1.2, 2], life: [0.4, 0.8] },
+      // Bottom-right: the fox spirit's lantern glows; the blue flowers shine.
+      { id: 'fox', type: 'glow', points: [[945, 466, 24]], color: [120, 220, 255], anim: 'flicker', speed: 1.8, alpha: [0.2, 0.55], kickDur: 2.5 },
+      { id: 'flowers', type: 'glow', points: [[970, 530, 10], [1000, 490, 10], [830, 495, 8], [845, 525, 8]], color: [140, 190, 255], anim: 'pulse', period: 4, alpha: [0.1, 0.4], kickDur: 2 },
+      { id: 'foxWisps', type: 'particles', kind: 'wisp', from: [[945, 466, 20]], rate: 0, max: 6, color: [150, 230, 255], size: [2, 4], life: [2, 3], alpha: 0.3 },
+      // Air: clouds roll beneath, stars twinkle, petals drift by moonlight.
+      { type: 'fog', area: [-120, 330, 1144, 600], count: 14, size: [100, 180], speed: 5, color: [170, 180, 230], alpha: 0.12 },
+      { type: 'fog', area: [-120, 160, 1144, 330], count: 8, size: [80, 140], speed: 3.5, color: [150, 160, 210], alpha: 0.07 },
+      { type: 'particles', kind: 'glint', area: [0, 0, 1024, 140], rate: 1.2, max: 8, color: [235, 240, 255], size: [0.8, 1.6], life: [0.6, 1.4] },
+      { type: 'particles', kind: 'petal', area: [-40, 0, 1064, 560], rate: 0.6, max: 8, color: [240, 200, 255], size: [2, 3], life: [5, 8], speed: 0.8 },
+    ],
+    pokes: [
+      { area: [10, 0, 220, 190], sound: 'whoosh', kick: ['ring', 'ringGlow'], flare: [210, 140, 255], glyph: '✴️', burst: { layer: 'shuriken', n: 6, spread: 50 } },
+      { area: [850, 10, 1000, 200], sound: 'growl', kick: ['dragon', 'dragonCrystal'], flare: [210, 110, 255], glyph: '🐉', burst: { layer: 'dragonSmoke', n: 6, spread: 12 } },
+      { area: [0, 360, 230, 572], sound: 'clink', kick: ['shrine'], flare: [120, 230, 255], glyph: '🗡️', burst: { layer: 'blade', n: 4, spread: 50 } },
+      { area: [820, 380, 1024, 572], sound: 'chime', kick: ['fox', 'flowers'], flare: [120, 220, 255], glyph: '🦊', burst: { layer: 'foxWisps', n: 5, spread: 20 } },
+      { area: [420, 0, 610, 110], sound: 'chime', kick: ['moon'], flare: [200, 225, 255], glyph: '🌕' },
+    ],
+    reactions: { slice: { kick: ['matRunes', 'matEdge', 'braziers', 'ringGlow', 'dragonCrystal'], burst: [{ layer: 'shuriken', n: 4 }] } },
+  },
+  'fruit-ninjas-night-portrait': {
+    wind: { dir: -1, every: [7, 12], speed: [80, 120], width: [160, 240], lean: 0.1 },
+    layers: [
+      { id: 'moon', type: 'glow', points: [[232, 82, 70]], color: [200, 225, 255], anim: 'pulse', period: 9, alpha: [0.1, 0.28], kickDur: 2.5 },
+      { id: 'matRunes', type: 'glow', points: [[230, 345, 10], [230, 610, 10], [230, 658, 10], [230, 690, 10], [100, 352, 8], [358, 352, 8], [66, 600, 9], [392, 600, 9], [60, 462, 8], [400, 462, 8]], color: [190, 110, 255], anim: 'pulse', period: 4.4, alpha: [0.06, 0.32], kickDur: 2 },
+      { id: 'ring', type: 'vortex', center: [52, 120], rx: 52, ry: 26, count: 14, speed: 0.9, color: [210, 140, 255], alpha: 0.26 },
+      { id: 'ringGlow', type: 'glow', points: [[50, 160, 30]], color: [200, 110, 255], anim: 'pulse', period: 3, alpha: [0.12, 0.42], kickDur: 2 },
+      { id: 'shuriken', type: 'particles', kind: 'glint', area: [0, 40, 110, 160], rate: 0.8, max: 3, color: [230, 220, 255], size: [1, 2], life: [0.4, 0.8] },
+      { id: 'portal', type: 'glow', points: [[334, 212, 26]], color: [120, 230, 255], anim: 'pulse', period: 3.6, alpha: [0.15, 0.5], kickDur: 2 },
+      { id: 'dragonCrystal', type: 'glow', points: [[430, 140, 20]], color: [210, 110, 255], anim: 'pulse', period: 2.8, alpha: [0.2, 0.55], kickDur: 2.5 },
+      { id: 'dragon', type: 'echo', box: [395, 40, 459, 220], feather: 6, motion: { kind: 'breathe', amp: 0.8, period: 4.6, kickAmp: 2.5 } },
+      { id: 'falls', type: 'particles', kind: 'drip', from: [[305, 790, 10], [30, 820, 8]], rate: 2.4, max: 10, color: [200, 225, 255], size: [1, 1.5], life: [0.6, 1], fall: 22, splash: false },
+      { id: 'shrine', type: 'glow', points: [[60, 900, 16]], color: [120, 230, 255], anim: 'pulse', period: 3.2, alpha: [0.15, 0.5], kickDur: 2 },
+      { id: 'blade', type: 'particles', kind: 'glint', area: [10, 830, 130, 870], rate: 0.8, max: 3, color: [235, 245, 255], size: [1.2, 2], life: [0.4, 0.8] },
+      { id: 'fox', type: 'glow', points: [[430, 852, 20]], color: [120, 220, 255], anim: 'flicker', speed: 1.8, alpha: [0.2, 0.55], kickDur: 2.5 },
+      { id: 'foxWisps', type: 'particles', kind: 'wisp', from: [[430, 852, 16]], rate: 0, max: 6, color: [150, 230, 255], size: [2, 3.5], life: [2, 3], alpha: 0.3 },
+      { type: 'fog', area: [-100, 740, 560, 1024], count: 12, size: [90, 160], speed: 4.5, color: [170, 180, 230], alpha: 0.12 },
+      { type: 'fog', area: [-100, 160, 560, 270], count: 6, size: [70, 120], speed: 3.5, color: [150, 160, 210], alpha: 0.07 },
+      { type: 'particles', kind: 'glint', area: [0, 0, 459, 150], rate: 1, max: 6, color: [235, 240, 255], size: [0.8, 1.6], life: [0.6, 1.4] },
+      { type: 'particles', kind: 'petal', area: [-30, 0, 489, 1000], rate: 0.5, max: 7, color: [240, 200, 255], size: [2, 3], life: [5, 8], speed: 0.8 },
+    ],
+    pokes: [
+      { area: [0, 30, 120, 240], sound: 'whoosh', kick: ['ring', 'ringGlow'], flare: [210, 140, 255], glyph: '✴️', burst: { layer: 'shuriken', n: 5, spread: 40 } },
+      { area: [380, 30, 459, 230], sound: 'growl', kick: ['dragon', 'dragonCrystal'], flare: [210, 110, 255], glyph: '🐉' },
+      { area: [0, 820, 150, 1000], sound: 'clink', kick: ['shrine'], flare: [120, 230, 255], glyph: '🗡️', burst: { layer: 'blade', n: 4, spread: 40 } },
+      { area: [370, 780, 459, 960], sound: 'chime', kick: ['fox'], flare: [120, 220, 255], glyph: '🦊', burst: { layer: 'foxWisps', n: 5, spread: 16 } },
+      { area: [160, 20, 300, 150], sound: 'chime', kick: ['moon'], flare: [200, 225, 255], glyph: '🌕' },
+    ],
+    reactions: { slice: { kick: ['matRunes', 'portal', 'ringGlow', 'dragonCrystal'], burst: [{ layer: 'shuriken', n: 4 }] } },
+  },
+
   // ==== The Circles of Hell (Demons' Descent), rebuilt for the new paintings ====================
   // ---- I · Limbo: a grey ashen plain, ruins in the mist, lost souls wandering. ----
   'circle1-land': {

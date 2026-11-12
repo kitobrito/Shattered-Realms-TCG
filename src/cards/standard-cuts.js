@@ -143,6 +143,11 @@ export const STANDARD_CUTS = {
     'elver_swarm', 'volt_leech', 'tidal_generator', 'voltage_matriarch', 'megavolt_eel',
     'storm_drain', 'overcharge', 'reef_blackout', 'short_circuit', 'lightning_rod',
   ],
+  // Keeps: Harvest-friendly Fruits, the slicers and their payoffs (Pyromancer, Miyori, Kenzaru).
+  'Fruit Ninjas': [
+    'cherryblade_scout', 'citrus_runner', 'orchard_lookout', 'coconut_ironfist', 'grand_orchard_sensei',
+    'frost_grape_cluster', 'titan_watermelon', 'counter_slice', 'the_thousand_cuts', 'murakiri_the_forbidden_edge',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their
