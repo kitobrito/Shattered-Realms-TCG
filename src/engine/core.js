@@ -251,6 +251,38 @@ export function manaFor(pl, card) {
   return pl.mana.current - (isDinosaurCard(card) ? 0 : (pl.mana.primal ?? 0));
 }
 
+// ---- Quick Plays on the opponent's turn: borrowed Mana ----------------------------------
+// On your opponent's turn a Quick Play is paid from whatever Mana you have left, then borrowed from
+// your next turn: what you borrow (qpDebt) comes off your next refill. Cast in response like this,
+// a Quick Play costs (1) less (never below 1): reflexes are their strength.
+export const QP_REFLEX_DISCOUNT = 1;
+export function nextTurnMana(state, p) {
+  const pl = state.players[p];
+  const grow = pl.factions?.includes('Dinosaurs') ? 2 : (state.rules.manaPerTurn ?? 1);
+  return Math.min(state.rules.maxMana, (pl.mana.max ?? 0) + grow) + (pl.mana.bonusNextTurn ?? 0);
+}
+export const isOffTurn = (state, p) => state.activePlayer !== p;
+export function quickPlayCost(state, inst) {
+  const c = costOf(state, inst);
+  return isOffTurn(state, inst.owner) ? Math.max(Math.min(1, c), c - QP_REFLEX_DISCOUNT) : c;
+}
+export function quickPlayBudget(state, p) {
+  const pl = state.players[p];
+  if (!isOffTurn(state, p)) return null; // on your own turn Quick Plays use your normal Mana
+  return Math.max(0, pl.mana.current - (pl.mana.primal ?? 0)) + Math.max(0, nextTurnMana(state, p) - (pl.qpDebt ?? 0));
+}
+// Pay an off-turn Quick Play: left-over Mana first, the rest is borrowed from next turn.
+export function payQuickPlay(state, p, cost) {
+  const pl = state.players[p];
+  const spare = Math.max(0, pl.mana.current - (pl.mana.primal ?? 0));
+  const fromNow = Math.min(spare, cost);
+  pl.mana.current -= fromNow;
+  pl.mana.temp = Math.min(pl.mana.temp ?? 0, Math.max(0, pl.mana.current));
+  const borrowed = cost - fromNow;
+  if (borrowed > 0) pl.qpDebt = (pl.qpDebt ?? 0) + borrowed;
+  return borrowed;
+}
+
 // Dinosaur cards spend Primal Mana first; other cards only normal Mana.
 export function payMana(pl, card, cost) {
   const m = pl.mana;

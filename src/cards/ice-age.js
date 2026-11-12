@@ -115,7 +115,7 @@ export const ICE_AGE_CARDS = [
     effects: [{ op: 'buff', target: FRIENDLY_MINIONS, health: 2 }],
   },
   {
-    ...S, id: 'flint_spear_volley', name: 'Flint Spear Volley', art: '🗡️', cost: 2,
+    ...S, quickPlay: {}, id: 'flint_spear_volley', name: 'Flint Spear Volley', art: '🗡️', cost: 2,
     text: 'Deal 3 damage to a minion. If it is Frozen, deal 5 instead.', target: { type: 'minion', side: 'any' },
     effects: [{ op: 'damage', target: 'chosen', amount: 3, amountIf: { if: { subject: 'chosen', keyword: 'Frozen' }, amount: 5 } }],
   },
@@ -130,7 +130,7 @@ export const ICE_AGE_CARDS = [
     effects: [{ op: 'draw', count: 3, if: { controls: { minHealth: 8 } }, else: [{ op: 'draw', count: 2 }] }],
   },
   {
-    ...S, id: 'glacial_fortress', name: 'Glacial Fortress', art: '🧊', cost: 4,
+    ...S, quickPlay: {}, id: 'glacial_fortress', name: 'Glacial Fortress', art: '🧊', cost: 4,
     text: 'Give a friendly minion +2/+4 and Taunt.', target: FRIENDLY_MINION,
     effects: [{ op: 'buff', target: 'chosen', attack: 2, health: 4, keywords: ['Taunt'] }],
   },

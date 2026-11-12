@@ -12,7 +12,7 @@ import {
   summonMinion, isBurning, manaFor, payMana, radiationOf,
   isShark, huntsPrey, heal, heroOf, isDarkOrUndead,
   sinkCircles, descentDepth, heroSpellCost, initDescent, maxHand,
-  traceFx, allKeywords,
+  traceFx, allKeywords, isOffTurn, payQuickPlay, quickPlayBudget, quickPlayCost,
   tagsOf, usesCorpses,
 } from './core.js';
 import { EFFECT_OPS, addKeyword, applyBuff, canShift, chainLightning, checkCondition, dropHeroWeapon, burstShell, growShells, processBeyond, resolveEffect, surfaceMinion, takeHide, tickChestbursters, tickThawing } from './effects.js';
@@ -269,7 +269,10 @@ function eligibleQuickPlays(state, p, windowName, windowCtx) {
     const card = getCard(inst.cardId);
     const qp = card.quickPlay;
     if (!qp || !(qp.windows ?? DEFAULT_QUICK_PLAY_WINDOWS).includes(windowName)) continue;
-    if (costOf(state, inst) > manaFor(state.players[p], card) || !hasRoom(state, p, card)) continue;
+    // Off-turn: left-over Mana plus next turn's (minus what is already borrowed), at the reflex discount.
+    const budget = quickPlayBudget(state, p);
+    const affordable = budget == null ? costOf(state, inst) <= manaFor(state.players[p], card) : quickPlayCost(state, inst) <= budget;
+    if (!affordable || !hasRoom(state, p, card)) continue;
     if (!matchFilter(state, qp.filter, { controller: p, self: inst.uid, event: windowCtx?.event })) continue;
     out.push(...playOptions(state, p, card, inst.uid, 'quickPlay'));
   }
@@ -480,8 +483,17 @@ function quickPlay(state, { player: p, card: uid, target, target2 }) {
   const pl = state.players[p];
   const windowState = state.pending;
   state.pending = null;
-  const { inst, card } = takeFromHand(state, p, uid);
-  log(state, `${pl.name} responds with ${card.name} (Quick Play)!`);
+  let inst, card, borrowed = 0;
+  if (isOffTurn(state, p)) {
+    // Paid from left-over Mana, then borrowed from next turn (core.js payQuickPlay), at the reflex discount.
+    const idx = pl.hand.findIndex((c) => c.uid === uid);
+    inst = pl.hand[idx];
+    card = getCard(inst.cardId);
+    const cost = quickPlayCost(state, inst);
+    pl.hand.splice(idx, 1);
+    borrowed = payQuickPlay(state, p, cost);
+  } else ({ inst, card } = takeFromHand(state, p, uid));
+  log(state, `${pl.name} responds with ${card.name} (Quick Play)!${borrowed ? ` (${borrowed} Mana borrowed from next turn)` : ''}`);
   pl.graveyard.push(inst);
   const ctx = { self: inst.uid, controller: p, chosen: target ?? null, chosen2: target2 ?? null, cardId: card.id, event: windowState.ctx?.event };
   pushFront(state, [
@@ -1248,6 +1260,15 @@ const STEPS = {
     if (pl.extinction) pl.extinction.turns += 1;
     if (pl.greatFreeze) pl.greatFreeze.turns += 1;
     factionHook(pl, 'turnStartMana')(state, pl);
+    // Mana borrowed for Quick Plays on the opponent's turn comes off this refill.
+    if (pl.qpDebt > 0) {
+      const paid = Math.min(pl.qpDebt, pl.mana.current);
+      pl.mana.current -= paid;
+      pl.mana.temp = Math.min(pl.mana.temp ?? 0, pl.mana.current);
+      pl.mana.primal = Math.min(pl.mana.primal ?? 0, pl.mana.current);
+      log(state, `${pl.name} pays back ${pl.qpDebt} Mana borrowed for Quick Plays.`);
+      pl.qpDebt = 0;
+    }
     pl.hero.attacksThisTurn = 0;
     pl.hero.dualWieldStrikeUsed = false;
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }

@@ -124,14 +124,14 @@ export const EEL_CARDS = [
   },
 
   // ---- Spells (9) ----
-  { ...S, id: 'static_spark', name: 'Static Spark', art: '⚡', cost: 2, target: ENEMY_CHAR, text: 'Chain 2.', effects: [chain(2)] },
+  { ...S, quickPlay: {}, id: 'static_spark', name: 'Static Spark', art: '⚡', cost: 2, target: ENEMY_CHAR, text: 'Chain 2.', effects: [chain(2)] },
   {
     ...S, id: 'wet_net', name: 'Wet Net', art: '🕸️', cost: 1,
     text: 'Make all enemy minions Conductive. Draw a card.',
     effects: [{ op: 'conductive', target: ENEMY_MINIONS }, { op: 'draw', count: 1 }],
   },
   {
-    ...S, id: 'copper_coil', name: 'Copper Coil', art: '🧲', cost: 2, target: { type: 'minion', side: 'friendly' },
+    ...S, quickPlay: {}, id: 'copper_coil', name: 'Copper Coil', art: '🧲', cost: 2, target: { type: 'minion', side: 'friendly' },
     text: 'Give a friendly minion 3 Volts.', effects: [volts('chosen', 3)],
   },
   {

@@ -326,7 +326,7 @@ function startTutorial() {
   op.hand = T.rivalHand.map((id) => inst(1, id));
   op.deck = op.deck.filter((c) => !T.rivalHand.includes(c.cardId));
   op.hero.health = T.rivalHealth;
-  game = { state, mode: 'ai', factions: [T.you], rivalFactions: [T.rival], human: 0, format: 'single', difficulty: 'easy', stats: freshStats(), tutorial: true };
+  game = { state, mode: 'ai', factions: [T.you], rivalFactions: [T.rival], human: 0, format: 'single', difficulty: 'tutorial', stats: freshStats(), tutorial: true };
   startGuide(() => { if (screen === 'game') render(); });
   enterGame(true);
 }
@@ -3710,13 +3710,17 @@ function render() {
 // A human Quick Play window auto-passes after quickPlaySeconds.
 let reactionPrompted = null;
 function syncReactionTimer() {
+  // The Quick Play prompt's big cards fit their text once they are on screen.
+  const qpPrompt = app.querySelector('.qp-prompt:not(.fitted)');
+  if (qpPrompt) { qpPrompt.classList.add('fitted'); requestAnimationFrame(() => fitAllText(qpPrompt)); }
   const s = game?.state;
   const open = screen === 'game' && s?.pending?.type === 'reaction' && !isAI(s.pending.player) && !handoff;
   const key = open ? `${s.turn}|${s.log.length}|${s.pending.window}|${s.pending.player}` : null;
   if (reactionTimer && reactionTimer.key !== key) { clearInterval(reactionTimer.interval); reactionTimer = null; }
   if (!open || reactionTimer) { paintCountdown(); return; }
-  // Untimed vs the AI (Settings → Turn timer vs AI): no countdown, no auto-pass.
-  if (game.mode === 'ai' && !getSettings().turnTimerVsAI) {
+  // Quick Plays: 8 seconds to decide (rules.quickPlaySeconds) against people, including the online
+  // stand-in opponents, who play like people; against the computer you can take as long as you like.
+  if (game.mode === 'ai') {
     if (reactionPrompted !== key) { reactionPrompted = key; sound.play('quickPlay'); }
     const cd = app.querySelector('.countdown');
     if (cd) cd.style.display = 'none';
@@ -4241,6 +4245,21 @@ app.addEventListener('click', (e) => {
   // Tapping a corner prop on the board: it hops, flashes and makes its sound.
   const prop = screen === 'game' && e.target.closest('.board-prop');
   if (prop) return pokeProp(prop);
+  // The Quick Play prompt answers even while the opponent's move is still animating (it often opens
+  // mid-animation, and a tap that silently did nothing lost the window).
+  if (screen === 'game' && game.state.pending?.type === 'reaction' && !isAI(game.state.pending.player)) {
+    const qpBtn = e.target.closest('.qp-prompt [data-qp]');
+    const passBtn = e.target.closest('.qp-prompt [data-act="pass"]');
+    const choice = qpBtn ? getLegalActions(game.state).filter((a) => a.type === 'quickPlay')[Number(qpBtn.dataset.qp)]
+      : passBtn ? { type: 'pass', player: game.state.pending.player } : null;
+    if (choice) {
+      (qpBtn ?? passBtn).classList.add('chosen');
+      const key = game.state.pending;
+      // Played the moment the animation ends (if the window is still the same one).
+      const go = () => { if (game.state.pending !== key) return; if (animating) setTimeout(go, 60); else act(choice); };
+      return go();
+    }
+  }
   if (screen !== 'game' || animating) return;
   const s = game.state;
   const legal = getLegalActions(s).filter((a) => !isAI(a.player));

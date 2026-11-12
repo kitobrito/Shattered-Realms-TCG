@@ -27,8 +27,12 @@ export const BASE_WEIGHTS = {
 // a plan; peek: that prediction uses the opponent's real hand (Impossible only);
 // blunder: chance of a random move (Easy).
 export const DIFFICULTIES = {
-  easy: { beam: 2, depth: 3, maxNodes: 60, blunder: 0.25, weights: BASE_WEIGHTS, noReact: true, keepHand: true },
-  medium: { weights: BASE_WEIGHTS },
+  // Players found Medium overwhelming (it used the full search: beam 5, depth 7). Medium now plans a
+  // short way ahead and slips now and then (vs the old Medium it wins about 6 in 16); Easy blunders
+  // often and its Hero starts with 25 Health (3 in 16). The tutorial's rival is gentler still.
+  tutorial: { beam: 1, depth: 2, maxNodes: 20, blunder: 0.5, weights: BASE_WEIGHTS, noReact: true, keepHand: true, advantage: { health: -10 } },
+  easy: { beam: 1, depth: 2, maxNodes: 30, blunder: 0.35, weights: BASE_WEIGHTS, noReact: true, keepHand: true, advantage: { health: -5 } },
+  medium: { beam: 2, depth: 3, maxNodes: 80, blunder: 0.12, weights: BASE_WEIGHTS },
   // Measured (AI vs AI, 150-300 games): trained weights beat Medium ~55%, but deeper
   // search stopped helping (Very Hard ≈ Hard). So the top levels also get
   // advantages: extra Hero Health and extra starting cards (see applyAdvantage).

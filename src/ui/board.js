@@ -2,7 +2,7 @@
 // in drag.js, animation in fx.js, and the action loop in main.js.
 
 import { CIRCLES } from '../engine/rules.js';
-import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, heroSpellCost, mushroomsIn, radiationOf, usesCorpses } from '../engine/core.js';
+import { allKeywords, costOf, effectiveAttack, findCharacter, hasKeyword, heroSpellCost, mushroomsIn, quickPlayBudget, quickPlayCost, radiationOf, usesCorpses } from '../engine/core.js';
 import { acidHideAmount, actingPlayer } from '../engine/engine.js';
 import { evolveTurnsFor } from '../engine/effects.js';
 import { getCard } from '../engine/registry.js';
@@ -13,7 +13,7 @@ import { hasBoardFx } from './circle-fx.js';
 import { getSettings } from './settings.js';
 import { boardProgress, ownedBoards } from './unlocks.js';
 import { isMuted, play as playSound } from './sound.js';
-import { artOf, minionArtOf, backStyle, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
+import { artOf, minionArtOf, backStyle, bigCardHTML, fslug, cardHTML, esc, FACTION_ICONS, heroArtOf, playerHeroArt, playerPortraitHTML, youText, rankBadgeHTML, rankProgressHTML, icon } from './shared.js';
 
 // ---- Pieces ------------------------------------------------------------------
 
@@ -454,7 +454,9 @@ function manaHTML(pl, mine) {
     else cls = base + (i - max) < lit ? litCls(base + (i - max)) : 'locked';
     crystals += `<span class="crystal ${cls}" data-crystal="${i}"></span>`;
   }
-  const next = pl.mana.bonusNextTurn ? ` <small>+${pl.mana.bonusNextTurn} next</small>` : '';
+  const next = (pl.mana.bonusNextTurn ? ` <small>+${pl.mana.bonusNextTurn} next</small>` : '')
+    // Mana borrowed for Quick Plays on the opponent's turn: it comes off the next refill.
+    + (pl.qpDebt ? ` <small class="qp-debt" title="Borrowed for Quick Plays: comes off your next turn's Mana">−${pl.qpDebt} next</small>` : '');
   const primalNote = primalMax ? ` <small class="primal-note" title="Primal Mana: only for Dinosaur cards">🦴${primal} Primal</small>` : '';
   return `<div class="mana-bar ${mine ? 'me' : 'opp'}"><b class="mana-text">${current}/${max}${next}${primalNote}</b><div class="crystals">${crystals}</div></div>`;
 }
@@ -529,33 +531,66 @@ function mulliganHTML(s, p, marked) {
   </div></div>`;
 }
 
+// The Quick Play prompt: the Quick Play itself as a big card on the left, a glowing arrow, and a big
+// card of what it would act on (the attacker, the minion about to be hit, the one that just died, or
+// the card's chosen target) on the right. Below: each option with its cost (and how much of it is
+// borrowed from next turn), Pass, and the countdown.
 function reactionHTML(s, legal) {
   const qps = legal.filter((a) => a.type === 'quickPlay');
+  const legalIndex = new Map(qps.map((a, i) => [a, i])); // buttons keep the engine's order for data-qp
+  const me = s.pending.player;
+  const pl = s.players[me];
+  const instOf = (a) => pl.hand.find((c) => c.uid === a.card);
   const charName = (id) => {
     const c = findCharacter(s, id);
     if (!c) return '';
     return c.kind === 'hero' ? `${s.players[c.owner].name}` : getCard(c.cardId).name;
   };
   const label = (a) => {
-    const card = getCard(s.players[a.player].hand.find((c) => c.uid === a.card).cardId);
+    const card = getCard(instOf(a).cardId);
     const t = a.target != null ? ` → ${charName(a.target)}` : '';
     const t2 = a.target2 != null ? ` & ${charName(a.target2)}` : '';
     return `${card.name}${t}${t2}`;
   };
   const ev = s.pending.ctx?.event;
   const what = {
-    cardPlayed: 'a card was played', attackDeclared: 'an attack was declared', minionDied: 'a minion died',
-    endOfTurn: 'the turn is ending', wouldTakeDamage: 'damage incoming',
-  }[s.pending.window];
+    cardPlayed: 'A card was played', attackDeclared: 'An attack is coming', minionDied: 'A minion died',
+    endOfTurn: 'The turn is ending', wouldTakeDamage: 'Damage incoming',
+  }[s.pending.window] ?? 'Quick Play';
   const detail = s.pending.window === 'wouldTakeDamage' ? `: ${ev.amount} to ${charName(ev.target)}`
     : ev?.source != null && findCharacter(s, ev.source) ? `: ${charName(ev.source)}` : '';
-  return `<div class="reaction"><span class="countdown"></span><b>Quick Play?</b> <span class="sub">${esc((what ?? s.pending.window) + detail)}</span>
-    ${qps.map((a, i) => {
-      const card = getCard(s.players[a.player].hand.find((c) => c.uid === a.card).cardId);
-      // The card's text right on the button, so the decision is quick.
-      return `<button data-qp="${i}" class="qp-option"><b><span class="qp-cost">${card.cost}</span> ${esc(label(a))}</b><small>${esc(card.text)}</small></button>`;
+  // What the first option acts on: its chosen target, else the event's minion (attacker / about to be
+  // hit / just died / just played).
+  // Lead with the option aimed at the minion that opened the window (the attacker / the one about to
+  // be hit / the one just played), then enemy targets, then the rest.
+  const evMinion = s.pending.window === 'wouldTakeDamage' ? ev?.target : ev?.source ?? ev?.target;
+  const rank = (a) => (a.target == null ? 1 : a.target === evMinion ? 0 : findCharacter(s, a.target)?.controller !== me ? 1 : 2);
+  qps.sort((x, y) => rank(x) - rank(y));
+  const first = qps[0];
+  const focusId = first?.target ?? (s.pending.window === 'wouldTakeDamage' ? ev?.target : ev?.source ?? ev?.target);
+  const focus = focusId != null ? findCharacter(s, focusId) : null;
+  const dead = !focus && ev?.dead?.cardId ? ev.dead : null;
+  const bigOf = (c) => (c.kind === 'hero' ? `<div class="qp-hero"><b>${esc(s.players[c.owner].name)}</b><span>${c.health} Health</span></div>`
+    : bigCardHTML(getCard(c.cardId), { attack: effectiveAttack(c), health: c.health, maxHealth: c.maxHealth }));
+  const focusHTML = focus ? bigOf(focus) : dead ? bigCardHTML(getCard(dead.cardId)) : ev?.cardId ? bigCardHTML(getCard(ev.cardId)) : '';
+  const budget = quickPlayBudget(s, me);
+  const spare = Math.max(0, pl.mana.current - (pl.mana.primal ?? 0));
+  const costNote = (a) => {
+    const cost = quickPlayCost(s, instOf(a));
+    const borrowed = budget == null ? 0 : Math.max(0, cost - spare);
+    return `<span class="qp-cost">${cost}</span>${borrowed ? `<i class="qp-borrow">${borrowed} from next turn</i>` : ''}`;
+  };
+  return `<div class="reaction qp-prompt">
+    <div class="qp-head"><span class="countdown"></span><b>Quick Play?</b><span class="sub">${esc(what + detail)}</span></div>
+    ${first ? `<div class="qp-stage">
+      <div class="qp-card qp-mine">${bigCardHTML(getCard(instOf(first).cardId), { cost: quickPlayCost(s, instOf(first)) })}</div>
+      ${focusHTML ? `<div class="qp-arrow" aria-hidden="true"><i></i><i></i><i></i></div><div class="qp-card qp-focus">${focusHTML}</div>` : ''}
+    </div>` : ''}
+    <div class="qp-options">${qps.map((a) => {
+      const card = getCard(instOf(a).cardId);
+      return `<button data-qp="${legalIndex.get(a)}" class="qp-option"><b>${costNote(a)} ${esc(label(a))}</b><small>${esc(card.text)}</small></button>`;
     }).join('')}
-    <button data-act="pass" class="ghost">Pass</button></div>`;
+    <button data-act="pass" class="ghost">Pass</button></div></div>`;
 }
 
 function choiceHTML(choice) {
