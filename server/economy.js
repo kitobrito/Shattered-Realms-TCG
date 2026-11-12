@@ -22,7 +22,7 @@ import { PLAYABLE_FACTIONS } from '../src/cards/index.js';
 import { ALT_BOARDS } from '../src/cards/board-art.js';
 
 export const DAILY_POINTS = 80;
-export const DAILIES_PER_DAY = 4;
+export const DAILIES_PER_DAY = 5;
 export const PACK_COST = 160;
 // The Legendary Pack: LEGENDARY_PACK_COST points, PACK_SIZE cards from any realm, completely random,
 // with one guaranteed legendary (one you don't own yet when there is any).
@@ -83,7 +83,7 @@ export function makeDailies(key, day) {
   const r = rng(`${key}:${day}`);
   const kinds = ['fusion'];
   const rest = ['faction', 'ranked', 'single', 'pair', 'any'];
-  while (kinds.length < DAILIES_PER_DAY) {
+  while (kinds.length < DAILIES_PER_DAY && rest.length) {
     const k = rest.splice(Math.floor(r() * rest.length), 1)[0];
     if (k === 'single' && kinds.includes('pair')) continue; // never ask for both deck shapes on one day
     if (k === 'pair' && kinds.includes('single')) continue;
@@ -99,6 +99,14 @@ export function makeDailies(key, day) {
 export function refreshDailies(acc, now = Date.now()) {
   const day = dayOf(now);
   if (acc.dailies?.day !== day) { acc.dailies = { day, list: makeDailies(acc.key, day) }; return true; }
+  // More missions a day than when today's list was made (4 became 5): add the new ones, keep progress.
+  // Missions come out in the same order for an account and day, so the new ones follow on.
+  const list = acc.dailies.list;
+  if (list.length < DAILIES_PER_DAY) {
+    const added = makeDailies(acc.key, day).slice(list.length).filter((m) => !list.some((x) => x.kind === m.kind || x.id === m.id));
+    list.push(...added);
+    return added.length > 0;
+  }
   return false;
 }
 
@@ -272,7 +280,7 @@ export function economyView(acc, now = Date.now()) {
     cards: acc.cards ?? [],
     dupes: acc.dupes ?? {},
     boards: acc.boards ?? [],
-    dailies: acc.dailies.list.map(({ id, kind, text, need, progress, done }) => ({ id, kind, text, need, progress, done, points: DAILY_POINTS })),
+    dailies: acc.dailies.list.map(({ id, kind, text, need, progress, done, factions, faction }) => ({ id, kind, text, need, progress, done, points: DAILY_POINTS, ...(factions ? { factions } : {}), ...(faction ? { faction } : {}) })),
     resetsIn: msUntilReset(now),
     cardsImported: !!acc.cardsImported,
     rules: { packCost: PACK_COST, legendaryPackCost: LEGENDARY_PACK_COST, packSize: PACK_SIZE, freePerFaction: FREE_PER_FACTION, recycle: RECYCLE, dailyPoints: DAILY_POINTS, legendaryChance: LEGENDARY_CHANCE, cardPrice: CARD_PRICE, boardPrice: BOARD_PRICE },

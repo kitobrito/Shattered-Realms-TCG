@@ -56,13 +56,27 @@ const edit = async (key, fn) => { const a = await store.get(key); fn(a); await s
 const acc = (cards = [], points = 0) => ({ key: 'tester', name: 'Tester', cards, points, dupes: {} });
 
 // ---- Economy rules (pure) ----------------------------------------------------------------
-await test('Dailies: 4 a day, always one fusion mission, the same list all day, new ones the next day', () => {
+await test('Dailies: 5 a day, always one fusion mission, the same list all day, new ones the next day', () => {
   const a = makeDailies('someone', '2026-11-12'), b = makeDailies('someone', '2026-11-12'), c = makeDailies('someone', '2026-11-13');
   if (a.length !== DAILIES_PER_DAY) return `${a.length} missions`;
   if (!a.some((m) => m.kind === 'fusion' && m.factions.length === 2)) return 'no fusion mission';
-  if (new Set(a.map((m) => m.kind)).size !== 4) return 'repeated kinds';
+  if (new Set(a.map((m) => m.kind)).size !== DAILIES_PER_DAY) return 'repeated kinds';
+  if (a.some((m) => m.kind === 'single') && a.some((m) => m.kind === 'pair')) return 'both deck shapes on one day';
   if (JSON.stringify(a) !== JSON.stringify(b)) return 'not stable within the day';
   if (JSON.stringify(a.map((m) => m.text)) === JSON.stringify(c.map((m) => m.text))) return 'same missions the next day';
+});
+
+await test('A day that started with 4 missions gets the 5th added, keeping progress', () => {
+  const a = acc();
+  const t0 = Date.parse('2026-11-12T10:00:00Z');
+  refreshDailies(a, t0);
+  const full = a.dailies.list.map((m) => m.kind);
+  a.dailies.list = a.dailies.list.slice(0, 4);
+  a.dailies.list[0].progress = 2;
+  refreshDailies(a, t0);
+  if (a.dailies.list.length !== 5) return `${a.dailies.list.length} missions`;
+  if (a.dailies.list[0].progress !== 2) return 'progress lost';
+  if (JSON.stringify(a.dailies.list.map((m) => m.kind)) !== JSON.stringify(full)) return 'different missions';
 });
 
 await test('Dailies pay 80 points only when completed, only for public wins; an unfinished one is gone the next day', () => {
@@ -80,7 +94,7 @@ await test('Dailies pay 80 points only when completed, only for public wins; an 
   const progressed = a.dailies.list.find((m) => !m.done && m.progress > 0);
   refreshDailies(a, t0 + 86400000);
   if (a.dailies.day !== dayOf(t0 + 86400000) || a.dailies.list.some((m) => m.progress)) return 'yesterday carried over';
-  if (!progressed && a.dailies.list.length !== 4) return 'bad refresh';
+  if (!progressed && a.dailies.list.length !== DAILIES_PER_DAY) return 'bad refresh';
 });
 
 await test('Wins unlock cards only until 10 of a realm are owned; the rest must come from packs', () => {
@@ -155,7 +169,7 @@ await test('A new account starts with 1000 points; an older account gets them on
 
 await test('The account carries the economy: points, cards, 4 dailies, the reset time', async () => {
   const e = alice.you.economy;
-  if (!e || e.points !== 1000 || !Array.isArray(e.cards) || e.dailies.length !== 4 || !(e.resetsIn > 0)) return JSON.stringify(e).slice(0, 200);
+  if (!e || e.points !== 1000 || !Array.isArray(e.cards) || e.dailies.length !== DAILIES_PER_DAY || !(e.resetsIn > 0)) return JSON.stringify(e).slice(0, 200);
 });
 
 await test('Buying a pack through the server spends points and returns 7 cards', async () => {
