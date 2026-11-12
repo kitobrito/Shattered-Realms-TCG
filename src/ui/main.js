@@ -36,7 +36,8 @@ import * as srv from './server-link.js';
 import { BUILD } from '../build.js';
 import { markPatchSeen, PATCH_NOTES, patchNotesHTML, patchUnseen } from './patch-notes.js';
 import { CURRENT_POLL, POLLS } from '../polls.js';
-import { awardUnlocks, boardProgress, isLocked, lockedCount, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
+import { awardUnlocks, boardProgress, isLocked, localOwnedCards, lockedCount, setOwnedBoards, setOwnedCards, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
+import { shopHTML } from './shop.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
 const SAVE_KEY = 'faction-ccg-save';
@@ -1791,6 +1792,9 @@ function leaveOnline() {
 function stopQueueTicker() { clearInterval(queueTicker); queueTicker = null; }
 
 // ---- Play a bot while you wait (Quick Match / Ranked queue) ----
+// Switched off for now: the server finds an opponent for anyone who waits (server/bots.js).
+// Set to true to offer it again once the playerbase is bigger.
+const BOT_WHILE_WAITING = false;
 // You stay in the queue while playing the AI. A banner keeps the search time; when a real
 // opponent is found, the bot game ends and you go straight into the match. The bot game's
 // "Main menu" goes back to the queue instead, and "Stop searching" leaves the queue but lets
@@ -1800,7 +1804,7 @@ let waitBanner = null;
 const waitingInQueue = () => !!game?.waiting && lobby?.status === 'queued';
 
 function startBotWhileWaiting() {
-  if (lobby?.status !== 'queued' || lobby.mode === 'private') return;
+  if (!BOT_WHILE_WAITING || lobby?.status !== 'queued' || lobby.mode === 'private') return;
   startGame('ai', picked);
   if (game?.mode === 'ai') game.waiting = { mode: lobby.mode };
   render();
@@ -1962,7 +1966,7 @@ function renderLobby() {
         <h3>${esc(MODE_NAMES[st.mode] ?? 'Match')}</h3>
         <p class="lobby-wait">${st.mode === 'private' ? `Waiting for <b>${esc(st.friend)}</b> to type your name (<b>${esc(srv.user?.name ?? '')}</b>)…` : 'Looking for an opponent…'}</p>
         <div class="queue-time">${fmtWait(Date.now() - st.since)}</div>
-        ${st.mode !== 'private' ? '<button data-act="botWhileWaiting">🤖 Play a bot while you wait</button>' : ''}
+        ${BOT_WHILE_WAITING && st.mode !== 'private' ? '<button data-act="botWhileWaiting">🤖 Play a bot while you wait</button>' : ''}
         <button data-act="cancelQueue" class="ghost">Cancel</button>
       </div>`
     : st.status === 'delete'
@@ -2192,9 +2196,139 @@ function applySync(state) {
   render();
 }
 
+// ---- Shop: dailies, packs, duplicates and the trade board (shop.js draws it) ----
+let shop = { tab: 'dailies', you: null, trades: [], opened: null, draft: null, busy: false, msg: null };
+let importSent = false;
+// The account's cards are the ones that count: mirror them into this browser (the deck builder and
+// collection read them from there). The first time an account is seen, the cards this browser had
+// unlocked before accounts kept them are brought over once.
+function syncEconomy(you) {
+  const e = you?.economy;
+  if (!e) return;
+  shop.you = you;
+  if (!e.cardsImported) {
+    if (!importSent) { importSent = true; srv.send({ t: 'importCards', ids: localOwnedCards() }); }
+    return;
+  }
+  setOwnedCards(e.cards);
+  setOwnedBoards(e.boards);
+}
+const bundleWords = (b) => [...(b?.cards ?? []).map((id) => getCard(id)?.name ?? id), ...(b?.points ? [`${b.points} points`] : [])].join(' + ');
+function openShop(tab = shop.tab) {
+  screen = 'shop';
+  shop = { ...shop, tab, msg: null, draft: null, opened: null };
+  if (srv.token()) { connectServer(); srv.send({ t: 'me' }); srv.send({ t: 'trades' }); }
+  render();
+}
+function renderShop() {
+  app.innerHTML = shopHTML(shop, !!srv.token());
+  showMenuBackdrop(true);
+  const opened = app.querySelector('.sh-opened');
+  if (opened) fitAllText(opened);
+}
+const emptyBundle = () => ({ cards: [], points: 0 });
+function shopButton(name) {
+  const [cmd, a, b] = name.split(':');
+  const d = shop.draft;
+  switch (cmd) {
+    case 'shopTab': shop.tab = a; shop.msg = null; if (a === 'trades') srv.send({ t: 'trades' }); return render();
+    case 'shopClose': screen = 'menu'; return render();
+    case 'shopBuy': shop.busy = true; sound.play('click'); srv.send({ t: 'buyPack', faction: name.slice(8) }); return render();
+    case 'shopOpenedOk': shop.opened = null; return render();
+    case 'shopBuyCard': {
+      const c = getCard(name.slice(12));
+      const price = c?.legendary ? shop.you.economy.rules.cardPrice.legendary : shop.you.economy.rules.cardPrice.normal;
+      if (!c || !confirm(`Buy ${c.name} for ${price} points?`)) return;
+      shop.busy = true; srv.send({ t: 'buyCard', id: c.id }); return render();
+    }
+    case 'shopBuyBoard': {
+      const id = name.slice(13);
+      if (!confirm(`Buy the ${id} board for ${shop.you.economy.rules.boardPrice} points?`)) return;
+      shop.busy = true; srv.send({ t: 'buyBoard', board: id }); return render();
+    }
+    case 'shopRecycle': srv.send({ t: 'recycle', id: name.slice(12), count: 1 }); return;
+    case 'shopRecycleAll': srv.send({ t: 'recycle', all: true }); return;
+    case 'tradeNew': shop.draft = { mode: 'post', give: [], options: [emptyBundle()], target: 'give', realm: null }; return render();
+    case 'tradeOffer': shop.draft = { mode: 'offer', id: a, bundle: emptyBundle(), target: 'bundle', realm: null }; return render();
+    case 'tradeCounter': shop.draft = { mode: 'counter', id: a, offer: b, bundle: emptyBundle(), target: 'bundle', realm: null, collection: [] }; srv.send({ t: 'tradeCollection', id: a, offer: b }); return render();
+    case 'tradeTake': {
+      const t = shop.trades.find((x) => x.id === a);
+      if (!t || !confirm(`Trade ${bundleWords(t.wants[Number(b)])} for ${bundleWords({ cards: t.give })}?`)) return;
+      srv.send({ t: 'takeTrade', id: a, option: Number(b) }); return;
+    }
+    case 'tradeAccept': srv.send({ t: 'acceptOffer', id: a, offer: b }); return;
+    case 'tradeDecline': srv.send({ t: 'declineOffer', id: a, offer: b }); return;
+    case 'tradeCancel': if (confirm('Take this trade down? Your cards come back.')) srv.send({ t: 'cancelTrade', id: a }); return;
+    case 'draftCancel': shop.draft = null; return render();
+    case 'draftTarget': if (d) d.target = a === 'give' || a === 'bundle' ? a : Number(a); return render();
+    case 'draftAddOption': if (d && d.options.length < 6) { d.options.push(emptyBundle()); d.target = d.options.length - 1; } return render();
+    case 'draftDropOption': if (d) { d.options.splice(Number(a), 1); d.target = 'give'; } return render();
+    case 'draftAdd': {
+      if (!d) return;
+      const id = name.slice(9);
+      const box = d.target === 'give' ? { cards: d.give } : d.target === 'bundle' ? d.bundle : d.options[d.target];
+      if (!box) return;
+      const limit = 4;
+      if (box.cards.length >= limit) { flash(`At most ${limit} cards here.`); return; }
+      box.cards.push(id); sound.play('draw'); return render();
+    }
+    case 'draftRemove': {
+      if (!d) return;
+      const box = a === 'give' ? { cards: d.give } : a === 'bundle' ? d.bundle : d.options[Number(a)];
+      box?.cards.splice(Number(b), 1); return render();
+    }
+    case 'draftSend': {
+      if (!d) return;
+      if (d.mode === 'post') srv.send({ t: 'postTrade', give: d.give, wants: d.options });
+      else if (d.mode === 'offer') srv.send({ t: 'offerTrade', id: d.id, ...d.bundle });
+      else srv.send({ t: 'counterTrade', id: d.id, offer: d.offer, ...d.bundle });
+      return;
+    }
+  }
+  return false;
+}
+
 function onServerMessage(msg) {
   if (!msg || typeof msg !== 'object') return;
   msg = cleanIncoming(msg);
+  if (msg.you?.economy) syncEconomy(msg.you);
+  const onShop = screen === 'shop';
+  switch (msg.t) {
+    case 'pack':
+      shop.busy = false;
+      shop.opened = { title: msg.faction === 'legendary' ? 'Legendary Pack' : `${msg.faction} pack`, cards: msg.cards };
+      sound.play('victory');
+      return onShop && render();
+    case 'bought':
+      shop.busy = false;
+      sound.play('victory');
+      flash(msg.kind === 'card' ? `${getCard(msg.id)?.name ?? 'Card'} is yours. Add it with Build my deck.` : `The ${msg.id} board is yours. Pick it in the Collection's board picker for ${msg.faction}.`);
+      return onShop && render();
+    case 'recycled':
+      flash(`Recycled ${msg.recycled} duplicate${msg.recycled === 1 ? '' : 's'} for ${msg.points} points.`);
+      return onShop && render();
+    case 'trades':
+      shop.trades = msg.listings ?? [];
+      return onShop && render();
+    case 'tradePosted': shop.draft = null; flash('Your trade is up on the board.'); return onShop && render();
+    case 'tradeOffered': shop.draft = null; flash('Offer sent.'); return onShop && render();
+    case 'tradeCancelled': flash('Trade taken down. Your cards are back.'); return onShop && render();
+    case 'tradeCollection': if (shop.draft?.mode === 'counter' && shop.draft.id === msg.id) shop.draft.collection = msg.cards; return onShop && render();
+    case 'traded':
+      shop.draft = null;
+      flash(`Trade done! You got ${bundleWords(msg.got)}.`);
+      sound.play('victory');
+      if (onShop) { srv.send({ t: 'trades' }); render(); }
+      return;
+    case 'tradeUpdate':
+      flash(msg.msg);
+      if (onShop) srv.send({ t: 'trades' });
+      return;
+    case 'winClaimed':
+      if (game && msg.unlocked?.length && !game.unlockSeen) { game.unlocked = msg.unlocked; if (screen === 'game') render(); }
+      return;
+  }
+  if (msg.t === 'reject' && onShop) { shop.busy = false; flash(msg.msg); return render(); }
   const inServerGame = screen === 'game' && game?.mode === 'online' && link === srv;
   switch (msg.t) {
     case 'accountDeleted':
@@ -2213,7 +2347,7 @@ function onServerMessage(msg) {
         flash(`Welcome, ${msg.you?.name ?? 'traveller'}!`);
         return;
       }
-      if (onAcctScreen()) render();
+      if (onAcctScreen() || onShop) render();
       return;
     case 'authError':
       acct.msg = msg.msg;
@@ -2285,6 +2419,9 @@ function onServerMessage(msg) {
     case 'result': {
       if (!inServerGame) return;
       game.result = msg;
+      // The server unlocks cards for a win (up to 10 per realm) and pays for completed dailies.
+      if (msg.unlocked?.length) game.unlocked = msg.unlocked;
+      for (const d of msg.dailies ?? []) flash(`Daily mission complete: +${d.points} points (${d.text})`);
       const s = game.state;
       if (!s.gameOver) {
         // Decided by the server (time-out or disconnect).
@@ -2614,10 +2751,12 @@ function renderMenu() {
         <button data-act="tutorial" class="m2-link ${tutorialDone() ? '' : 'new-player'}">${icon('cap')}<span><b>Tutorial</b><small>New? Start here</small></span></button>
         <button data-act="howto" class="m2-link">${icon('book')}<span><b>How to play</b><small>Learn the basics</small></span></button>
         <button data-act="gallery" class="m2-link">${icon('cards')}<span><b>Collection</b><small>View your cards</small></span></button>
+        <button data-act="shop" class="m2-link">${icon('trophy')}<span><b>Shop</b><small>Dailies, packs &amp; trades</small></span></button>
         <button data-act="settings" class="m2-link">${icon('gear')}<span><b>Settings</b><small>Game &amp; account</small></span></button>
       </footer>
       <nav class="m2-tabbar">
         <button data-act="gallery">${icon('cards')}<span>Collection</span></button>
+        <button data-act="shop">${icon('trophy')}<span>Shop</span></button>
         <button data-act="ai" class="m2-tab-play">${icon('play')}<span>Play</span></button>
         <button data-act="howto">${icon('book')}<span>Guide</span></button>
         <button data-act="patchNotes" class="${patchUnseen() ? 'has-new' : ''}">${icon('log')}<span>News</span></button>
@@ -2943,7 +3082,7 @@ function boardPickerHTML(f) {
   const current = chosenBoard(f);
   const opts = [{ id: f, name: `${f} (original)`, blurb: 'The realm\'s own battlefield.', open: true }, ...ALT_BOARDS[f].map((b) => {
     const pr = boardProgress(b, f);
-    return { id: b.id, name: b.id, blurb: b.blurb, open: boardUnlocked(b, f), need: `Unlock all ${pr.total} ${b.set ?? EXPANSION_NAMES[f]} cards (${pr.have}/${pr.total})` };
+    return { id: b.id, name: b.id, blurb: b.blurb, open: boardUnlocked(b, f), need: `Unlock all ${pr.total} ${b.set ?? EXPANSION_NAMES[f]} cards (${pr.have}/${pr.total}), or buy it in the Shop` };
   })];
   return `<div class="overlay board-pick-overlay"><div class="guide-backdrop" data-act="closeBoards"></div>
     <div class="board-pick"><header><h3>${esc(f)} Boards</h3><button class="ghost" data-act="closeBoards" aria-label="Close">✕</button></header>
@@ -3079,6 +3218,18 @@ function renderGallery() {
 
 // The collection's sort dropdown.
 app.addEventListener('change', (e) => {
+  // The trade composer's realm list and points boxes.
+  const ch = e.target.closest?.('[data-act-change]');
+  if (ch && screen === 'shop' && ch.dataset.actChange === 'shopCardRealm') { shop.cardRealm = ch.value; return render(); }
+  if (ch && screen === 'shop' && shop.draft) {
+    const [cmd, key] = ch.dataset.actChange.split(':');
+    if (cmd === 'draftRealm') shop.draft.realm = ch.value;
+    if (cmd === 'draftPoints') {
+      const box = key === 'bundle' ? shop.draft.bundle : shop.draft.options[Number(key)];
+      if (box) box.points = Math.max(0, Math.floor(Number(ch.value) || 0));
+    }
+    return render();
+  }
   if (!e.target.matches?.('[data-sort]') || screen !== 'gallery') return;
   bookSort = e.target.value;
   sound.play('draw');
@@ -3282,7 +3433,12 @@ function renderGame() {
     if (game.tutorial) { markTutorialDone(); stopGuide(); }
     else {
       if (game.mode !== 'online') milestone = recordMatch() ?? milestone;
-      if (s.winner === viewer && (game.mode === 'ai' || game.mode === 'online')) game.unlocked = awardUnlocks(UNLOCKS_PER_WIN, s.players[viewer].factions);
+      // Online, the server awards the cards (in its result). Against the AI: a signed-in player's account
+      // gets them (the server keeps the 8-per-realm limit); a guest's go into this browser.
+      if (s.winner === viewer && game.mode === 'ai') {
+        if (srv.token()) srv.send({ t: 'claimWin', factions: s.players[viewer].factions });
+        else game.unlocked = awardUnlocks(UNLOCKS_PER_WIN, s.players[viewer].factions);
+      }
     }
   }
   app.innerHTML = boardHTML({
@@ -3417,6 +3573,7 @@ function render() {
   else if (screen === 'gallery') renderGallery();
   else if (screen === 'builder') renderBuilder();
   else if (screen === 'online') renderLobby();
+  else if (screen === 'shop') renderShop();
   else if (screen === 'signin') renderSignIn();
   else if (screen === 'howto') { app.innerHTML = howToPlayHTML(KEYWORD_TEXT, howtoPage); showMenuBackdrop(true); }
   else renderGame();
@@ -3997,6 +4154,8 @@ app.addEventListener('click', (e) => {
 
 function onButton(name) {
   const s = game?.state;
+  if (name === 'shop') { sound.play('click'); return openShop(); }
+  if (screen === 'shop' && name && shopButton(name) !== false) return;
   // Patch notes (main menu): open and close, pick a post or a category tab, see a board big.
   if (name === 'patchNotes') { sound.play('click'); markPatchSeen(); patch = { open: true, post: 0, tab: null, board: null, keepScroll: false }; return render(); }
   if (name === 'closePatch') { patch.open = false; return render(); }

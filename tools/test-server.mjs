@@ -28,7 +28,7 @@ if (DB) {
 }
 const store = await openStore({ dataDir: dir, databaseUrl: DB });
 console.log(`(accounts in ${store.kind === 'postgres' ? 'Postgres' : 'a JSON file'})`);
-const srv = await startServer({ port: 0, store });
+const srv = await startServer({ port: 0, store, bots: { enabled: false } });
 const URL_ = `ws://localhost:${srv.port}/ws`;
 
 let passed = 0, failures = 0;
@@ -347,7 +347,7 @@ await srv.close();
 // A second server with short waits, for the time-outs.
 {
   const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'srv-test-'));
-  const fast = await startServer({ port: 0, store: await openStore({ dataDir: dir2, databaseUrl: '' }), awaySeconds: 1, idleSeconds: 2, mulliganSeconds: 2 });
+  const fast = await startServer({ port: 0, store: await openStore({ dataDir: dir2, databaseUrl: '' }), awaySeconds: 1, idleSeconds: 2, mulliganSeconds: 2, bots: { enabled: false } });
   const url = `ws://localhost:${fast.port}/ws`;
   const join = async (name) => {
     const c = client(url);
