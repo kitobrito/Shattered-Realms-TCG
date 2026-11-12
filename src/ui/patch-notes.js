@@ -73,6 +73,9 @@ export const PATCH_NOTES = [
         { cards: [], text: 'Anyone who has one of your options can trade on the spot. Players can also make you a different offer, and you can accept it, decline it or counter with what you\'d want instead.' },
         { cards: [], text: 'Cards you put up are held until the trade ends, so they can\'t be traded twice. Trades last 7 days; take one down any time and your cards come back.' },
       ] },
+      { cat: 'qol', h: 'Shop art', list: [
+        { cards: [], text: 'Every realm has its own painted card pack, and the Legendary Pack is solid gold. Opening a pack now shakes it, bursts it open in a flash of light and deals your cards out. Points show as a gold coin, and the Shop has its own icon on the menu.' },
+      ] },
       { cat: 'qol', h: 'Matchmaking', list: [
         { cards: [], text: 'Quick Match and Ranked find you an opponent faster. The "play a bot while you wait" button has been retired for now.' },
       ] },

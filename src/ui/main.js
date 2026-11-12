@@ -2225,6 +2225,8 @@ function renderShop() {
   showMenuBackdrop(true);
   const opened = app.querySelector('.sh-opened');
   if (opened) fitAllText(opened);
+  // The opening animation plays once; a redraw after that shows the cards straight away.
+  if (shop.opened && !shop.opened.seen) { const o = shop.opened; setTimeout(() => { o.seen = true; }, 2200); }
 }
 const emptyBundle = () => ({ cards: [], points: 0 });
 function shopButton(name) {
@@ -2296,7 +2298,7 @@ function onServerMessage(msg) {
   switch (msg.t) {
     case 'pack':
       shop.busy = false;
-      shop.opened = { title: msg.faction === 'legendary' ? 'Legendary Pack' : `${msg.faction} pack`, cards: msg.cards };
+      shop.opened = { title: msg.faction === 'legendary' ? 'Legendary Pack' : `${msg.faction} pack`, cards: msg.cards, pack: msg.faction };
       sound.play('victory');
       return onShop && render();
     case 'bought':
@@ -2751,12 +2753,12 @@ function renderMenu() {
         <button data-act="tutorial" class="m2-link ${tutorialDone() ? '' : 'new-player'}">${icon('cap')}<span><b>Tutorial</b><small>New? Start here</small></span></button>
         <button data-act="howto" class="m2-link">${icon('book')}<span><b>How to play</b><small>Learn the basics</small></span></button>
         <button data-act="gallery" class="m2-link">${icon('cards')}<span><b>Collection</b><small>View your cards</small></span></button>
-        <button data-act="shop" class="m2-link">${icon('trophy')}<span><b>Shop</b><small>Dailies, packs &amp; trades</small></span></button>
+        <button data-act="shop" class="m2-link"><img class="ui-ico shop-ico" src="art/ui/shop/shop-icon.webp" alt=""><span><b>Shop</b><small>Dailies, packs &amp; trades</small></span></button>
         <button data-act="settings" class="m2-link">${icon('gear')}<span><b>Settings</b><small>Game &amp; account</small></span></button>
       </footer>
       <nav class="m2-tabbar">
         <button data-act="gallery">${icon('cards')}<span>Collection</span></button>
-        <button data-act="shop">${icon('trophy')}<span>Shop</span></button>
+        <button data-act="shop"><img class="ui-ico shop-ico" src="art/ui/shop/shop-icon.webp" alt=""><span>Shop</span></button>
         <button data-act="ai" class="m2-tab-play">${icon('play')}<span>Play</span></button>
         <button data-act="howto">${icon('book')}<span>Guide</span></button>
         <button data-act="patchNotes" class="${patchUnseen() ? 'has-new' : ''}">${icon('log')}<span>News</span></button>

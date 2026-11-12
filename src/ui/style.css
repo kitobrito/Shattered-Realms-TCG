@@ -350,7 +350,7 @@ body:not(.touch-ui) .my-hand .card:hover { z-index: 6; }
 .zoom-term.pending { border-color: var(--gold); }
 
 /* Foil on the zoomed card: a glint sweeps across when it opens / pages, then follows the mouse. */
-.zoom-foil { position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit; mix-blend-mode: screen; opacity: 0;
+.zoom-foil { position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit; opacity: 0;
   background:
     radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #ffffff2a, transparent 45%),
     linear-gradient(105deg, transparent 43%, #ffffff66 48.5%, #fff0c855 51%, #bfe8ff33 53.5%, transparent 57%) var(--fx, 50%) 0 / 260% 100% no-repeat;
@@ -6148,8 +6148,34 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 .sh-packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
 .sh-pack { display: grid; justify-items: center; gap: 4px; padding: 10px; border-radius: 10px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .1); text-align: center; }
 .sh-pack.complete { opacity: .7; }
-.sh-pack-ico { font-size: 26px; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; border: 2px solid rgba(255, 211, 106, .55); box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
-.sh-pack-ico img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.sh-pack-art { height: 150px; width: auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6)); transition: transform .25s ease, filter .25s ease; transform: rotate(-3deg); }
+.sh-pack:hover .sh-pack-art { transform: rotate(0) translateY(-6px) scale(1.04); filter: drop-shadow(0 10px 16px rgba(0, 0, 0, .7)) brightness(1.08); }
+.sh-legend-art { height: 170px; width: auto; filter: drop-shadow(0 0 18px rgba(255, 196, 70, .55)) drop-shadow(0 8px 12px rgba(0, 0, 0, .6)); animation: sh-legend-float 3.2s ease-in-out infinite; }
+@keyframes sh-legend-float { 50% { transform: translateY(-6px) rotate(1.5deg); } }
+.sh-legendary > div { flex: 1 1 260px; }
+/* The points coin: in the counter, on every price, reward and recycle value. */
+.sh-coin { width: 1.25em; height: 1.25em; vertical-align: -0.28em; margin-right: .3em; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+.sh-points .sh-coin { width: 26px; height: 26px; align-self: center; margin-right: 0; }
+.sh-pts .sh-coin { width: 1.1em; height: 1.1em; }
+.m2 .shop-ico { object-fit: contain; stroke: none; border-radius: 6px; }
+/* Opening a pack: the wrapper shakes, flashes and bursts, then the cards are dealt in. */
+.sh-rip { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 3; }
+.sh-rip-pack { grid-area: 1 / 1; height: min(56vh, 420px); filter: drop-shadow(0 0 30px rgba(255, 220, 140, .6)); animation: sh-rip-pack 1.15s ease-in forwards; }
+.sh-burst { grid-area: 1 / 1; width: min(110vmin, 900px); opacity: 0; animation: sh-burst 1.4s .8s ease-out forwards; }
+@keyframes sh-rip-pack {
+  0% { transform: scale(.6) rotate(-6deg); opacity: 0; }
+  18% { transform: scale(1) rotate(0); opacity: 1; }
+  30%, 50%, 70% { transform: scale(1.02) rotate(-3deg); }
+  40%, 60% { transform: scale(1.04) rotate(3deg); }
+  78% { transform: scale(1.08) rotate(0); filter: brightness(2.2) drop-shadow(0 0 40px #fff); opacity: 1; }
+  100% { transform: scale(1.5); filter: brightness(4); opacity: 0; }
+}
+@keyframes sh-burst { 0% { opacity: 0; transform: scale(.4) rotate(0); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3) rotate(25deg); } }
+.sh-opened .unlock-panel { animation: sh-panel-in .45s 1s both; }
+.sh-opened .unlock-card:nth-child(n) { animation-delay: calc(var(--k, 0) * 0.12s + 1.15s); }
+.sh-opened.seen .unlock-panel, .sh-opened.seen .unlock-card:nth-child(n) { animation: none; }
+@keyframes sh-panel-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sh-rip { display: none; } .sh-opened .unlock-panel, .sh-opened .unlock-card:nth-child(n) { animation-delay: 0s; } }
 .sh-pack b { color: #f3ead6; font-size: 14px; }
 .sh-pack small { color: #a99fbd; font-size: 12px; }
 .sh-pack button { width: 100%; }
@@ -6195,7 +6221,6 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 .sh-opened .unlock-panel { width: min(900px, calc(100vw - 24px)); }
 .sh-opened .unlock-row { flex-wrap: wrap; gap: 12px 10px; }
 .sh-opened .unlock-card .card { width: clamp(110px, 19vw, 170px); }
-.sh-opened .unlock-card:nth-child(n) { animation-delay: calc(var(--k, 0) * 0.12s + 0.15s); }
 @media (max-width: 560px) { .sh-opened .unlock-card .card { width: calc((100vw - 80px) / 3); } .sh-opened .unlock-row { gap: 8px 6px; } }
 /* Buy cards: single cards and boards for points. */
 .sh-realm select { margin-left: 6px; padding: 5px 10px; border-radius: 6px; background: #0b0914; color: #f3ead6; border: 1px solid rgba(255, 255, 255, .25); font: inherit; }
