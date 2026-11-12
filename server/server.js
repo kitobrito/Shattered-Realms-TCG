@@ -22,7 +22,7 @@ import { openStore } from './store.js';
 import { POLLS } from '../src/polls.js';
 import { newsFeed } from './news-feed.js';
 import { chooseAction } from '../src/ai/smart.js';
-import { awardWinUnlocks, buyBoard, buyCard, economyView, grantStartPoints, importCards, openLegendaryPack, openPack, recordPublicWin, recycle } from './economy.js';
+import { awardWinUnlocks, buyBoard, buyCard, buyPack, openStoredPack, economyView, grantStartPoints, importCards, openLegendaryPack, openPack, countsForDailies, recordPublicGame, recycle } from './economy.js';
 import { botEntry, botThinkMs, ensureBots, simulateBotGames } from './bots.js';
 import { addOffer, bundleText, cleanBundle, counter, giveCard, listingView, newListing, removeOffer, swap } from './trades.js';
 
@@ -415,10 +415,11 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
           if (won) acc.rankedWins++; else acc.rankedLosses++;
           acc.rating = newRating(ratings[seat], ratings[1 - seat], won);
         }
-        // A win unlocks cards (up to the free 10 per realm) and, in Quick Match or Ranked, counts for dailies.
-        if (won && !acc.bot) {
-          unlocked[seat] = awardWinUnlocks(acc, game.factions[seat]);
-          dailies[seat] = recordPublicWin(acc, { mode: game.mode, factions: game.factions[seat] });
+        // A win unlocks cards (up to the free 10 per realm). Every finished Quick Match or Ranked game,
+        // won or lost, counts for dailies (if it ended normally or lasted a few turns).
+        if (won && !acc.bot) unlocked[seat] = awardWinUnlocks(acc, game.factions[seat]);
+        if (!acc.bot && countsForDailies(reason, game.state?.turn)) {
+          dailies[seat] = recordPublicGame(acc, { mode: game.mode, factions: game.factions[seat] });
         }
         await store.save(acc);
       }
@@ -504,13 +505,22 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       }
       case 'concede': return onConcede(conn);
       // ---- Card economy (server/economy.js).
+      // Buying a pack puts it in the player's pack collection; opening one is a separate step.
       case 'buyPack': return withLock(async () => {
         const acc = await store.get(conn.key);
-        // faction 'legendary': the Legendary Pack (any realm, a guaranteed legendary).
-        const r = msg.faction === 'legendary' ? openLegendaryPack(acc) : openPack(acc, String(msg.faction ?? ''));
+        const kind = msg.faction === 'legendary' ? 'legendary' : String(msg.faction ?? '');
+        const r = buyPack(acc, kind);
         if (r.error) return send(conn, { t: 'reject', msg: r.error });
         await store.save(acc);
-        send(conn, { t: 'pack', faction: msg.faction, cards: r.cards, you: await youOf(acc) });
+        send(conn, { t: 'packBought', kind, you: await youOf(acc) });
+      });
+      case 'openPack': return withLock(async () => {
+        const acc = await store.get(conn.key);
+        const kind = msg.kind === 'legendary' ? 'legendary' : String(msg.kind ?? '');
+        const r = openStoredPack(acc, kind);
+        if (r.error) return send(conn, { t: 'reject', msg: r.error });
+        await store.save(acc);
+        send(conn, { t: 'pack', faction: kind, cards: r.cards, you: await youOf(acc) });
       });
       // Buy a single card ({ id }) or an alternate board ({ board }) for points.
       case 'buyCard': case 'buyBoard': return withLock(async () => {

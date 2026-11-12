@@ -129,7 +129,7 @@ export function missionsPanelHTML(state, ctx) {
   } else {
     const e = ctx.economy;
     body = `<div class="dm-row"><h2>Daily missions</h2><span class="dm-sub">New missions in ${hhmm(e.resetsIn)}</span></div>
-      <p class="dm-sub">Win Quick Match or Ranked games to complete them. Each pays <b>${e.rules.dailyPoints} points</b>.</p>
+      <p class="dm-sub">Play Quick Match or Ranked games to complete them, win or lose. Each pays <b>${e.rules.dailyPoints} points</b>.</p>
       <ul class="dm-list">${e.dailies.map((m, i) => `<li class="dm-mission ${m.done ? 'done' : ''}" style="--i:${i}">
         ${missionCardHTML(m)}
         ${m.done ? '<em class="dm-done">✔ Done</em>' : `<button class="gold dm-play" data-act="dmPlay:${i}">${icon('play')}<span>Play</span></button>`}

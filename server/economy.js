@@ -67,18 +67,21 @@ const pick = (r, list) => list[Math.floor(r() * list.length)];
 // The mission kinds. Each says what a win must look like to count, and how it reads.
 const KINDS = {
   fusion: { need: 3, make: (r) => { const a = pick(r, PLAYABLE_FACTIONS); let b = pick(r, PLAYABLE_FACTIONS); while (b === a) b = pick(r, PLAYABLE_FACTIONS); return { factions: [a, b].sort() }; },
-    text: (m) => `Win ${m.need} public games with the ${m.factions[0]} + ${m.factions[1]} fusion`,
+    text: (m) => `Play ${m.need} public games with the ${m.factions[0]} + ${m.factions[1]} fusion`,
     counts: (m, w) => w.factions.length === 2 && m.factions.every((f) => w.factions.includes(f)) },
   faction: { need: 3, make: (r) => ({ faction: pick(r, PLAYABLE_FACTIONS) }),
-    text: (m) => `Win ${m.need} public games with ${m.faction} in your deck`,
+    text: (m) => `Play ${m.need} public games with ${m.faction} in your deck`,
     counts: (m, w) => w.factions.includes(m.faction) },
-  ranked: { need: 2, make: () => ({}), text: (m) => `Win ${m.need} Ranked games`, counts: (m, w) => w.mode === 'ranked' },
-  single: { need: 3, make: () => ({}), text: (m) => `Win ${m.need} public games with a single-realm deck`, counts: (m, w) => w.factions.length === 1 },
-  pair: { need: 3, make: () => ({}), text: (m) => `Win ${m.need} public games with a two-realm deck`, counts: (m, w) => w.factions.length === 2 },
-  any: { need: 4, make: () => ({}), text: (m) => `Win ${m.need} Quick Match or Ranked games`, counts: () => true },
+  ranked: { need: 2, make: () => ({}), text: (m) => `Play ${m.need} Ranked games`, counts: (m, w) => w.mode === 'ranked' },
+  single: { need: 3, make: () => ({}), text: (m) => `Play ${m.need} public games with a single-realm deck`, counts: (m, w) => w.factions.length === 1 },
+  pair: { need: 3, make: () => ({}), text: (m) => `Play ${m.need} public games with a two-realm deck`, counts: (m, w) => w.factions.length === 2 },
+  any: { need: 4, make: () => ({}), text: (m) => `Play ${m.need} Quick Match or Ranked games`, counts: () => true },
 };
 
 // The 4 missions for this player on this day: always a fusion mission, then three different others.
+// A mission's text in the current wording (missions made before a wording change say it the new way too).
+const missionText = (m) => { try { return KINDS[m.kind]?.text(m) ?? m.text; } catch { return m.text; } };
+
 export function makeDailies(key, day) {
   const r = rng(`${key}:${day}`);
   const kinds = ['fusion'];
@@ -112,17 +115,26 @@ export function refreshDailies(acc, now = Date.now()) {
 
 // A win in a public game: advance every mission it counts for; pay for the ones it completes.
 // win: { mode: 'quick' | 'ranked', factions: [...] }. Returns the missions completed by this win.
-export function recordPublicWin(acc, win, now = Date.now()) {
+// A game counts for dailies if it ended normally, or lasted at least DAILY_MIN_TURNS turns (so quitting
+// on turn 1 over and over doesn't farm points).
+export const DAILY_MIN_TURNS = 6;
+export const countsForDailies = (reason, turns) => reason === 'normal' || (Number(turns) || 0) >= DAILY_MIN_TURNS;
+
+// A finished public game, won or lost: advance every mission it counts for; pay for the ones it completes.
+// game: { mode: 'quick' | 'ranked', factions: [...] }. Returns the missions completed by this game.
+export function recordPublicGame(acc, win, now = Date.now()) {
   if (win.mode !== 'quick' && win.mode !== 'ranked') return [];
   refreshDailies(acc, now);
   const completed = [];
   for (const m of acc.dailies.list) {
     if (m.done || !KINDS[m.kind]?.counts(m, win)) continue;
     m.progress = Math.min(m.need, m.progress + 1);
-    if (m.progress >= m.need) { m.done = true; acc.points = (acc.points ?? 0) + DAILY_POINTS; completed.push({ id: m.id, text: m.text, points: DAILY_POINTS }); }
+    if (m.progress >= m.need) { m.done = true; acc.points = (acc.points ?? 0) + DAILY_POINTS; completed.push({ id: m.id, text: missionText(m), points: DAILY_POINTS }); }
   }
   return completed;
 }
+
+export const recordPublicWin = recordPublicGame; // the old name
 
 const ownedSet = (acc) => new Set(acc.cards ?? []);
 export const ownedIn = (acc, faction) => { const have = ownedSet(acc); return expansionOf(faction).filter((c) => have.has(c.id)).length; };
@@ -148,12 +160,13 @@ export function awardWinUnlocks(acc, factions, random = Math.random) {
 }
 
 // Open a pack of a realm. Returns { cards: [{ id, duplicate }] } or { error }.
-export function openPack(acc, faction, random = Math.random) {
+// Open a realm pack. charge: false opens one the player already bought (buyPack / openStoredPack).
+export function openPack(acc, faction, random = Math.random, { charge = true } = {}) {
   if (!PLAYABLE_FACTIONS.includes(faction)) return { error: 'Pick a realm.' };
-  if ((acc.points ?? 0) < PACK_COST) return { error: `A pack costs ${PACK_COST} points. You have ${acc.points ?? 0}.` };
+  if (charge && (acc.points ?? 0) < PACK_COST) return { error: `A pack costs ${PACK_COST} points. You have ${acc.points ?? 0}.` };
   const all = expansionOf(faction);
   const have = ownedSet(acc);
-  acc.points -= PACK_COST;
+  if (charge) acc.points -= PACK_COST;
   acc.dupes ??= {};
   const cards = [];
   for (let i = 0; i < PACK_SIZE; i++) {
@@ -173,11 +186,11 @@ export function openPack(acc, faction, random = Math.random) {
 }
 
 // Open the Legendary Pack. Returns { cards: [{ id, duplicate }] } or { error }.
-export function openLegendaryPack(acc, random = Math.random) {
-  if ((acc.points ?? 0) < LEGENDARY_PACK_COST) return { error: `The Legendary Pack costs ${LEGENDARY_PACK_COST} points. You have ${acc.points ?? 0}.` };
+export function openLegendaryPack(acc, random = Math.random, { charge = true } = {}) {
+  if (charge && (acc.points ?? 0) < LEGENDARY_PACK_COST) return { error: `The Legendary Pack costs ${LEGENDARY_PACK_COST} points. You have ${acc.points ?? 0}.` };
   const all = extras();
   const have = ownedSet(acc);
-  acc.points -= LEGENDARY_PACK_COST;
+  if (charge) acc.points -= LEGENDARY_PACK_COST;
   acc.dupes ??= {};
   const legendaries = all.filter((c) => c.legendary);
   const freshLegendaries = legendaries.filter((c) => !have.has(c.id));
@@ -240,6 +253,29 @@ export function buyBoard(acc, id) {
   return { id, faction: f.faction, price: BOARD_PRICE };
 }
 
+// The pack collection: a bought pack waits in acc.packs ([{ kind, bought }], kind = a realm or
+// 'legendary') until the player opens it.
+export const MAX_STORED_PACKS = 200;
+export function buyPack(acc, kind) {
+  const legendary = kind === 'legendary';
+  if (!legendary && !PLAYABLE_FACTIONS.includes(kind)) return { error: 'Pick a realm.' };
+  const cost = legendary ? LEGENDARY_PACK_COST : PACK_COST;
+  if ((acc.points ?? 0) < cost) return { error: `${legendary ? 'The Legendary Pack costs' : 'A pack costs'} ${cost} points. You have ${acc.points ?? 0}.` };
+  if ((acc.packs ?? []).length >= MAX_STORED_PACKS) return { error: `You can keep ${MAX_STORED_PACKS} unopened packs. Open some first.` };
+  acc.points -= cost;
+  acc.packs = [...(acc.packs ?? []), { kind, bought: Date.now() }];
+  return { kind, cost };
+}
+export function openStoredPack(acc, kind, random = Math.random) {
+  const i = (acc.packs ?? []).findIndex((p) => p.kind === kind);
+  if (i < 0) return { error: kind === 'legendary' ? "You don't have a Legendary Pack to open." : `You don't have a ${kind} pack to open.` };
+  const r = kind === 'legendary' ? openLegendaryPack(acc, random, { charge: false }) : openPack(acc, kind, random, { charge: false });
+  if (r.error) return r;
+  acc.packs.splice(i, 1);
+  return r;
+}
+const packCounts = (acc) => (acc.packs ?? []).reduce((m, p) => ({ ...m, [p.kind]: (m[p.kind] ?? 0) + 1 }), {});
+
 export const recycleValue = (id) => (getCard(id)?.legendary ? RECYCLE.legendary : RECYCLE.normal);
 
 // Recycle duplicates: { id, count } (count defaults to all of that card), or all: true for every one.
@@ -280,7 +316,8 @@ export function economyView(acc, now = Date.now()) {
     cards: acc.cards ?? [],
     dupes: acc.dupes ?? {},
     boards: acc.boards ?? [],
-    dailies: acc.dailies.list.map(({ id, kind, text, need, progress, done, factions, faction }) => ({ id, kind, text, need, progress, done, points: DAILY_POINTS, ...(factions ? { factions } : {}), ...(faction ? { faction } : {}) })),
+    packs: packCounts(acc),
+    dailies: acc.dailies.list.map(({ id, kind, text, need, progress, done, factions, faction }) => ({ id, kind, text: missionText({ kind, text, need, factions, faction }), need, progress, done, points: DAILY_POINTS, ...(factions ? { factions } : {}), ...(faction ? { faction } : {}) })),
     resetsIn: msUntilReset(now),
     cardsImported: !!acc.cardsImported,
     rules: { packCost: PACK_COST, legendaryPackCost: LEGENDARY_PACK_COST, packSize: PACK_SIZE, freePerFaction: FREE_PER_FACTION, recycle: RECYCLE, dailyPoints: DAILY_POINTS, legendaryChance: LEGENDARY_CHANCE, cardPrice: CARD_PRICE, boardPrice: BOARD_PRICE },

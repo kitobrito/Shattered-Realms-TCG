@@ -10,11 +10,11 @@ import { startServer } from '../server/server.js';
 import { openStore } from '../server/store.js';
 import {
   BOARD_PRICE, CARD_PRICE, DAILIES_PER_DAY, DAILY_POINTS, FREE_PER_FACTION, LEGENDARY_PACK_COST, PACK_COST, PACK_SIZE, RECYCLE, awardWinUnlocks, dayOf, expansionOf,
-  makeDailies, openLegendaryPack, openPack, recordPublicWin, recycle, refreshDailies,
+  makeDailies, openLegendaryPack, openPack, recordPublicWin, recordPublicGame, countsForDailies, DAILY_MIN_TURNS, economyView, recycle, refreshDailies,
 } from '../server/economy.js';
 import { BOT_NAMES } from '../server/bots.js';
 import { actingPlayer, applyAction, getLegalActions } from '../src/engine/engine.js';
-import { allCards, restoreCustomCards } from '../src/engine/registry.js';
+import { allCards, getCard as getCardServer, restoreCustomCards } from '../src/engine/registry.js';
 import { FACTION_DECKS } from '../src/cards/index.js';
 
 process.env.QUIET = '1';
@@ -77,6 +77,28 @@ await test('A day that started with 4 missions gets the 5th added, keeping progr
   if (a.dailies.list.length !== 5) return `${a.dailies.list.length} missions`;
   if (a.dailies.list[0].progress !== 2) return 'progress lost';
   if (JSON.stringify(a.dailies.list.map((m) => m.kind)) !== JSON.stringify(full)) return 'different missions';
+});
+
+await test('Dailies count games played, win or lose; quitting in the first turns does not count', () => {
+  if (!makeDailies('someone', '2026-11-12').every((m) => m.text.startsWith('Play '))) return 'missions still say Win';
+  if (!countsForDailies('normal', 2)) return 'a game that ended normally must count';
+  if (countsForDailies('concede', 2) || countsForDailies('disconnect', DAILY_MIN_TURNS - 1)) return 'an early quit counted';
+  if (!countsForDailies('concede', DAILY_MIN_TURNS) || !countsForDailies('timeout', 9)) return 'a long game that ended by a quit must count';
+  const a = acc();
+  const t0 = Date.parse('2026-11-12T10:00:00Z');
+  refreshDailies(a, t0);
+  const any = a.dailies.list.find((m) => m.kind === 'any');
+  if (!any) return 'no any-game mission today';
+  recordPublicGame(a, { mode: 'quick', factions: ['Bees'] }, t0); // a loss is recorded just the same
+  if (any.progress !== 1) return `progress ${any.progress}`;
+});
+
+await test('Missions handed out with the old "Win" wording show the new wording', () => {
+  const a = acc();
+  refreshDailies(a, Date.parse('2026-11-12T10:00:00Z'));
+  a.dailies.list.forEach((m) => { m.text = m.text.replace(/^Play /, 'Win '); });
+  const view = economyView(a, Date.parse('2026-11-12T11:00:00Z'));
+  if (!view.dailies.every((m) => m.text.startsWith('Play '))) return JSON.stringify(view.dailies.map((m) => m.text));
 });
 
 await test('Dailies pay 80 points only when completed, only for public wins; an unfinished one is gone the next day', () => {
@@ -172,11 +194,27 @@ await test('The account carries the economy: points, cards, 4 dailies, the reset
   if (!e || e.points !== 1000 || !Array.isArray(e.cards) || e.dailies.length !== DAILIES_PER_DAY || !(e.resetsIn > 0)) return JSON.stringify(e).slice(0, 200);
 });
 
-await test('Buying a pack through the server spends points and returns 7 cards', async () => {
-  await edit('alicia', (a) => { a.points = 400; });
+await test('Buying a pack puts it in Your packs unopened; opening it gives 7 cards, one pack at a time', async () => {
+  await edit('alicia', (a) => { a.points = 1000; a.packs = []; });
   await alice.send({ t: 'buyPack', faction: 'Robots' });
+  let m = await alice.next('packBought');
+  if (m.you.economy.points !== 840 || m.you.economy.packs.Robots !== 1) return JSON.stringify(m.you.economy.packs);
+  await alice.send({ t: 'buyPack', faction: 'Robots' });
+  await alice.next('packBought');
+  await alice.send({ t: 'buyPack', faction: 'legendary' });
+  m = await alice.next('packBought');
+  const packs = m.you.economy.packs;
+  if (packs.Robots !== 2 || packs.legendary !== 1 || m.you.economy.points !== 40) return JSON.stringify({ packs, pts: m.you.economy.points });
+  const cardsBefore = ((await store.get('alicia')).cards ?? []).length;
+  await alice.send({ t: 'openPack', kind: 'Robots' });
   const p = await alice.next('pack');
-  if (p.cards.length !== 7 || p.you.economy.points !== 240) return JSON.stringify({ n: p.cards.length, pts: p.you.economy.points });
+  if (p.cards.length !== 7 || p.you.economy.packs.Robots !== 1 || p.you.economy.points !== 40) return JSON.stringify({ n: p.cards.length, packs: p.you.economy.packs, pts: p.you.economy.points });
+  if (((await store.get('alicia')).cards ?? []).length <= cardsBefore) return 'no cards added';
+  await alice.send({ t: 'openPack', kind: 'legendary' });
+  const l = await alice.next('pack');
+  if (!l.cards.some((c) => getCardServer(c.id)?.legendary) || l.you.economy.packs.legendary) return 'legendary pack wrong';
+  await alice.send({ t: 'openPack', kind: 'Bees' });
+  if (!/don't have a Bees pack/.test((await alice.next('reject')).msg)) return 'opened a pack the player does not have';
   await edit('bobby', (a) => { a.points = 20; });
   await bob.send({ t: 'buyPack', faction: 'Robots' });
   const no = await bob.next('reject');
