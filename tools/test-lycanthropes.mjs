@@ -99,6 +99,42 @@ test('Each Lycanthrope transforms by button only once per turn; again next turn'
   if (!canTransform(m)) return 'could not transform on the next turn';
 });
 
+test('Beast Form lasts 2 of your turns, then turns back by itself at the end of your turn', () => {
+  const m = put(0, 'moonbound_initiate');
+  transform(0, m);
+  if (form(m) !== 'beast' || m.beastTurnsLeft !== 2) return `form ${form(m)}, turns left ${m.beastTurnsLeft}`;
+  endTurn(); // end of your 1st turn in Beast Form
+  if (form(m) !== 'beast' || m.beastTurnsLeft !== 1) return `after one turn: ${form(m)} ${m.beastTurnsLeft}`;
+  endTurn(); // the opponent's turn doesn't count
+  if (form(m) !== 'beast' || m.beastTurnsLeft !== 1) return `after the opponent's turn: ${form(m)} ${m.beastTurnsLeft}`;
+  endTurn(); // end of your 2nd turn: back to Humanoid
+  if (form(m) !== 'human' || m.beastTurnsLeft != null) return `after two of your turns: ${form(m)} ${m.beastTurnsLeft}`;
+});
+
+test('Turning back by itself counts as a Transform ("whenever ... transforms" happens)', () => {
+  const vet = put(0, 'redmoon_veteran'); // Humanoid: whenever another friendly Lycanthrope transforms, +1 Health
+  const m = put(0, 'moonbound_initiate');
+  transform(0, m);
+  const hp = vet.maxHealth;
+  endTurn(); endTurn(); endTurn();
+  if (form(m) !== 'human') return 'did not turn back';
+  if (vet.maxHealth !== hp + 1) return `Redmoon Veteran ${hp} -> ${vet.maxHealth} (the turn back should count as a Transform)`;
+});
+
+test('Turning back by itself doesn\'t use up the Transform button; transforming back early still works', () => {
+  const m = put(0, 'moonbound_initiate');
+  transform(0, m);
+  endTurn(); endTurn();
+  transform(0, m); // back to Humanoid early, by hand
+  if (form(m) !== 'human' || m.beastTurnsLeft != null) return `manual turn back: ${form(m)} ${m.beastTurnsLeft}`;
+  const n = put(0, 'silverclaw_stalker');
+  transform(0, n);
+  endTurn(); endTurn(); endTurn(); // n turns back at the end of this turn
+  if (form(n) !== 'human') return 'did not turn back';
+  endTurn(); // the owner's next turn
+  if (!canTransform(n)) return 'could not transform after turning back';
+});
+
 test('Damage carries over but a Transform never kills (at least 1 Health)', () => {
   const m = put(0, 'silverclaw_stalker'); // 2/3 -> 3/2
   m.health = 1; // took 2 damage

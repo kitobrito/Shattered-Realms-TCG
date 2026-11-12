@@ -226,6 +226,10 @@ export function pullFromEnemyDeck(state, p, uid, collapse) {
 // difference between the two printed stat lines is applied on top, damage stays (but never
 // kills: at least 1 Health is left), and so do buffs and granted keywords.
 export const formOf = (m) => getCard(m.cardId)?.form ?? null;
+// Beast Form is temporary: it lasts for BEAST_TURNS of its controller's turns (counting the turn it
+// transformed), then the minion turns back at the end of that turn (engine.js beastWane). Turning
+// back is a real Transform, so "whenever this transforms" effects happen.
+export const BEAST_TURNS = 2;
 export function canShift(m) {
   const card = m && m.kind === 'minion' ? getCard(m.cardId) : null;
   return !!(card && (card.beastForm || card.humanForm) && m.health > 0 && !m.destroyed);
@@ -262,6 +266,7 @@ export function shiftMinion(state, m, to = null) {
   const oldSt = old.statics ?? [];
   m.statics = [...(m.statics ?? []).filter((x) => !oldSt.includes(x)), ...(nw.statics ?? [])];
   m.cardId = intoId;
+  if (nw.form === 'beast') m.beastTurnsLeft = BEAST_TURNS; else delete m.beastTurnsLeft;
   log(state, `🌕 ${old.name} transforms into its ${nw.form === 'beast' ? 'Beast' : 'Humanoid'} Form!`);
   emit(state, { type: 'minionTransformed', source: m.uid, player: m.controller, form: nw.form });
   return true;

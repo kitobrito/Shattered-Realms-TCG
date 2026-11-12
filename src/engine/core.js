@@ -747,6 +747,8 @@ export function summonMinion(state, p, cardId, opts = {}) {
     return null;
   }
   const m = createMinion(state, cardId, p);
+  // A Lycanthrope summoned straight into Beast Form wears it for 2 turns too (effects.js BEAST_TURNS).
+  if (getCard(cardId).form === 'beast' && getCard(cardId).humanForm) m.beastTurnsLeft = 2;
   if (opts.attack != null) m.attack = opts.attack;
   if (opts.health != null) { m.health = opts.health; m.maxHealth = opts.health; }
   for (const k of opts.keywords ?? []) if (!m.keywords.includes(k)) m.keywords.push(k);

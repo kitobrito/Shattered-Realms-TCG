@@ -1025,9 +1025,28 @@ const STEPS = {
       { kind: 'storm', player: p },
       { kind: 'extinction', player: p },
       { kind: 'circleEnd', player: p },
+      { kind: 'beastWane', player: p },
       { kind: 'deaths' },
       { kind: 'cleanup', player: p },
       { kind: 'startTurn', player: opponentOf(p) },
+    ]);
+  },
+
+  // Lycanthropes: Beast Form wears off. Each of this player's Beast Forms counts down one of their
+  // turns; at 0 it turns back into its Humanoid Form, as a Transform (its "whenever this
+  // transforms" effects happen). It doesn't use up the once-per-turn Transform.
+  beastWane(state, { player: p }) {
+    const back = [];
+    for (const m of state.players[p].board) {
+      if (!(m.beastTurnsLeft > 0) || m.health <= 0 || m.destroyed) continue;
+      m.beastTurnsLeft -= 1;
+      if (m.beastTurnsLeft === 0) back.push(m);
+    }
+    if (!back.length) return;
+    for (const m of back) log(state, `🌘 ${nameOf(state, m)}'s Beast Form wears off.`);
+    pushFront(state, [
+      ...back.map((m) => ({ kind: 'effect', effect: { op: 'shift', target: { uid: m.uid }, to: 'human' }, ctx: { self: m.uid, controller: p } })),
+      { kind: 'deaths' },
     ]);
   },
 

@@ -88,6 +88,25 @@ export const PATCH_NOTES = [
     ],
   },
   {
+    id: '2026-11-12-lycan',
+    date: 'November 12',
+    title: 'Beast Form wears off',
+    tag: 'Rules change',
+    intro: 'A Lycanthrope\'s Beast Form is now temporary: it lasts 2 of your turns, then the beast turns back by itself.',
+    blocks: [
+      { cat: 'change', h: 'Lycanthropes', list: [
+        { cards: ['moonbound_initiate', 'redmoon_veteran'], text: 'Beast Form now lasts 2 of your turns, counting the turn it transformed. At the end of your second turn it turns back into its Humanoid Form by itself. A moon on the minion shows how many of your turns it has left.',
+          why: 'Beast Forms used to stay out forever, so a Lycanthrope transformed once and never looked back. Now timing the transform matters, and the payoffs for going back and forth come up far more often.' },
+        { cards: ['redmoon_veteran'], text: 'Turning back by itself counts as a Transform, so every "whenever this transforms" and "whenever a friendly Lycanthrope transforms" effect happens, including the heals for going back to Humanoid. It doesn\'t use up your once-per-turn Transform, and you can still Transform back early by hand.' },
+      ] },
+    ],
+    details: [
+      'Beast Form lasts 2 of its controller\'s turns (the turn it transformed counts as the first). It turns back at the end of the second one; the opponent\'s turns don\'t count.',
+      'The automatic turn back is a Transform: all transform triggers happen. It doesn\'t use the once-per-turn Transform button.',
+      'Transforming into Beast Form again (by hand or with a card) starts a fresh 2 turns. A Lycanthrope summoned straight into Beast Form also gets 2 turns.',
+    ],
+  },
+  {
     id: '2026-11-12-chasm',
     date: 'November 12',
     title: 'The Great Chasm Beyond',
