@@ -52,7 +52,7 @@ export function shopHTML(shop, signedIn) {
 
 function dailiesHTML(e) {
   return `<section class="sh-panel"><div class="sh-row"><h2>Daily missions</h2><span class="sh-sub">New missions in ${hhmm(e.resetsIn)}</span></div>
-    <p class="sh-sub">Win Quick Match or Ranked games to complete them. Each pays <b>${e.rules.dailyPoints} points</b>. Missions you don't finish today are replaced tomorrow.</p>
+    <p class="sh-sub">Play Quick Match or Ranked games to complete them, win or lose. Each pays <b>${e.rules.dailyPoints} points</b>. Missions you don't finish today are replaced tomorrow.</p>
     <ul class="dm-list sh-dailies-big">${e.dailies.map((m, i) => `<li class="dm-mission ${m.done ? 'done' : ''}" style="--i:${i}">
       ${missionCardHTML(m)}${m.done ? '<em class="dm-done">✔ Done</em>' : ''}</li>`).join('')}</ul>
     <p class="sh-sub">Winning still unlocks cards too, until you own ${e.rules.freePerFaction} of a realm's expansion cards. The rest of a realm come from its packs.</p></section>`;
@@ -67,13 +67,22 @@ function packsHTML(shop, e) {
       <img class="sh-pack-art" src="${packArt(f)}" alt="" draggable="false"><b>${esc(f)}</b><small>${have} / ${all.length} owned</small>
       <button data-act="shopBuy:${esc(f)}" class="${e.points >= r.packCost ? 'gold' : 'ghost'}" ${e.points >= r.packCost && !shop.busy ? '' : 'disabled'}>${price(r.packCost)}</button></div>`;
   };
-  return `<section class="sh-panel sh-legendary">
+  // Packs bought but not opened yet, one tile per kind; open them one at a time.
+  const unopened = Object.entries(e.packs ?? {}).filter(([, n]) => n > 0)
+    .sort(([a], [b]) => (a === 'legendary' ? -1 : b === 'legendary' ? 1 : a.localeCompare(b)));
+  const yours = `<section class="sh-panel sh-yours"><div class="sh-row"><h2>Your packs</h2><span class="sh-sub">${unopened.length ? `${unopened.reduce((n, [, k]) => n + k, 0)} unopened` : 'Packs you buy wait here until you open them'}</span></div>
+    ${unopened.length ? `<div class="sh-owned-packs">${unopened.map(([kind, n]) => `<div class="sh-owned-pack ${kind === 'legendary' ? 'legendary' : ''}">
+      <img src="${packArt(kind)}" alt="" draggable="false"><i class="sh-owned-count">×${n}</i>
+      <b>${kind === 'legendary' ? 'Legendary Pack' : esc(kind)}</b>
+      <button class="gold" data-act="shopOpen:${esc(kind)}" ${shop.busy ? 'disabled' : ''}>Open</button></div>`).join('')}</div>`
+    : '<p class="sh-sub">Buy a pack below and it lands here. Open it whenever you like.</p>'}</section>`;
+  return `${yours}<section class="sh-panel sh-legendary">
       <img class="sh-legend-art" src="${packArt('legendary')}" alt="" draggable="false">
       <div><h2>Legendary Pack</h2><p>${r.packSize} cards from <b>any realm</b>, completely random, with at least one <b>guaranteed legendary</b> (one you don't own yet, while there are any).</p></div>
       <button data-act="shopBuy:legendary" class="${e.points >= r.legendaryPackCost ? 'gold' : 'ghost'}" ${e.points >= r.legendaryPackCost && !shop.busy ? '' : 'disabled'}>${price(r.legendaryPackCost)}</button>
     </section>
     <section class="sh-panel"><div class="sh-row"><h2>Realm packs</h2><span class="sh-sub">${r.packSize} cards · ${Math.round(r.legendaryChance * 100)}% legendary chance per card</span></div>
-    <p class="sh-sub">Cards from the realm you pick, mostly ones you don't have yet. A card you already own is a duplicate: recycle it for points or trade it.</p>
+    <p class="sh-sub">Bought packs go to Your packs above. Cards come from the realm you pick, mostly ones you don't have yet. A card you already own is a duplicate: recycle it for points or trade it.</p>
     <div class="sh-packs">${PLAYABLE_FACTIONS.map(realm).join('')}</div></section>`;
 }
 

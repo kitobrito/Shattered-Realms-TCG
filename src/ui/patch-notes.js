@@ -41,6 +41,27 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12-dailies-play',
+    date: 'November 12',
+    title: 'Daily missions: just play, and a pack collection',
+    tag: 'Change',
+    intro: 'Daily missions now count every Quick Match or Ranked game you play, win or lose, and the packs you buy are saved for you to open whenever you like.',
+    blocks: [
+      { cat: 'qol', h: 'Your packs', list: [
+        { cards: [], text: 'Buying a pack no longer opens it straight away. It goes into Your packs at the top of the Shop\'s Packs tab, where you can open your packs one at a time, whenever you want.' },
+      ] },
+      { cat: 'change', h: 'Daily missions', list: [
+        { cards: [], text: 'Missions now say "Play 3 public games with..." instead of "Win 3...". Every Quick Match or Ranked game you finish with the right deck counts, whether you win or lose.',
+          why: 'Missions are there to get you trying new realms and fusions. Losing while you learn a new deck shouldn\'t cost you your daily points.' },
+        { cards: [], text: 'A game counts once it ends normally, or after 6 turns (3 each) if someone quits. Conceding straight away doesn\'t count.' },
+        { cards: [], text: 'Today\'s missions have switched to the new wording, and your progress so far is kept.' },
+      ] },
+    ],
+    details: [
+      'Both players\' missions advance at the end of a Quick Match or Ranked game. Wins still unlock cards (up to 10 per realm) as before. Draws don\'t count.',
+    ],
+  },
+  {
     id: '2026-11-12-dailies-menu',
     date: 'November 12',
     title: 'Daily missions on the main menu',
