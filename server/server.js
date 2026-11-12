@@ -17,7 +17,7 @@ import { actingPlayer, applyAction, createGame, legalMatch } from '../src/engine
 import { restoreCustomCards } from '../src/engine/registry.js';
 import { checkDeck } from '../src/cards/deck-check.js';
 import { stateHash } from '../src/ui/net.js';
-import { applyResult, freshLadder, newRating, rankView, START_RATING } from './ladder.js';
+import { applyResult, freshLadder, ladderScore, newRating, rankView, START_RATING } from './ladder.js';
 import { openStore } from './store.js';
 import { POLLS } from '../src/polls.js';
 import { newsFeed } from './news-feed.js';
@@ -68,6 +68,26 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       wins: acc.wins, losses: acc.losses, rankedWins: acc.rankedWins, rankedLosses: acc.rankedLosses,
       place: await store.place(acc),
     };
+  }
+  // What anyone can see about a player (the website's playerbase and profile pages). Never the
+  // password hash, salt or tokens.
+  const PLAYERBASE_LIMIT = 2000;
+  function publicProfile(acc, place) {
+    const played = (acc.wins ?? 0) + (acc.losses ?? 0);
+    const ranked = (acc.rankedWins ?? 0) + (acc.rankedLosses ?? 0);
+    return {
+      name: acc.name, admin: ADMINS.has(acc.key), ...rankView(acc.ladder),
+      wins: acc.wins ?? 0, losses: acc.losses ?? 0, games: played, winRate: played ? Math.round(((acc.wins ?? 0) / played) * 100) : 0,
+      rankedWins: acc.rankedWins ?? 0, rankedLosses: acc.rankedLosses ?? 0, rankedGames: ranked,
+      joined: acc.created ?? null, place, online: conns.has(acc.key), inMatch: Boolean(liveGameOf(acc.key)),
+    };
+  }
+  const liveGameOf = (key) => { const g = games.get(key); return g && !g.over ? g : null; };
+  // Ladder places for a set of accounts: ranked players only, best score first (as the leaderboard).
+  function placesOf(accounts) {
+    const ranked = accounts.filter((a) => (a.rankedWins ?? 0) + (a.rankedLosses ?? 0) > 0)
+      .sort((a, b) => ladderScore(b.ladder) - ladderScore(a.ladder) || (a.key < b.key ? -1 : 1));
+    return new Map(ranked.map((a, i) => [a.key, i + 1]));
   }
   const send = (conn, msg) => { if (conn?.ws.readyState === 1) conn.ws.send(JSON.stringify(msg)); };
   const sendTo = (key, msg) => send(conns.get(key), msg);
@@ -443,6 +463,8 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   // (no preflight); tokens travel in the body, never in cookies, so allowing any origin is safe.
   //   GET  /api/news          patch notes, factions and the current poll
   //   GET  /api/leaderboard   the top 50 of the ranked ladder
+  //   GET  /api/players       every registered player's public profile (newest first), for the playerbase page
+  //   GET  /api/player/<name> one player's public profile
   //   POST /api/register      { name, password }  → { token, you }
   //   POST /api/login         { name, password }  → { token, you }
   //   POST /api/me            { token }           → { you }
@@ -457,6 +479,19 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
       if (route === 'news') {
         const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim() || 'http';
         return reply(200, newsFeed(`${proto}://${req.headers.host}`), { 'cache-control': 'public, max-age=300' });
+      }
+      if (route === 'players') {
+        const accounts = await store.all(PLAYERBASE_LIMIT);
+        const places = placesOf(accounts);
+        const rows = accounts.map((a) => publicProfile(a, places.get(a.key) ?? null));
+        return reply(200, { total: rows.length, online: rows.filter((r) => r.online).length, rows }, { 'cache-control': 'public, max-age=30' });
+      }
+      if (route.startsWith('player/')) {
+        let name = '';
+        try { name = decodeURIComponent(route.slice('player/'.length)).trim().toLowerCase(); } catch { /* bad escape */ }
+        const acc = NAME_RE.test(name) ? await store.get(name) : null;
+        if (!acc) return reply(404, { error: 'No player by that name.' });
+        return reply(200, { player: publicProfile(acc, await store.place(acc)) }, { 'cache-control': 'public, max-age=30' });
       }
       if (route === 'leaderboard') {
         const rows = await store.top(50);

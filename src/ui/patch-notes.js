@@ -41,6 +41,23 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-12-playerbase',
+    date: 'November 12',
+    title: 'The Playerbase',
+    tag: 'Website',
+    intro: 'The Shattered Realms section of comic-arena.net now has a Playerbase page and a public profile for every player.',
+    blocks: [
+      { cat: 'qol', h: 'Playerbase and profiles', list: [
+        { cards: [], text: 'The new Playerbase page (Playerbase in the Shattered Realms menu on comic-arena.net) lists every registered player with their rank, ladder place, record, win rate, join date, and whether they are online or in a match right now. Search it, filter it to players who are online or on the ladder, and sort by newest, rank, wins or games.' },
+        { cards: [], text: 'Every player has a profile page with their rank, RP, promotion series and full record. Names on the ladder link straight to them.' },
+      ] },
+    ],
+    details: [
+      'Playerbase: comic-arena.net/shattered-players. Profiles: comic-arena.net/shattered-player?name=YourName.',
+      'Only public details are shown: name, rank, record, ladder place, join date and online status. Passwords and sign-in details are never shared.',
+    ],
+  },
+  {
     id: '2026-11-11',
     date: 'November 10 - 11',
     title: 'Arsenal and two-realm balance',

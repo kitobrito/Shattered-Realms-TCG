@@ -245,6 +245,24 @@ await test('Ranked: the winner gains RP and the loser loses none at 0 RP; the le
   if (lb.rows.length !== 2 || lb.rows[0].name !== 'Alice' || lb.rows[0].place !== 1 || ra.you.place !== 1) return JSON.stringify(lb.rows);
 });
 
+await test('Playerbase API lists every player with public fields only, and serves one profile', async () => {
+  const base = `http://localhost:${srv.port}`;
+  const list = await (await fetch(`${base}/api/players`)).json();
+  const alice = list.rows.find((r) => r.name === 'Alice');
+  const bob = list.rows.find((r) => r.name === 'Bob_2');
+  if (!alice || !bob || list.total !== list.rows.length) return JSON.stringify(list).slice(0, 300);
+  if (alice.place !== 1 || alice.rankedWins !== 1 || alice.games < 2 || !alice.label || typeof alice.winRate !== 'number' || !alice.joined) return JSON.stringify(alice);
+  if (!alice.online || list.online < 2) return `online ${alice.online} ${list.online}`;
+  const leaked = JSON.stringify(list).match(/"(hash|salt|token|key)"/);
+  if (leaked) return `leaked ${leaked[1]}`;
+  const one = await fetch(`${base}/api/player/alice`);
+  const p = (await one.json()).player;
+  if (one.status !== 200 || p.name !== 'Alice' || p.place !== 1) return JSON.stringify(p);
+  const missing = await fetch(`${base}/api/player/nobody_here`);
+  const bad = await fetch(`${base}/api/player/%E0%A4%A`);
+  if (missing.status !== 404 || bad.status !== 404) return `${missing.status} ${bad.status}`;
+});
+
 await test('Different formats are not matched together', async () => {
   A.drop(); B.drop();
   await A.send(queueMsg('quick'));

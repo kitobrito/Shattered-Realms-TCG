@@ -55,6 +55,10 @@ async function postgresStore(url) {
       const r = await pool.query('SELECT data FROM accounts WHERE ranked > 0 ORDER BY score DESC, key LIMIT $1', [limit]);
       return r.rows.map((x) => x.data);
     },
+    async all(limit) {
+      const r = await pool.query("SELECT data FROM accounts ORDER BY (data->>'created')::bigint DESC NULLS LAST, key LIMIT $1", [limit]);
+      return r.rows.map((x) => x.data);
+    },
     async place(a) {
       if (!rankedGames(a)) return null;
       const r = await pool.query('SELECT count(*)::int AS n FROM accounts WHERE ranked > 0 AND (score > $1 OR (score = $1 AND key < $2))', [ladderScore(a.ladder), a.key]);
@@ -116,6 +120,7 @@ function fileStore(dir) {
       save();
     },
     async top(limit) { return board().slice(0, limit).map(clone); },
+    async all(limit) { return Object.values(data.accounts).sort((a, b) => (b.created ?? 0) - (a.created ?? 0) || (a.key < b.key ? -1 : 1)).slice(0, limit).map(clone); },
     async place(a) { if (!rankedGames(a)) return null; const i = board().findIndex((x) => x.key === a.key); return i < 0 ? null : i + 1; },
     async addToken(token, key, expires) { data.tokens[token] = { key, expires }; save(); },
     async getToken(token) { return data.tokens[token] ?? null; },
