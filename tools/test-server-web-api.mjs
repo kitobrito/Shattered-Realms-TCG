@@ -20,7 +20,8 @@ ok(res.headers.get('access-control-allow-origin') === '*', 'news readable from o
 const cmp = news.posts.flatMap((p) => p.blocks).find((b) => b.compare)?.compare[0];
 ok(cmp && cmp.before && cmp.now && cmp.before.text !== cmp.now.text, 'a change carries before and now cards');
 ok(/^http:\/\/localhost:\d+\/art\//.test(cmp.now.art), `card art is an absolute address (${cmp.now.art})`);
-ok(news.factions.length >= 20 && news.poll?.options.length === 4, 'factions and the current poll are included');
+ok(news.factions.length >= 20 && news.poll === null, 'factions are included, and no poll is open (the faction vote closed: Fruit Ninjas won)');
+ok(news.pollResult?.winner?.name === 'Fruit Ninjas', `the vote result is announced (${JSON.stringify(news.pollResult?.winner?.name)})`);
 
 res = await post('register', { name: 'Webby', password: 'short' }); ok(res.status === 400, 'short password refused');
 res = await post('register', { name: 'Webby', password: 'longenough1' }); let r = await res.json();

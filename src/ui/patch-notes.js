@@ -43,9 +43,9 @@ export const PATCH_NOTES = [
   {
     id: '2026-11-13-fruit-ninjas',
     date: 'November 13',
-    title: 'The Fruit Ninjas',
+    title: 'Fruit Ninjas won the vote!',
     tag: 'New faction + boards',
-    intro: 'You voted, they\'re here: shinobi of the enchanted orchard who grow magic Fruits, slice them open, and unleash their power. Two new boards, ten Legendaries and 22 new Fusion Hero Spells come with them.',
+    intro: 'The vote is in, and Fruit Ninjas won! Thank you to everyone who voted. Voting is now closed, and the winners are here: shinobi of the enchanted orchard who grow magic Fruits, slice them open, and unleash their power. Two new boards, ten Legendaries and 22 new Fusion Hero Spells come with them.',
     blocks: [
       { cat: 'faction', h: 'Fruit Ninjas', cards: [
         { title: 'Fruit Ninjas', faction: 'Fruit Ninjas', blurb: 'Grow Fruit, Slice Fruit, unleash its power. 30 cards plus the 20-card Shadow Orchard expansion (stealth, Combo and the big legends), and five Legendary Weapons.' },
