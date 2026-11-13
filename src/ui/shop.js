@@ -12,6 +12,7 @@ import { ALT_BOARDS, BOARD_ART } from '../cards/board-art.js';
 import { boardProgress } from './unlocks.js';
 import { missionCardHTML } from './missions.js';
 import { artOf, cardHTML, esc, icon } from './shared.js';
+import { rxIcon, screenHeadHTML } from './realm-ui.js';
 
 const extras = () => allCards().filter((c) => c.extra && !c.token && !c.custom && !c.alwaysUnlocked);
 const ofRealm = (f) => extras().filter((c) => c.faction === f);
@@ -29,25 +30,46 @@ const chip = (id, extra = '') => {
 const bundleHTML = (b) => [...(b.cards ?? []).map((id) => chip(id)), ...(b.points ? [`<span class="sh-pts">${COIN}${b.points}</span>`] : [])].join('<i class="sh-plus">+</i>') || '<em>nothing</em>';
 const hhmm = (ms) => { const m = Math.max(0, Math.round(ms / 60000)); return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`; };
 
-export function shopHTML(shop, signedIn) {
+// The Store (new look). `wallet` is the shared top-right wallet HTML from main.js.
+export function shopHTML(shop, signedIn, wallet = '') {
   const e = shop.you?.economy;
-  const tabs = [['dailies', 'Dailies'], ['packs', 'Packs'], ['cards', 'Buy cards'], ['dupes', 'Duplicates'], ['trades', 'Trade board']];
-  const head = `<header class="sh-head">
-      <button class="ghost sh-back" data-act="shopClose">${icon('chevron')}<span>Menu</span></button>
-      <h1>Shop</h1>
-      <div class="sh-points" title="Points: earned by completing daily missions">${e ? `${COIN}<b>${e.points}</b><span>points</span>` : ''}</div>
-    </header>
-    <nav class="sh-tabs">${tabs.map(([k, l]) => `<button data-act="shopTab:${k}" class="${shop.tab === k ? 'on' : 'ghost'}">${l}${k === 'dupes' && e && Object.keys(e.dupes).length ? ` <i class="sh-count">${Object.values(e.dupes).reduce((a, b) => a + b, 0)}</i>` : ''}</button>`).join('')}</nav>`;
+  const tabs = [['packs', 'Packs'], ['dailies', 'Dailies'], ['cards', 'Cards & boards'], ['dupes', 'Duplicates'], ['trades', 'Trades']];
+  const head = `${screenHeadHTML('Store', 'store', wallet)}
+    <nav class="rx-ctabs rx-stabs">${tabs.map(([k, l]) => `<button data-act="shopTab:${k}" class="${shop.tab === k ? 'on' : ''}">${l}${k === 'dupes' && e && Object.keys(e.dupes).length ? ` <i class="sh-count">${Object.values(e.dupes).reduce((a, b) => a + b, 0)}</i>` : ''}</button>`).join('')}</nav>`;
+  const wrap = (body) => `<div class="menu shop rx rx-store">${head}<div class="rx-sbody">${body}</div>${shop.opened ? openedHTML(shop.opened) : ''}${shop.draft && e ? draftHTML(shop, e) : ''}</div>`;
   if (!signedIn) {
-    return `<div class="menu shop"><div class="sh-wrap">${head.replace(/<nav class="sh-tabs">[\s\S]*<\/nav>/, '')}
-      <section class="sh-panel sh-empty"><h2>Sign in to use the Shop</h2>
-      <p>Daily missions earn points, points buy card packs, and the trade board swaps cards with other players. They all belong to your account, so sign in first.</p>
-      <button class="gold" data-act="online">Sign in</button></section></div></div>`;
+    return wrap(`${featuredHTML(shop, null)}<section class="rx-panel sh-empty rx-signin"><h2>Sign in to use the Store</h2>
+      <p>Daily missions earn points, points buy card packs, and trades swap cards with other players. They all belong to your account, so sign in first.</p>
+      <button class="rx-gold" data-act="goSignIn">Sign in</button></section>`);
   }
-  if (!e) return `<div class="menu shop"><div class="sh-wrap">${head}<section class="sh-panel sh-empty"><p>Loading your account…</p></section></div></div>`;
+  if (!e) return wrap('<section class="rx-panel sh-empty"><p>Loading your account…</p></section>');
   const body = shop.tab === 'packs' ? packsHTML(shop, e) : shop.tab === 'cards' ? cardsHTML(shop, e) : shop.tab === 'dupes' ? dupesHTML(e) : shop.tab === 'trades' ? tradesHTML(shop, e) : dailiesHTML(e);
-  return `<div class="menu shop"><div class="sh-wrap">${head}${shop.msg ? `<p class="sh-msg">${esc(shop.msg)}</p>` : ''}${body}</div>
-    ${shop.opened ? openedHTML(shop.opened) : ''}${shop.draft ? draftHTML(shop, e) : ''}</div>`;
+  return wrap(`${shop.msg ? `<p class="sh-msg">${esc(shop.msg)}</p>` : ''}${body}`);
+}
+
+// The featured pack (the newest realm, Fruit Ninjas), with a quantity picker, and the current-set card.
+export const FEATURED_REALM = 'Fruit Ninjas';
+function featuredHTML(shop, e) {
+  const r = e?.rules, cost = r?.packCost ?? 0, qty = Math.max(1, shop.qty ?? 1);
+  const all = ofRealm(FEATURED_REALM), owned = new Set(e?.cards ?? []), have = all.filter((c) => owned.has(c.id)).length;
+  const can = e && e.points >= cost * qty && !shop.busy;
+  return `<section class="rx-feature">
+    <div class="rx-panel rx-feat-main">
+      <div class="rx-feat-art"><i class="rx-feat-glow"></i><img src="art/ui/shop/feature-fruit-ninjas.webp" alt="Fruit Ninjas pack: Enchanted Harvest" draggable="false"></div>
+      <div class="rx-feat-info">
+        <h2>Enchanted Harvest Pack ${rxIcon('info')}</h2>
+        <p>${r ? `${r.packSize} cards from the Fruit Ninjas realm, mostly ones you don't own yet. ${Math.round(r.legendaryChance * 100)}% legendary chance per card.` : 'Cards from the Fruit Ninjas realm, mostly ones you do not own yet.'}</p>
+        ${e ? `<small class="rx-feat-own">${have} / ${all.length} Fruit Ninjas cards owned</small>` : ''}
+        <div class="rx-qty"><button data-act="shopQty:-1" ${qty <= 1 ? 'disabled' : ''} aria-label="One fewer">${rxIcon('minus')}</button><b>${qty}</b><button data-act="shopQty:1" ${qty >= 10 ? 'disabled' : ''} aria-label="One more">${rxIcon('plus')}</button></div>
+        <button class="rx-gold rx-buy" data-act="${e ? `shopBuyN:${qty}` : 'goSignIn'}" ${e && !can ? 'disabled' : ''}><img class="rx-coin" src="art/ui/shop/coin.webp" alt="">${e ? `<span>${(cost * qty).toLocaleString('en-US')}</span>` : ''}<span>${e ? 'Buy pack' + (qty > 1 ? 's' : '') : 'Sign in to buy'}</span></button>
+      </div>
+    </div>
+    <div class="rx-panel rx-feat-set">
+      <div class="rx-set-art"><img src="art/ui/shop/pack-fruit-ninjas.webp" alt="" draggable="false" style="--r:-14deg"><img src="art/ui/shop/pack-fruit-ninjas.webp" alt="" draggable="false" style="--r:0deg"><img src="art/ui/shop/pack-fruit-ninjas.webp" alt="" draggable="false" style="--r:14deg"></div>
+      <small>Current set</small><b>Enchanted Harvest</b>
+      <button class="rx-ghost" data-act="viewSet:${esc(FEATURED_REALM)}">View set ${rxIcon('arrow')}</button>
+    </div>
+  </section>`;
 }
 
 function dailiesHTML(e) {
@@ -76,12 +98,12 @@ function packsHTML(shop, e) {
       <b>${kind === 'legendary' ? 'Legendary Pack' : esc(kind)}</b>
       <button class="gold" data-act="shopOpen:${esc(kind)}" ${shop.busy ? 'disabled' : ''}>Open</button></div>`).join('')}</div>`
     : '<p class="sh-sub">Buy a pack below and it lands here. Open it whenever you like.</p>'}</section>`;
-  return `${yours}<section class="sh-panel sh-legendary">
+  return `${featuredHTML(shop, e)}${yours}<section class="sh-panel sh-legendary">
       <img class="sh-legend-art" src="${packArt('legendary')}" alt="" draggable="false">
       <div><h2>Legendary Pack</h2><p>${r.packSize} cards from <b>any realm</b>, completely random, with at least one <b>guaranteed legendary</b> (one you don't own yet, while there are any).</p></div>
       <button data-act="shopBuy:legendary" class="${e.points >= r.legendaryPackCost ? 'gold' : 'ghost'}" ${e.points >= r.legendaryPackCost && !shop.busy ? '' : 'disabled'}>${price(r.legendaryPackCost)}</button>
     </section>
-    <section class="sh-panel"><div class="sh-row"><h2>Realm packs</h2><span class="sh-sub">${r.packSize} cards · ${Math.round(r.legendaryChance * 100)}% legendary chance per card</span></div>
+    <section class="sh-panel"><div class="sh-row"><h2>Other packs</h2><span class="sh-sub">${r.packSize} cards · ${Math.round(r.legendaryChance * 100)}% legendary chance per card</span></div>
     <p class="sh-sub">Bought packs go to Your packs above. Cards come from the realm you pick, mostly ones you don't have yet. A card you already own is a duplicate: recycle it for points or trade it.</p>
     <div class="sh-packs">${PLAYABLE_FACTIONS.map(realm).join('')}</div></section>`;
 }

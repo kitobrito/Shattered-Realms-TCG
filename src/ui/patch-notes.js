@@ -43,6 +43,24 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-13-new-menus',
+    date: 'November 13',
+    title: 'A brand-new look for the menus',
+    tag: 'New menus',
+    intro: 'The realms got a makeover. A new Home screen floats every part of the game on its own island, and Play, Collection and the Store have all been rebuilt to match.',
+    blocks: [
+      { cat: 'qol', h: 'New screens', art: [
+        { src: 'art/ui/home-hub.webp', title: 'Home', caption: 'Tap an island: Build, Collection, Factions, Realms, or the big Play button.' },
+        { src: 'art/ui/shop/feature-fruit-ninjas.webp', title: 'Enchanted Harvest', caption: 'The Fruit Ninjas pack, now headlining the Store.' },
+      ], list: [
+        { cards: [], text: 'Home: a sidebar for every screen, your points, daily missions and profile at the top, and the latest news on the right. The Origin Story tells how the world broke apart.' },
+        { cards: [], text: 'Play: pick your factions, see your Fusion hero, choose Ranked, Casual, Play vs AI, Custom Match or Hot Seat, pick a deck, then Confirm & Play.' },
+        { cards: [], text: 'Collection: every realm on the left with its card count, quick filters, set and sort menus, and search.' },
+        { cards: [], text: 'Store: the new Enchanted Harvest pack (Fruit Ninjas) is featured up front. Buy up to ten at once.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-13-swine-butchers-preview',
     date: 'November 13',
     title: 'Coming soon: the Swine Butchers',

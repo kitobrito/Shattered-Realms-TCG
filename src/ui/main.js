@@ -38,6 +38,7 @@ import { markPatchSeen, PATCH_NOTES, patchNotesHTML, patchUnseen } from './patch
 import { CURRENT_POLL, POLLS } from '../polls.js';
 import { awardUnlocks, boardProgress, isLocked, localOwnedCards, lockedCount, setOwnedBoards, setOwnedCards, UNLOCKS_PER_WIN, unlockPopupHTML } from './unlocks.js';
 import { shopHTML } from './shop.js';
+import { homeHTML, originStoryHTML, rxIcon, screenHeadHTML, walletHTML } from './realm-ui.js';
 import { missionPlan, missionsButtonHTML, missionsPanelHTML, playerBoxHTML } from './missions.js';
 import { availableFactions, chooseFirstRealms, FIRST_PICKS, firstTime, heroRevealed, journeyDone, needsFirstPick, pairUnlocked, progressLine, recordMatch, revealHero, STARTERS, starterDeck, starterMode, unlockEverything } from './journey.js';
 
@@ -45,7 +46,9 @@ const SAVE_KEY = 'faction-ccg-save';
 const SAVE_VERSION = 2;
 const app = document.getElementById('app');
 
-let screen = 'menu';
+let screen = 'home';
+let originOpen = false;
+let playMode = null; // the Play screen's chosen mode: ranked | casual | ai | custom | hotseat
 let game = null;           // { state, mode: 'ai' | 'hotseat' | 'online', factions, rivalFactions }
 let viewer = 0;            // whose perspective is shown at the bottom
 let handoff = false;       // hot-seat: hide hands while passing the device
@@ -2209,7 +2212,7 @@ function applySync(state) {
 }
 
 // ---- Shop: dailies, packs, duplicates and the trade board (shop.js draws it) ----
-let shop = { tab: 'dailies', you: null, trades: [], opened: null, draft: null, busy: false, msg: null };
+let shop = { tab: 'packs', you: null, trades: [], opened: null, draft: null, busy: false, msg: null };
 // Daily missions on the main menu (missions.js draws them).
 let missions = null;           // { open, step: 'list' | 'setup', mission, deck } | null
 let missionQueue = null;       // 'quick' | 'ranked': queue as soon as the server knows who we are
@@ -2313,7 +2316,7 @@ function openShop(tab = shop.tab) {
   render();
 }
 function renderShop() {
-  app.innerHTML = shopHTML(shop, !!srv.token());
+  app.innerHTML = shopHTML(shop, !!srv.token(), walletNow());
   showMenuBackdrop(true);
   const opened = app.querySelector('.sh-opened');
   if (opened) fitAllText(opened);
@@ -2326,7 +2329,16 @@ function shopButton(name) {
   const d = shop.draft;
   switch (cmd) {
     case 'shopTab': shop.tab = a; shop.msg = null; if (a === 'trades') srv.send({ t: 'trades' }); return render();
-    case 'shopClose': screen = 'menu'; return render();
+    case 'shopClose': screen = 'home'; return render();
+    case 'shopQty': shop.qty = Math.max(1, Math.min(10, (shop.qty ?? 1) + Number(a))); sound.play('click'); return render();
+    case 'shopBuyN': {
+      const n = Math.max(1, Math.min(10, Number(a) || 1));
+      shop.busy = true; sound.play('click');
+      for (let i = 0; i < n; i++) srv.send({ t: 'buyPack', faction: 'Fruit Ninjas' });
+      flash(n > 1 ? `Buying ${n} Enchanted Harvest packs: they land in Your packs.` : 'Bought! Open it in Your packs.');
+      return render();
+    }
+    case 'viewSet': bookPage = name.slice(8); bookSet = 'all'; gallerySearch = ''; screen = 'gallery'; zoomId = null; sound.play('click'); return render();
     case 'shopBuy': shop.busy = true; sound.play('click'); srv.send({ t: 'buyPack', faction: name.slice(8) }); return render();
     case 'shopOpenedOk': shop.opened = null; return render();
     case 'shopOpen': shop.busy = true; sound.play('click'); srv.send({ t: 'openPack', kind: name.slice(9) }); return render();
@@ -2442,7 +2454,7 @@ function onServerMessage(msg) {
       if (msg.t === 'welcome' && screen === 'signin') {
         // Signed in from the first-launch screen: on to the game (Play Online reconnects later).
         srv.disconnect();
-        screen = 'menu';
+        screen = 'home';
         render();
         flash(`Welcome, ${msg.you?.name ?? 'traveller'}!`);
         return;
@@ -2580,6 +2592,19 @@ function portraitCircleFx(root) {
 
 // The deck picker under the deck line: premade decks and your saved ones. One that needs
 // locked cards shows a lock; picking it opens it in the deck builder to swap those out.
+// Play a premade or saved deck (one with locked cards opens in the builder).
+function pickDeckIndex(i) {
+  const d = deckChoices(picked)[i];
+  if (!d) return;
+  if (lockedIn(d.deck).length) {
+    builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(d.deck); zoomId = null; screen = 'builder'; app.scrollTop = 0;
+    flash(`"${d.name}" needs ${lockedIn(d.deck).length} locked card${lockedIn(d.deck).length === 1 ? '' : 's'}: click a 🔒 card in your deck to swap it, then Save deck.`);
+    return render();
+  }
+  storeDeck(picked, sameDeck(d.deck, recommendedDeck(picked)) ? null : d.deck);
+  flash(`Playing "${d.name}".`);
+  return render();
+}
 function deckChoicesHTML() {
   const current = pairDeckFor(picked);
   return `<div class="deck-choices"><span class="ds-label">Decks:</span>${deckChoices(picked).map((d, i) => {
@@ -2734,7 +2759,7 @@ async function loadPoll() {
   render();
   try { const r = await srv.fetchPoll(CURRENT_POLL); poll = { ...poll, loading: false, counts: r.counts, total: r.total }; }
   catch { poll = { ...poll, loading: false, error: poll.mine ? "Couldn't reach the server to show the results. Try again in a moment." : null }; }
-  if (screen === 'menu' && patch.open && patch.tab === 'vote') render();
+  if ((screen === 'menu' || screen === 'home') && patch.open && patch.tab === 'vote') render();
 }
 async function vote(choice) {
   if (poll.sending) return;
@@ -2748,11 +2773,31 @@ async function vote(choice) {
   } catch (e) {
     poll = { ...poll, sending: false, error: /offline/.test(e.message) ? 'Voting needs an internet connection.' : "Couldn't send your vote (the server may be waking up). Try again in a moment." };
   }
-  if (screen === 'menu' && patch.open) render();
+  if ((screen === 'menu' || screen === 'home') && patch.open) render();
 }
 function missionPanelCtx() {
   const plan = missions?.mission ? missionPlanFor(missions.mission) : null;
   return { signedIn: !!srv.token(), economy: currentEconomy(), plan, deckOptions: plan ? missionDeckOptions(plan.factions) : [] };
+}
+
+// The wallet in the new top bar: points, daily missions (mail) and profile.
+function walletNow() {
+  const e = currentEconomy();
+  const left = (e?.dailies ?? []).filter((m) => !m.done).length;
+  return walletHTML({ signedIn: !!srv.user, points: e?.points, unseenMissions: left, online: BUILD.online });
+}
+// Home: the hub of floating islands, the sidebar and the News panel.
+function renderHome() {
+  applyJourney();
+  if (BUILD.online && srv.token() && !srv.user && !menuConnectTried) { menuConnectTried = true; setTimeout(connectServer, 0); }
+  showMenuBackdrop(true);
+  app.innerHTML = homeHTML({ wallet: walletNow(), notes: PATCH_NOTES, unseen: patchUnseen(), online: BUILD.online })
+    + (patch.open ? patchNotesHTML({ ...patch, poll }) : '')
+    + (missions?.open ? missionsPanelHTML(missions, missionPanelCtx()) : '')
+    + (originOpen ? originStoryHTML() : '')
+    + (zoomId && patch.open ? zoomHTML(getCard(zoomId)) : '');
+  const pnPost = app.querySelector('.pn-post');
+  if (pnPost) fitAllText(pnPost);
 }
 
 function renderMenu() {
@@ -2821,56 +2866,54 @@ function renderMenu() {
     <div class="m2-deck">${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}</div>
     ${ready ? `<button class="m2-guide" data-act="guide"><span>${sets.length ? esc(sets.join(' · ')) : 'What these realms do'}</span><b>Realm guide ${icon('chevron')}</b></button>` : ''}`;
   const cornerStyle = `--c1:${picked[0] ? fx.factionColor(picked[0]) : '#8a6cff'};--c2:${picked[1] ? fx.factionColor(picked[1]) : picked[0] ? fx.factionColor(picked[0]) : '#ffd25a'}`;
+  // The Play screen (new look): 1 pick realms, 2 pick a mode, 3 confirm.
+  const tile = (f) => {
+    const on = picked.includes(f), sealed = !open.includes(f);
+    return `<button class="rx-ftile f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${realmAttr(f)} style="--fc:${fx.factionColor(f)}">
+      <span class="rx-ftile-ico">${crestHTML(f)}</span><span class="rx-ftile-name">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials').replace('Monster Hunter', 'Monster<br>Hunter')}</span>
+      ${on ? `<i class="rx-check">✓</i>` : sealed ? '<i class="rx-lock">🔒</i>' : ''}</button>`;
+  };
+  const modes = (BUILD.online ? [['ranked', 'crown', 'Ranked', 'Compete, climb and earn rewards'], ['casual', 'casual', 'Casual', 'Quick match: play for fun'], ['ai', 'robot', 'Play vs AI', 'Practice against the AI'], ['custom', 'link', 'Custom Match', 'Create or join a private game'], ['hotseat', 'seat', 'Hot Seat', 'Two players, one screen']]
+    : [['ai', 'robot', 'Play vs AI', 'Practice against the AI'], ['hotseat', 'seat', 'Hot Seat', 'Two players, one screen']]);
+  if (!modes.some(([k]) => k === playMode)) playMode = modes[0][0];
+  const deckList = ready ? deckChoices(picked) : [];
+  const curDeck = ready ? pairDeckFor(picked) : [];
+  const deckName = ready ? (currentDeckName() ?? 'Your deck') : 'Pick your realms';
+  const showcase = ready ? [...new Set(curDeck)].map(getCard).filter(Boolean).sort((x, y) => (y.legendary ? 1 : 0) - (x.legendary ? 1 : 0) || y.cost - x.cost).slice(0, 5) : [];
+  const step = !ready ? 1 : 2;
   app.innerHTML = `
-    <div class="menu tavern select-screen m2">
-      <header class="m2-top">
-        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
-        <p class="ts-tag">Twenty realms broke apart. Two of them are yours.</p>
-        ${BUILD.online ? `<div class="m2-acct-row"><div class="m2-acct-l">${playerBoxHTML(srv.user, currentEconomy()?.points)}</div><div class="m2-acct-r">${missionsButtonHTML(srv.user ? currentEconomy()?.dailies : null)}</div></div>` : ''}
-        ${PATCH_NOTES[0] ? `<button class="m2-news ${patchUnseen() ? 'unseen' : ''}" data-act="patchNotes" title="Read the patch notes"><b>${patchUnseen() ? 'NEW' : 'Latest'}</b><span>${esc(PATCH_NOTES[0].title)}</span><i>Patch notes ${icon('chevron')}</i></button>` : ''}
-        ${POLLS[CURRENT_POLL] ? `<div class="m2-vote ${myVote() ? 'done' : 'open'}">
-          <button class="m2-vote-head" data-act="voteNow"><b>🗳️ ${myVote() ? 'You voted!' : 'Vote now'}</b><span>${esc(POLLS[CURRENT_POLL].question)}</span></button>
-          <div class="m2-vote-opts">${POLLS[CURRENT_POLL].options.map((o) => `<button class="${myVote() === o.id ? 'mine' : ''}" data-act="voteFromMenu:${o.id}" title="Vote for ${esc(o.name)}${o.blurb ? `: ${esc(o.blurb)}` : ''}">${o.art ? `<img src="${o.art}" alt="" draggable="false">` : `<i>${o.icon}</i>`}<span>${esc(o.name)}</span></button>`).join('')}</div>
-          <button class="m2-vote-go" data-act="voteNow">${myVote() ? 'See results' : 'Vote'} ${icon('chevron')}</button>
-        </div>` : ''}
-        <div class="m2-toggle-row">
-          <span class="pick-count">${picked.length}/${pickNeeded()}</span>
-          ${pairUnlocked() ? `<div class="format-toggle m2-toggle">
-            <button data-act="formatPair" class="${format === 'pair' ? 'on' : 'ghost'}">Two factions</button>
-            <button data-act="formatSingle" class="${format === 'single' ? 'on' : 'ghost'}">One faction</button>
-          </div>` : ''}
-        </div>
-        ${progress ? `<div class="journey-line"><span>${esc(progress)}</span><button data-act="journeySkip" class="ghost">Played card games before? Unlock everything</button></div>` : ''}
-      </header>
-      <aside class="m2-panel m2-list">${list}</aside>
-      <section class="m2-stage stage" style="${cornerStyle}">
-        <div class="m2-frame"><i class="m2-gem t"></i><i class="m2-gem b"></i><div class="stage-portrait">${portrait}</div></div>
+    <div class="menu rx rx-play select-screen" style="${cornerStyle}">
+      ${screenHeadHTML('Play', 'play', walletNow())}
+      <ol class="rx-steps">${[['Select factions', 1], ['Choose game mode', 2], ['Confirm', 3]].map(([t, n]) => `<li class="${n === step ? 'on' : n < step ? 'done' : ''}"><b>${n < step ? '✓' : n}</b><span>${t}</span></li>`).join(`<li class="rx-step-arrow" aria-hidden="true">${rxIcon('arrow')}</li>`)}</ol>
+      <section class="rx-panel rx-fpanel">
+        <h3>Select your ${pickNeeded() === 1 ? 'faction' : 'factions'}</h3>
+        ${pairUnlocked() ? `<div class="rx-seg"><button data-act="formatSingle" class="${format === 'single' ? 'on' : ''}">One faction</button><button data-act="formatPair" class="${format === 'pair' ? 'on' : ''}">Two factions</button></div>` : ''}
+        <div class="rx-fgrid">${roster.filter((f) => playable.includes(f)).map(tile).join('')}</div>
+        ${progress ? `<p class="rx-journey">${esc(progress)} <button class="rx-link" data-act="journeySkip">Unlock everything</button></p>` : ''}
       </section>
-      <aside class="m2-panel m2-info">${info}</aside>
-      <div class="m2-strips">${strip(0)}${pickNeeded() > 1 ? strip(1) : ''}</div>
-      <nav class="m2-bar">
-        ${BUILD.online ? `<button data-act="online" class="m2-play gold">${icon('swords')}<span>Play online</span></button>` : ''}
-        <button data-act="hotseat" class="m2-play">${icon('players')}<span>Hot seat</span></button>
-        <button data-act="ai" class="m2-play ${BUILD.online ? '' : 'gold'}">${icon('robot')}<span>Play vs AI</span></button>
-        ${saved ? `<button data-act="continue" class="m2-play">↻<span>Continue</span></button>` : ''}
-        <div class="m2-diff">${difficultySliderHTML()}</div>
-      </nav>
-      <footer class="m2-foot">
-        <button data-act="patchNotes" class="m2-link ${patchUnseen() ? 'has-new' : ''}">${icon('log')}<span><b>Patch notes</b><small>What's new</small></span></button>
-        <button data-act="tutorial" class="m2-link ${tutorialDone() ? '' : 'new-player'}">${icon('cap')}<span><b>Tutorial</b><small>New? Start here</small></span></button>
-        <button data-act="howto" class="m2-link">${icon('book')}<span><b>How to play</b><small>Learn the basics</small></span></button>
-        <button data-act="gallery" class="m2-link">${icon('cards')}<span><b>Collection</b><small>View your cards</small></span></button>
-        <button data-act="shop" class="m2-link"><img class="ui-ico shop-ico" src="art/ui/shop/shop-icon.webp" alt=""><span><b>Shop</b><small>Dailies, packs &amp; trades</small></span></button>
-        <button data-act="settings" class="m2-link">${icon('gear')}<span><b>Settings</b><small>Game &amp; account</small></span></button>
-      </footer>
-      <nav class="m2-tabbar">
-        <button data-act="gallery">${icon('cards')}<span>Collection</span></button>
-        <button data-act="shop"><img class="ui-ico shop-ico" src="art/ui/shop/shop-icon.webp" alt=""><span>Shop</span></button>
-        <button data-act="ai" class="m2-tab-play">${icon('play')}<span>Play</span></button>
-        <button data-act="howto">${icon('book')}<span>Guide</span></button>
-        <button data-act="patchNotes" class="${patchUnseen() ? 'has-new' : ''}">${icon('log')}<span>News</span></button>
-        <button data-act="settings">${icon('gear')}<span>Settings</span></button>
-      </nav>
+      <section class="rx-heroarea">
+        <div class="rx-pair">${picked[0] ? medal(picked[0]) : '<span class="m2-medal empty"><b>?</b></span>'}${pickNeeded() > 1 ? `<i class="rx-plus-big">+</i>${picked[1] ? medal(picked[1]) : '<span class="m2-medal empty"><b>?</b></span>'}` : ''}</div>
+        <div class="rx-heroframe stage"><div class="stage-portrait">${portrait}</div></div>
+        <div class="rx-nameplate"><b>${picked.length ? picked.map(esc).join(' + ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`}</b>
+          ${fusion ? `<button class="rx-fusion" data-zoom="${fusion.id}" title="See the Fusion card">Fusion: ${esc(fusion.name)}</button>` : ready && format === 'single' && FACTION_INFO[picked[0]] ? `<small>${esc(FACTION_INFO[picked[0]].style)}</small>` : ''}</div>
+        ${ready ? `<button class="rx-link rx-guide-link" data-act="guide">${rxIcon('story')}<span>${sets.length ? esc(sets.join(' · ')) : 'Realm guide'}</span></button>` : ''}
+      </section>
+      <section class="rx-panel rx-mpanel">
+        <h3>Choose game mode</h3>
+        <div class="rx-modes">${modes.map(([k, ico, t, sub]) => `<button class="rx-mode ${playMode === k ? 'on' : ''}" data-act="playMode:${k}">${rxIcon(ico)}<span><b>${t}</b><small>${sub}</small></span></button>`).join('')}</div>
+        ${playMode === 'ai' ? `<div class="rx-diff">${difficultySliderHTML()}</div>` : ''}
+        ${BUILD.online ? `<div class="rx-acct">${missionsButtonHTML(srv.user ? currentEconomy()?.dailies : null)}</div>` : ''}
+      </section>
+      <section class="rx-panel rx-deckbar">
+        <label class="rx-deckpick">${rxIcon('deck')}<span>Deck:</span>
+          <select data-deckpick-select ${ready ? '' : 'disabled'} aria-label="Choose a deck">${ready ? deckList.map((d, i) => `<option value="${i}" ${d.name === currentDeckName() ? 'selected' : ''}>${esc(d.name)}${lockedIn(d.deck).length ? ' 🔒' : ''}</option>`).join('') + (currentDeckName() ? '' : '<option selected disabled>Your deck</option>') : `<option>${esc(deckName)}</option>`}</select></label>
+        <div class="rx-thumbs">${showcase.map((c) => `<button class="rx-thumb ${c.legendary ? 'legendary' : ''}" data-zoom="${c.id}" title="${esc(c.name)}"><img src="${artOf(c) ?? ''}" alt="" draggable="false"></button>`).join('')}</div>
+        ${ready ? `<button class="rx-ghost" data-act="editCuts">${customDeckFor(picked) ? 'Edit deck' : 'Build deck'}</button>` : ''}
+        ${saved ? '<button class="rx-ghost" data-act="continue">↻ Continue</button>' : ''}
+      </section>
+      <button class="rx-gold rx-confirm" data-act="confirmPlay" ${ready ? '' : 'disabled'}>${rxIcon('play')}<span>Confirm &amp; Play</span></button>
+      <nav class="rx-tabbar">${[['home', 'Home', 'home'], ['collection', 'Cards', 'gallery'], ['play', 'Play', 'menu'], ['store', 'Store', 'shop'], ['settings', 'Settings', 'settings']]
+        .map(([ico, label, act]) => `<button data-act="${act}" class="${ico === 'play' ? 'rx-tab-play on' : ''}">${rxIcon(ico)}<span>${label}</span></button>`).join('')}</nav>
     </div>
     ${guideOpen && ready ? `<div class="overlay guide-overlay"><div class="guide-backdrop" data-act="closeGuide"></div><div class="guide-panel">
       <button class="ghost guide-close" data-act="closeGuide">✕</button>${format !== 'single' ? pairGuideHTML(picked) : ''}${factionGuideHTML(picked)}
@@ -3282,42 +3325,46 @@ function renderGallery() {
     ? [`${galleryCards(f).filter((c) => c.fusion).length} Fusion Hero Spells`, 'one per faction pair', '3 uses each']
     : hasExtras(f) ? [`${FACTION_POOLS[f].length} cards`, `${FACTION_POOLS[f].length - FACTION_LISTS[f].length} new`, `Deck uses ${FACTION_DECKS[f].length}`]
       : [`${FACTION_LISTS[f].length} cards`, `Deck uses ${FACTION_DECKS[f].length}`];
+  // The Collection (new look): tabs, realms on the left with counts, filters above the card grid.
+  const count = (x) => galleryCards(x).filter((c) => !c.token).length;
+  const setOpts = EXPANSION_NAMES[f] ? [['all', 'All cards'], ['core', 'Original set'], ['exp', EXPANSION_NAMES[f]], ...miniSets(f).map((n) => [`set:${n}`, n])] : [['all', 'All cards']];
   app.innerHTML = `
-    <div class="book coll2">
-      <header class="book-head c2-head">
-        <img class="c2-logo" src="art/ui/logo.png" alt="Shattered Realms" draggable="false">
-        <h2>Card Collection</h2>
-        <div class="c2-find">${searchBoxHTML()}<button class="ghost c2-filter ${showFilters ? 'on' : ''}" data-filters aria-label="Filters" title="Quick filters">${icon('filter')}</button></div>
-        <div class="c2-progress" title="Cards unlocked">${icon('laurel')}<span><b>${have} / ${total}</b><small>Collection progress</small></span></div>
-        <button data-act="menu" class="ghost c2-back">${icon('back')}<span>Back</span></button>
-      </header>
-      ${showFilters && !searching ? `<nav class="set-filter search-chips c2-chips">${SEARCH_CHIPS.map(([w, label]) => `<button class="ghost ${chipOn(w) ? 'on' : ''}" data-search-chip="${esc(w)}">${esc(label)}</button>`).join('')}</nav>` : ''}
-      <div class="book-body">
-        <nav class="book-tabs">${factions.map((x) => `<button class="book-tab f-${fslug(x)} ${x === f && !searching ? 'on' : ''}" data-book="${esc(x)}" title="${esc(x)}">
-          ${crestHTML(x)}<b>${esc(x).replace('Ultraterrestrials', 'Ultra&shy;terrestrials')}</b>${icon('chevron')}</button>`).join('')}</nav>
-        ${searching ? gallerySearchPage(factions) : `
-        <section class="book-page f-${fslug(f)} ${bookTurned ? 'turn' : ''}">
-          <header class="page-title c2-banner" style="--banner:url('${new URL(banner, document.baseURI).href}')">
-            <span class="c2-medal">${crestHTML(f)}</span>
-            <div><h3>${esc(f)}</h3><span class="sub c2-stats">${stats.map((x) => `<span>${esc(x)}</span>`).join('<i>•</i>')}</span></div>
-          </header>
-          <div class="c2-bar">
-            ${EXPANSION_NAMES[f] ? `<nav class="set-filter">${[['all', 'All Cards'], ['core', 'Original Set'], ['exp', EXPANSION_NAMES[f]], ...miniSets(f).map((n) => [`set:${n}`, n])].map(([k, label]) =>
-              `<button class="ghost ${bookSet === k ? 'on' : ''}" data-bookset="${k}">${esc(label)}</button>`).join('')}</nav>` : '<span></span>'}
-            ${ALT_BOARDS[f] ? `<button class="ghost c2-boards" data-act="boards" title="Choose the board this realm plays on">🖼️ <span>Boards</span></button>` : ''}
-            <label class="c2-sort"><span>Sort:</span><select data-sort aria-label="Sort cards">${SORTS.map(([k, label]) => `<option value="${k}" ${bookSort === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
-          </div>
+    <div class="rx rx-coll">
+      ${screenHeadHTML('Collection', 'collection', walletNow())}
+      <nav class="rx-ctabs">
+        <button class="on" data-act="gallery">My cards</button>
+        <button data-act="navBuild">Decks</button>
+        <button data-act="boards" ${ALT_BOARDS[f] && !searching ? '' : 'disabled'} title="Choose the board this realm plays on">Boards</button>
+        <button data-act="${BUILD.online ? 'shopTab:cards' : 'shop'}">Crafting</button>
+      </nav>
+      <aside class="rx-panel rx-cside">
+        <div class="rx-cprog" title="Cards unlocked">${rxIcon('crown')}<span>All cards</span><b>${have} / ${total}</b></div>
+        <h4>Factions</h4>
+        <div class="rx-crealms">${factions.map((x) => `<button class="rx-crealm f-${fslug(x)} ${x === f && !searching ? 'on' : ''}" data-book="${esc(x)}" style="--fc:${x === 'Fusion' ? '#b06cff' : fx.factionColor(x)}">
+          ${crestHTML(x)}<span>${esc(x)}</span><b>${count(x)}</b></button>`).join('')}</div>
+        <h4>Filters</h4>
+        <div class="rx-cchips">${SEARCH_CHIPS.map(([w, label]) => `<button class="rx-cchip ${chipOn(w) ? 'on' : ''}" data-search-chip="${esc(w)}"><i></i>${esc(label)}</button>`).join('')}</div>
+      </aside>
+      <section class="rx-panel rx-cmain">
+        <div class="rx-cbar">
+          ${searching ? `<span class="rx-chead">Search · ${searchResults(factions).length} cards</span>` : `<label class="rx-select"><select data-bookset-select aria-label="Card set">${setOpts.map(([k, label]) => `<option value="${esc(k)}" ${bookSet === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>`}
+          <label class="rx-select"><select data-sort aria-label="Sort cards">${SORTS.map(([k, label]) => `<option value="${k}" ${bookSort === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
+          <div class="rx-csearch">${searchBoxHTML()}</div>
+          <span class="rx-cstats">${searching ? '' : stats.map((x) => esc(x)).join(' · ')}</span>
+        </div>
+        ${searching ? gallerySearchPage(factions) : `<section class="book-page rx-cpage f-${fslug(f)} ${bookTurned ? 'turn' : ''}">
           ${pagerHTML(`gal:${f}:${bookSet}:${bookSort}`, sortCards(setCards(f)).map(galleryCardHTML).join(''), { chain: true, cls: 'pg-rich' })}
         </section>`}
-      </div>
+      </section>
     </div>
     ${zoomId ? zoomHTML(getCard(zoomId)) : ''}
     ${boardsOpen && ALT_BOARDS[f] && !searching ? boardPickerHTML(f) : ''}`;
   bookTurned = false;
   app.scrollTop = scrollY;
   // Upright phones: the realm strip scrolls sideways; keep the open realm in view.
-  const on = app.querySelector('.coll2 .book-tab.on'), strip = on?.parentElement;
+  const on = app.querySelector('.rx-crealm.on'), strip = on?.parentElement;
   if (on && strip.scrollWidth > strip.clientWidth) strip.scrollLeft = on.offsetLeft - (strip.clientWidth - on.offsetWidth) / 2;
+  if (on && strip.scrollHeight > strip.clientHeight) strip.scrollTop = on.offsetTop - (strip.clientHeight - on.offsetHeight) / 2;
   // Typing re-renders the page: keep the cursor in the search box.
   if (refocusSearch) {
     refocusSearch = false;
@@ -3340,6 +3387,8 @@ app.addEventListener('change', (e) => {
     }
     return render();
   }
+  if (e.target.matches?.('[data-deckpick-select]') && screen === 'menu') return pickDeckIndex(Number(e.target.value));
+  if (e.target.matches?.('[data-bookset-select]') && screen === 'gallery') { bookSet = e.target.value; sound.play('draw'); return render(); }
   if (!e.target.matches?.('[data-sort]') || screen !== 'gallery') return;
   bookSort = e.target.value;
   sound.play('draw');
@@ -3677,9 +3726,10 @@ function render() {
   const restoreInputs = screen === shownScreen ? keepInputs() : null;
   document.body.classList.toggle('in-game', screen === 'game');
   if (screen !== 'game') hideBoard();
-  if (screen !== 'menu' && screen !== 'online' && screen !== 'howto' && screen !== 'signin') showMenuBackdrop(false);
+  if (screen !== 'menu' && screen !== 'home' && screen !== 'online' && screen !== 'howto' && screen !== 'signin') showMenuBackdrop(false);
   if (screen !== 'game') { clearTips(); if (guideOn()) stopGuide(); }
-  if (screen === 'menu') renderMenu();
+  if (screen === 'home') renderHome();
+  else if (screen === 'menu') renderMenu();
   else if (screen === 'gallery') renderGallery();
   else if (screen === 'builder') renderBuilder();
   else if (screen === 'online') renderLobby();
@@ -4114,20 +4164,9 @@ app.addEventListener('click', (e) => {
       return render();
     }
   }
-  // The deck picker on the menu: play a premade or saved deck (one with locked cards opens in the builder).
+  // The deck picker on the menu: see pickDeckIndex.
   const pickBtn = e.target.closest('[data-pickdeck]');
-  if (pickBtn && (screen === 'menu' || screen === 'online')) {
-    const d = deckChoices(picked)[Number(pickBtn.dataset.pickdeck)];
-    if (!d) return;
-    if (lockedIn(d.deck).length) {
-      builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(d.deck); zoomId = null; screen = 'builder'; app.scrollTop = 0;
-      flash(`"${d.name}" needs ${lockedIn(d.deck).length} locked card${lockedIn(d.deck).length === 1 ? '' : 's'}: click a 🔒 card in your deck to swap it, then Save deck.`);
-      return render();
-    }
-    storeDeck(picked, sameDeck(d.deck, recommendedDeck(picked)) ? null : d.deck);
-    flash(`Playing "${d.name}".`);
-    return render();
-  }
+  if (pickBtn && (screen === 'menu' || screen === 'online')) return pickDeckIndex(Number(pickBtn.dataset.pickdeck));
   // Named decks in the deck builder: load one, or delete it.
   const slotBtn = e.target.closest('[data-slot]');
   if (slotBtn && screen === 'builder') {
@@ -4284,6 +4323,7 @@ app.addEventListener('click', (e) => {
 function onButton(name) {
   const s = game?.state;
   if (name === 'shop') { sound.play('click'); return openShop(); }
+  if (name?.startsWith('shopTab:') && screen !== 'shop') { sound.play('click'); return openShop(name.slice(8)); }
   if (screen === 'shop' && name && shopButton(name) !== false) return;
   if (name && /^dm[A-Z]/.test(name) && missionButton(name) !== false) return;
   // Patch notes (main menu): open and close, pick a post or a category tab, see a board big.
@@ -4300,8 +4340,29 @@ function onButton(name) {
   }
   if (name?.startsWith('patchVoteFor:')) return vote(name.slice(13));
   // Tapping a faction on the menu's vote banner: vote, and show the results.
+  if (name?.startsWith('playMode:')) { playMode = name.slice(9); sound.play('click'); return render(); }
   if (name?.startsWith('voteFromMenu:')) { patch = { ...patch, open: true, tab: 'vote', board: null, keepScroll: false }; return vote(name.slice(13)); }
   switch (name) {
+    case 'home': clearTimeout(aiTimer); hidePreview(); if (game?.mode === 'online' || screen === 'online') leaveOnline(); sound.play('click'); screen = 'home'; zoomId = null; matchSetup = null; return render();
+    case 'goSignIn': acct.tab = 'login'; acct.msg = null; screen = 'signin'; return render();
+    case 'confirmPlay': {
+      if (!pickedReady()) return flash(`Pick ${pickNeeded()} factions first.`);
+      const m = playMode ?? (BUILD.online ? 'ranked' : 'ai');
+      if (m === 'ai' || m === 'hotseat') return onButton(m);
+      if (!BUILD.online) return;
+      if (m === 'custom') return onButton('online');
+      sound.play('click');
+      lobby = { status: 'choose' }; screen = 'online'; app.scrollTop = 0; connectServer();
+      if (srv.user) queueMatch(m === 'casual' ? 'quick' : 'ranked'); else missionQueue = m === 'casual' ? 'quick' : 'ranked';
+      return render();
+    }
+    case 'originStory': sound.play('click'); originOpen = true; return render();
+    case 'closeOrigin': originOpen = false; return render();
+    case 'navRealms': sound.play('click'); if (BUILD.online && srv.user) return onButton('dmOpen'); return onButton('patchNotes');
+    case 'navBuild':
+      sound.play('click');
+      if (pickedReady()) return onButton('editCuts');
+      screen = 'menu'; render(); return flash(`Pick ${pickNeeded() === 1 ? 'a realm' : `${pickNeeded()} realms`} to build a deck.`);
     case 'ai': {
       // From the menu: choose the AI opponent first (the pre-match screen).
       if (screen === 'menu' && !needsFirstPick() && picked.length === pickNeeded()) return openMatchSetup('ai');
@@ -4422,7 +4483,7 @@ function onButton(name) {
       return render();
     case 'playOffline':
       try { sessionStorage.setItem(OFFLINE_KEY, '1'); } catch { /* storage unavailable */ }
-      srv.disconnect(); acct.msg = null; screen = 'menu';
+      srv.disconnect(); acct.msg = null; screen = 'home';
       return render();
     case 'quickMatch': return queueMatch('quick');
     case 'rankedMatch': return queueMatch('ranked');
@@ -4667,7 +4728,7 @@ document.addEventListener('account', (e) => {
   if (e.detail === 'logout') srv.logout();
   try { sessionStorage.removeItem(OFFLINE_KEY); } catch { /* storage unavailable */ }
   lobby = { status: 'choose' }; acct.msg = null; acct.tab = 'login';
-  if (BUILD.online) { screen = 'signin'; connectServer(); } else screen = 'menu';
+  if (BUILD.online) { screen = 'signin'; connectServer(); } else screen = 'home';
   render();
 });
 
