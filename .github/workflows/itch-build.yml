@@ -22,6 +22,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check weapon rendering and equipment rules
+        run: |
+          node tools/test-weapon-frame.mjs
+          node tools/test-arsenal.mjs
+          node tools/test-robots-arsenal.mjs
+          node tools/test-witches-spellbound.mjs
       - name: Build the game (card art as WebP, bundled into packs)
         run: |
           pip install --quiet pillow

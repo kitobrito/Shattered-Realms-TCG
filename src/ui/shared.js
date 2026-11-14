@@ -103,7 +103,7 @@ export function cardHTML(card, { uid, playable, selected, back, choice, zoom, co
     : cuttable ? `data-cut="${card.id}"` : zoom ? `data-zoom="${card.id}"` : '';
   const costClass = cost != null && cost < card.cost ? 'cheaper' : cost > card.cost ? 'pricier' : '';
   return `
-    <div class="card t-${card.type} ${isCut ? 'cut' : ''} ${isDupe ? 'dupe' : ''} ${artOf(card) ? 'has-art' : ''} ${card.quickPlay ? 'quick' : ''} ${playable ? 'playable' : ''} ${respond ? 'respond' : ''} ${dim ? 'dim' : ''} ${selected ? 'selected' : ''} ${incomplete.length ? 'incomplete' : ''}"
+    <div class="card t-${card.type} ${weaponStatsForCard(card) ? 'weapon-card' : ''} ${isCut ? 'cut' : ''} ${isDupe ? 'dupe' : ''} ${artOf(card) ? 'has-art' : ''} ${card.quickPlay ? 'quick' : ''} ${playable ? 'playable' : ''} ${respond ? 'respond' : ''} ${dim ? 'dim' : ''} ${selected ? 'selected' : ''} ${incomplete.length ? 'incomplete' : ''}"
          data-preview="${card.id}" ${data}>
       ${(zoom || cuttable) && (card.beastForm ?? card.rebornAs) ? `<div class="beast-behind" aria-hidden="true">${bigCardHTML(getCard(card.beastForm ?? card.rebornAs), { small: true })}</div>` : ''}
       ${bigCardHTML(card, { cost, costClass, small: true })}
@@ -173,22 +173,37 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
     // Hero Weapons are spells that arm your Hero: Witches' Wands say so, other weapons (Robots, the Broom) say Weapon.
     : card.wand ? 'Wand' : weaponStatsForCard(card) ? 'Weapon' : 'Spell';
   const weaponStats = weaponStatsForCard(card);
-  const weaponStatsHTML = weaponStats ? `<div class="bc-weapon-stats" aria-label="Weapon: ${weaponStats.attack} Attack, ${weaponStats.durability} Durability"><span><i aria-hidden="true">⚔</i><b>${weaponStats.attack}</b><small>ATK</small></span><span><i aria-hidden="true">⛨</i><b>${weaponStats.durability}</b><small>DUR</small></span></div>` : '';
   const faction = fslug(card.faction);
-  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver, weaponStatsHTML });
+  if (weaponStats) return weaponCardHTML(card, {weaponStats, cost, costClass, extra, small, faction, incomplete, artOver});
+  if (!classicCards()) return shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver });
   return `
     <div class="big-card framed t-${card.type} f-${faction} ${incomplete.length ? 'is-pending' : ''} ${card.legendary ? 'legend' : ''}">
       <div class="bc-art">${artOver ?? artOf(card) ? `<img src="${artOver ?? artOf(card)}" alt="${esc(card.name)}" ${small ? 'loading="lazy"' : ''} draggable="false">` : `<span>${card.art ?? '✦'}</span>`}</div>
       <img class="bc-frame" src="art/frames/${card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell'}.png" alt="" draggable="false">
       <i class="bc-sock sock-cost"></i>${card.type === 'minion' ? '<i class="bc-sock sock-atk"></i><i class="bc-sock sock-hp"></i>' : ''}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
-      ${weaponStatsHTML}
       ${ribbonSVG(card.name, card.type)}
       <div class="bc-text"><span>${richText(card.text) || '<i>No card text.</i>'}${extra}</span></div>
       ${label ? `<div class="bc-type">${esc(label)}</div>` : ''}
       ${card.type === 'minion' ? `<span class="bc-gem bc-atk ${statClass(attack, card.attack)}">${attack ?? card.attack ?? '?'}</span><span class="bc-gem bc-hp ${hpClass} ${String(health ?? card.health ?? '').length > 1 ? 'two-digit' : ''}">${health ?? card.health ?? '?'}</span>` : ''}
       ${card.form === 'beast' ? '<span class="bc-token">Beast Form</span>' : card.formLabel ? `<span class="bc-token">${esc(card.formLabel)}</span>` : card.token ? '<span class="bc-token">Token</span>' : ''}
     </div>`;
+}
+
+// Equipment spells, Wands, relics and Legendary weapons all use the same
+// supplied frame, in every card view and in both appearance settings.
+export const WEAPON_FRAME_SRC = 'art/frames/weapon-universal.webp';
+function weaponCardHTML(card, {weaponStats, cost, costClass, extra, small, faction, incomplete, artOver}) {
+  const picture=artOver??artOf(card);
+  return `<div class="big-card shard universal-weapon t-${card.type} f-${faction} ${incomplete.length?'is-pending':''} ${card.legendary?'legend':''}" aria-label="${esc(card.name)} — Weapon">
+    <div class="bc-art">${picture?`<img src="${picture}" alt="${esc(card.name)}"${artFocus(card)} ${small?'loading="lazy"':''} draggable="false">`:`<span>${card.art??'⚔'}</span>`}</div>
+    <img class="bc-frame" src="${WEAPON_FRAME_SRC}" alt="" draggable="false">
+    <span class="bc-gem bc-cost ${costClass} ${String(cost??card.cost).length>1?'two-digit':''}">${cost??card.cost}</span>
+    <div class="bc-banner"><span>${esc(card.name)}</span></div>
+    <div class="bc-text"><span>${richText(card.text)||'<i>No card text.</i>'}${extra}</span></div>
+    <span class="bc-gem bc-atk ${String(weaponStats.attack).length>1?'two-digit':''}" title="Attack" aria-label="${weaponStats.attack} Attack">${weaponStats.attack}</span>
+    <span class="bc-gem bc-dur ${String(weaponStats.durability).length>1?'two-digit':''}" title="Durability" aria-label="${weaponStats.durability} Durability">${weaponStats.durability}</span>
+  </div>`;
 }
 
 // Players can switch back to the older painted frames in Settings.
@@ -212,7 +227,7 @@ const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs'
   'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels', 'Fruit Ninjas']);
 // Realms whose Legendary spells (and Legendary Weapons) wear their own painted frame.
 const LEGEND_SPELL_FRAMES = new Set(['Witches', 'Fruit Ninjas']);
-function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null, weaponStatsHTML = '' }) {
+function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {
   const type = card.type === 'minion' ? 'minion' : card.type === 'trap' ? 'trap' : 'spell';
   const frame = type === 'spell' && card.quickPlay ? 'quickplay' : type;
   const hp = health ?? card.health ?? '?';
@@ -248,7 +263,6 @@ function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hp
       ${legend ? '' : `<i class="sh-accent" style="-webkit-mask-image:url('art/frames/painted-${type}-glow.png');mask-image:url('art/frames/painted-${type}-glow.png')"></i>`}
       ${sigilHTML(card)}
       <span class="bc-gem bc-cost ${costClass}">${cost ?? card.cost}</span>
-      ${weaponStatsHTML}
       <div class="bc-banner"><span>${esc(card.name)}</span></div>
       ${label ? (type === 'minion'
     ? `<div class="bc-type lines-${label.split(' · ').length}">${label.split(' · ').map((w) => `<span>${esc(w)}</span>`).join('')}</div>`

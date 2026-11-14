@@ -6443,3 +6443,24 @@ body.reduced-motion .hero-portrait.eclipse::after { animation: none; }
 .sh-owned-pack button { min-width: 90px; }
 @keyframes sh-pack-bob { 50% { transform: translateY(-4px) rotate(-1.5deg); } }
 @media (prefers-reduced-motion: reduce) { .sh-owned-pack img { animation: none; } }
+
+/* Shared green weapon frame. Keep the hand/collection card footprint unchanged;
+   fit the narrower frame inside it so existing targeting and drag zones still fit. */
+.big-card.shard.universal-weapon{width:calc(var(--h)*.6704);border:0!important;background:none!important;box-shadow:none!important}
+.card:not(.back)>.big-card.universal-weapon{width:93.11%!important;left:3.445%!important;height:100%!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-art{left:17%!important;top:10.1%!important;width:66.1%!important;height:42.1%!important;border-radius:0!important;transform:none!important;border:0!important;box-shadow:none!important;overflow:hidden;z-index:0}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-art img{width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-banner{left:18%!important;top:54.2%!important;width:65%!important;height:4.9%!important;transform:none!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-banner span{font-size:1.55em;color:#fff4de!important;-webkit-text-stroke:0!important;paint-order:normal!important;text-shadow:0 .07em .14em #000;white-space:nowrap}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-text{left:18%!important;top:66.3%!important;width:64%!important;height:20.8%!important;padding:0!important;background:none!important;box-shadow:none!important;z-index:4}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-text span{font-size:1.35em;line-height:1.15}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-gem{display:grid!important;place-items:center!important;position:absolute!important;transform:none!important;background:none!important;clip-path:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important;color:#fff!important;text-shadow:0 .05em .08em #001b16,0 0 .08em #001b16;z-index:5;font-weight:900;line-height:1!important;-webkit-text-stroke:0!important;paint-order:normal!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost{left:5.26%!important;top:3.66%!important;width:19.08%!important;height:12.79%!important;font-size:3.9em!important;filter:none!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-atk{left:5.6%!important;top:84.4%!important;width:17%!important;height:11.8%!important;font-size:3.3em!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-dur{left:77.9%!important;top:84.4%!important;width:17%!important;height:11.8%!important;font-size:3.3em!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-gem.two-digit{font-size:2.9em!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.cheaper{color:#b7ffbd!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.pricier{color:#ffd0c3!important}
+body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-gem.bc-cost.cheaper,body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-gem.bc-cost.pricier{background:none!important}
+body.colorblind .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.cheaper{color:#c9e6ff!important}
+body.colorblind .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.pricier{color:#ffe0b8!important}
