@@ -334,3 +334,17 @@
 }
 @media (orientation: portrait), (max-width: 760px) { .rx-play .rx-head { order: -3; } .rx-play .rx-steps { order: -2; } .rx-play .rx-heroframe { width: 46vw; } }
 @media (orientation: portrait), (max-width: 760px) { .rx-play .rx-heroframe { flex: none !important; width: 50vw !important; height: 50vw !important; } }
+
+/* Islands keep their place when pressed or hovered (a general ".rx button:hover" rule used to reset
+   their centring transform, so a tap made the label jump off its island). */
+.rx .rx-hub .rx-isle, .rx .rx-hub .rx-isle:hover, .rx .rx-hub .rx-isle:active, .rx .rx-hub .rx-isle:focus { transform: translate(-50%, -50%) !important; }
+.rx .rx-hub .rx-isle.pressed { transform: translate(-50%, -50%) scale(0.96) !important; transition: transform 0.08s ease-out !important; }
+.rx-hub .rx-isle-build { --glow: 110, 215, 255; } .rx-hub .rx-isle-collection { --glow: 255, 205, 100; }
+.rx-hub .rx-isle-factions { --glow: 120, 255, 110; } .rx-hub .rx-isle-realms { --glow: 200, 120, 255; } .rx-hub .rx-isle-play { --glow: 255, 140, 60; }
+/* Pressing an island: a burst of light in its colour (a flash at the centre and a ring rushing out). */
+.rx-burst { position: absolute; left: 50%; top: 50%; width: 120%; aspect-ratio: 1; transform: translate(-50%, -50%) scale(0.2); border-radius: 50%; pointer-events: none; z-index: 3;
+  background: radial-gradient(circle, #fff 0%, rgba(255, 255, 255, 0.9) 10%, rgb(var(--glow)) 24%, rgba(var(--glow), 0.55) 45%, transparent 70%); filter: blur(1px); animation: rx-burst 0.7s cubic-bezier(.15,.8,.3,1) forwards; }
+.rx-burst.ring { background: none; border: 4px solid rgb(var(--glow)); box-shadow: 0 0 24px rgb(var(--glow)), inset 0 0 18px rgb(var(--glow)); width: 70%; filter: none; animation: rx-ring 0.7s cubic-bezier(.15,.8,.3,1) forwards; }
+@keyframes rx-burst { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 35% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0; } }
+@keyframes rx-ring { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.9); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .rx-burst { animation-duration: 0.01s; } }

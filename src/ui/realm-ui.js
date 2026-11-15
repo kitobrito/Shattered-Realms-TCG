@@ -119,3 +119,19 @@ export function originStoryHTML() {
       <button class="rx-gold" data-act="menu">${rxIcon('play')}<span>Enter the realms</span></button>
     </article></div>`;
 }
+
+// Pressing an island on Home: it sinks a touch and lets out a burst of light in its own colour.
+if (typeof document !== 'undefined') {
+  document.addEventListener('pointerdown', (e) => {
+    const isle = e.target.closest?.('.rx-hub .rx-isle');
+    if (!isle) return;
+    isle.classList.add('pressed');
+    for (const cls of ['rx-burst', 'rx-burst ring']) {
+      const b = document.createElement('i'); b.className = cls; isle.append(b);
+      b.addEventListener('animationend', () => b.remove(), { once: true });
+      setTimeout(() => b.remove(), 900);
+    }
+    const up = () => { isle.classList.remove('pressed'); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
+    addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
+}
