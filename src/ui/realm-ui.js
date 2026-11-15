@@ -135,3 +135,28 @@ if (typeof document !== 'undefined') {
     addEventListener('pointerup', up); addEventListener('pointercancel', up);
   });
 }
+
+// Leaving Home from an island, the sidebar or the tab bar: the island's light burst plays for a beat,
+// then the next screen turns in like the page of a book. Reduced-motion players go straight through.
+if (typeof document !== 'undefined') {
+  let turning = false;
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest?.('.rx-home .rx-isle, .rx-home .rx-side .rx-nav:not(.on), .rx-home .rx-tabbar button:not(.on)');
+    if (!btn || btn.dataset.turned === '1') return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (turning) return;
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced-motion');
+    const go = () => {
+      turning = false; btn.dataset.turned = '1'; btn.click();
+      const page = document.getElementById('app')?.firstElementChild;
+      if (!calm && page && !page.classList.contains('rx-home')) {
+        page.classList.add('rx-turn-in');
+        page.addEventListener('animationend', () => page.classList.remove('rx-turn-in'), { once: true });
+      }
+    };
+    if (calm) return go();
+    turning = true;
+    btn.closest('.rx-home')?.classList.add('rx-turn-out');
+    setTimeout(go, 260);
+  }, true);
+}

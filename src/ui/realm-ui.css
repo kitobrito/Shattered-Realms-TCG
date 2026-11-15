@@ -348,3 +348,12 @@
 @keyframes rx-burst { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 35% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0; } }
 @keyframes rx-ring { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.9); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .rx-burst { animation-duration: 0.01s; } }
+/* Leaving Home: the hub dips away, and the next screen turns in from the left like a book page. */
+.rx-home.rx-turn-out .rx-hub, .rx-home.rx-turn-out .rx-news, .rx-home.rx-turn-out .rx-side { transition: transform 0.26s ease-in, opacity 0.26s ease-in, filter 0.26s ease-in; }
+.rx-home.rx-turn-out .rx-hub { transform: scale(0.97); opacity: 0.55; filter: brightness(1.15); }
+.rx-home.rx-turn-out .rx-news, .rx-home.rx-turn-out .rx-side { opacity: 0.4; }
+#app { perspective: 1800px; }
+.rx-turn-in { transform-origin: 0% 50%; animation: rx-page-turn 0.55s cubic-bezier(.2,.75,.25,1) both; backface-visibility: hidden; }
+.rx-turn-in::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0) 40%, rgba(255,230,180,0.08) 80%, rgba(0,0,0,0)); animation: rx-page-shade 0.55s ease-out both; }
+@keyframes rx-page-turn { 0% { transform: rotateY(-62deg) translateX(-4%); opacity: 0; } 35% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes rx-page-shade { from { opacity: 1; } to { opacity: 0; } }
