@@ -352,8 +352,9 @@
 .rx-home.rx-turn-out .rx-hub, .rx-home.rx-turn-out .rx-news, .rx-home.rx-turn-out .rx-side { transition: transform 0.26s ease-in, opacity 0.26s ease-in, filter 0.26s ease-in; }
 .rx-home.rx-turn-out .rx-hub { transform: scale(0.97); opacity: 0.55; filter: brightness(1.15); }
 .rx-home.rx-turn-out .rx-news, .rx-home.rx-turn-out .rx-side { opacity: 0.4; }
-#app { perspective: 1800px; }
-.rx-turn-in { transform-origin: 0% 50%; animation: rx-page-turn 0.55s cubic-bezier(.2,.75,.25,1) both; backface-visibility: hidden; }
+.rx-turn-in { transform-origin: 0% 50%; animation: rx-page-turn 0.55s cubic-bezier(.2,.75,.25,1) backwards; backface-visibility: hidden; }
 .rx-turn-in::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0) 40%, rgba(255,230,180,0.08) 80%, rgba(0,0,0,0)); animation: rx-page-shade 0.55s ease-out both; }
-@keyframes rx-page-turn { 0% { transform: rotateY(-62deg) translateX(-4%); opacity: 0; } 35% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+/* The perspective lives in the transform itself: a perspective (or lasting transform) on #app would
+   pin "position: fixed" bars (the tab bar, the deck list) to the scrolling page instead of the screen. */
+@keyframes rx-page-turn { 0% { transform: perspective(1800px) rotateY(-62deg) translateX(-4%); opacity: 0; } 35% { opacity: 1; } 100% { transform: none; opacity: 1; } }
 @keyframes rx-page-shade { from { opacity: 1; } to { opacity: 0; } }
