@@ -43,6 +43,19 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-15-hand-fixes',
+    date: 'November 15',
+    title: 'Smoother card dragging',
+    tag: 'Fixes',
+    intro: 'Two small fixes to playing cards from your hand, mostly on phones.',
+    blocks: [
+      { cat: 'fix', h: 'Fixes', list: [
+        { cards: [], text: 'With six or more cards your hand splits into two rows. Pulling a front-row card up now always picks up that card, instead of sometimes switching to the card behind it. The front corner cards were the worst affected.' },
+        { cards: [], text: 'Picking up a card now closes any big card preview that was open, so it no longer covers the board while you drag.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-13-new-menus',
     date: 'November 13',
     title: 'A brand-new look for the menus',
