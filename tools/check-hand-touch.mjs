@@ -21,8 +21,10 @@ const line = (x0, y0, x1, y1, n) => Array.from({ length: n }, (_, i) => [x0 + (x
 
 await p.addInitScript(([f]) => { sessionStorage.setItem('shattered-offline', '1'); localStorage.setItem('shattered-journey', JSON.stringify({ games: 9, done: true, seen: [] })); localStorage.setItem('faction-ccg-settings', JSON.stringify({ tips: false, volume: 0, music: 0 })); localStorage.setItem('faction-ccg-format', 'single'); }, [faction]);
 await p.goto(`http://localhost:${process.env.PORT ?? 8766}/index.html`); await p.waitForFunction(() => !document.getElementById('boot')); await wait(800);
+await p.evaluate(() => document.querySelector('.rx-home [data-act="menu"]')?.click()); await wait(500); // the Home hub opens first
 await p.evaluate((f) => { const e = document.querySelector(`[data-faction="${f}"]`); if (e && !e.classList.contains('on')) e.click(); }, faction);
-await p.evaluate(() => document.querySelector('[data-act="ai"]')?.click()); await wait(400);
+await p.evaluate(() => { const m = document.querySelector('[data-act="playMode:ai"]'); if (m) { m.click(); } }); await wait(300);
+await p.evaluate(() => (document.querySelector('[data-act="confirmPlay"]') ?? document.querySelector('[data-act="ai"]'))?.click()); await wait(400);
 await p.evaluate(() => document.querySelector('[data-act="setupStart"]')?.click());
 await p.waitForFunction(() => window.__shattered().screen === 'game' && !document.querySelector('.game-loader'), null, { timeout: 30000 });
 for (let i = 0; i < 160; i++) { const d = await p.evaluate(() => { const g = window.__shattered(); const s = g.game.state; const pd = s.pending; if (pd?.player === g.viewer && !g.animating) { if (pd.type === 'mulligan') g.act({ type: 'mulligan', player: g.viewer, replace: [] }); else if (pd.type === 'choice') g.act({ type: 'choose', player: g.viewer, index: 0 }); } return !pd && s.activePlayer === g.viewer && !g.animating; }); if (d) break; await wait(250); }
@@ -34,6 +36,14 @@ const setHand = (n) => p.evaluate(async (n) => { const core = await import('./sr
   const cheap = pool.find((c) => c.cost === 1) ?? pool[0]; const dear = pool.filter((c) => c.cost >= 4);
   core.addToHand(s, g.viewer, cheap.id); for (let i = 1; i < n; i++) core.addToHand(s, g.viewer, dear[i % dear.length].id);
   me.mana.current = 1; me.mana.max = 1; g.render(); return me.hand.map((c) => c.uid); }, n);
+// Same, with the one affordable card at a chosen spot in the hand.
+const setHandAt = (n, at) => p.evaluate(async ([n, at]) => { const core = await import('./src/engine/core.js'); const g = window.__shattered(); const s = g.game.state; const me = s.players[g.viewer];
+  me.hand.length = 0; const f = me.factions[0]; const reg = await import('./src/engine/registry.js');
+  const pool = reg.allCards().filter((c) => c.faction === f && c.type === 'minion' && !c.token && !c.extra);
+  const cheap = pool.find((c) => c.cost === 1) ?? pool[0]; const dear = pool.filter((c) => c.cost >= 4);
+  for (let i = 0; i < n; i++) core.addToHand(s, g.viewer, i === at ? cheap.id : dear[i % dear.length].id);
+  for (const m of me.board.splice(0)) { /* room on the board */ }
+  me.mana.current = 1; me.mana.max = 1; g.render(); return me.hand.map((c) => c.uid); }, [n, at]);
 const state = () => p.evaluate(() => ({
   docked: !!document.querySelector('.my-hand.docked'),
   inspect: [...document.querySelectorAll('.my-hand .inspect')].map((e) => Number(e.dataset.hand)),
@@ -122,6 +132,28 @@ if (mode === 'portrait') {
   for (let i = 0; i < 24; i++) { await touch('touchMove', seam.x + (i % 3) - 1, seam.y + ((i % 2) ? 3 : -3)); await wait(25); const st = await state(); if (st.reading[0] != null && jit[jit.length - 1] !== st.reading[0]) jit.push(st.reading[0]); }
   await touch('touchEnd'); await wait(300);
   ok(jit.length <= 1, `a thumb jittering on the seam keeps showing one card (${jit.map((u) => uids.indexOf(u)).join('→')})`);
+}
+
+// --- 6b. Portrait, six cards (two rows): the front corner cards can be pulled straight up onto the board,
+// even after holding them to read (sliding up used to switch to the back-row card above), and picking a
+// card up closes the big preview.
+if (mode === 'portrait') {
+  for (const [at, label] of [[3, 'front-left'], [5, 'front-right']]) {
+    await p.waitForFunction(() => !window.__shattered().animating, null, { timeout: 15000 }); await wait(400);
+    uids = await setHandAt(6, at); await wait(700);
+    const c = await centerOf(uids[at]);
+    const sx = c.r.l + c.r.w * (at === 3 ? 0.3 : 0.7), sy = c.r.t + c.r.h * 0.6;
+    await touch("touchStart", sx, sy); await wait(900); // hold: the card is being read, its preview open
+    const reading = (await state()).preview != null;
+    const to = await p.evaluate(() => { const r = document.querySelector('.board.me').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+    await slide(line(sx, sy, to.x, to.y, 18), 25);
+    const mid = await state();
+    await touch('touchEnd'); await wait(900);
+    const after = await state();
+    ok(reading && mid.preview == null, `picking up the ${label} card closes its preview (open while held: ${reading}, while dragging: ${mid.preview})`);
+    await p.waitForFunction(() => !window.__shattered().animating, null, { timeout: 15000 }); await wait(400);
+    ok(after.hand === 5, `the ${label} card in a six-card hand is played by holding it and dragging up (hand ${after.hand})`);
+  }
 }
 
 // --- 7. Drag an unaffordable card onto the board: now it says why; drag an affordable one: it's played.

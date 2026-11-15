@@ -394,6 +394,8 @@ function readCard(p, el) {
 function startDrag(p) {
   endHold();
   clearInspect();
+  // Picking a card up closes any big preview that was open (it would cover the board).
+  api.inspect?.(null);
   const rect = p.el.getBoundingClientRect();
   // Touch: the card rides above your thumb so you can see it (and where it will land).
   const lift = p.touch ? { offX: rect.width / 2, offY: rect.height + 14 } : { offX: p.x - rect.left, offY: p.y - rect.top };
@@ -415,7 +417,10 @@ function onMove(e) {
     } else if (press.held) {
       // Reading (held, or sliding along the hand): the card under the finger is the one shown;
       // leaving the hand upwards picks the shown card up.
-      if (e.clientY < cardsTop(press) - 10 && far) startDrag(press);
+      // A clear pull upward (steeper than ~50 degrees) picks up the card being read straight away.
+      // In a two-row hand the front row sits under the back row: sliding up from a front card used to
+      // switch to the back-row card under the finger instead of lifting the one you pressed.
+      if ((e.clientY < cardsTop(press) - 10 && far) || (far && -dy > 22 && -dy > Math.abs(dx) * 1.2)) startDrag(press);
       else { const over = pickAlongHand(press, e.clientX, e.clientY); if (over && over !== press.el) readCard(press, over); }
     } else if (far) {
       // Not held yet: pulling up (anything steeper than about 25 degrees) drags the card out, toward
