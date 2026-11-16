@@ -27,6 +27,7 @@ jobs:
           node-version: '22'
       - name: Check weapon rendering and equipment rules
         run: |
+          node tools/test-card-motion.mjs
           node tools/test-weapon-frame.mjs
           node tools/test-arsenal.mjs
           node tools/test-robots-arsenal.mjs

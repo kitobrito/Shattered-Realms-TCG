@@ -21,6 +21,7 @@ import { boardFaction, boardUnlocked, chosenBoard, boardHTML, boardRealmOf, desc
 import { boardReact, canPokeBoard, hideBoard, pokeBoard, resetDescentBoard, showBoard } from './board-layer.js';
 import { startBoardFx } from './circle-fx.js';
 import * as drag from './drag.js';
+import {capturePlacement,landPiece,settleCard,directStrike} from './card-motion.js';
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
@@ -863,6 +864,7 @@ async function act(action, meta = {}) {
     }
     action = legal;
   }
+  const placement=!meta.remote&&action.player===viewer&&['play','quickPlay'].includes(action.type)?(meta.placement??capturePlacement(meta.from??app.querySelector(`[data-hand="${action.card}"]`))):null;
   animating = true;
   // The opponent's moves leave the card you are reading where it is (no closing and reopening).
   if (!meta.remote && !isAI(action.player)) { drag.cancel(); hidePreview(); }
@@ -882,6 +884,7 @@ async function act(action, meta = {}) {
   before.castType = playedCard?.type;
   before.eclipse = s.players.map((p) => !!p.hero.eclipse);
   before.playedId = playedCard?.id;
+  before.placement=playedCard?.type==='minion'?placement:null;
 
   // ---- Before: the move itself.
   let lunged = null;
@@ -897,7 +900,8 @@ async function act(action, meta = {}) {
       if (striker?.kind === 'hero' && ['flintlock_pistol', 'hidden_hand_cannon'].includes(activeWeapon?.cardId)) sound.play('gunshot');
       else if (striker?.kind === 'hero' && activeWeapon?.cardId === 'silver_bolt_crossbow') sound.play('crossbow');
       // Witches: a Hero with a Wand fires from afar — a bolt, not a lunge.
-      if (striker?.kind === 'hero' && striker.weapon?.wand) { sound.play('zap'); await fx.wandBolt(charEl(action.attacker), charEl(action.defender), effectiveAttack(striker)); }
+      if(meta.directAttack)await directStrike(charEl(action.attacker),charEl(action.defender),meta.attackDrag,{weight:striker?effectiveAttack(striker):2,color:fx.factionColor(before.srcFaction),table:app.querySelector('.arena')});
+      else if (striker?.kind === 'hero' && striker.weapon?.wand) { sound.play('zap'); await fx.wandBolt(charEl(action.attacker), charEl(action.defender), effectiveAttack(striker)); }
       // Monster Hunter legendaries: Moon's silver streak, Sun's beam and its hellfire bullet at the enemy Hero.
       else if (legend === 'moon_revolver') { sound.play('gunshot'); await fx.moonShot(charEl(action.attacker), charEl(action.defender)); }
       else if (legend === 'sun_revolver') {
@@ -955,6 +959,8 @@ async function act(action, meta = {}) {
         if (action.type === 'play') await spotlightCard(playedCard.id, `${s.players[action.player].name} played`);
         else await revealPlayed(playedCard.id);
         if (flourish) await fx.castFlourish(null, null, before.srcFaction, spellTarget);
+      } else if(placement&&playedCard.type!=='minion'){
+        await settleCard(placement);
       } else if (flourish) {
         const from = meta.from && document.body.contains(meta.from) ? meta.from.getBoundingClientRect() : null;
         if (meta.from) meta.from.style.visibility = 'hidden';
@@ -1305,6 +1311,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
 
   // New minions drop in; moved ones glide (FLIP). Expensive ones make an entrance.
   let summoned = false;
+  let placedImpact=false;
   let bigEntrance = false;
   const moving = new Set();
   for (const el of app.querySelectorAll('.minion[data-char]')) {
@@ -1313,6 +1320,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
       summoned = true;
       const m = findCharacter(s, Number(el.dataset.char));
       const card = m && getCard(m.cardId);
+      if(before.placement&&!before.placementUsed&&m?.controller===action.player&&card?.id===before.playedId){before.placementUsed=true;placedImpact=true;jobs.push(landPiece(el,before.placement,{weight:card.cost,color:fx.factionColor(card.faction),table:app.querySelector('.arena'),onImpact:()=>sound.play('minionLand')}));continue;}
       if (before.beyond.has(m?.uid)) { jobs.push(fx.portalIn(el, card?.faction)); continue; }
       if (ownEntrance.has(m?.uid)) continue;
       if (card && card.cost >= 7) { bigEntrance = true; jobs.push(fx.entrance(el, esc(card.name), card.faction)); }
@@ -1320,7 +1328,7 @@ async function afterEffects(s, before, rects, oldMinions, action, lunged) {
     }
     else if (Number(el.dataset.char) !== action.attacker) moving.add(key);
   }
-  if (summoned) sound.play(bigEntrance ? 'bigHit' : 'minionLand');
+  if (summoned&&!placedImpact) sound.play(bigEntrance ? 'bigHit' : 'minionLand');
   if (bigEntrance) jobs.push(fx.screenShake(app.querySelector('.arena') ?? app, 10));
   jobs.push(fx.flip(app, rects, moving));
 

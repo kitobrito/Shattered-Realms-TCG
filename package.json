@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/server.js",
     "test:server": "node tools/test-server.mjs",
-    "test:weapon-frame": "node tools/test-weapon-frame.mjs"
+    "test:weapon-frame": "node tools/test-weapon-frame.mjs",
+    "test:card-motion": "node tools/test-card-motion.mjs"
   },
   "engines": {
     "node": ">=20"

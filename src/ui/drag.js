@@ -1,6 +1,6 @@
 // Pointer input for the battle screen: drag cards from the hand onto the
 // board (choosing the slot), and aim targeting arrows for targeted cards,
-// Hero Spells and attacks. Every option comes from the engine's legal
+// Hero Spells. Attacks drag the actual character onto a legal enemy. Every option comes from the engine's legal
 // actions, so the UI can never submit an illegal move.
 //
 // api: { root(): Element, legal(): action[], canAct(): bool, act(action, meta), onChange(), inspect(el) }
@@ -23,6 +23,7 @@
 // legal) the moment the animation ends.
 
 import { ghost } from './fx.js';
+import {attackTargetAt,beginAttackDrag,moveAttackDrag,endAttackDrag,capturePlacement} from './card-motion.js';
 import { setHandOpen } from './board.js';
 
 const DRAG_START = 6; // px of movement before a press becomes a drag (mouse)
@@ -35,7 +36,7 @@ const HOLD_MS = 320;  // press and hold a hand card this long (without moving) f
 let api = null;
 let press = null;   // pointer is down on something
 let drag = null;    // a hand card is being dragged
-let aim = null;     // a targeting arrow is active
+let aim = null;     // a target selection is active
 let inspected = null; // touch: hand card uid shown in the preview, waiting for a second tap
 let queued = null;    // a card dropped during an animation, waiting to be played
 let pointerId = null; // the finger (or mouse) the current press/drag belongs to; other touches are ignored
@@ -75,7 +76,7 @@ function drawArrow(from, to, locked) {
 }
 
 function hideArrow() {
-  for (const el of document.querySelectorAll('.aim-over')) el.classList.remove('aim-over');
+  for (const el of document.querySelectorAll('.aim-over, .attack-drop-target')) el.classList.remove('aim-over','attack-drop-target');
   document.getElementById('arrow-layer')?.classList.remove('show');
 }
 
@@ -102,6 +103,7 @@ function paintTargets() {
 
 // Re-apply transient classes after the board re-renders.
 export function refresh() {
+  if(aim?.dragVisual){const current=api.root().querySelector(`[data-char="${aim.options[0]?.attacker}"]`);if(!current){cancel();return;}aim.dragVisual.source=current;current.classList.add('attack-drag-src');}
   paintTargets();
   if (inspected != null) {
     const el = api.root().querySelector(`[data-hand="${inspected}"]`);
@@ -124,8 +126,8 @@ export const recentlyAimed = () => Date.now() - aimEndedAt < 500;
 
 // options: legal actions that all need a target; key(a) gives the target uid.
 // extra: fields to add to the chosen action (e.g. { position }).
-function startAim(fromEl, options, { key = (a) => a.target, extra = {}, source = null } = {}) {
-  aim = { from: centerOf(fromEl), options, key, extra, first: null, source, pointer: null };
+function startAim(fromEl, options, { key = (a) => a.target, extra = {}, source = null, attack = false } = {}) {
+  aim = { from: centerOf(fromEl), options, key, extra, first: null, source, attack, pointer: null };
   // Aiming an attack or a Hero Spell from the board: the raised hand steps back to its corner,
   // out of the way of the targets (aiming a card dragged out of the hand leaves it alone).
   if (!fromEl.closest('.my-hand') && !drag) setHandOpen(false, api.root(), { force: true });
@@ -154,9 +156,11 @@ function pickTarget(uid) {
 
 function finish(action) {
   aimEndedAt = Date.now();
-  const { extra, source } = aim;
+  const { extra, source, attack } = aim;
+  const attackDrag=aim.dragVisual?.copy.getBoundingClientRect();
+  const placement=aim.ghost?capturePlacement(aim.ghost):null;
   cancel();
-  api.act({ ...action, ...extra }, { from: source });
+  api.act({ ...action, ...extra }, { from: source, directAttack:attack, attackDrag, placement });
 }
 
 function clearInspect() {
@@ -202,6 +206,7 @@ export function cancel() {
   clearInspect();
   if (drag?.ghost) drag.ghost.remove();
   if (aim?.ghost) aim.ghost.remove();
+  if(aim?.dragVisual)endAttackDrag(aim.dragVisual);
   api?.root().querySelector('.drag-src')?.classList.remove('drag-src');
   removeGap();
   drag = null;
@@ -371,8 +376,9 @@ function onDown(e) {
       if (charEl.classList.contains('minion') && charEl.closest('.board.me')) api.deny?.(charEl, 'attack', uid);
       return;
     }
-    press = { kind: 'attack', el: charEl, options, x: e.clientX, y: e.clientY };
-    startAim(charEl, options, { key: (a) => a.defender, source: charEl });
+    api.inspect?.(null);clearInspect();
+    press = { kind: 'attack', el: charEl, options, x: e.clientX, y: e.clientY, touch:e.pointerType==='touch',lastPoint:{x:e.clientX,y:e.clientY,time:performance.now()} };
+    startAim(charEl, options, { key: (a) => a.defender, source: charEl,attack:true });
   } else {
     return;
   }
@@ -449,13 +455,25 @@ function onMove(e) {
     g.classList.toggle('lifted', lifted);
     if (drag.minion && overBoard(e.clientX, cardY(e))) showGap(slotIndex(e.clientX)); else removeGap();
   }
+  if(aim?.attack){
+    const point={x:e.clientX,y:e.clientY,time:performance.now()};
+    const hit=attackTargetAt(api.root(),aim.options,point,press?.lastPoint,{touch:press?.touch});
+    if(press?.kind==='attack'){
+      if(!aim.dragVisual&&Math.hypot(point.x-press.x,point.y-press.y)>dragStart(press))aim.dragVisual=beginAttackDrag(press.el,{x:press.x,y:press.y});
+      if(aim.dragVisual)moveAttackDrag(aim.dragVisual,point,!!hit);
+      press.previousPoint=press.lastPoint;press.lastPoint=point;
+    }
+    hideArrow();
+    if(hit)hit.el.classList.add('attack-drop-target');
+    return;
+  }
   if (aim) {
     const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-char]');
     const set = targetSet();
     const locked = over && set.has(Number(over.dataset.char));
     drawArrow(aim.from, locked ? centerOf(over) : { x: e.clientX, y: e.clientY }, locked);
     // The character in the crosshairs braces itself.
-    for (const el of api.root().querySelectorAll('.aim-over')) if (el !== over || !locked) el.classList.remove('aim-over');
+    for (const el of api.root().querySelectorAll('.aim-over')) if (el !== over || !locked) el.classList.remove('aim-over','attack-drop-target');
     if (locked) over.classList.add('aim-over');
   }
 }
@@ -466,9 +484,13 @@ function onUp(e) {
   // Releasing / clicking while aiming (attack drags, or click-to-target).
   if (aim && (!press || press.kind === 'attack')) {
     const moved = press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > dragStart(press);
-    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-char]');
+    if(aim.attack&&!api.canAct()){cancel();return;}
+    const point={x:e.clientX,y:e.clientY,time:performance.now()};
+    const prior=press?.lastPoint;
+    const crossing=prior&&Math.hypot(prior.x-point.x,prior.y-point.y)<2?press.previousPoint:prior;
+    const over=aim.attack?attackTargetAt(api.root(),aim.options,point,crossing,{touch:press?.touch})?.el:document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-char]');
     if (over && pickTarget(Number(over.dataset.char))) { press = null; return; }
-    // A plain click on the source keeps the arrow up (click-to-target); otherwise cancel.
+    // A plain click on the source keeps legal targets selected (click-to-target); otherwise cancel.
     if (press && !moved) { press = null; return; }
     cancel();
     return;
@@ -542,7 +564,7 @@ function onUp(e) {
       }
       drag = null;
       press = null;
-      api.act({ ...options[0], ...(position != null ? { position } : {}) }, { from: g, dropped: true });
+      api.act({ ...options[0], ...(position != null ? { position } : {}) }, { from: g, dropped: true, placement:capturePlacement(g) });
       g.remove();
       return;
     }
@@ -583,7 +605,7 @@ function waitForTurn() {
       handEl?.classList.add('drag-src');
       return;
     }
-    api.act({ ...options[0], ...(q.position != null ? { position: q.position } : {}) }, { from: q.ghost, dropped: true });
+    api.act({ ...options[0], ...(q.position != null ? { position: q.position } : {}) }, { from: q.ghost, dropped: true, placement:capturePlacement(q.ghost) });
     q.ghost.remove();
     return;
   }
