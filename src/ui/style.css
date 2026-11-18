@@ -6464,3 +6464,27 @@ body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.pr
 body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-gem.bc-cost.cheaper,body .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-gem.bc-cost.pricier{background:none!important}
 body.colorblind .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.cheaper{color:#c9e6ff!important}
 body.colorblind .big-card.shard.universal-weapon:is(.legend,.t-spell,.t-weapon) .bc-cost.pricier{color:#ffe0b8!important}
+
+/* ==== Calm board (Settings > Calm board, on by default) ====
+   The cards should be the brightest, busiest thing on screen. The realm's painting stays, but steps back:
+   dimmed and a little desaturated with a soft vignette, a quiet dark pool under each row of minions,
+   smaller stat badges, faded corner icons (full strength on hover), and no floating Zzz. */
+body.calm-board #board-layer .board-stage,
+body.calm-board #board-layer .board-backdrop { filter: brightness(0.6) saturate(0.7); transition: filter 0.4s ease; }
+body.calm-board #board-layer .board-stage::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 50;
+  background: radial-gradient(ellipse 62% 58% at 50% 50%, transparent 55%, rgba(4, 3, 10, 0.5) 100%);
+}
+body.calm-board .arena .board::before {
+  content: ''; position: absolute; inset: -14% -3%; z-index: -1; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(6, 5, 14, 0.5) 0%, rgba(6, 5, 14, 0.32) 45%, transparent 72%);
+}
+/* Stat badges: about a fifth smaller, anchored to their corners. */
+body.calm-board .arena .minion .atk, body.calm-board .arena .minion .sm-socket.l { scale: 0.8; transform-origin: 0% 100%; }
+body.calm-board .arena .minion .hp, body.calm-board .arena .minion .sm-socket.r { scale: 0.8; transform-origin: 100% 100%; }
+/* Keyword and status icons: small and faded until you look at that minion. */
+body.calm-board .arena .minion .icons { opacity: 0.55; scale: 0.82; transform-origin: 100% 0%; transition: opacity 0.2s ease, scale 0.2s ease; }
+body.calm-board .arena .minion:hover .icons, body.calm-board .arena .minion.targetable .icons { opacity: 1; scale: 1; }
+/* Just summoned: no floating Zzz, the minion is simply a little greyed out until it can attack. */
+body.calm-board .arena .minion .m-zzz { display: none !important; }
+body.calm-board .arena .minion.asleep .m-art { filter: brightness(0.8) saturate(0.6); }
