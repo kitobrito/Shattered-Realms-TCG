@@ -9,7 +9,7 @@ import * as srv from './server-link.js';
 
 const KEY = 'faction-ccg-settings';
 const SPEEDS = { normal: 1, fast: 0.65, turbo: 0.4 };
-const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false, orientation: 'landscape' };
+const DEFAULTS = { volume: 80, music: 50, speed: 'normal', reducedMotion: false, colorBlind: false, tips: true, difficulty: 'medium', classicCards: false, vibration: true, turnTimerVsAI: false, aiSpeed: 'same', basicBoard: false, calmBoard: true, orientation: 'landscape' };
 // Extra speed-up just for the AI's turns (on top of Game speed).
 export const AI_SPEEDS = { same: 1, fast: 0.55, turbo: 0.3 };
 
@@ -70,6 +70,7 @@ export function applySettings(settings = getSettings()) {
   document.body.classList.toggle('reduced-motion', settings.reducedMotion);
   document.body.classList.toggle('colorblind', settings.colorBlind);
   document.body.classList.toggle('classic-cards', settings.classicCards);
+  document.body.classList.toggle('calm-board', settings.calmBoard);
   sound.setHaptics(settings.vibration);
   applyOrientation(settings.orientation);
 }
@@ -105,6 +106,7 @@ export function openSettings() {
         <div class="seg">${[['landscape', 'Landscape'], ['portrait', 'Portrait']].map(([k, n]) => `<button data-orientation="${k}" class="${st.orientation === k ? 'on' : ''}">${n}</button>`).join('')}</div>
         <i>Hold your phone sideways (Landscape) or upright (Portrait)</i></div>` : ''}
       <label class="set-row"><span>Turn timer vs AI</span><input type="checkbox" data-set="turnTimerVsAI" ${st.turnTimerVsAI ? 'checked' : ''}><i>Off: take as long as you like against the computer (online and hot-seat games are always timed)</i></label>
+      <label class="set-row"><span>Calm board</span><input type="checkbox" data-set="calmBoard" ${st.calmBoard ? 'checked' : ''}><i>Dims the scenery behind the cards, smaller stat badges, no floating Z's</i></label>
       <label class="set-row"><span>Basic board</span><input type="checkbox" data-set="basicBoard" ${st.basicBoard ? 'checked' : ''}><i>Play on a plain, calm hilltop instead of your realm's board</i></label>
       <label class="set-row"><span>Reduce motion</span><input type="checkbox" data-set="reducedMotion" ${st.reducedMotion ? 'checked' : ''}><i>Shorter, calmer animations</i></label>
       <label class="set-row"><span>Colour-blind mode</span><input type="checkbox" data-set="colorBlind" ${st.colorBlind ? 'checked' : ''}><i>Blue / orange instead of green / red</i></label>

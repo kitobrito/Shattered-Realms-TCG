@@ -43,6 +43,21 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-18-calm-board',
+    date: 'November 18',
+    title: 'A calmer board',
+    tag: 'Easier on the eyes',
+    intro: 'Matches were a lot to look at. The board now steps back so your cards are the brightest thing on screen.',
+    blocks: [
+      { cat: 'qol', h: 'Calm board', list: [
+        { cards: [], text: 'The realm painting behind the battle is dimmed and softened a little, with a gentle dark edge, and each row of minions sits on a quiet dark patch so the cards stand out from the floor.' },
+        { cards: [], text: 'Attack and Health badges on minions are a bit smaller, and keyword icons stay small and faded until you hover over a minion.' },
+        { cards: [], text: 'No more floating Zzz: a minion that cannot attack yet is simply a little greyed out.' },
+        { cards: [], text: 'Prefer the old look? Turn off Calm board in Settings.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-15-hand-fixes',
     date: 'November 15',
     title: 'Smoother card dragging and a livelier Home',
