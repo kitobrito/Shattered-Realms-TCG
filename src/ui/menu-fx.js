@@ -11,7 +11,7 @@ const calm = () => document.body.classList.contains('reduced-motion') || matchMe
 // slides into the matchup strip.
 export function realmPicked(root, faction) {
   if (calm()) return;
-  const medal = root.querySelector(`.slab[data-faction="${CSS.escape(faction)}"] .slab-face, .medallion[data-faction="${CSS.escape(faction)}"] .medal-face`);
+  const medal = root.querySelector(`.rx-slot.filled[data-faction="${CSS.escape(faction)}"] .m2-medal, .slab[data-faction="${CSS.escape(faction)}"] .slab-face, .medallion[data-faction="${CSS.escape(faction)}"] .medal-face`);
   if (medal) {
     const r = medal.getBoundingClientRect();
     fx.particles(r, faction, 4);
