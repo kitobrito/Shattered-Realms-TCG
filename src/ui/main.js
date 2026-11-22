@@ -25,6 +25,7 @@ import {capturePlacement,landPiece,settleCard,directStrike} from './card-motion.
 import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
+import { initFactionDrag } from './faction-drag.js';
 import { artOf, minionArtOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
@@ -201,8 +202,23 @@ let builderMode = 'cut';   // which deck builder is open: 'cut' (build your deck
 // ---- Game flow ------------------------------------------------------------
 
 const pickNeeded = () => (format === 'single' ? 1 : Math.min(DEFAULT_RULES.factionsPerDeck, PLAYABLE_FACTIONS.length));
-let picked = PLAYABLE_FACTIONS.slice(0, pickNeeded());
-let pickCleared = false; // the player un-picked every realm on purpose: don't pick one for them
+// The Play screen opens with both faction slots empty: nothing is picked for you.
+let picked = [];
+let pickCleared = true; // no realm picked (on purpose): don't pick one for them
+let armedSlot = null;   // a full slot the player tapped to change: the next faction tapped goes there
+// Put a faction in a slot (Faction 1 = 0, Faction 2 = 1). One already in the other slot swaps over;
+// a slot past the picked ones just fills the next free one.
+function pickInto(slot, f) {
+  const next = [...picked];
+  const at = next.indexOf(f);
+  if (at === slot) return false;
+  if (at >= 0) [next[at], next[slot]] = [next[slot], f];
+  else if (slot >= next.length) next.push(f);
+  else next[slot] = f;
+  picked = next.filter(Boolean).slice(0, pickNeeded());
+  pickCleared = !picked.length; armedSlot = null;
+  return true;
+}
 // Each format remembers its own pick when you switch between them.
 const otherPick = { pair: null, single: null };
 function setFormat(next) {
@@ -2874,6 +2890,20 @@ function renderMenu() {
     <div class="m2-deck">${starterMode() ? '<p class="deck-line sub">You play a <b>starter deck</b>: simple cards to learn with. Your rival does too.</p>' : deckLineHTML()}</div>
     ${ready ? `<button class="m2-guide" data-act="guide"><span>${sets.length ? esc(sets.join(' · ')) : 'What these realms do'}</span><b>Realm guide ${icon('chevron')}</b></button>` : ''}`;
   const cornerStyle = `--c1:${picked[0] ? fx.factionColor(picked[0]) : '#8a6cff'};--c2:${picked[1] ? fx.factionColor(picked[1]) : picked[0] ? fx.factionColor(picked[0]) : '#ffd25a'}`;
+  // The faction slots: drag or tap factions in. The glowing slot is the one the next tap fills.
+  const nextSlot = armedSlot != null && picked[armedSlot] ? armedSlot : picked.length < pickNeeded() ? picked.length : null;
+  const slotBox = (i) => {
+    const f = picked[i];
+    const label = pickNeeded() === 1 ? 'Your faction' : `Faction ${i + 1}`;
+    return f
+      ? `<div class="rx-slot filled ${nextSlot === i ? 'active' : ''}" data-pickslot="${i}" data-faction="${esc(f)}" style="--fc:${fx.factionColor(f)}" title="${armedSlot === i ? 'Now tap or drag a faction to put here' : 'Tap to change this faction'}">
+          <small class="rx-slot-label">${label}</small>${medal(f)}<b>${esc(f)}</b><button class="rx-slot-x" data-slotclear="${i}" aria-label="Clear ${label}">✕</button></div>`
+      : `<div class="rx-slot empty ${nextSlot === i ? 'active' : ''}" data-pickslot="${i}">
+          <small class="rx-slot-label">${label}</small><span class="m2-medal empty"><b>+</b></span><b>${nextSlot === i ? 'Tap or drag a faction' : 'Pick Faction 1 first'}</b></div>`;
+  };
+  // Above the hero on a wide screen; on a phone a copy rides at the top of the faction grid, so a
+  // faction can be dragged into a slot without scrolling away from it.
+  const slotsHTML = (cls) => `<div class="rx-slots ${cls}">${Array.from({ length: pickNeeded() }, (_, i) => slotBox(i)).join('<i class="rx-plus-big">+</i>')}${picked.length ? '<button class="rx-slots-clear" data-slotclear="-1">Clear</button>' : ''}</div>`;
   // The Play screen (new look): 1 pick realms, 2 pick a mode, 3 confirm.
   const tile = (f) => {
     const on = picked.includes(f), sealed = !open.includes(f);
@@ -2896,11 +2926,12 @@ function renderMenu() {
       <section class="rx-panel rx-fpanel">
         <h3>Select your ${pickNeeded() === 1 ? 'faction' : 'factions'}</h3>
         ${pairUnlocked() ? `<div class="rx-seg"><button data-act="formatSingle" class="${format === 'single' ? 'on' : ''}">One faction</button><button data-act="formatPair" class="${format === 'pair' ? 'on' : ''}">Two factions</button></div>` : ''}
+        ${slotsHTML('rx-slots-phone')}
         <div class="rx-fgrid">${roster.filter((f) => playable.includes(f)).map(tile).join('')}</div>
         ${progress ? `<p class="rx-journey">${esc(progress)} <button class="rx-link" data-act="journeySkip">Unlock everything</button></p>` : ''}
       </section>
       <section class="rx-heroarea">
-        <div class="rx-pair">${picked[0] ? medal(picked[0]) : '<span class="m2-medal empty"><b>?</b></span>'}${pickNeeded() > 1 ? `<i class="rx-plus-big">+</i>${picked[1] ? medal(picked[1]) : '<span class="m2-medal empty"><b>?</b></span>'}` : ''}</div>
+        ${slotsHTML('rx-slots-main')}
         <div class="rx-heroframe stage"><div class="stage-portrait">${portrait}</div></div>
         <div class="rx-nameplate"><b>${picked.length ? picked.map(esc).join(' + ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`}</b>
           ${fusion ? `<button class="rx-fusion" data-zoom="${fusion.id}" title="See the Fusion card">Fusion: ${esc(fusion.name)}</button>` : ready && format === 'single' && FACTION_INFO[picked[0]] ? `<small>${esc(FACTION_INFO[picked[0]].style)}</small>` : ''}</div>
@@ -3727,6 +3758,13 @@ function keepInputs() {
 
 // One-off animations to play right after the next render (menu-fx.js).
 const afterRender = [];
+initFactionDrag({
+  canDrag: () => screen === 'menu' && !needsFirstPick() && !matchSetup,
+  drop(f, slot) {
+    // Faction 2 can't be filled while Faction 1 is empty: a drop there lands in Faction 1.
+    if (pickInto(Math.min(slot, picked.length), f)) { sound.play('click'); afterRender.push(() => mfx.realmPicked(app, f)); render(); }
+  },
+});
 function render() {
   // A new screen opens at its top (menus scroll inside #app).
   if (screen !== shownScreen) app.scrollTop = 0;
@@ -4269,6 +4307,20 @@ app.addEventListener('click', (e) => {
     return render();
   }
   if (e.target.closest('[data-sealed]') && screen === 'menu') return flash('This realm opens as you play: two more after every match.');
+  const slotClear = screen === 'menu' && e.target.closest('[data-slotclear]');
+  if (slotClear) {
+    const slot = Number(slotClear.dataset.slotclear);
+    picked = slot < 0 ? [] : picked.filter((_, i) => i !== slot);
+    pickCleared = !picked.length; armedSlot = null; sound.play('click');
+    return render();
+  }
+  const pickSlot = screen === 'menu' && e.target.closest('[data-pickslot]');
+  if (pickSlot) {
+    const slot = Number(pickSlot.dataset.pickslot);
+    armedSlot = picked[slot] && armedSlot !== slot ? slot : null;
+    sound.play('click');
+    return render();
+  }
   const chip = e.target.closest('[data-faction]');
   if (chip && (screen === 'menu' || (screen === 'online' && lobbyEditable()))) {
     const f = chip.dataset.faction;
@@ -4283,10 +4335,15 @@ app.addEventListener('click', (e) => {
       afterRender.push(() => mfx.realmPicked(app, f));
       return render();
     }
-    const adding = !picked.includes(f);
-    picked = adding ? [...picked, f].slice(-pickNeeded()) : picked.filter((x) => x !== f);
-    pickCleared = !picked.length;
-    if (adding) afterRender.push(() => mfx.realmPicked(app, f));
+    // Tapping a picked faction takes it out. Otherwise it fills the slot you chose (tap a full slot to
+    // change it), else the next empty one. With every slot full nothing is swapped out behind your back.
+    if (picked.includes(f)) { picked = picked.filter((x) => x !== f); pickCleared = !picked.length; armedSlot = null; return render(); }
+    if (armedSlot != null && picked[armedSlot]) pickInto(armedSlot, f);
+    else if (picked.length < pickNeeded()) pickInto(picked.length, f);
+    else return flash(screen === 'menu'
+      ? (pickNeeded() === 1 ? 'Your faction is picked. Tap it to change it, or drag another onto its slot.' : 'Both factions are picked. Tap a slot to change it, or drag a faction onto it.')
+      : 'Tap a picked faction to take it out first.');
+    afterRender.push(() => mfx.realmPicked(app, f));
     return render();
   }
   // Tapping a corner prop on the board: it hops, flashes and makes its sound.

@@ -43,6 +43,20 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-22-faction-slots',
+    date: 'November 22',
+    title: 'Faction slots on the Play screen',
+    tag: 'Easier picking',
+    intro: 'Picking your two factions no longer plays musical chairs. Each faction now has its own slot that you fill on purpose.',
+    blocks: [
+      { cat: 'qol', h: 'Faction slots', list: [
+        { cards: [], text: 'Two slots, Faction 1 and Faction 2, sit above your hero. Drag a faction from the grid onto a slot, or just tap it: a tap fills the glowing slot. On a phone, hold a faction for a moment, then drag it. The slots stay pinned above the grid as you scroll.' },
+        { cards: [], text: 'Faction 1 fills first, then Faction 2. Once both are full, tapping another faction no longer swaps out the one you picked earlier. To change one, tap its slot and then the new faction, drag the new faction onto it, or drag one slot onto the other to swap them.' },
+        { cards: [], text: 'Each slot has an X to empty it, and Clear empties both. The Play screen now starts with nothing picked.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-18-calm-board',
     date: 'November 18',
     title: 'A calmer board',

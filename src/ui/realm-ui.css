@@ -187,6 +187,39 @@
 .rx-pair .m2-medal { width: clamp(38px, 4.6vw, 70px); height: clamp(38px, 4.6vw, 70px); border-radius: 50%; overflow: hidden; display: grid; place-items: center; border: 2px solid #e9c46c; background: #150e2a; box-shadow: 0 0 14px color-mix(in srgb, var(--fc, #8a6cff) 80%, transparent); }
 .rx-pair .m2-medal img { width: 100%; height: 100%; object-fit: cover; }
 .rx-pair .m2-medal.empty b { font-family: var(--font-title); color: #b9a9c9; font-size: 1.4em; }
+/* Faction slots: drag or tap factions in. The glowing one is filled by the next tap. */
+.rx-slots { display: flex; align-items: center; justify-content: center; gap: 0.5em; position: relative; width: 100%; }
+.rx-slot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.25em; width: clamp(110px, 11vw, 170px); padding: 1.1em 0.5em 0.55em; border-radius: 12px; border: 2px dashed rgba(185, 138, 58, 0.55); background: rgba(16, 10, 34, 0.82); cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.rx-slot.filled { border-style: solid; border-color: #c99a40; background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--fc) 30%, #1a1132), #110b24 75%); }
+.rx-slot.active { border-color: #ffd76a; box-shadow: 0 0 0 1px #7a4c14, 0 0 18px rgba(255, 200, 90, 0.55); animation: rx-slot-pulse 1.6s ease-in-out infinite; }
+.rx-slot.drop-hover { border-color: #fff0b8; border-style: solid; transform: scale(1.06); box-shadow: 0 0 0 2px #ffe39a, 0 0 26px rgba(255, 220, 120, 0.8); animation: none; }
+.rx-slot-label { position: absolute; top: 0.3em; left: 0; right: 0; text-align: center; font: 700 0.62em/1 var(--font-title); letter-spacing: 0.12em; text-transform: uppercase; color: #e9c46c; }
+.rx-slot .m2-medal { width: clamp(38px, 4.2vw, 64px); height: clamp(38px, 4.2vw, 64px); border-radius: 50%; overflow: hidden; display: grid; place-items: center; border: 2px solid #e9c46c; background: #150e2a; box-shadow: 0 0 14px color-mix(in srgb, var(--fc, #8a6cff) 80%, transparent); }
+.rx-slot .m2-medal img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.rx-slot .m2-medal.empty { border-style: dashed; border-color: rgba(233, 196, 108, 0.6); box-shadow: none; }
+.rx-slot .m2-medal.empty b { font-family: var(--font-title); color: #b9a9c9; font-size: 1.5em; }
+.rx-slot > b { font-size: 0.8em; line-height: 1.1; text-align: center; color: #f3e6cc; }
+.rx-slot.empty > b { font-weight: 600; font-size: 0.7em; color: var(--rx-muted, #b9a9c9); }
+.rx .rx-slot-x { position: absolute !important; top: -0.55em !important; right: -0.55em !important; width: 1.7em !important; height: 1.7em !important; min-width: 0 !important; padding: 0 !important; border-radius: 50% !important; border: 1px solid #fff0b8 !important; background: #3a1420 !important; color: #ffd9c0 !important; font: 900 0.8em/1 var(--font-body) !important; display: grid !important; place-items: center !important; cursor: pointer !important; box-shadow: 0 2px 6px #000a !important; }
+.rx .rx-slot-x:hover { background: #6a1f30 !important; }
+.rx .rx-slots-clear { position: absolute !important; right: 0 !important; bottom: -0.2em !important; padding: 0.25em 0.7em !important; min-width: 0 !important; border-radius: 999px !important; border: 1px solid rgba(185, 138, 58, 0.6) !important; background: rgba(20, 13, 40, 0.85) !important; color: #f0dcb0 !important; font: 700 0.7em/1.2 var(--font-title) !important; letter-spacing: 0.06em !important; text-transform: uppercase !important; cursor: pointer !important; }
+@keyframes rx-slot-pulse { 50% { box-shadow: 0 0 0 1px #7a4c14, 0 0 28px rgba(255, 200, 90, 0.85); } }
+@media (prefers-reduced-motion: reduce) { .rx-slot.active { animation: none; } }
+.rx .rx-ftile { touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.rx .rx-ftile.rx-dragging, .rx-slot.rx-dragging { opacity: 0.45; }
+.rx-drag-ghost { position: fixed !important; left: 0; top: 0; z-index: 10000; pointer-events: none; margin: 0 !important; border-radius: 50%; filter: drop-shadow(0 6px 14px #000c) drop-shadow(0 0 10px rgba(255, 210, 120, 0.7)); }
+.rx-drag-ghost img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
+.rx-slots-phone { display: none; }
+@media (orientation: portrait), (max-width: 760px) {
+  .rx-slots-main { display: none; }
+  .rx-slots-phone { display: flex; position: sticky; top: 0; z-index: 6; margin: 0 -0.3em 0.6em; padding: 0.55em 0.3em 0.5em; background: linear-gradient(180deg, rgba(14, 9, 30, 0.97) 80%, rgba(14, 9, 30, 0)); }
+  .rx-slots-phone .rx-slot { width: 38%; flex-direction: row; justify-content: flex-start; gap: 0.45em; padding: 1.15em 0.5em 0.45em; }
+  .rx-slots-phone .rx-slot .m2-medal { width: 40px; height: 40px; flex: none; }
+  .rx-slots-phone .rx-slot > b { text-align: left; }
+  .rx-slots-phone .rx-plus-big { font-size: 1.4em; }
+  .rx-slots-phone .rx-slots-clear { position: static !important; margin-left: 0.2em !important; }
+}
 .rx-plus-big { font-style: normal; font-family: var(--font-title); font-weight: 800; font-size: 2em; color: #f6e2b0; text-shadow: 0 0 8px rgba(255, 210, 120, 0.6); }
 .rx-heroframe { position: relative; flex: 1; min-height: 0; aspect-ratio: 3 / 3.4; max-width: 100%; border-radius: 14px; padding: 0.5vh; border: 2px solid #c99a40;
   background: linear-gradient(180deg, #2a1a48, #120b24); box-shadow: 0 0 0 4px rgba(12, 8, 26, 0.9), 0 0 0 5px rgba(233, 196, 108, 0.35), 0 0 40px color-mix(in srgb, var(--c1, #8a6cff) 55%, transparent), 0 0 70px color-mix(in srgb, var(--c2, #ffd25a) 30%, transparent); overflow: hidden; }
