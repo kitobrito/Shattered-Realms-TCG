@@ -320,3 +320,134 @@ export const DIVINE_CARDS = [
     text: 'Redeemed by Seraphael.',
   },
 ];
+
+// ---- Expansion: The Radiant Armory (24 unlockable cards) ----
+// The angels' holy forge: Hero Weapons, Armor, shields for your minions, the archangels who guard
+// the forge, and The Holy Divine. Weapon marks land as the Hero swings (as in Arsenal).
+const ARMORY = 'The Radiant Armory';
+const AX = { extra: true, set: ARMORY };
+const AXM = { ...DV, ...AX };
+const weapon = (id, name, attack, durability, extra = {}) => ({ op: 'equipHeroWeapon', cardId: id, name, attack, durability, ...extra });
+const XW = (id, name, art, cost, attack, durability, text, gear = {}, card = {}) =>
+  ({ ...S, ...AX, id, name, art, cost, attack, durability, heroWeapon: true, text, ...card, effects: [weapon(id, name, attack, durability, gear)] });
+const ON_SWING = (effects, target = 'enemyCharacter') => [{ on: 'attackDeclared', filter: { source: 'self', target }, effects }];
+const OTHER_FRIENDLY_MINIONS = { minions: { side: 'friendly', excludeSelf: true } };
+
+export const DIVINE_ARMORY = [
+  // ---- Weapons (6) ----
+  XW('dawnforged_blade', 'Dawnforged Blade', '🗡️', 2, 2, 2, 'Your Hero has +2 Attack against Dark minions.', { preyTag: 'Dark', preyBonus: 2 }),
+  XW('hammer_of_the_dawnsmith', 'Hammer of the Dawnsmith', '🔨', 3, 3, 2, 'Whenever your Hero attacks with it, gain 2 Armor.',
+    { triggers: ON_SWING([{ op: 'gainArmor', amount: 2 }]) }),
+  XW('seraphs_spear', 'Seraph\'s Spear', '🔱', 3, 2, 3, 'Ranged. Whenever your Hero attacks with it, restore 2 Health to your Hero (Overheal).',
+    { ranged: true, triggers: ON_SWING([heal('friendlyHero', 2)]) }),
+  XW('bow_of_the_first_morning', 'Bow of the First Morning', '🏹', 2, 1, 3, 'Ranged. Whenever your Hero attacks with it, restore 1 Health to all friendly minions (Overheal).',
+    { ranged: true, triggers: ON_SWING([heal(FRIENDLY_MINIONS, 1)]) }),
+  XW('censer_flail_of_judgment', 'Censer Flail of Judgment', '⛓️', 4, 3, 3, 'Whenever your Hero attacks with it, give all enemy minions Holy Flame 1.',
+    { triggers: ON_SWING([flame(ENEMY_MINIONS, 1)]) }),
+  XW('sunsplitter', 'Sunsplitter', '⚔️', 6, 5, 3, 'Lifesteal. Your Hero has +3 Attack against Dark minions.',
+    { keywords: ['Lifesteal'], preyTag: 'Dark', preyBonus: 3 }, { legendary: true, frameArt: 'art/frames/legendary-weapon-divine.png' }),
+
+  // ---- Shields (4) ----
+  {
+    ...S, ...AX, id: 'aegis_of_dawn', name: 'Aegis of Dawn', art: '🛡️', cost: 1,
+    text: 'Give a friendly minion Evade and 2 Temporary Health until the start of your next turn.',
+    target: { ...FRIENDLY_MINION },
+    effects: [{ op: 'buff', target: 'chosen', keywords: ['Evade'], health: 2, temporaryHealth: true, untilYourNextTurn: true }],
+  },
+  {
+    ...AXM, id: 'bulwark_seraph', name: 'Bulwark Seraph', art: '🛡️', cost: 3, attack: 2, health: 5, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: Gain 3 Armor.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'gainArmor', amount: 3 }] }],
+  },
+  {
+    ...S, ...AX, id: 'wall_of_halos', name: 'Wall of Halos', art: '😇', cost: 4,
+    text: 'Give all friendly minions 3 Temporary Health and Taunt until the start of your next turn.',
+    effects: [{ op: 'buff', target: FRIENDLY_MINIONS, health: 3, temporaryHealth: true, lingerKeywords: ['Taunt'], untilYourNextTurn: true }],
+  },
+  {
+    ...AXM, id: 'mirror_shield_paladin', name: 'Mirror-Shield Paladin', art: '🪞', cost: 4, attack: 3, health: 5, keywords: ['Evade'],
+    text: 'Evade. Whenever this loses Evade, deal 3 damage to a random enemy minion.',
+    triggers: [{ on: 'keywordLost', filter: { target: 'self', keyword: 'Evade' }, effects: [{ op: 'damage', target: { randomOf: ENEMY_MINIONS }, amount: 3 }] }],
+  },
+
+  // ---- Armour (4) ----
+  { ...S, ...AX, id: 'blessed_mail', name: 'Blessed Mail', art: '🧥', cost: 2, text: 'Gain 5 Armor.', effects: [{ op: 'gainArmor', amount: 5 }] },
+  {
+    ...AXM, id: 'armorer_of_the_celestial_forge', name: 'Celestial Armorer', art: '⚒️', cost: 3, attack: 2, health: 4,
+    text: 'Whenever you equip a weapon, gain 2 Armor and give it +1 Durability.',
+    triggers: [{ on: 'weaponEquipped', effects: [{ op: 'gainArmor', amount: 2 }, { op: 'buffHeroWeapon', durability: 1, justEquipped: true }] }],
+  },
+  {
+    ...S, ...AX, id: 'halo_helm', name: 'Halo Helm', art: '⛑️', cost: 1,
+    text: 'Give a friendly minion +2 maximum Health and Taunt.',
+    target: { ...FRIENDLY_MINION },
+    effects: [{ op: 'vitality', target: 'chosen', amount: 2 }, { op: 'buff', target: 'chosen', keywords: ['Taunt'] }],
+  },
+  {
+    ...AXM, id: 'radiant_juggernaut', name: 'Radiant Juggernaut', art: '🛡️', cost: 6, attack: 5, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: Gain 5 Armor.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'gainArmor', amount: 5 }] }],
+  },
+
+  // ---- Archangels (5) ----
+  {
+    ...AXM, id: 'archangel_valoriel', name: 'Archangel Valoriel', art: '👼', cost: 6, attack: 5, health: 5, keywords: ['Rush'],
+    text: 'Rush. Arrival: Equip a 3/2 Sword of Heaven.',
+    triggers: [{ on: 'battlecry', effects: [weapon('dawnforged_blade', 'Sword of Heaven', 3, 2)] }],
+  },
+  {
+    ...AXM, id: 'archangel_seraphine', name: 'Archangel Seraphine', art: '👼', cost: 5, attack: 3, health: 7, keywords: ['Taunt'],
+    text: 'Taunt. Arrival: Give your other minions 2 Temporary Health and Evade until the start of your next turn.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: OTHER_FRIENDLY_MINIONS, health: 2, temporaryHealth: true, lingerKeywords: ['Evade'], untilYourNextTurn: true }] }],
+  },
+  {
+    ...AXM, id: 'archangel_thamuel', name: 'Archangel Thamuel', art: '📯', cost: 4, attack: 3, health: 4,
+    text: 'Arrival: Summon two 1/1 Spirits with Taunt.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'summon', cardId: 'spirit' }, { op: 'summon', cardId: 'spirit' }] }],
+  },
+  {
+    ...AXM, id: 'archangel_oriphiel', name: 'Archangel Oriphiel', art: '⚖️', cost: 7, attack: 6, health: 6,
+    text: 'Arrival: Give all enemy minions Holy Flame 2. Dark enemies get 2 more.',
+    triggers: [{ on: 'battlecry', effects: [flame(ENEMY_MINIONS, 2), flame({ minions: ENEMY_DARK }, 2)] }],
+  },
+  {
+    ...AXM, id: 'archangel_lumiel', name: 'Archangel Lumiel', art: '👼', cost: 3, attack: 2, health: 3,
+    text: 'Arrival: Give a friendly minion +1/+2 and Evade.',
+    target: { ...FRIENDLY_MINION },
+    triggers: [{ on: 'battlecry', effects: [{ op: 'buff', target: 'chosen', attack: 1, health: 2, keywords: ['Evade'] }] }],
+  },
+
+  // ---- Legendaries (5) ----
+  {
+    ...AXM, id: 'archangel_auriel', name: 'Archangel Auriel', art: '👼', legendary: true, cost: 8, attack: 6, health: 7,
+    text: 'Arrival: Gain 5 Armor. Discover a Divine weapon. It costs 2 less.',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'gainArmor', amount: 5 }, { op: 'discoverWeapon', faction: 'Divine', costMod: -2 }] }],
+  },
+  {
+    ...AXM, id: 'archangel_michael', name: 'Archangel Michael', art: '⚔️', legendary: true, cost: 8, attack: 7, health: 7, keywords: ['Rush'],
+    text: 'Rush. Arrival: Deal 4 damage to all enemy Dark minions. Equip a 4/3 Flaming Sword with Lifesteal.',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'damage', target: { minions: ENEMY_DARK }, amount: 4 },
+      weapon('sunsplitter', 'Flaming Sword', 4, 3, { keywords: ['Lifesteal'] }),
+    ] }],
+  },
+  {
+    ...AXM, id: 'archangel_gabriel', name: 'Archangel Gabriel', art: '📯', legendary: true, cost: 6, attack: 4, health: 6,
+    text: 'Arrival: Draw 2 cards. Restore 4 Health to your Hero (Overheal).',
+    triggers: [{ on: 'battlecry', effects: [{ op: 'draw', count: 2 }, heal('friendlyHero', 4)] }],
+  },
+  {
+    ...AXM, id: 'archangel_raphael', name: 'Archangel Raphael', art: '🌿', legendary: true, cost: 6, attack: 4, health: 7,
+    text: 'Arrival: Restore 5 Health to all friendly characters (Overheal) and Cleanse them.',
+    triggers: [{ on: 'battlecry', effects: [heal(FRIENDLY_CHARACTERS, 5), { op: 'cleanse', target: FRIENDLY_CHARACTERS }] }],
+  },
+  {
+    ...AXM, id: 'the_holy_divine', name: 'The Holy Divine', art: '✨', legendary: true, cost: 10, attack: 10, health: 10,
+    text: 'Arrival: Destroy all enemy Dark minions. Give your other minions +2/+2, Evade and Reborn. Gain 10 Armor.',
+    triggers: [{ on: 'battlecry', effects: [
+      { op: 'destroy', target: { minions: ENEMY_DARK } },
+      { op: 'buff', target: OTHER_FRIENDLY_MINIONS, attack: 2, health: 2, keywords: ['Evade', 'Reborn'] },
+      { op: 'gainArmor', amount: 10 },
+    ] }],
+  },
+];

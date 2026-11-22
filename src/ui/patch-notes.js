@@ -43,6 +43,31 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-22-radiant-armory',
+    date: 'November 22',
+    title: 'Divine: The Radiant Armory',
+    tag: 'New expansion',
+    intro: 'The angels open their holy forge. Divine gets 24 new cards: radiant weapons for your Hero, shields and armour, the archangels who guard the forge, and The Holy Divine.',
+    blocks: [
+      { cat: 'expansion', h: 'New expansion', cards: [
+        { title: 'The Radiant Armory (Divine)', set: 'The Radiant Armory', blurb: 'Six holy weapons, four shields, four pieces of armour, five archangels, Michael, Gabriel and Raphael, Auriel the Keeper of the Armory, and The Holy Divine. Unlock them by winning matches, like every expansion.' },
+      ] },
+      { cat: 'legendary', h: 'New Legendaries', cards: [
+        { title: 'The Radiant Armory', legendaryOf: { factions: [], sets: ['The Radiant Armory'] } },
+      ] },
+      { cat: 'gameplay', h: 'What they do', list: [
+        { cards: ['dawnforged_blade', 'hammer_of_the_dawnsmith', 'seraphs_spear', 'sunsplitter'], text: 'Weapons: the Dawnforged Blade and Sunsplitter hit Dark minions harder, the Hammer of the Dawnsmith gives you Armor with every swing, and the Seraph\'s Spear and Bow of the First Morning heal as they strike from afar.' },
+        { cards: ['wall_of_halos', 'mirror_shield_paladin', 'blessed_mail', 'radiant_juggernaut'], text: 'Shields and armour: Evade, Taunt and Temporary Health for your minions, and big piles of Armor for your Hero.' },
+        { cards: ['archangel_michael', 'archangel_gabriel', 'archangel_raphael', 'the_holy_divine'], text: 'Michael burns away Dark minions and hands you a Flaming Sword, Gabriel draws you two cards, Raphael heals and Cleanses your whole side, and The Holy Divine destroys every enemy Dark minion and blesses your army.' },
+      ] },
+    ],
+    details: [
+      'The Radiant Armory: 24 unlockable Divine cards (6 weapons, 4 shields, 4 armour, 5 archangels, 5 Legendaries).',
+      'Legendaries: Sunsplitter (the Archon\'s Greatsword); Archangel Auriel, Keeper of the Radiant Armory; Archangel Michael, Commander of the Heavenly Host; Archangel Gabriel, the Messenger of Heaven; Archangel Raphael, the Healer of God; The Holy Divine (10 Mana).',
+      'The other archangels: Valoriel, the Sword of Heaven; Seraphine, the Unbroken Shield; Thamuel, Herald of the Trumpet; Oriphiel, the Judging Flame; Lumiel, Bearer of the Dawn Helm.',
+    ],
+  },
+  {
     id: '2026-11-22-faction-slots',
     date: 'November 22',
     title: 'Faction slots on the Play screen',
