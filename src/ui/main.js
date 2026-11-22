@@ -4660,7 +4660,7 @@ function layoutFit() {
   if (zoomId) {
     for (const pg of app.querySelectorAll('.pager')) {
       const i = [...pg.querySelector('.pager-grid').children].findIndex((c) => c.matches(`[data-zoom="${zoomId}"], [data-cut="${zoomId}"]`) || c.querySelector(`[data-zoom="${zoomId}"], [data-cut="${zoomId}"]`));
-      if (i >= 0 && pg.querySelector('.pager-grid').children[i].style.display === 'none') showCard(pg, i);
+      if (i >= 0 && pg.querySelector('.pager-grid').children[i].style.display === 'none') { showCard(pg, i); fitAllText(pg); }
     }
   }
   fitDeckRows();
@@ -4690,7 +4690,8 @@ window.addEventListener('resize', () => {
 // Turning pages: the arrows, the arrow keys and swiping across the cards.
 function pageTurn(pg, dir) {
   const off = turnPage(pg, dir);
-  if (!off) { sound.play('draw'); mfx.dealIn(pg, dir); return; }
+  // Cards on a hidden page couldn't be measured when the page was drawn: fit their names and text now.
+  if (!off) { sound.play('draw'); fitAllText(pg); mfx.dealIn(pg, dir); return; }
   // The collection runs on into the previous / next faction.
   if (screen === 'gallery') {
     const factions = [...Object.keys(FACTION_LISTS), 'Fusion'];

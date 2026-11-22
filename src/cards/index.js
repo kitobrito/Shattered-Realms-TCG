@@ -13,7 +13,7 @@ import { FUNGUS_CARDS } from './fungus.js';
 import { ZOMBIE_CARDS } from './zombies.js';
 import { DRAGON_CARDS } from './dragons.js';
 import { DEMON_CARDS } from './demons.js';
-import { DIVINE_CARDS } from './divine.js';
+import { DIVINE_CARDS, DIVINE_ARMORY } from './divine.js';
 import { ROBOT_CARDS } from './robots.js';
 import { FUSION_CARDS } from './fusions.js';
 import { BEE_CARDS } from './bees.js';
@@ -37,7 +37,7 @@ import { applyWeaponCardTemplate } from './weapon-template.js';
 import { ARSENAL_CARDS } from './arsenal.js';
 import { FRUIT_NINJA_CARDS } from './fruit-ninjas.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...MONSTER_HUNTER_EXPANSION, ...ARSENAL_CARDS, ...FRUIT_NINJA_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...DIVINE_ARMORY, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...MONSTER_HUNTER_EXPANSION, ...ARSENAL_CARDS, ...FRUIT_NINJA_CARDS, ...FUSION_CARDS]);
 applyWeaponCardTemplate(allCards());
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
