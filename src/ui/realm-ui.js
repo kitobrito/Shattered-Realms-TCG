@@ -69,7 +69,7 @@ function noteThumb(note) {
     for (const x of ids) { const id = typeof x === 'string' ? x : x?.id; if (!id || !hasCard(id)) continue; const a = artOf(getCard(id)); if (a) return a; }
     if (b.boards?.[0]?.src) return b.boards[0].src;
   }
-  return 'art/ui/menu-bg.jpg';
+  return 'art/ui/home-palace.webp';
 }
 
 export function homeHTML({ wallet, notes, unseen, online }) {
@@ -87,12 +87,12 @@ export function homeHTML({ wallet, notes, unseen, online }) {
     </header>
     <nav class="rx-side" aria-label="Main menu">${NAV.map(([ico, label, act], i) => `<button class="rx-nav ${i === 0 ? 'on' : ''}" data-act="${act}">${rxIcon(ico)}<span>${label}</span></button>`).join('')}</nav>
     <section class="rx-hub" aria-label="The Shattered Realms">
-      <div class="rx-hub-art"><img src="art/ui/home-hub.webp" alt="" draggable="false"></div>
+      <div class="rx-hub-art"><img src="art/ui/home-palace.webp" alt="" draggable="false"></div>
       ${islands.map(([k, t, s, act]) => `<button class="rx-isle rx-isle-${k}" data-act="${act}"><span class="rx-plaque"><b>${t}</b><small>${s}</small></span></button>`).join('')}
       <button class="rx-isle rx-isle-play" data-act="menu"><span class="rx-plaque"><b>Play</b><small>Enter the realms</small></span></button>
     </section>
     <aside class="rx-news">
-      <header><h2>${rxIcon('news')}<span>News</span></h2><button class="rx-viewall" data-act="patchNotes">View all ${rxIcon('arrow')}</button></header>
+      <header><h2>${rxIcon('news')}<span>Newsreel</span></h2><button class="rx-viewall" data-act="patchNotes">View all ${rxIcon('arrow')}</button></header>
       ${lead ? `<button class="rx-lead" data-act="patchPost:0" style="--thumb:url('${new URL(noteThumb(lead), document.baseURI).href}')">
         <span class="rx-lead-art"></span>
         <span class="rx-lead-text"><em class="rx-badge ${unseen ? 'new' : ''}">${unseen ? 'New' : esc(lead.tag ?? 'Latest')}</em><b>${esc(lead.title)}</b><small>${esc((lead.intro ?? '').split(/(?<=[.!?])\s/)[0])}</small></span>

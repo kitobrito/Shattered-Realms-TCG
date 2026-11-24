@@ -475,3 +475,136 @@ body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
   .cine-poster:hover .cine-frame { transform: none; }
 }
 body.reduced-motion .cine-marquee::before, body.reduced-motion .cine-marquee::after, body.reduced-motion .cine-poster:hover .cine-art img, body.reduced-motion .cine-card-poster img { animation: none !important; }
+
+/* ======================================================================================
+   THEATRE THEME: every menu screen dressed as the old picture palace of the Play lobby.
+   Velvet curtains around the screen, brass-trimmed velvet panels, marquee titles with
+   chasing bulbs, ticket-stub buttons and tabs, and a film-strip step bar.
+   ====================================================================================== */
+:root { --th-velvet: #5e0f1b; --th-velvet-dark: #2a060c; --th-brass: #d6a548; --th-brass-dim: #8a6427; --th-cream: #f6e6c0;
+  --th-bulb: radial-gradient(circle, #fff6d2 0 32%, #ffbe55 44%, transparent 60%); }
+
+/* The auditorium behind the menus: dark house, curtains drawn back at the sides, a valance on
+   top, two spotlights sweeping the stage, and a little film grain. */
+#menu-bg .mbg-theatre { position: absolute; inset: 0; pointer-events: none; }
+#menu-bg .mbg-islands { filter: brightness(0.62) saturate(0.95); }
+#menu-bg .mbg-rays, #menu-bg .mbg-ember { display: none; }
+.mbg-curtain { position: absolute; top: 0; bottom: 0; width: clamp(28px, 5vw, 96px);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.6)),
+    repeating-linear-gradient(90deg, #3a0710 0, #7a1424 9%, #9a1d2f 13%, #6a1020 19%, #2e050c 25%);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8); }
+.mbg-curtain.l { left: 0; border-radius: 0 0 60% 0 / 0 0 12% 0; transform-origin: top left; animation: th-sway 9s ease-in-out infinite alternate; }
+.mbg-curtain.r { right: 0; border-radius: 0 0 0 60% / 0 0 0 12%; transform-origin: top right; animation: th-sway 11s ease-in-out infinite alternate-reverse; }
+.mbg-valance { position: absolute; left: 0; right: 0; top: 0; height: clamp(16px, 3.2vh, 34px);
+  background: radial-gradient(ellipse 50% 100% at 50% 0, #9a1d2f 60%, transparent 62%) 0 0 / clamp(60px, 7vw, 120px) 100% repeat-x, linear-gradient(#5e0f1b, #3a0710);
+  border-bottom: 2px solid var(--th-brass-dim); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7); }
+.mbg-spot { position: absolute; top: -10%; width: 38vw; height: 120%; background: conic-gradient(from 168deg at 50% 0, transparent 0deg, rgba(255, 236, 190, 0.07) 8deg, rgba(255, 236, 190, 0.11) 12deg, rgba(255, 236, 190, 0.07) 16deg, transparent 24deg);
+  mix-blend-mode: screen; transform-origin: 50% 0; }
+.mbg-spot.a { left: 4%; animation: th-spot 14s ease-in-out infinite alternate; }
+.mbg-spot.b { right: 4%; animation: th-spot 17s ease-in-out infinite alternate-reverse; }
+.mbg-grain { position: absolute; inset: -50%; opacity: 0.07; background-image: repeating-radial-gradient(circle at 17% 32%, #fff 0 0.6px, transparent 0.6px 2.4px), repeating-radial-gradient(circle at 73% 61%, #000 0 0.7px, transparent 0.7px 2.9px);
+  animation: th-grain 0.5s steps(3) infinite; }
+@keyframes th-sway { from { transform: skewX(0deg); } to { transform: skewX(1.2deg); } }
+@keyframes th-spot { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+@keyframes th-grain { 33% { transform: translate(-3%, 2%); } 66% { transform: translate(2%, -3%); } }
+
+/* Panels: deep velvet behind a double brass rule. */
+.rx-panel, .rx-side, .rx-news { background: linear-gradient(170deg, rgba(48, 9, 18, 0.92), rgba(16, 6, 12, 0.94) 60%, rgba(30, 7, 14, 0.94)) !important;
+  border: 1.5px solid var(--th-brass) !important;
+  box-shadow: inset 0 0 0 3px rgba(18, 6, 8, 0.95), inset 0 0 0 4px rgba(214, 165, 72, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.6) !important; }
+.rx-panel > h3, .rx-news h2, .rx-cside h4 { color: var(--th-cream) !important; text-shadow: 0 0 8px rgba(255, 190, 90, 0.35); }
+
+/* Screen titles hang in a marquee sign with chasing bulbs. */
+.rx-head { background: linear-gradient(180deg, rgba(20, 4, 8, 0.92), rgba(20, 4, 8, 0.45)) !important; border-bottom-color: rgba(214, 165, 72, 0.5) !important; }
+.rx-head .rx-title { position: relative; padding: 0.62em 1em 0.56em; line-height: 1; isolation: isolate; filter: none; background: none !important; font-size: 1.3em; }
+.rx-head .rx-title, .rx-head .rx-title span { -webkit-text-fill-color: #ffe9b0 !important; color: #ffe9b0 !important;
+  text-shadow: 0 0 6px rgba(255, 200, 90, 0.9), 0 0 16px rgba(255, 150, 40, 0.55), 0 2px 0 #5a2a06 !important; }
+.rx-head .rx-title::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 8px; border: 2px solid var(--th-brass);
+  background: var(--th-bulb) 6px 3px / 16px 7px repeat-x, var(--th-bulb) 14px calc(100% - 3px) / 16px 7px repeat-x, linear-gradient(180deg, #2a1608, #120904);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), inset 0 0 16px rgba(255, 190, 80, 0.12), 0 0 18px rgba(255, 170, 60, 0.18); animation: th-chase 1s steps(2) infinite; }
+@keyframes th-chase { to { background-position: 14px 3px, 6px calc(100% - 3px), 0 0; } }
+
+/* Buttons: gold admission tickets with notched ends; secondary buttons are ticket outlines. */
+.rx .rx-gold, .rx-gold { border-radius: 6px !important; border: 0 !important; padding: 0.75em 1.9em !important;
+  background: linear-gradient(180deg, #ffe8a8 0%, #f4c04f 50%, #d68f26 100%) !important;
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 0.42em, #000 0.46em) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 0.42em, #000 0.46em) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle at 0 50%, transparent 0.42em, #000 0.46em) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 0.42em, #000 0.46em) right / 51% 100% no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(255, 245, 210, 0.7), inset 0 -3px 0 rgba(120, 60, 10, 0.35) !important; filter: drop-shadow(0 0 10px rgba(255, 190, 80, 0.45)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)); }
+.rx .rx-gold:hover:not(:disabled), .rx-gold:hover:not(:disabled) { filter: brightness(1.08) drop-shadow(0 0 16px rgba(255, 200, 90, 0.7)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)) !important; }
+.rx .rx-confirm span::after { content: ' \00B7  Admit one'; font-size: 0.55em; letter-spacing: 0.18em; opacity: 0.75; }
+.rx .rx-ghost { border-radius: 5px !important; border: 1px dashed rgba(214, 165, 72, 0.85) !important; background: rgba(40, 8, 14, 0.85) !important; color: var(--th-cream) !important; }
+.rx .rx-ghost:hover:not(:disabled) { background: rgba(94, 15, 27, 0.9) !important; border-style: solid !important; }
+
+/* Tabs and the faction format switch: ticket stubs, the chosen one torn off in gold. */
+.rx-ctabs { border-radius: 8px !important; background: rgba(30, 6, 10, 0.9) !important; border-color: var(--th-brass) !important; }
+.rx .rx-ctabs button, .rx .rx-seg button { border-radius: 5px !important; border: 1px dashed rgba(214, 165, 72, 0.55) !important; }
+.rx .rx-ctabs button.on, .rx .rx-seg button.on { border-style: solid !important; }
+
+/* Steps: a strip of film. */
+.rx-steps { position: relative; background: #120a0a !important; border: 0 !important; border-radius: 4px !important; padding-top: 0.55em !important; padding-bottom: 0.55em !important;
+  box-shadow: inset 0 0 0 1px rgba(214, 165, 72, 0.35); }
+.rx-steps::before, .rx-steps::after { content: ''; position: absolute; left: 0; right: 0; height: 0.42em;
+  background: repeating-linear-gradient(90deg, transparent 0 0.5em, rgba(246, 230, 192, 0.55) 0.5em 1.05em, transparent 1.05em 1.6em); border-radius: 1px; }
+.rx-steps::before { top: 0.12em; } .rx-steps::after { bottom: 0.12em; }
+
+/* Home: the program (side menu) and the newsreel. */
+.rx .rx-nav:hover:not(:disabled) { background: rgba(140, 28, 46, 0.35) !important; }
+.rx .rx-nav.on { background: linear-gradient(90deg, #5e0f1b, #9a1d2f 70%, #c0283d) !important; box-shadow: 0 0 0 1px var(--th-brass), 0 0 18px rgba(200, 40, 60, 0.55) !important; }
+.rx-nav.on::after { background: #c0283d !important; border-color: var(--th-brass) !important; }
+.rx-home::before { background: radial-gradient(ellipse 55% 65% at 50% 55%, rgba(255, 190, 110, 0.14), transparent 70%), linear-gradient(180deg, rgba(14, 3, 6, 0.6), rgba(14, 3, 6, 0.1) 30%, rgba(14, 3, 6, 0.55)) !important; }
+.rx-logo img { filter: drop-shadow(0 0 14px rgba(255, 180, 80, 0.5)) drop-shadow(0 2px 2px #000) !important; }
+.rx-logo-gem { background: linear-gradient(90deg, transparent, #ffd38a 30%, #fff 50%, #ffd38a 70%, transparent) !important; box-shadow: 0 0 10px #ffb84a !important; }
+
+/* Phones: the tab bar is a row of tickets. */
+@media (orientation: portrait), (max-width: 760px) {
+  .rx .rx-tabbar { background: linear-gradient(180deg, #3a0710, #1a0408) !important; border-top: 2px solid var(--th-brass) !important; }
+  .mbg-curtain { width: 18px; }
+}
+
+/* Settings and other panels opened over the menus: velvet playbills. */
+.settings-panel { background: linear-gradient(170deg, #4a0c16, #1c060b 70%) !important; border: 2px solid var(--th-brass) !important;
+  box-shadow: inset 0 0 0 3px #12050a, inset 0 0 0 4px rgba(214, 165, 72, 0.35), 0 20px 50px rgba(0, 0, 0, 0.75) !important; }
+.settings-panel h2 { position: relative; padding: 0.35em 0 0.3em; color: var(--th-cream) !important; text-shadow: 0 0 10px rgba(255, 190, 90, 0.5); }
+.settings-panel h2::after { content: ''; display: block; height: 6px; margin: 0.35em auto 0; width: 70%; background: var(--th-bulb) 0 0 / 14px 6px repeat-x; animation: cine-chase 0.9s steps(2) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mbg-curtain, .mbg-spot, .mbg-grain, .rx-head .rx-title::before, .settings-panel h2::after { animation: none !important; }
+}
+body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-motion .mbg-grain, body.reduced-motion .rx-head .rx-title::before { animation: none !important; }
+@media (orientation: portrait), (max-width: 760px) {
+  .rx-head .rx-title { font-size: 1em !important; padding: 0.95em 0.85em 0.9em; }
+  .rx-head .rx-title::before { background-size: 12px 6px, 12px 6px, auto; }
+}
+
+/* Home: the picture palace replaces the floating castle. Each label sits on its part of the
+   building (fractions of the painting): Build at the projection booth, Collection at the poster
+   case, Factions on the poster wall, Realms at the searchlights, Play on the marquee. */
+.rx-hub-art { aspect-ratio: 1024 / 825 !important; }
+.rx-hub-art img { animation: none !important; -webkit-mask: radial-gradient(ellipse 60% 62% at 50% 48%, #000 72%, transparent 100%) !important; mask: radial-gradient(ellipse 60% 62% at 50% 48%, #000 72%, transparent 100%) !important;
+  filter: drop-shadow(0 0 40px rgba(255, 170, 70, 0.25)); }
+.rx-hub .rx-isle { top: calc(48% + (var(--y) - 0.5) * var(--S) * 0.8057) !important; height: calc(var(--h) * var(--S) * 0.8057) !important; border-radius: 14px !important; }
+.rx-hub .rx-isle-build { --x: 0.14; --y: 0.36; --w: 0.24; --h: 0.3; }
+.rx-hub .rx-isle-collection { --x: 0.84; --y: 0.36; --w: 0.22; --h: 0.36; }
+.rx-hub .rx-isle-factions { --x: 0.15; --y: 0.72; --w: 0.28; --h: 0.26; }
+.rx-hub .rx-isle-realms { --x: 0.88; --y: 0.62; --w: 0.2; --h: 0.34; }
+.rx-hub .rx-isle-play { --x: 0.5; --y: 0.56; --w: 0.4; --h: 0.46; }
+.rx-isle-build .rx-plaque { left: 50% !important; top: 78% !important; }
+.rx-isle-collection .rx-plaque { left: 50% !important; top: 89% !important; }
+.rx-isle-factions .rx-plaque { left: 50% !important; top: 20% !important; }
+.rx-isle-realms .rx-plaque { left: 50% !important; top: 79% !important; }
+.rx-isle-play .rx-plaque { left: 50% !important; top: 33.4% !important; }
+/* The four side labels are little lit signs so they read over the painting. */
+.rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: calc(var(--S) * 0.021); padding: 0.32em 0.75em 0.36em; border-radius: 5px; border: 1.5px solid var(--th-brass);
+  background: linear-gradient(180deg, rgba(60, 10, 18, 0.92), rgba(24, 6, 10, 0.92)); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 170, 70, 0.25); }
+/* Play is spelled out on the marquee itself, in red marquee letters. */
+.rx-isle-play .rx-plaque b { background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: #8a0f1f !important; -webkit-text-fill-color: #8a0f1f !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 6px rgba(255, 120, 90, 0.35) !important; filter: none !important; letter-spacing: 0.14em !important; }
+.rx-isle-play .rx-plaque small { color: #5a1a10 !important; text-shadow: none !important; font-weight: 800 !important; }
+.rx-isle::after { border-radius: 14px !important; background: radial-gradient(ellipse, rgba(255, 200, 110, 0.3), transparent 70%) !important; }
+@media (orientation: portrait), (max-width: 760px) {
+  .rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: max(10px, calc(var(--S) * 0.021)); }
+}
+.rx-isle-play .rx-plaque { line-height: 0.95 !important; }
+.rx-isle-play .rx-plaque small { font-size: 0.42em !important; margin-top: 0.1em !important; }
+/* PLAY nudged down on its own; "Enter the realms" stays where it is. */
+.rx-isle-play .rx-plaque b { position: relative !important; top: 0.17em !important; }

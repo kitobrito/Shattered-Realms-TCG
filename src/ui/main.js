@@ -2677,9 +2677,12 @@ function showMenuBackdrop(on) {
     menuBg = document.createElement('div');
     menuBg.id = 'menu-bg';
     // The shattered realms drifting in the void (slow pan and zoom).
-    menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg.jpg\')"></div>'
+    // The auditorium of the picture palace (theatre theme).
+    menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg-theatre.jpg\')"></div>'
       + '<div class="mbg-mist m1"></div><div class="mbg-mist m2"></div>'
       + '<div class="mbg-shade"></div><div class="mbg-rays"></div>'
+      // Theatre: the house lights are down, the curtains drawn back, two spotlights sweep the stage.
+      + '<div class="mbg-theatre"><i class="mbg-spot a"></i><i class="mbg-spot b"></i><i class="mbg-grain"></i><i class="mbg-curtain l"></i><i class="mbg-curtain r"></i><i class="mbg-valance"></i></div>'
       + Array.from({ length: 28 }, () => `<i class="mbg-ember" style="left:${Math.random() * 100}%;--d:${(6 + Math.random() * 8).toFixed(1)}s;--delay:${(-Math.random() * 14).toFixed(1)}s;--x:${(Math.random() * 120 - 60).toFixed(0)}px;--s:${(0.6 + Math.random() * 1.2).toFixed(2)}"></i>`).join('');
     document.body.prepend(menuBg);
     // Depth: the backdrop drifts a little against the mouse (the mist more than the islands).
@@ -4770,7 +4773,7 @@ async function boot() {
   const img = (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
   const jobs = [
     document.fonts?.ready ?? Promise.resolve(),
-    ...['art/ui/logo.png', 'art/ui/menu-bg.jpg', 'art/ui/play-button.png', 'art/ui/divider.png',
+    ...['art/ui/logo.png', 'art/ui/menu-bg-theatre.jpg', 'art/ui/home-palace.webp', 'art/ui/play-button.png', 'art/ui/divider.png',
       'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-quickplay.png', 'art/frames/painted-trap.png',
       'art/frames/legendary-minion.png', 'art/frames/legendary-spell.png', 'art/frames/legendary-trap.png'].map(img),
     ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${fslug(f)}.jpg`)]),
