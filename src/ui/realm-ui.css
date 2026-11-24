@@ -720,3 +720,23 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
   .cine-screen-title { font-size: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .cine-seat.filled .cine-seat-poster img { animation: none; } }
+
+/* ---- Film endings on the results: THE END for a win, Intermission for a draw or a surrender ---- */
+.go-title.go-film { display: flex; flex-direction: column; align-items: center; gap: 0.35em; }
+.go-film-kicker { font: 800 clamp(11px, 1.1vw, 15px)/1 var(--font-title); letter-spacing: 0.32em; text-transform: uppercase; color: #e9b65a; text-shadow: 0 0 10px rgba(255, 180, 80, 0.5); }
+/* THE END: an old title card in flowing script, flickering like the last frames of the reel. */
+.go-title .go-film-end { font-family: 'Brush Script MT', 'Segoe Script', 'Snell Roundhand', cursive !important; font-weight: 700 !important; font-style: italic; text-transform: none !important; letter-spacing: 0.02em !important;
+  font-size: clamp(56px, 10vw, 104px) !important; line-height: 1.05; padding: 0 0.15em;
+  background: linear-gradient(180deg, #fff6dc, #f2cf74 55%, #b9842e) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;
+  filter: drop-shadow(0 0 14px rgba(255, 200, 100, 0.55)) drop-shadow(0 3px 0 #4a2306); }
+.game-over.fresh .go-title .go-film-end { animation: go-film-in 1.4s ease-out 0.25s both, go-film-flicker 2.6s steps(1) 1.7s infinite !important; }
+@keyframes go-film-in { from { opacity: 0; transform: scale(1.12); filter: blur(6px) drop-shadow(0 0 14px rgba(255, 200, 100, 0.55)); } to { opacity: 1; transform: none; } }
+@keyframes go-film-flicker { 0%, 100% { opacity: 1; } 46% { opacity: 0.86; } 48% { opacity: 1; } 71% { opacity: 0.93; } }
+/* Intermission: lit up on a marquee sign, bulbs chasing round it. */
+.go-title .go-film-intermission { position: relative; display: inline-block; padding: 0.5em 0.75em 0.44em !important; font-size: clamp(22px, 3.3vw, 38px) !important; letter-spacing: 0.08em !important;
+  color: #ffe9b0 !important; background: none !important; -webkit-text-fill-color: #ffe9b0 !important; text-shadow: 0 0 8px rgba(255, 200, 90, 0.9), 0 0 20px rgba(255, 150, 40, 0.5), 0 2px 0 #5a2a06; isolation: isolate; }
+.go-title .go-film-intermission::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 10px; border: 2px solid #d6a548;
+  background: var(--th-bulb) 6px 4px / 18px 8px repeat-x, var(--th-bulb) 15px calc(100% - 4px) / 18px 8px repeat-x, linear-gradient(180deg, #2a1608, #120904);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 26px rgba(255, 170, 60, 0.25); animation: th-chase 1s steps(2) infinite; }
+@media (prefers-reduced-motion: reduce) { .go-title .go-film-end, .go-title .go-film-intermission::before { animation: none !important; } }
+body.reduced-motion .go-title .go-film-end, body.reduced-motion .go-title .go-film-intermission::before { animation: none !important; }

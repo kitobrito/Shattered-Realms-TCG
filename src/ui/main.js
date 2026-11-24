@@ -1793,6 +1793,7 @@ async function concede(remoteLoser = null) {
   if (game.mode === 'online' && remoteLoser == null) link.send({ t: 'concede' });
   s.gameOver = true;
   s.winner = 1 - loser;
+  s.concededBy = loser; // the results call a surrender an Intermission
   s.pending = null;
   s.queue = [];
   s.log.push({ turn: s.turn, msg: `${s.players[loser].name} concedes.` });

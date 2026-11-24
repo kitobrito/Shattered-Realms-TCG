@@ -43,6 +43,23 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-24-the-big-screen',
+    date: 'November 24',
+    title: 'The big screen and film endings',
+    tag: 'Play screen + match endings',
+    intro: 'Choosing your films is more deliberate, the middle of the Play screen is now a cinema screen, and every match ends like a film.',
+    blocks: [
+      { cat: 'qol', h: 'Picking your features', list: [
+        { cards: [], text: 'Clicking a poster now picks it out first: it lights up, shows its lobby card and says "Click again to add". Only a second click adds it (or, on a poster you have already chosen, removes it). Dragging a poster still adds it straight away.' },
+        { cards: [], text: 'Use the arrow keys to walk along the poster wall, Enter or Space to add the one you are on, and Escape to let go of it.' },
+        { cards: [], text: 'The middle of the Play screen is now the big screen: drag posters onto it, and your film posters appear there with their titles in lights. Drop onto one of them to swap it. Hero portraits now appear when your heroes fuse at the start of the match.' },
+      ] },
+      { cat: 'qol', h: 'Film endings', list: [
+        { cards: [], text: 'Win a match and it ends on THE END. A draw, or a match you surrender, is an Intermission.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-24-opening-reel',
     date: 'November 24',
     title: 'Roll the film',

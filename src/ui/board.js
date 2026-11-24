@@ -632,6 +632,12 @@ function onlineResultHTML(ctx) {
 function gameOverHTML(s, me, stats, ctx = {}) {
   const outcome = s.winner == null ? 'draw' : s.winner === me ? 'win' : 'loss';
   const result = { win: 'Victory', loss: 'Defeat', draw: 'Draw' }[outcome];
+  // The picture palace: a win ends on THE END; a draw, or a match you surrendered, is an Intermission.
+  const surrendered = outcome === 'loss' && s.concededBy === me;
+  const film = outcome === 'win' ? 'end' : outcome === 'draw' || surrendered ? 'intermission' : null;
+  const titleHTML = film === 'end' ? '<small class="go-film-kicker">Victory</small><span class="go-film-end">The End</span>'
+    : film === 'intermission' ? `<small class="go-film-kicker">${surrendered ? 'You surrendered' : 'A draw'}</small><span class="go-film-intermission">Intermission</span>`
+      : `<span>${result}</span>`;
   const mp = s.players[me];
   const op = s.players[1 - me];
   const st = stats ?? {};
@@ -653,7 +659,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
     ${outcome === 'win' ? '<div class="go-rays"></div>' : ''}${ash}
     <div class="panel summary">
       ${art ? `<div class="go-medal">${playerPortraitHTML(mp.factions)}</div>` : ''}
-      <h2 class="go-title"><span>${result}</span></h2>
+      <h2 class="go-title ${film ? `go-film go-film-${film}` : ''}">${titleHTML}</h2>
       <p class="go-sub">${s.winner == null ? 'Nobody wins' : esc(youText(`${s.players[s.winner].name} wins`))} · ${rounds} round${rounds === 1 ? '' : 's'}</p>
       <div class="go-stats">
         <div class="go-row go-head"><span>${esc(mp.name)}</span><span></span><span>${esc(op.name)}</span></div>
