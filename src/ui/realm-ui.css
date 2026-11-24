@@ -674,3 +674,69 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 .ts-logo-sheen { display: none !important; }
 .ts-logo img, .title-screen .ts-logo img { filter: drop-shadow(0 0 24px rgba(255, 170, 70, 0.35)) !important; }
 @media (orientation: portrait), (max-width: 760px) { .rx-logo { height: auto !important; } .rx-logo img { width: min(78vw, 420px); height: auto; } }
+
+/* A poster picked out by a first click (or the arrow keys): lit and lifted, with a hint for the second click. */
+.rx .rx-ftile.cine-poster.previewing { transform: translateY(-4px) scale(1.05) !important; z-index: 3; }
+.cine-poster.previewing .cine-frame { border-color: #fff0b8; box-shadow: 0 0 0 2px #2a1608, 0 0 0 4px #fff0b8, 0 0 26px color-mix(in srgb, var(--fc) 70%, #ffd27a), 0 10px 22px rgba(0, 0, 0, 0.8); }
+.cine-poster.on.previewing .cine-frame { box-shadow: 0 0 0 2px #7a4c14, 0 0 0 4px #fff0b8, 0 0 26px rgba(255, 220, 130, 0.95); }
+.cine-poster.previewing .cine-art img { animation: cine-kenburns 6s ease-in-out infinite alternate; }
+.cine-hint { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 0.9em 0.3em 0.4em; font: 800 0.62em/1.1 var(--font-title); font-style: normal; letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: center; color: #fff1cf; background: linear-gradient(transparent, rgba(30, 6, 10, 0.92) 45%); text-shadow: 0 1px 2px #000; opacity: 0; transform: translateY(40%); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.cine-poster.previewing .cine-hint { opacity: 1; transform: none; animation: cine-hint-pulse 1.4s ease-in-out infinite; }
+@keyframes cine-hint-pulse { 50% { color: #ffd987; } }
+.cine-poster:focus-visible { outline: none; }
+@media (prefers-reduced-motion: reduce) { .cine-poster.previewing .cine-art img, .cine-poster.previewing .cine-hint { animation: none; } }
+
+/* ---- The big screen (Play, middle): your feature posters with their titles in lights.
+   Posters are dragged onto it; hero portraits are left for the fusion at the start of the match. ---- */
+.rx-heroframe.cine-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.4vh; padding: 3vh 2.5vw 4vh; overflow: visible;
+  background: radial-gradient(ellipse 80% 70% at 50% 40%, rgba(255, 236, 200, 0.10), transparent 70%), linear-gradient(180deg, #1c0e14, #0e070c); transition: box-shadow 0.2s, border-color 0.2s; }
+.cine-screen.drop-hover { border-color: #fff0b8; box-shadow: 0 0 0 4px rgba(12, 8, 26, 0.9), 0 0 0 6px #ffe39a, 0 0 50px rgba(255, 210, 120, 0.6); }
+.cine-seats { display: flex; align-items: center; justify-content: center; gap: 1.2vw; width: 100%; }
+.cine-amp { font: italic 800 clamp(18px, 2.2vw, 34px)/1 var(--font-title); color: #ffe39a; text-shadow: 0 0 10px rgba(255, 190, 90, 0.7); }
+.cine-seat { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.5em; width: 42%; cursor: pointer; }
+.cine-screen.one .cine-seat { width: 52%; }
+.cine-seat-poster { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 687 / 1024; border-radius: 5px; overflow: hidden; }
+.cine-seat.filled .cine-seat-poster { border: 3px solid #d6a548; box-shadow: 0 0 0 3px #2a1608, 0 0 26px color-mix(in srgb, var(--fc) 55%, rgba(255, 190, 90, 0.6)), 0 14px 26px rgba(0, 0, 0, 0.8); }
+.cine-seat.filled .cine-seat-poster img { width: 100%; height: 100%; object-fit: cover; display: block; animation: cine-kenburns 7s ease-in-out infinite alternate; }
+.cine-seat.empty .cine-seat-poster { border: 2px dashed rgba(214, 165, 72, 0.6); background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 10px, transparent 10px 20px); color: #cdb68a; text-align: center; padding: 0.6em; }
+.cine-seat.empty .cine-seat-poster b { display: block; font: 300 3.2em/1 var(--font-title); color: #e9c46c; opacity: 0.8; }
+.cine-seat.empty .cine-seat-poster em { display: block; margin-top: 0.4em; font-style: normal; font-size: 0.85em; font-weight: 700; }
+.cine-seat.active.empty .cine-seat-poster { border-color: #ffd76a; animation: rx-slot-pulse 1.6s ease-in-out infinite; }
+.cine-seat.active.filled .cine-seat-poster { border-color: #fff0b8; box-shadow: 0 0 0 3px #7a4c14, 0 0 0 5px #ffe39a, 0 0 30px rgba(255, 210, 120, 0.85); }
+.cine-seat.drop-hover .cine-seat-poster { border-color: #fff0b8; border-style: solid; transform: scale(1.04); box-shadow: 0 0 0 3px #ffe39a, 0 0 30px rgba(255, 220, 120, 0.9); transition: transform 0.15s; }
+.cine-seat > small { font: 700 0.72em/1 var(--font-title); letter-spacing: 0.14em; text-transform: uppercase; color: #e9b65a; }
+.cine-seat .rx-slot-x { top: -0.6em !important; right: -0.6em !important; z-index: 2; }
+.cine-screen-text { text-align: center; max-width: 100%; }
+.cine-screen-kicker { display: block; margin-bottom: 0.35em; font: 800 clamp(10px, 0.85vw, 14px)/1 var(--font-title); letter-spacing: 0.26em; text-transform: uppercase; color: #e9b65a; }
+.cine-screen-title { margin: 0; font: 900 clamp(18px, 2.15vw, 36px)/1.06 var(--font-title); letter-spacing: 0.03em; text-transform: uppercase; color: #ffe9b0;
+  text-shadow: 0 0 10px rgba(255, 190, 90, 0.85), 0 0 26px rgba(255, 140, 40, 0.45), 0 3px 0 #5a2a06; }
+.cine-screen-title i { font-style: italic; color: #e9b65a; }
+.cine-screen-title.dim { color: #8c7a63; text-shadow: none; font-size: clamp(15px, 1.5vw, 24px); }
+.cine-screen .cine-screen-clear { position: absolute !important; top: 0.7em !important; right: 0.7em !important; bottom: auto !important; }
+.cine-slot-thumb { border-radius: 4px !important; aspect-ratio: 687 / 1024; width: auto !important; }
+@media (orientation: portrait), (max-width: 760px) {
+  .rx-play .rx-heroframe.cine-screen { width: 92vw !important; height: auto !important; padding: 16px 12px 22px; gap: 12px; }
+  .cine-screen-title { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .cine-seat.filled .cine-seat-poster img { animation: none; } }
+
+/* ---- Film endings on the results: THE END for a win, Intermission for a draw or a surrender ---- */
+.go-title.go-film { display: flex; flex-direction: column; align-items: center; gap: 0.35em; }
+.go-film-kicker { font: 800 clamp(11px, 1.1vw, 15px)/1 var(--font-title); letter-spacing: 0.32em; text-transform: uppercase; color: #e9b65a; text-shadow: 0 0 10px rgba(255, 180, 80, 0.5); }
+/* THE END: an old title card in flowing script, flickering like the last frames of the reel. */
+.go-title .go-film-end { font-family: 'Brush Script MT', 'Segoe Script', 'Snell Roundhand', cursive !important; font-weight: 700 !important; font-style: italic; text-transform: none !important; letter-spacing: 0.02em !important;
+  font-size: clamp(56px, 10vw, 104px) !important; line-height: 1.05; padding: 0 0.15em;
+  background: linear-gradient(180deg, #fff6dc, #f2cf74 55%, #b9842e) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;
+  filter: drop-shadow(0 0 14px rgba(255, 200, 100, 0.55)) drop-shadow(0 3px 0 #4a2306); }
+.game-over.fresh .go-title .go-film-end { animation: go-film-in 1.4s ease-out 0.25s both, go-film-flicker 2.6s steps(1) 1.7s infinite !important; }
+@keyframes go-film-in { from { opacity: 0; transform: scale(1.12); filter: blur(6px) drop-shadow(0 0 14px rgba(255, 200, 100, 0.55)); } to { opacity: 1; transform: none; } }
+@keyframes go-film-flicker { 0%, 100% { opacity: 1; } 46% { opacity: 0.86; } 48% { opacity: 1; } 71% { opacity: 0.93; } }
+/* Intermission: lit up on a marquee sign, bulbs chasing round it. */
+.go-title .go-film-intermission { position: relative; display: inline-block; padding: 0.5em 0.75em 0.44em !important; font-size: clamp(22px, 3.3vw, 38px) !important; letter-spacing: 0.08em !important;
+  color: #ffe9b0 !important; background: none !important; -webkit-text-fill-color: #ffe9b0 !important; text-shadow: 0 0 8px rgba(255, 200, 90, 0.9), 0 0 20px rgba(255, 150, 40, 0.5), 0 2px 0 #5a2a06; isolation: isolate; }
+.go-title .go-film-intermission::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 10px; border: 2px solid #d6a548;
+  background: var(--th-bulb) 6px 4px / 18px 8px repeat-x, var(--th-bulb) 15px calc(100% - 4px) / 18px 8px repeat-x, linear-gradient(180deg, #2a1608, #120904);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 26px rgba(255, 170, 60, 0.25); animation: th-chase 1s steps(2) infinite; }
+@media (prefers-reduced-motion: reduce) { .go-title .go-film-end, .go-title .go-film-intermission::before { animation: none !important; } }
+body.reduced-motion .go-title .go-film-end, body.reduced-motion .go-title .go-film-intermission::before { animation: none !important; }

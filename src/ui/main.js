@@ -26,7 +26,7 @@ import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
 import { initFactionDrag } from './faction-drag.js';
-import { hideLobbyCard, initLobby, lobbyCardHTML, MOVIE_TITLES, openCurtains, playReel, posterHTML } from './cinema.js';
+import { hideLobbyCard, initLobby, lobbyCardHTML, MOVIE_TITLES, openCurtains, playReel, posterHTML, posterPath as posterPathOf } from './cinema.js';
 import { artOf, minionArtOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
@@ -207,7 +207,13 @@ const pickNeeded = () => (format === 'single' ? 1 : Math.min(DEFAULT_RULES.facti
 let picked = [];
 let pickCleared = true; // no realm picked (on purpose): don't pick one for them
 let armedSlot = null;
-let lobbyInfo = null;   // phones: the last poster tapped, whose lobby card shows above the wall   // a full slot the player tapped to change: the next faction tapped goes there
+let lobbyInfo = null;
+let previewFaction = null; // the poster a first click (or the arrow keys) picked out; a second click adds it
+// Light up one poster as the picked-out one without redrawing the screen (keeps focus and scroll).
+function markPreview(f) {
+  previewFaction = f;
+  for (const el of app.querySelectorAll('.cine-poster')) el.classList.toggle('previewing', (el.dataset.faction ?? el.dataset.sealed) === f);
+}   // phones: the last poster tapped, whose lobby card shows above the wall   // a full slot the player tapped to change: the next faction tapped goes there
 // Put a faction in a slot (Faction 1 = 0, Faction 2 = 1). One already in the other slot swaps over;
 // a slot past the picked ones just fills the next free one.
 function pickInto(slot, f) {
@@ -1787,6 +1793,7 @@ async function concede(remoteLoser = null) {
   if (game.mode === 'online' && remoteLoser == null) link.send({ t: 'concede' });
   s.gameOver = true;
   s.winner = 1 - loser;
+  s.concededBy = loser; // the results call a surrender an Intermission
   s.pending = null;
   s.queue = [];
   s.log.push({ turn: s.turn, msg: `${s.players[loser].name} concedes.` });
@@ -2908,16 +2915,39 @@ function renderMenu() {
     const label = pickNeeded() === 1 ? 'Your faction' : `Faction ${i + 1}`;
     return f
       ? `<div class="rx-slot filled ${nextSlot === i ? 'active' : ''}" data-pickslot="${i}" data-faction="${esc(f)}" style="--fc:${fx.factionColor(f)}" title="${armedSlot === i ? 'Now tap or drag a faction to put here' : 'Tap to change this faction'}">
-          <small class="rx-slot-label">${label}</small>${medal(f)}<b>${esc(f)}</b><button class="rx-slot-x" data-slotclear="${i}" aria-label="Clear ${label}">✕</button></div>`
+          <small class="rx-slot-label">${label}</small><span class="m2-medal cine-slot-thumb"><img src="${artSrc(posterPathOf(f))}" alt="" draggable="false"></span><b>${esc(f)}</b><button class="rx-slot-x" data-slotclear="${i}" aria-label="Clear ${label}">✕</button></div>`
       : `<div class="rx-slot empty ${nextSlot === i ? 'active' : ''}" data-pickslot="${i}">
           <small class="rx-slot-label">${label}</small><span class="m2-medal empty"><b>+</b></span><b>${nextSlot === i ? 'Tap or drag a faction' : 'Pick Faction 1 first'}</b></div>`;
   };
+  // The big screen in the middle: your film(s) as posters with their titles in lights. It is where
+  // posters are dragged (anywhere on it fills the next free seat; onto a poster replaces that one).
+  // Hero portraits stay off this screen: they appear in the hero fusion as the match starts.
+  const screenSlot = (i) => {
+    const f = picked[i];
+    const label = pickNeeded() === 1 ? 'Your feature' : i ? 'Second feature' : 'First feature';
+    return f
+      ? `<div class="cine-seat filled ${nextSlot === i ? 'active' : ''}" data-pickslot="${i}" data-faction="${esc(f)}" style="--fc:${fx.factionColor(f)}" title="${armedSlot === i ? 'Now pick a poster to put here' : 'Click to swap this feature'}">
+          <span class="cine-seat-poster"><img src="${artSrc(posterPathOf(f))}" alt="" draggable="false"></span><small>${label}</small><button class="rx-slot-x" data-slotclear="${i}" aria-label="Remove ${esc(f)}">✕</button></div>`
+      : `<div class="cine-seat empty ${nextSlot === i ? 'active' : ''}" data-pickslot="${i}"><span class="cine-seat-poster"><b>+</b><em>${nextSlot === i ? 'Drag a poster here' : 'Pick the first feature'}</em></span><small>${label}</small></div>`;
+  };
+  const screenTitle = picked.length
+    ? `<small class="cine-screen-kicker">${picked.length > 1 ? 'Tonight\u2019s double feature' : pickNeeded() > 1 ? 'Now showing (pick a second feature)' : 'Now showing'}</small><h2 class="cine-screen-title">${picked.map((f) => esc(MOVIE_TITLES[f] ?? f)).join('<i> &amp; </i>')}</h2>`
+    : `<small class="cine-screen-kicker">The screen is dark</small><h2 class="cine-screen-title dim">${pickNeeded() > 1 ? 'Drag two posters here' : 'Drag a poster here'}</h2>`;
+  const screenHTML = `<div class="rx-heroframe cine-screen ${pickNeeded() > 1 ? 'two' : 'one'}" data-pickslot="-1">
+      <div class="cine-seats">${Array.from({ length: pickNeeded() }, (_, i) => screenSlot(i)).join('<i class="cine-amp">&amp;</i>')}</div>
+      <div class="cine-screen-text">${screenTitle}</div>
+      ${picked.length ? '<button class="rx-slots-clear cine-screen-clear" data-slotclear="-1">Clear</button>' : ''}
+    </div>`;
   // Above the hero on a wide screen; on a phone a copy rides at the top of the faction grid, so a
   // faction can be dragged into a slot without scrolling away from it.
   const slotsHTML = (cls) => `<div class="rx-slots ${cls}">${Array.from({ length: pickNeeded() }, (_, i) => slotBox(i)).join('<i class="rx-plus-big">+</i>')}${picked.length ? '<button class="rx-slots-clear" data-slotclear="-1">Clear</button>' : ''}</div>`;
   // The Play screen (new look): 1 pick realms, 2 pick a mode, 3 confirm.
   // The poster wall: each realm is a B-movie on the lobby wall (cinema.js).
-  const tile = (f) => posterHTML(f, { on: picked.includes(f), slot: picked.indexOf(f), sealed: !open.includes(f), attrs: realmAttr(f), color: fx.factionColor(f) });
+  // A first click picks a poster out (lit frame, its lobby card, a hint); only a second click adds or removes it.
+  const tapWord = matchMedia('(hover: hover) and (pointer: fine)').matches ? 'Click' : 'Tap';
+  const canAdd = picked.length < pickNeeded() || (armedSlot != null && picked[armedSlot]);
+  const hintFor = (f) => (picked.includes(f) ? `${tapWord} again to remove` : canAdd ? `${tapWord} again to add` : 'Both slots are full');
+  const tile = (f) => posterHTML(f, { on: picked.includes(f), slot: picked.indexOf(f), sealed: !open.includes(f), attrs: realmAttr(f), color: fx.factionColor(f), preview: previewFaction === f, hint: hintFor(f) });
   const modes = (BUILD.online ? [['ranked', 'crown', 'Ranked', 'Compete, climb and earn rewards'], ['casual', 'casual', 'Casual', 'Quick match: play for fun'], ['ai', 'robot', 'Play vs AI', 'Practice against the AI'], ['custom', 'link', 'Custom Match', 'Create or join a private game'], ['hotseat', 'seat', 'Hot Seat', 'Two players, one screen']]
     : [['ai', 'robot', 'Play vs AI', 'Practice against the AI'], ['hotseat', 'seat', 'Hot Seat', 'Two players, one screen']]);
   if (!modes.some(([k]) => k === playMode)) playMode = modes[0][0];
@@ -2940,10 +2970,8 @@ function renderMenu() {
         ${progress ? `<p class="rx-journey">${esc(progress)} <button class="rx-link" data-act="journeySkip">Unlock everything</button></p>` : ''}
       </section>
       <section class="rx-heroarea">
-        ${slotsHTML('rx-slots-main')}
-        <div class="rx-heroframe stage"><div class="stage-portrait">${portrait}</div></div>
+        ${screenHTML}
         <div class="rx-nameplate"><b>${picked.length ? picked.map(esc).join(' + ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`}</b>
-          ${picked.length ? `<small class="cine-billing">${picked.length > 1 ? 'Double feature: ' : 'Tonight: '}${picked.map((f) => `<i>${esc(MOVIE_TITLES[f] ?? f)}</i>`).join(' + ')}</small>` : ''}
           ${fusion ? `<button class="rx-fusion" data-zoom="${fusion.id}" title="See the Fusion card">Fusion: ${esc(fusion.name)}</button>` : ready && format === 'single' && FACTION_INFO[picked[0]] ? `<small>${esc(FACTION_INFO[picked[0]].style)}</small>` : ''}</div>
         ${ready ? `<button class="rx-link rx-guide-link" data-act="guide">${rxIcon('story')}<span>${sets.length ? esc(sets.join(' · ')) : 'Realm guide'}</span></button>` : ''}
       </section>
@@ -3772,7 +3800,15 @@ initLobby({ active: () => screen === 'menu' && !needsFirstPick() && !matchSetup 
 initFactionDrag({
   canDrag: () => screen === 'menu' && !needsFirstPick() && !matchSetup,
   drop(f, slot) {
-    // Faction 2 can't be filled while Faction 1 is empty: a drop there lands in Faction 1.
+    // Anywhere on the screen (-1): the seat you picked out to swap, else the next free one.
+    if (slot < 0) {
+      if (picked.includes(f)) return;
+      if (armedSlot != null && picked[armedSlot]) slot = armedSlot;
+      else if (picked.length < pickNeeded()) slot = picked.length;
+      else return flash(pickNeeded() === 1 ? 'Drop it onto your poster to swap it.' : 'Both features are picked. Drop onto one of them to swap it.');
+    }
+    // The second seat can't be filled while the first is empty: a drop there lands in the first.
+    previewFaction = null;
     if (pickInto(Math.min(slot, picked.length), f)) { sound.play('click'); afterRender.push(() => mfx.realmPicked(app, f)); render(); }
   },
 });
@@ -4330,6 +4366,7 @@ app.addEventListener('click', (e) => {
     return render();
   }
   const pickSlot = screen === 'menu' && e.target.closest('[data-pickslot]');
+  if (pickSlot && Number(pickSlot.dataset.pickslot) < 0) return; // the screen itself: only a drop target
   if (pickSlot) {
     const slot = Number(pickSlot.dataset.pickslot);
     armedSlot = picked[slot] && armedSlot !== slot ? slot : null;
@@ -4339,6 +4376,18 @@ app.addEventListener('click', (e) => {
   const chip = e.target.closest('[data-faction]');
   if (chip && (screen === 'menu' || (screen === 'online' && lobbyEditable()))) {
     const f = chip.dataset.faction;
+    // Posters: the first click only picks one out; a second click on the same poster adds (or removes) it.
+    if (tapped && previewFaction !== f) {
+      sound.play('click');
+      if (lobbyInfo === f && !matchMedia('(hover: hover) and (pointer: fine)').matches) { previewFaction = f; return render(); }
+      markPreview(f);
+      return lobbyInfo === f ? render() : undefined;
+    }
+    if (tapped) {
+      previewFaction = null;
+      // Picked with the keyboard: keep the focus on that poster after the redraw.
+      if (e.detail === 0) afterRender.push(() => app.querySelector(`.cine-poster[data-faction="${CSS.escape(f)}"]`)?.focus({ preventScroll: true }));
+    }
     // Phone strips: each row fills its own slot (Faction 1, Faction 2).
     if (chip.dataset.slot != null && pickNeeded() > 1) {
       const slot = Number(chip.dataset.slot);
@@ -4628,6 +4677,42 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') onButton('zoomPrev');
     if (e.key === 'ArrowRight') onButton('zoomNext');
   }
+});
+
+// The poster wall and the arrow keys: move from poster to poster (up and down follow the columns),
+// Enter or Space adds the one picked out (it is a button), Escape lets go of it.
+document.addEventListener('keydown', (e) => {
+  if (screen !== 'menu' || zoomId || matchSetup || needsFirstPick() || patch.open || missions?.open || guideOpen) return;
+  if (e.target.closest?.('input, textarea, select') || e.altKey || e.ctrlKey || e.metaKey) return;
+  const posters = [...app.querySelectorAll('.rx-fgrid .cine-poster')];
+  if (!posters.length) return;
+  if (e.key === 'Escape' && previewFaction) { markPreview(null); hideLobbyCard(); return; }
+  const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  const d = dirs[e.key];
+  if (!d) return;
+  // Only when the wall has the focus (or nothing does): the arrows still work as usual elsewhere.
+  const active = document.activeElement;
+  if (active && active !== document.body && !active.closest('.rx-fgrid')) return;
+  e.preventDefault();
+  const id = (el) => el.dataset.faction ?? el.dataset.sealed;
+  let i = posters.indexOf(active?.closest?.('.cine-poster'));
+  if (i < 0) i = posters.findIndex((el) => id(el) === previewFaction);
+  let next;
+  if (i < 0) next = posters[0];
+  else if (d[0]) next = posters[Math.max(0, Math.min(posters.length - 1, i + d[0]))];
+  else {
+    // The nearest poster in the row above or below.
+    const r = posters[i].getBoundingClientRect(), cx = r.left + r.width / 2;
+    const rows = posters.map((el) => el.getBoundingClientRect()).map((b, k) => ({ k, top: b.top, cx: b.left + b.width / 2 }));
+    const tops = [...new Set(rows.map((x) => Math.round(x.top)))].sort((a, b) => a - b);
+    const row = tops.indexOf(Math.round(r.top)) + d[1];
+    if (row < 0 || row >= tops.length) return;
+    next = posters[rows.filter((x) => Math.round(x.top) === tops[row]).sort((a, b) => Math.abs(a.cx - cx) - Math.abs(b.cx - cx))[0].k];
+  }
+  next.focus({ preventScroll: true });
+  next.scrollIntoView({ block: 'nearest', behavior: calmMotion() ? 'auto' : 'smooth' });
+  markPreview(id(next));
+  sound.play('click');
 });
 
 // The zoomed card's foil follows the mouse: a glint band plus a soft glare where the light hits.
