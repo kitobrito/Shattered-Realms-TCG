@@ -33,7 +33,7 @@ IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.webp')
 QUALITY = 72  # visually identical to the source JPGs at full size, under half the bytes
 PACK_LIMIT = 2 * 1024 * 1024  # start a new pack part past this many bytes (small parts: a card's art arrives sooner)
 MAX_SIDE = 768  # cards never show art bigger than this on screen, even zoomed on a sharp phone
-EAGER = ('heroes', 'backs')  # the menus show these at once
+EAGER = ('heroes', 'backs', 'posters')  # the menus show these at once (posters: the Play screen's lobby wall)
 
 
 def to_webp(path):

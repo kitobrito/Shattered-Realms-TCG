@@ -43,6 +43,21 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-24-cinema-lobby',
+    date: 'November 24',
+    title: 'Now Showing: the cinema lobby',
+    tag: 'New Play screen',
+    intro: 'Picking your realms now happens in an old cinema lobby. Every realm has its own 1950s B-movie poster on the wall.',
+    blocks: [
+      { cat: 'qol', h: 'The lobby', list: [
+        { cards: [], text: 'Each realm is a movie: They Came from Heaven, The Night of Eternal Blood, Jaws from the Abyss, Terror at 10,000 Volts and twenty more, on a velvet wall under a lit-up Now Showing marquee.' },
+        { cards: [], text: 'Point at a poster and it comes alive: the artwork slowly pans and flickers like a projector, and a lobby card opens beside it with the film\'s title, the realm\'s Hero Spell, how it plays, and its strengths and weaknesses.' },
+        { cards: [], text: 'On a phone, tap a poster to pick it and read its lobby card above the wall.' },
+        { cards: [], text: 'Picked posters light up with a ticket stub showing their slot (Faction 1 or Faction 2), and your pair is billed as a double feature under the hero. Dragging posters into the slots works just like before.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-22-radiant-armory',
     date: 'November 22',
     title: 'Divine: The Radiant Armory',

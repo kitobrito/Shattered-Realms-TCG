@@ -21,6 +21,7 @@ export function initFactionDrag({ canDrag, drop }) {
   const slotAt = (x, y) => document.elementFromPoint(x, y)?.closest?.('[data-pickslot]') ?? null;
 
   function start() {
+    document.dispatchEvent(new Event('factiondragstart'));
     const { el, faction, x, y } = press;
     clearTimeout(press.timer);
     const face = el.querySelector('.rx-ftile-ico, .m2-medal') ?? el;
