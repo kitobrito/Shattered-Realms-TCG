@@ -92,7 +92,7 @@ export function homeHTML({ wallet, notes, unseen, online }) {
       <button class="rx-isle rx-isle-play" data-act="menu"><span class="rx-plaque"><b>Play</b><small>Enter the realms</small></span></button>
     </section>
     <aside class="rx-news">
-      <header><h2>${rxIcon('news')}<span>News</span></h2><button class="rx-viewall" data-act="patchNotes">View all ${rxIcon('arrow')}</button></header>
+      <header><h2>${rxIcon('news')}<span>Newsreel</span></h2><button class="rx-viewall" data-act="patchNotes">View all ${rxIcon('arrow')}</button></header>
       ${lead ? `<button class="rx-lead" data-act="patchPost:0" style="--thumb:url('${new URL(noteThumb(lead), document.baseURI).href}')">
         <span class="rx-lead-art"></span>
         <span class="rx-lead-text"><em class="rx-badge ${unseen ? 'new' : ''}">${unseen ? 'New' : esc(lead.tag ?? 'Latest')}</em><b>${esc(lead.title)}</b><small>${esc((lead.intro ?? '').split(/(?<=[.!?])\s/)[0])}</small></span>

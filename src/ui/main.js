@@ -2680,6 +2680,8 @@ function showMenuBackdrop(on) {
     menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg.jpg\')"></div>'
       + '<div class="mbg-mist m1"></div><div class="mbg-mist m2"></div>'
       + '<div class="mbg-shade"></div><div class="mbg-rays"></div>'
+      // Theatre: the house lights are down, the curtains drawn back, two spotlights sweep the stage.
+      + '<div class="mbg-theatre"><i class="mbg-spot a"></i><i class="mbg-spot b"></i><i class="mbg-grain"></i><i class="mbg-curtain l"></i><i class="mbg-curtain r"></i><i class="mbg-valance"></i></div>'
       + Array.from({ length: 28 }, () => `<i class="mbg-ember" style="left:${Math.random() * 100}%;--d:${(6 + Math.random() * 8).toFixed(1)}s;--delay:${(-Math.random() * 14).toFixed(1)}s;--x:${(Math.random() * 120 - 60).toFixed(0)}px;--s:${(0.6 + Math.random() * 1.2).toFixed(2)}"></i>`).join('');
     document.body.prepend(menuBg);
     // Depth: the backdrop drifts a little against the mouse (the mist more than the islands).
