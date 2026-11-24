@@ -2677,7 +2677,8 @@ function showMenuBackdrop(on) {
     menuBg = document.createElement('div');
     menuBg.id = 'menu-bg';
     // The shattered realms drifting in the void (slow pan and zoom).
-    menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg.jpg\')"></div>'
+    // The auditorium of the picture palace (theatre theme).
+    menuBg.innerHTML = '<div class="mbg-islands" style="background-image:url(\'art/ui/menu-bg-theatre.jpg\')"></div>'
       + '<div class="mbg-mist m1"></div><div class="mbg-mist m2"></div>'
       + '<div class="mbg-shade"></div><div class="mbg-rays"></div>'
       // Theatre: the house lights are down, the curtains drawn back, two spotlights sweep the stage.
@@ -4772,7 +4773,7 @@ async function boot() {
   const img = (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
   const jobs = [
     document.fonts?.ready ?? Promise.resolve(),
-    ...['art/ui/logo.png', 'art/ui/menu-bg.jpg', 'art/ui/play-button.png', 'art/ui/divider.png',
+    ...['art/ui/logo.png', 'art/ui/menu-bg-theatre.jpg', 'art/ui/home-palace.webp', 'art/ui/play-button.png', 'art/ui/divider.png',
       'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-quickplay.png', 'art/frames/painted-trap.png',
       'art/frames/legendary-minion.png', 'art/frames/legendary-spell.png', 'art/frames/legendary-trap.png'].map(img),
     ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${fslug(f)}.jpg`)]),

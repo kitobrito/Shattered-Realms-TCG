@@ -487,7 +487,7 @@ body.reduced-motion .cine-marquee::before, body.reduced-motion .cine-marquee::af
 /* The auditorium behind the menus: dark house, curtains drawn back at the sides, a valance on
    top, two spotlights sweeping the stage, and a little film grain. */
 #menu-bg .mbg-theatre { position: absolute; inset: 0; pointer-events: none; }
-#menu-bg .mbg-islands { filter: brightness(0.32) saturate(0.6) sepia(0.35) hue-rotate(-20deg); }
+#menu-bg .mbg-islands { filter: brightness(0.62) saturate(0.95); }
 #menu-bg .mbg-rays, #menu-bg .mbg-ember { display: none; }
 .mbg-curtain { position: absolute; top: 0; bottom: 0; width: clamp(28px, 5vw, 96px);
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.6)),
@@ -574,4 +574,33 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 @media (orientation: portrait), (max-width: 760px) {
   .rx-head .rx-title { font-size: 1em !important; padding: 0.95em 0.85em 0.9em; }
   .rx-head .rx-title::before { background-size: 12px 6px, 12px 6px, auto; }
+}
+
+/* Home: the picture palace replaces the floating castle. Each label sits on its part of the
+   building (fractions of the painting): Build at the projection booth, Collection at the poster
+   case, Factions on the poster wall, Realms at the searchlights, Play on the marquee. */
+.rx-hub-art { aspect-ratio: 1024 / 825 !important; }
+.rx-hub-art img { animation: none !important; -webkit-mask: radial-gradient(ellipse 60% 62% at 50% 48%, #000 72%, transparent 100%) !important; mask: radial-gradient(ellipse 60% 62% at 50% 48%, #000 72%, transparent 100%) !important;
+  filter: drop-shadow(0 0 40px rgba(255, 170, 70, 0.25)); }
+.rx-hub .rx-isle { top: calc(48% + (var(--y) - 0.5) * var(--S) * 0.8057) !important; height: calc(var(--h) * var(--S) * 0.8057) !important; border-radius: 14px !important; }
+.rx-hub .rx-isle-build { --x: 0.14; --y: 0.36; --w: 0.24; --h: 0.3; }
+.rx-hub .rx-isle-collection { --x: 0.84; --y: 0.36; --w: 0.22; --h: 0.36; }
+.rx-hub .rx-isle-factions { --x: 0.15; --y: 0.72; --w: 0.28; --h: 0.26; }
+.rx-hub .rx-isle-realms { --x: 0.88; --y: 0.62; --w: 0.2; --h: 0.34; }
+.rx-hub .rx-isle-play { --x: 0.5; --y: 0.56; --w: 0.4; --h: 0.46; }
+.rx-isle-build .rx-plaque { left: 50% !important; top: 78% !important; }
+.rx-isle-collection .rx-plaque { left: 50% !important; top: 89% !important; }
+.rx-isle-factions .rx-plaque { left: 50% !important; top: 20% !important; }
+.rx-isle-realms .rx-plaque { left: 50% !important; top: 79% !important; }
+.rx-isle-play .rx-plaque { left: 50% !important; top: 32% !important; }
+/* The four side labels are little lit signs so they read over the painting. */
+.rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: calc(var(--S) * 0.021); padding: 0.32em 0.75em 0.36em; border-radius: 5px; border: 1.5px solid var(--th-brass);
+  background: linear-gradient(180deg, rgba(60, 10, 18, 0.92), rgba(24, 6, 10, 0.92)); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 170, 70, 0.25); }
+/* Play is spelled out on the marquee itself, in red marquee letters. */
+.rx-isle-play .rx-plaque b { background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: #8a0f1f !important; -webkit-text-fill-color: #8a0f1f !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 6px rgba(255, 120, 90, 0.35) !important; filter: none !important; letter-spacing: 0.14em !important; }
+.rx-isle-play .rx-plaque small { color: #5a1a10 !important; text-shadow: none !important; font-weight: 800 !important; }
+.rx-isle::after { border-radius: 14px !important; background: radial-gradient(ellipse, rgba(255, 200, 110, 0.3), transparent 70%) !important; }
+@media (orientation: portrait), (max-width: 760px) {
+  .rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: max(10px, calc(var(--S) * 0.021)); }
 }

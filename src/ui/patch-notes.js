@@ -50,7 +50,8 @@ export const PATCH_NOTES = [
     intro: 'The cinema lobby was just the start: every menu is now dressed as an old picture palace.',
     blocks: [
       { cat: 'qol', h: 'The whole picture palace', list: [
-        { cards: [], text: 'Every menu now matches the lobby: the house lights are down, red velvet curtains frame the screen, two spotlights sweep the stage, and screen titles hang in lit-up marquee signs.' },
+        { cards: [], text: 'Home is now the Shattered Realms picture palace: PLAY is up in lights on the marquee, Build is the projection booth, Collection the poster case, Factions the poster wall, and Realms the searchlights.' },
+        { cards: [], text: 'Behind every menu you are sitting in the auditorium: the house lights are down, red velvet curtains frame the screen, two spotlights sweep the stage, and screen titles hang in lit-up marquee signs.' },
         { cards: [], text: 'Panels are velvet with brass trim, buttons are gold admission tickets, tabs are ticket stubs, the Play steps run along a strip of film, and News is now the Newsreel.' },
       ] },
     ],
