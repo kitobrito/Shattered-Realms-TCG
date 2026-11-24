@@ -4701,13 +4701,13 @@ document.addEventListener('keydown', (e) => {
   if (i < 0) next = posters[0];
   else if (d[0]) next = posters[Math.max(0, Math.min(posters.length - 1, i + d[0]))];
   else {
-    // The nearest poster in the row above or below.
-    const r = posters[i].getBoundingClientRect(), cx = r.left + r.width / 2;
-    const rows = posters.map((el) => el.getBoundingClientRect()).map((b, k) => ({ k, top: b.top, cx: b.left + b.width / 2 }));
-    const tops = [...new Set(rows.map((x) => Math.round(x.top)))].sort((a, b) => a - b);
-    const row = tops.indexOf(Math.round(r.top)) + d[1];
+    // The nearest poster in the row above or below. Rows come from the grid layout (offsetTop), not
+    // the screen position: the picked-out poster is lifted a little and must still count as its row.
+    const rows = posters.map((el, k) => ({ k, top: el.offsetTop, cx: el.offsetLeft + el.offsetWidth / 2 }));
+    const tops = [...new Set(rows.map((x) => x.top))].sort((a, b) => a - b);
+    const row = tops.indexOf(rows[i].top) + d[1];
     if (row < 0 || row >= tops.length) return;
-    next = posters[rows.filter((x) => Math.round(x.top) === tops[row]).sort((a, b) => Math.abs(a.cx - cx) - Math.abs(b.cx - cx))[0].k];
+    next = posters[rows.filter((x) => x.top === tops[row]).sort((a, b) => Math.abs(a.cx - rows[i].cx) - Math.abs(b.cx - rows[i].cx))[0].k];
   }
   next.focus({ preventScroll: true });
   next.scrollIntoView({ block: 'nearest', behavior: calmMotion() ? 'auto' : 'smooth' });
