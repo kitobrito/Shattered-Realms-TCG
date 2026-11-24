@@ -43,16 +43,25 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-24-theatre-theme',
+    date: 'November 24',
+    title: 'The whole picture palace',
+    tag: 'New look',
+    intro: 'The cinema lobby was just the start: every menu is now dressed as an old picture palace.',
+    blocks: [
+      { cat: 'qol', h: 'The whole picture palace', list: [
+        { cards: [], text: 'Every menu now matches the lobby: the house lights are down, red velvet curtains frame the screen, two spotlights sweep the stage, and screen titles hang in lit-up marquee signs.' },
+        { cards: [], text: 'Panels are velvet with brass trim, buttons are gold admission tickets, tabs are ticket stubs, the Play steps run along a strip of film, and News is now the Newsreel.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-24-cinema-lobby',
     date: 'November 24',
     title: 'Now Showing: the cinema lobby',
     tag: 'New Play screen',
     intro: 'Picking your realms now happens in an old cinema lobby. Every realm has its own 1950s B-movie poster on the wall.',
     blocks: [
-      { cat: 'qol', h: 'The whole picture palace', list: [
-        { cards: [], text: 'Every menu now matches the lobby: the house lights are down, red velvet curtains frame the screen, two spotlights sweep the stage, and screen titles hang in lit-up marquee signs.' },
-        { cards: [], text: 'Panels are velvet with brass trim, buttons are gold admission tickets, tabs are ticket stubs, the Play steps run along a strip of film, and News is now the Newsreel.' },
-      ] },
       { cat: 'qol', h: 'The lobby', list: [
         { cards: [], text: 'Each realm is a movie: They Came from Heaven, The Night of Eternal Blood, Jaws from the Abyss, Terror at 10,000 Volts and twenty more, on a velvet wall under a lit-up Now Showing marquee.' },
         { cards: [], text: 'Point at a poster and it comes alive: the artwork slowly pans and flickers like a projector, and a lobby card opens beside it with the film\'s title, the realm\'s Hero Spell, how it plays, and its strengths and weaknesses.' },
