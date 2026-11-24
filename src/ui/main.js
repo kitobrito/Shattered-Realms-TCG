@@ -26,7 +26,7 @@ import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
 import { initFactionDrag } from './faction-drag.js';
-import { hideLobbyCard, initLobby, lobbyCardHTML, MOVIE_TITLES, posterHTML } from './cinema.js';
+import { hideLobbyCard, initLobby, lobbyCardHTML, MOVIE_TITLES, openCurtains, playReel, posterHTML } from './cinema.js';
 import { artOf, minionArtOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
@@ -375,7 +375,13 @@ function enterGame(isNew = false) {
   if (!isNew) { render(); scheduleAI(); return; }
   animating = true; // nothing moves until the intro is over
   render();
-  showLoader().then(fuseHeroes).then(playIntro).finally(() => { animating = false; render(); scheduleAI(); });
+  // The picture palace: the film countdown and your film's opening credits roll, the curtains
+  // close, then part on the next scene (hero fusion, then the versus screen).
+  showLoader()
+    .then((loader) => playReel({ factions: game.state.players[viewer].factions, sound: (k) => sound.play(k), calm: calmMotion(), behind: loader }))
+    .then((reel) => { setTimeout(() => openCurtains(reel, (k) => sound.play(k)), 60); return fuseHeroes(); })
+    .then(playIntro)
+    .finally(() => { animating = false; render(); scheduleAI(); });
 }
 
 // Old saves predate random seats: the human was always seat 0.
@@ -1727,7 +1733,7 @@ async function showLoader() {
   const tips = tipsFor([...new Set(s.players.flatMap((pl) => pl.factions))]);
   const crest = (f) => (backArtOf(f) ? `<i class="crest" style="background-image:url('${backArtOf(f)}')"></i>` : '<i class="crest crest-fusion"></i>');
   el.innerHTML = `<div class="loader-box">
-      <img class="loader-logo" src="art/ui/logo.png" alt="Shattered Realms">
+      <img class="loader-logo" src="art/ui/logo-theatre.webp" alt="Shattered Realms">
       <div class="loader-realms">${mineF.map((f) => `<span>${crest(f)}<b>${esc(f)}</b></span>`).join('<i class="loader-plus">+</i>')}</div>
       <div class="loader-sigil"><i></i><i></i></div>
       <div class="loader-tipbox"><span class="loader-tiphead">Tip</span><p class="loader-tip">${esc(tips[0] ?? '')}</p></div>
@@ -1941,7 +1947,7 @@ function renderSignIn() {
     <div class="menu tavern title-screen signin">
       <header class="ts-title">
         <div class="ts-runes"></div>
-        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
+        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo-theatre.webp" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
         <p class="ts-tag">${reg ? 'Create your account to begin.' : 'Welcome back. Sign in to play.'}</p>
       </header>
       <section class="ts-panel signin-panel">
@@ -4773,7 +4779,7 @@ async function boot() {
   const img = (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
   const jobs = [
     document.fonts?.ready ?? Promise.resolve(),
-    ...['art/ui/logo.png', 'art/ui/menu-bg-theatre.jpg', 'art/ui/home-palace.webp', 'art/ui/play-button.png', 'art/ui/divider.png',
+    ...['art/ui/logo-theatre.webp', 'art/ui/menu-bg-theatre.jpg', 'art/ui/home-palace.webp', 'art/ui/play-button.png', 'art/ui/divider.png',
       'art/frames/painted-minion.png', 'art/frames/painted-spell.png', 'art/frames/painted-quickplay.png', 'art/frames/painted-trap.png',
       'art/frames/legendary-minion.png', 'art/frames/legendary-spell.png', 'art/frames/legendary-trap.png'].map(img),
     ensureArt([...Object.values(HERO_ART), ...FACTIONS.map((f) => `art/backs/${fslug(f)}.jpg`)]),

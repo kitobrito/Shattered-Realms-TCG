@@ -123,3 +123,62 @@ export function initLobby({ active }) {
   document.addEventListener('factiondragstart', () => { dragging = true; hideLobbyCard(); });
   document.addEventListener('pointerup', () => { dragging = false; }, true);
 }
+
+// ---- The reel: what plays as a match begins -------------------------------------------------
+// A scratchy film-leader countdown (3, 2, 1), then your film's opening credits (its poster, or
+// both posters as a double feature), then the curtains close. The returned element is left
+// on screen with the curtains closed, above everything; openCurtains() parts them over the
+// next scene (hero fusion or versus) and removes the reel. A tap skips straight to the end.
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+export async function playReel({ factions, sound, calm = false, behind = null }) {
+  const el = document.createElement('div');
+  el.className = `cine-reel ${calm ? 'calm' : ''}`;
+  const titles = factions.map((f) => MOVIE_TITLES[f] ?? f);
+  el.innerHTML = `
+    <div class="reel-leader"><div class="reel-dial"><i class="reel-sweep"></i><b class="reel-num">3</b></div><i class="reel-scratch"></i><i class="reel-grain"></i></div>
+    <div class="reel-credits">
+      <small class="reel-kicker">${factions.length > 1 ? 'Tonight’s double feature' : 'Now showing'}</small>
+      <div class="reel-posters">${factions.map((f) => `<span class="reel-poster"><img src="${artSrc(posterPath(f))}" alt="" draggable="false"></span>`).join('<i class="reel-amp">&amp;</i>')}</div>
+      <h2 class="reel-title">${titles.map(esc).join('<i> &amp; </i>')}</h2>
+    </div>
+    <i class="reel-curtain l"></i><i class="reel-curtain r"></i><i class="reel-valance"></i>`;
+  document.getElementById('fx-layer')?.appendChild(el) ?? document.body.appendChild(el);
+  let skipped = false;
+  const skip = () => { skipped = true; el.classList.add('skip'); };
+  el.addEventListener('pointerdown', skip);
+  const step = async (ms) => { if (!skipped) await Promise.race([wait(ms), new Promise((r) => el.addEventListener('pointerdown', r, { once: true }))]); };
+  try {
+    // The loader underneath can go now the reel covers it.
+    behind?.remove();
+    if (!calm) {
+      el.classList.add('leader-on');
+      for (const n of [3, 2, 1]) {
+        if (skipped) break;
+        el.querySelector('.reel-num').textContent = String(n);
+        const sw = el.querySelector('.reel-sweep');
+        sw.style.animation = 'none'; void sw.offsetWidth; sw.style.animation = '';
+        sound?.('click');
+        await step(560);
+      }
+      el.classList.remove('leader-on');
+    }
+    if (!skipped) {
+      el.classList.add('credits-on');
+      sound?.('drum');
+      await step(calm ? 900 : 1700);
+    }
+    el.classList.add('curtains-shut');
+    sound?.('whoosh');
+    await wait(skipped ? 260 : 520);
+  } finally {
+    el.removeEventListener('pointerdown', skip);
+  }
+  return el;
+}
+export function openCurtains(el, sound) {
+  if (!el) return Promise.resolve();
+  el.classList.remove('credits-on');
+  el.classList.add('curtains-open');
+  sound?.('whoosh');
+  return wait(el.classList.contains('calm') ? 450 : 950).then(() => el.remove());
+}

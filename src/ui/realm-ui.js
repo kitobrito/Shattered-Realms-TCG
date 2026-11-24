@@ -82,7 +82,7 @@ export function homeHTML({ wallet, notes, unseen, online }) {
   ];
   return `<div class="rx rx-home">
     <header class="rx-top">
-      <h1 class="rx-logo"><img src="art/ui/logo.png" alt="Shattered Realms" draggable="false"><i class="rx-logo-gem"></i></h1>
+      <h1 class="rx-logo"><img src="art/ui/logo-theatre.webp" alt="Shattered Realms" draggable="false"><i class="rx-logo-gem"></i></h1>
       ${wallet}
     </header>
     <nav class="rx-side" aria-label="Main menu">${NAV.map(([ico, label, act], i) => `<button class="rx-nav ${i === 0 ? 'on' : ''}" data-act="${act}">${rxIcon(ico)}<span>${label}</span></button>`).join('')}</nav>
