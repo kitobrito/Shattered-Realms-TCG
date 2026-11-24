@@ -3779,7 +3779,8 @@ initFactionDrag({
 function render() {
   // A new screen opens at its top (menus scroll inside #app).
   if (screen !== shownScreen) app.scrollTop = 0;
-  if (screen !== 'menu') hideLobbyCard();
+  // The poster's lobby card only belongs on the open poster wall (not under a pop-up or another screen).
+  if (screen !== 'menu' || matchSetup || needsFirstPick()) hideLobbyCard();
   const tabsBefore = screen === shownScreen ? mfx.tabRects(app) : null;
   const restoreInputs = screen === shownScreen ? keepInputs() : null;
   document.body.classList.toggle('in-game', screen === 'game');
