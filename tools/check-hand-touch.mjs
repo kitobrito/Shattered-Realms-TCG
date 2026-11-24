@@ -22,7 +22,8 @@ const line = (x0, y0, x1, y1, n) => Array.from({ length: n }, (_, i) => [x0 + (x
 await p.addInitScript(([f]) => { sessionStorage.setItem('shattered-offline', '1'); localStorage.setItem('shattered-journey', JSON.stringify({ games: 9, done: true, seen: [] })); localStorage.setItem('faction-ccg-settings', JSON.stringify({ tips: false, volume: 0, music: 0 })); localStorage.setItem('faction-ccg-format', 'single'); }, [faction]);
 await p.goto(`http://localhost:${process.env.PORT ?? 8766}/index.html`); await p.waitForFunction(() => !document.getElementById('boot')); await wait(800);
 await p.evaluate(() => document.querySelector('.rx-home [data-act="menu"]')?.click()); await wait(500); // the Home hub opens first
-await p.evaluate((f) => { const e = document.querySelector(`[data-faction="${f}"]`); if (e && !e.classList.contains('on')) e.click(); }, faction);
+// A poster's first click only picks it out; the second adds it.
+await p.evaluate((f) => { const e = document.querySelector(`[data-faction="${f}"]`); if (e && !e.classList.contains('on')) { e.click(); document.querySelector(`[data-faction="${f}"]`).click(); } }, faction);
 await p.evaluate(() => { const m = document.querySelector('[data-act="playMode:ai"]'); if (m) { m.click(); } }); await wait(300);
 await p.evaluate(() => (document.querySelector('[data-act="confirmPlay"]') ?? document.querySelector('[data-act="ai"]'))?.click()); await wait(400);
 await p.evaluate(() => document.querySelector('[data-act="setupStart"]')?.click());

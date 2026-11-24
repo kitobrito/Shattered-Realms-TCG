@@ -40,10 +40,11 @@ export const posterPath = (f) => `art/posters/${fslug(f)}.jpg`;
 const heroSpellOf = (f) => allCards().find((c) => c.heroSpell && !c.fusion && !c.token && c.faction === f) ?? null;
 
 // One poster in its lobby frame. state: { on, slot (0/1 or -1), sealed, attrs }.
-export function posterHTML(f, { on = false, slot = -1, sealed = false, attrs = '', color = '#8a6cff' } = {}) {
+// preview: the poster picked out by a first click (or the arrow keys); hint: what a second click does.
+export function posterHTML(f, { on = false, slot = -1, sealed = false, attrs = '', color = '#8a6cff', preview = false, hint = '' } = {}) {
   const title = MOVIE_TITLES[f] ?? f;
-  return `<button class="rx-ftile cine-poster f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${attrs} style="--fc:${color}" aria-label="${esc(f)}: ${esc(title)}">
-    <span class="cine-frame"><span class="rx-ftile-ico cine-art"><img src="${artSrc(posterPath(f))}" alt="" draggable="false" loading="lazy"></span><i class="cine-glare"></i></span>
+  return `<button class="rx-ftile cine-poster f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''} ${preview ? 'previewing' : ''}" ${attrs} style="--fc:${color}" aria-label="${esc(f)}: ${esc(title)}" aria-pressed="${on}">
+    <span class="cine-frame"><span class="rx-ftile-ico cine-art"><img src="${artSrc(posterPath(f))}" alt="" draggable="false" loading="lazy"></span><i class="cine-glare"></i>${hint && !sealed ? `<i class="cine-hint">${esc(hint)}</i>` : ''}</span>
     <span class="rx-ftile-name cine-name">${esc(f)}</span>
     ${on ? `<i class="cine-ticket">${slot >= 0 ? `Faction ${slot + 1}` : 'Now playing'}</i>` : sealed ? '<i class="rx-lock">🔒</i>' : ''}
   </button>`;

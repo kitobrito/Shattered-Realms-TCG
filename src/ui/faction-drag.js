@@ -17,14 +17,14 @@ export function initFactionDrag({ canDrag, drop }) {
   let drag = null;  // { faction, ghost, over }
   let swallowClick = false;
 
-  const sourceAt = (target) => target.closest?.('.rx-ftile[data-faction], .rx-slot.filled[data-faction]');
+  const sourceAt = (target) => target.closest?.('.rx-ftile[data-faction], .rx-slot.filled[data-faction], .cine-seat.filled[data-faction]');
   const slotAt = (x, y) => document.elementFromPoint(x, y)?.closest?.('[data-pickslot]') ?? null;
 
   function start() {
     document.dispatchEvent(new Event('factiondragstart'));
     const { el, faction, x, y } = press;
     clearTimeout(press.timer);
-    const face = el.querySelector('.rx-ftile-ico, .m2-medal') ?? el;
+    const face = el.querySelector('.rx-ftile-ico, .cine-seat-poster, .m2-medal') ?? el;
     const ghost = face.cloneNode(true);
     ghost.classList.add('rx-drag-ghost');
     const r = face.getBoundingClientRect();
