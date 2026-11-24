@@ -51,7 +51,7 @@ export const PATCH_NOTES = [
     blocks: [
       { cat: 'qol', h: 'Picking your features', list: [
         { cards: [], text: 'Clicking a poster now picks it out first: it lights up, shows its lobby card and says "Click again to add". Only a second click adds it (or, on a poster you have already chosen, removes it). Dragging a poster still adds it straight away.' },
-        { cards: [], text: 'Use the arrow keys to walk along the poster wall, Enter or Space to add the one you are on, and Escape to let go of it.' },
+        { cards: [], text: 'Use the arrow keys to walk along the poster wall (Up and Down go up and down the columns), Enter or Space to add the one you are on, and Escape to let go of it.' },
         { cards: [], text: 'The middle of the Play screen is now the big screen: drag posters onto it, and your film posters appear there with their titles in lights. Drop onto one of them to swap it. Hero portraits now appear when your heroes fuse at the start of the match.' },
       ] },
       { cat: 'qol', h: 'Film endings', list: [
