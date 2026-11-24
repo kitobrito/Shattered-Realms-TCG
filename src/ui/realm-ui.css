@@ -592,7 +592,7 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 .rx-isle-collection .rx-plaque { left: 50% !important; top: 89% !important; }
 .rx-isle-factions .rx-plaque { left: 50% !important; top: 20% !important; }
 .rx-isle-realms .rx-plaque { left: 50% !important; top: 79% !important; }
-.rx-isle-play .rx-plaque { left: 50% !important; top: 32% !important; }
+.rx-isle-play .rx-plaque { left: 50% !important; top: 33.4% !important; }
 /* The four side labels are little lit signs so they read over the painting. */
 .rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: calc(var(--S) * 0.021); padding: 0.32em 0.75em 0.36em; border-radius: 5px; border: 1.5px solid var(--th-brass);
   background: linear-gradient(180deg, rgba(60, 10, 18, 0.92), rgba(24, 6, 10, 0.92)); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 170, 70, 0.25); }
@@ -604,3 +604,5 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 @media (orientation: portrait), (max-width: 760px) {
   .rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: max(10px, calc(var(--S) * 0.021)); }
 }
+.rx-isle-play .rx-plaque { line-height: 0.95 !important; }
+.rx-isle-play .rx-plaque small { font-size: 0.42em !important; margin-top: 0.1em !important; }
