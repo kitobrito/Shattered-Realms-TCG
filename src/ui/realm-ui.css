@@ -607,4 +607,4 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 .rx-isle-play .rx-plaque { line-height: 0.95 !important; }
 .rx-isle-play .rx-plaque small { font-size: 0.42em !important; margin-top: 0.1em !important; }
 /* PLAY nudged down on its own; "Enter the realms" stays where it is. */
-.rx-isle-play .rx-plaque b { position: relative !important; top: 0.09em !important; }
+.rx-isle-play .rx-plaque b { position: relative !important; top: 0.17em !important; }
