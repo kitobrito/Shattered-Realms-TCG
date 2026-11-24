@@ -608,3 +608,69 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 .rx-isle-play .rx-plaque small { font-size: 0.42em !important; margin-top: 0.1em !important; }
 /* PLAY nudged down on its own; "Enter the realms" stays where it is. */
 .rx-isle-play .rx-plaque b { position: relative !important; top: 0.17em !important; }
+
+/* ---- The reel: film countdown, opening credits, curtains (plays as a match begins) ---- */
+.cine-reel { position: fixed; inset: 0; z-index: 12000; overflow: hidden; background: #0b0605; cursor: pointer; }
+.cine-reel.curtains-open { background: transparent; pointer-events: none; }
+.reel-leader { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity 0.2s;
+  background: radial-gradient(ellipse at 50% 50%, #d8c79f, #8f7a52 70%, #3a2e1c); filter: sepia(0.5); }
+.leader-on .reel-leader { opacity: 1; animation: reel-flicker 0.18s steps(2) infinite; }
+.reel-dial { position: relative; width: min(56vmin, 460px); aspect-ratio: 1; border-radius: 50%; border: 0.6vmin solid #1d150c; display: grid; place-items: center;
+  box-shadow: 0 0 0 1.4vmin rgba(29, 21, 12, 0.18), inset 0 0 0 2.4vmin rgba(29, 21, 12, 0.08); }
+.reel-dial::before, .reel-dial::after { content: ''; position: absolute; background: #1d150c; opacity: 0.75; }
+.reel-dial::before { left: -40%; right: -40%; top: 50%; height: 0.35vmin; }
+.reel-dial::after { top: -40%; bottom: -40%; left: 50%; width: 0.35vmin; }
+.reel-sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(29, 21, 12, 0.55) 0deg, rgba(29, 21, 12, 0.55) var(--a, 0deg), transparent var(--a, 0deg));
+  animation: reel-sweep 0.56s linear forwards; }
+@property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes reel-sweep { from { --a: 0deg; } to { --a: 360deg; } }
+.reel-num { position: relative; font: 900 min(34vmin, 280px)/1 var(--font-title); color: #1d150c; text-shadow: 0 0 2px rgba(0, 0, 0, 0.4); }
+.reel-scratch { position: absolute; inset: 0; pointer-events: none; background:
+  linear-gradient(90deg, transparent 22%, rgba(30, 20, 10, 0.5) 22.15%, transparent 22.3%), linear-gradient(90deg, transparent 71%, rgba(255, 250, 230, 0.6) 71.1%, transparent 71.25%);
+  animation: reel-scratch 0.3s steps(3) infinite; }
+.reel-grain { position: absolute; inset: -50%; opacity: 0.18; background-image: repeating-radial-gradient(circle at 31% 47%, #000 0 0.7px, transparent 0.7px 2.6px), repeating-radial-gradient(circle at 63% 22%, #fff 0 0.6px, transparent 0.6px 3px);
+  animation: th-grain 0.4s steps(3) infinite; }
+@keyframes reel-flicker { 50% { filter: sepia(0.5) brightness(0.9); } }
+@keyframes reel-scratch { 33% { transform: translateX(-9vw); } 66% { transform: translateX(14vw); } }
+.reel-credits { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.2vh; padding: 4vh 4vw; opacity: 0; transition: opacity 0.35s;
+  background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255, 190, 110, 0.18), transparent 70%), #0b0605; text-align: center; }
+.credits-on .reel-credits { opacity: 1; }
+.reel-kicker { font: 800 clamp(13px, 1.6vw, 22px)/1 var(--font-title); letter-spacing: 0.3em; text-transform: uppercase; color: #e9b65a; text-shadow: 0 0 12px rgba(255, 180, 80, 0.6); }
+.reel-posters { display: flex; align-items: center; gap: 2vw; }
+.reel-poster { display: block; height: min(52vh, 70vw); aspect-ratio: 687 / 1024; border: 3px solid #d6a548; border-radius: 4px; overflow: hidden;
+  box-shadow: 0 0 0 3px #2a1608, 0 0 40px rgba(255, 190, 90, 0.45), 0 20px 40px rgba(0, 0, 0, 0.8); transform: translateY(30px) scale(0.92); opacity: 0;
+  transition: transform 0.7s cubic-bezier(.2,.8,.3,1.1), opacity 0.5s; }
+.reel-poster img { width: 100%; height: 100%; object-fit: cover; display: block; animation: cine-kenburns 6s ease-in-out infinite alternate; }
+.credits-on .reel-poster { transform: none; opacity: 1; }
+.credits-on .reel-poster:nth-child(3) { transition-delay: 0.18s; }
+.reel-amp { font: italic 800 clamp(22px, 3vw, 44px)/1 var(--font-title); color: #ffe39a; font-style: italic; }
+.reel-title { margin: 0; max-width: 90vw; font: 900 clamp(22px, 3.6vw, 54px)/1.05 var(--font-title); letter-spacing: 0.04em; text-transform: uppercase; color: #ffe9b0;
+  text-shadow: 0 0 10px rgba(255, 190, 90, 0.85), 0 0 26px rgba(255, 140, 40, 0.5), 0 3px 0 #5a2a06; transform: scale(0.9); opacity: 0; transition: transform 0.8s ease-out 0.25s, opacity 0.6s 0.25s; }
+.reel-title i { font-style: italic; color: #e9b65a; }
+.credits-on .reel-title { transform: none; opacity: 1; }
+/* The curtains: drawn shut over the credits, then parted to show the match. */
+.reel-curtain { position: absolute; top: 0; bottom: 0; width: 51%; z-index: 3;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), transparent 15%, transparent 85%, rgba(0, 0, 0, 0.5)),
+    repeating-linear-gradient(90deg, #3a0710 0, #7a1424 2.2%, #9a1d2f 3.2%, #6a1020 4.6%, #2e050c 6%);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.85); transition: transform 0.5s cubic-bezier(.6,0,.4,1); }
+.reel-curtain.l { left: 0; transform: translateX(-102%); }
+.reel-curtain.r { right: 0; transform: translateX(102%); }
+.reel-valance { position: absolute; left: 0; right: 0; top: 0; z-index: 4; height: clamp(22px, 5vh, 50px); transform: translateY(-110%); transition: transform 0.4s;
+  background: radial-gradient(ellipse 50% 100% at 50% 0, #9a1d2f 60%, transparent 62%) 0 0 / clamp(60px, 8vw, 130px) 100% repeat-x, linear-gradient(#5e0f1b, #3a0710); border-bottom: 3px solid #d6a548; }
+.curtains-shut .reel-curtain { transform: none; }
+.curtains-shut .reel-valance { transform: none; }
+.curtains-open .reel-curtain { transition: transform 0.95s cubic-bezier(.55,0,.35,1); }
+.curtains-open .reel-curtain.l { transform: translateX(-102%) skewX(-4deg); }
+.curtains-open .reel-curtain.r { transform: translateX(102%) skewX(4deg); }
+.curtains-open .reel-valance { transform: translateY(-110%); transition-delay: 0.6s; }
+.curtains-open .reel-leader, .curtains-open .reel-credits { opacity: 0 !important; transition: none; }
+.cine-reel.skip .reel-curtain { transition-duration: 0.25s; }
+.cine-reel.calm .reel-curtain, .cine-reel.calm.curtains-open .reel-curtain { transition-duration: 0.4s; }
+@media (prefers-reduced-motion: reduce) { .reel-poster img, .reel-scratch, .reel-grain, .leader-on .reel-leader { animation: none !important; } }
+/* The theatre logo (user art): a lit marquee; bigger, reaching down into the night sky over the palace. */
+.rx-logo { height: 175% !important; top: 70% !important; z-index: 3; }
+.rx-logo img { filter: drop-shadow(0 0 18px rgba(255, 170, 70, 0.35)) !important; }
+.rx-logo-gem { display: none !important; }
+.ts-logo-sheen { display: none !important; }
+.ts-logo img, .title-screen .ts-logo img { filter: drop-shadow(0 0 24px rgba(255, 170, 70, 0.35)) !important; }
+@media (orientation: portrait), (max-width: 760px) { .rx-logo { height: auto !important; } .rx-logo img { width: min(78vw, 420px); height: auto; } }

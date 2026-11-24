@@ -43,6 +43,23 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-24-opening-reel',
+    date: 'November 24',
+    title: 'Roll the film',
+    tag: 'New match intro + logo',
+    intro: 'Every match now starts like a night at the pictures, and Shattered Realms has a new marquee logo.',
+    blocks: [
+      { cat: 'qol', h: 'The opening reel', list: [
+        { cards: [], text: 'As a match begins, an old film leader counts down 3, 2, 1 with a sweeping hand and a scratchy flicker.' },
+        { cards: [], text: 'Then your film\'s opening credits roll: its poster and title, or both posters as tonight\'s double feature. The curtains swing shut, then part on your heroes and the versus screen.' },
+        { cards: [], text: 'Tap anywhere to skip straight to the curtains. With Reduce motion on it is just a short title card.' },
+      ] },
+      { cat: 'qol', h: 'New logo', list: [
+        { cards: [], text: 'The Shattered Realms logo is now a cracked B-movie title on a lit marquee, with a dragon, a flying saucer, a giant ant and a bat looking on.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-24-theatre-theme',
     date: 'November 24',
     title: 'The whole picture palace',
