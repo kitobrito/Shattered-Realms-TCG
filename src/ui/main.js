@@ -26,6 +26,7 @@ import * as fx from './fx.js';
 import { layoutPagers, pageOf, setPage, showCard, turnPage } from './pager.js';
 import * as mfx from './menu-fx.js';
 import { initFactionDrag } from './faction-drag.js';
+import { hideLobbyCard, initLobby, lobbyCardHTML, MOVIE_TITLES, posterHTML } from './cinema.js';
 import { artOf, minionArtOf, backArtOf, fslug, backsOf, bigCardHTML, icon, cardHTML, cardTerms, esc, FACTION_ICONS, fitAllText, fusionHeroPath, heroArtOf, livingPortraitHTML, playerHeroArt, playerHeroPath, playerPortraitHTML, rankBadgeHTML, rankProgressHTML, youText } from './shared.js';
 import { EMOTE_KINDS, EMOTE_LABELS, emoteLine } from '../cards/emotes.js';
 import { DECK_TYPES, EXPANSION_NAMES, FACTION_INFO, synergyFor } from '../cards/faction-info.js';
@@ -205,7 +206,8 @@ const pickNeeded = () => (format === 'single' ? 1 : Math.min(DEFAULT_RULES.facti
 // The Play screen opens with both faction slots empty: nothing is picked for you.
 let picked = [];
 let pickCleared = true; // no realm picked (on purpose): don't pick one for them
-let armedSlot = null;   // a full slot the player tapped to change: the next faction tapped goes there
+let armedSlot = null;
+let lobbyInfo = null;   // phones: the last poster tapped, whose lobby card shows above the wall   // a full slot the player tapped to change: the next faction tapped goes there
 // Put a faction in a slot (Faction 1 = 0, Faction 2 = 1). One already in the other slot swaps over;
 // a slot past the picked ones just fills the next free one.
 function pickInto(slot, f) {
@@ -2905,12 +2907,8 @@ function renderMenu() {
   // faction can be dragged into a slot without scrolling away from it.
   const slotsHTML = (cls) => `<div class="rx-slots ${cls}">${Array.from({ length: pickNeeded() }, (_, i) => slotBox(i)).join('<i class="rx-plus-big">+</i>')}${picked.length ? '<button class="rx-slots-clear" data-slotclear="-1">Clear</button>' : ''}</div>`;
   // The Play screen (new look): 1 pick realms, 2 pick a mode, 3 confirm.
-  const tile = (f) => {
-    const on = picked.includes(f), sealed = !open.includes(f);
-    return `<button class="rx-ftile f-${fslug(f)} ${on ? 'on' : ''} ${sealed ? 'sealed' : ''}" ${realmAttr(f)} style="--fc:${fx.factionColor(f)}">
-      <span class="rx-ftile-ico">${crestHTML(f)}</span><span class="rx-ftile-name">${esc(f).replace('Ultraterrestrials', 'Ultra&shy;terrestrials').replace('Monster Hunter', 'Monster<br>Hunter')}</span>
-      ${on ? `<i class="rx-check">✓</i>` : sealed ? '<i class="rx-lock">🔒</i>' : ''}</button>`;
-  };
+  // The poster wall: each realm is a B-movie on the lobby wall (cinema.js).
+  const tile = (f) => posterHTML(f, { on: picked.includes(f), slot: picked.indexOf(f), sealed: !open.includes(f), attrs: realmAttr(f), color: fx.factionColor(f) });
   const modes = (BUILD.online ? [['ranked', 'crown', 'Ranked', 'Compete, climb and earn rewards'], ['casual', 'casual', 'Casual', 'Quick match: play for fun'], ['ai', 'robot', 'Play vs AI', 'Practice against the AI'], ['custom', 'link', 'Custom Match', 'Create or join a private game'], ['hotseat', 'seat', 'Hot Seat', 'Two players, one screen']]
     : [['ai', 'robot', 'Play vs AI', 'Practice against the AI'], ['hotseat', 'seat', 'Hot Seat', 'Two players, one screen']]);
   if (!modes.some(([k]) => k === playMode)) playMode = modes[0][0];
@@ -2920,13 +2918,15 @@ function renderMenu() {
   const showcase = ready ? [...new Set(curDeck)].map(getCard).filter(Boolean).sort((x, y) => (y.legendary ? 1 : 0) - (x.legendary ? 1 : 0) || y.cost - x.cost).slice(0, 5) : [];
   const step = !ready ? 1 : 2;
   app.innerHTML = `
-    <div class="menu rx rx-play select-screen" style="${cornerStyle}">
+    <div class="menu rx rx-play rx-cinema select-screen" style="${cornerStyle}">
       ${screenHeadHTML('Play', 'play', walletNow())}
       <ol class="rx-steps">${[['Select factions', 1], ['Choose game mode', 2], ['Confirm', 3]].map(([t, n]) => `<li class="${n === step ? 'on' : n < step ? 'done' : ''}"><b>${n < step ? '✓' : n}</b><span>${t}</span></li>`).join(`<li class="rx-step-arrow" aria-hidden="true">${rxIcon('arrow')}</li>`)}</ol>
       <section class="rx-panel rx-fpanel">
-        <h3>Select your ${pickNeeded() === 1 ? 'faction' : 'factions'}</h3>
+        <div class="cine-marquee" aria-hidden="true"><b>Now showing</b></div>
+        <h3>Select your ${pickNeeded() === 1 ? 'feature' : 'double feature'}</h3>
         ${pairUnlocked() ? `<div class="rx-seg"><button data-act="formatSingle" class="${format === 'single' ? 'on' : ''}">One faction</button><button data-act="formatPair" class="${format === 'pair' ? 'on' : ''}">Two factions</button></div>` : ''}
         ${slotsHTML('rx-slots-phone')}
+        ${lobbyInfo && FACTIONS.includes(lobbyInfo) ? `<div class="cine-inline" style="--fc:${fx.factionColor(lobbyInfo)}"><button class="cine-inline-x" data-act="lobbyClose" aria-label="Close">✕</button>${lobbyCardHTML(lobbyInfo)}</div>` : ''}
         <div class="rx-fgrid">${roster.filter((f) => playable.includes(f)).map(tile).join('')}</div>
         ${progress ? `<p class="rx-journey">${esc(progress)} <button class="rx-link" data-act="journeySkip">Unlock everything</button></p>` : ''}
       </section>
@@ -2934,6 +2934,7 @@ function renderMenu() {
         ${slotsHTML('rx-slots-main')}
         <div class="rx-heroframe stage"><div class="stage-portrait">${portrait}</div></div>
         <div class="rx-nameplate"><b>${picked.length ? picked.map(esc).join(' + ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`}</b>
+          ${picked.length ? `<small class="cine-billing">${picked.length > 1 ? 'Double feature: ' : 'Tonight: '}${picked.map((f) => `<i>${esc(MOVIE_TITLES[f] ?? f)}</i>`).join(' + ')}</small>` : ''}
           ${fusion ? `<button class="rx-fusion" data-zoom="${fusion.id}" title="See the Fusion card">Fusion: ${esc(fusion.name)}</button>` : ready && format === 'single' && FACTION_INFO[picked[0]] ? `<small>${esc(FACTION_INFO[picked[0]].style)}</small>` : ''}</div>
         ${ready ? `<button class="rx-link rx-guide-link" data-act="guide">${rxIcon('story')}<span>${sets.length ? esc(sets.join(' · ')) : 'Realm guide'}</span></button>` : ''}
       </section>
@@ -3758,6 +3759,7 @@ function keepInputs() {
 
 // One-off animations to play right after the next render (menu-fx.js).
 const afterRender = [];
+initLobby({ active: () => screen === 'menu' && !needsFirstPick() && !matchSetup });
 initFactionDrag({
   canDrag: () => screen === 'menu' && !needsFirstPick() && !matchSetup,
   drop(f, slot) {
@@ -3768,6 +3770,7 @@ initFactionDrag({
 function render() {
   // A new screen opens at its top (menus scroll inside #app).
   if (screen !== shownScreen) app.scrollTop = 0;
+  if (screen !== 'menu') hideLobbyCard();
   const tabsBefore = screen === shownScreen ? mfx.tabRects(app) : null;
   const restoreInputs = screen === shownScreen ? keepInputs() : null;
   document.body.classList.toggle('in-game', screen === 'game');
@@ -4306,7 +4309,9 @@ app.addEventListener('click', (e) => {
     sound.play('click');
     return render();
   }
-  if (e.target.closest('[data-sealed]') && screen === 'menu') return flash('This realm opens as you play: two more after every match.');
+  const tapped = screen === 'menu' && e.target.closest('.cine-poster');
+  if (tapped && !matchMedia('(hover: hover) and (pointer: fine)').matches) lobbyInfo = tapped.dataset.faction ?? tapped.dataset.sealed ?? null;
+  if (e.target.closest('[data-sealed]') && screen === 'menu') { if (tapped) render(); return flash('This realm opens as you play: two more after every match.'); }
   const slotClear = screen === 'menu' && e.target.closest('[data-slotclear]');
   if (slotClear) {
     const slot = Number(slotClear.dataset.slotclear);
@@ -4472,6 +4477,7 @@ function onButton(name) {
       if (firstPicks.length !== FIRST_PICKS) return;
       chooseFirstRealms(firstPicks); picked = [firstPicks[0]]; firstPicks = []; sound.play('versus'); return startGame('ai');
     case 'milestoneOk': { const m = milestone; milestone = null; sound.play('click'); if (m?.kind === 'fusion') setFormat('pair'); return render(); }
+    case 'lobbyClose': lobbyInfo = null; return render();
     case 'journeySkip': unlockEverything(); sound.play('click'); flash('Everything is unlocked: all realms, two-faction decks, traps and Quick Plays.'); return render();
     case 'unlockOk': if (game) game.unlockSeen = true; sound.play('click'); return render();
     case 'editCuts': replaceFor = null; builderFrom = screen === 'online' ? 'online' : null; builderMode = 'cut'; draftDeck = countsOf(pairDeckFor(picked)); zoomId = null; screen = 'builder'; app.scrollTop = 0; return render();
