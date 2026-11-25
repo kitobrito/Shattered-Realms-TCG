@@ -45,12 +45,13 @@ export const PATCH_NOTES = [
   {
     id: '2026-11-25-landscape-phones',
     date: 'November 25',
-    title: 'Fits on smaller phones held sideways',
+    title: 'Fits on smaller phones, and the poster wall stays put',
     tag: 'Phones',
     intro: 'On smaller phones turned sideways, the menus were squeezed into the upright phone layout and piled on top of each other. They now use the side-by-side layout and fit the screen.',
     blocks: [
       { cat: 'fix', h: 'Phones held sideways', list: [
         { cards: [], text: 'The Play screen, Home, Collection, Build and Store now fit on small phones held sideways: the poster wall, the big screen and the game modes sit side by side, and Confirm & Play is always on screen.' },
+        { cards: [], text: 'Tapping a poster on a phone no longer jumps the poster wall back to the top. The poster stays under your finger, so you can tap it again to add it, even in the bottom row.' },
       ] },
     ],
   },
