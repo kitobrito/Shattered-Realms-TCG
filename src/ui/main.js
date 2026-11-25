@@ -2731,6 +2731,19 @@ function synergyHTML(factions) {
   </div>`;
 }
 
+// The same rating on the Play screen's big screen, under the double feature's title: the stars, the
+// word, and the reason (tap or hover to read it all on a phone).
+function cineSynergyHTML(factions) {
+  const s = synergyFor(factions);
+  if (!s) return '';
+  const [stars, why] = s;
+  const label = ['', 'Clashing', 'Weak', 'Solid', 'Strong', 'Perfect'][stars];
+  return `<button class="cine-synergy s${stars}" data-act="guide" title="Synergy: ${stars} of 5. ${esc(why)} (Open the realm guide for the full deck guide.)">
+    <span class="cs-head"><span class="cs-label">Synergy</span><span class="cs-stars" aria-label="${stars} of 5 stars">${'★'.repeat(stars)}<i>${'★'.repeat(5 - stars)}</i></span><b>${label}</b></span>
+    <p>${esc(why)}</p>
+  </button>`;
+}
+
 // The two-realm deck guide: game plan, combos across the realms, the Fusion Hero Spell, what to
 // keep in the opening hand and the Mana curve (both from the deck you'll actually play).
 function pairGuideHTML(factions) {
@@ -3009,6 +3022,7 @@ function renderMenu() {
         <div class="rx-nameplate"><b>${picked.length ? picked.map(esc).join(' + ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`}</b>
           ${fusion ? `<button class="rx-fusion" data-zoom="${fusion.id}" title="See the Fusion card">Fusion: ${esc(fusion.name)}</button>` : ready && format === 'single' && FACTION_INFO[picked[0]] ? `<small>${esc(FACTION_INFO[picked[0]].style)}</small>` : ''}</div>
         ${ready ? `<button class="rx-link rx-guide-link" data-act="guide">${rxIcon('story')}<span>${sets.length ? esc(sets.join(' · ')) : 'Realm guide'}</span></button>` : ''}
+        ${ready && format !== 'single' ? cineSynergyHTML(picked) : ''}
       </section>
       <section class="rx-panel rx-mpanel">
         <h3>Choose game mode</h3>
