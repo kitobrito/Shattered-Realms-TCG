@@ -1,4 +1,4 @@
-# Shattered Realms server
+# Shattered TCG server
 
 Accounts, Quick Match, Ranked (Iron 5 to Legendary) and Private Match for the online game.
 It checks every move with the game's own engine, and also serves the game itself.

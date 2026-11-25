@@ -82,11 +82,11 @@ export function homeHTML({ wallet, notes, unseen, online }) {
   ];
   return `<div class="rx rx-home">
     <header class="rx-top">
-      <h1 class="rx-logo"><img src="art/ui/logo-theatre.webp" alt="Shattered Realms" draggable="false"><i class="rx-logo-gem"></i></h1>
+      <h1 class="rx-logo"><img src="art/ui/logo-theatre.webp" alt="Shattered TCG" draggable="false"><i class="rx-logo-gem"></i></h1>
       ${wallet}
     </header>
     <nav class="rx-side" aria-label="Main menu">${NAV.map(([ico, label, act], i) => `<button class="rx-nav ${i === 0 ? 'on' : ''}" data-act="${act}">${rxIcon(ico)}<span>${label}</span></button>`).join('')}</nav>
-    <section class="rx-hub" aria-label="The Shattered Realms">
+    <section class="rx-hub" aria-label="Shattered TCG">
       <div class="rx-hub-art"><img src="art/ui/home-palace.webp" alt="" draggable="false"></div>
       ${islands.map(([k, t, s, act]) => `<button class="rx-isle rx-isle-${k}" data-act="${act}"><span class="rx-plaque"><b>${t}</b><small>${s}</small></span></button>`).join('')}
       <button class="rx-isle rx-isle-play" data-act="menu"><span class="rx-plaque"><b>Play</b><small>Enter the realms</small></span></button>

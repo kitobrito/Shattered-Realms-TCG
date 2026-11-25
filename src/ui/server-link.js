@@ -1,4 +1,4 @@
-// Connection to the Shattered Realms server (accounts, matchmaking, ranked).
+// Connection to the Shattered TCG server (accounts, matchmaking, ranked).
 // Same shape as net.js (on / send / leave) so the game code can use either.
 
 import { stateHash } from './net.js';
@@ -78,7 +78,7 @@ function setToken(t) {
     } catch { /* storage unavailable */ }
   }
 }
-// comic-arena.net embeds the game and hands over the site's Shattered Realms sign-in in the address
+// comic-arena.net embeds the game and hands over the site's Shattered TCG sign-in in the address
 // (#sr-token=...), so a player signed in on the site is signed in here too. Taken once, then wiped
 // from the address bar.
 (function adoptSiteToken() {

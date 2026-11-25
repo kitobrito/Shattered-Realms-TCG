@@ -1,5 +1,5 @@
 // The patch notes (src/ui/patch-notes.js) as plain data for other sites: comic-arena.net's
-// Shattered Realms pages read GET /api/news and draw the posts themselves. Every card is resolved
+// Shattered TCG pages read GET /api/news and draw the posts themselves. Every card is resolved
 // to what it says today (and, for a change, what it said before), with absolute art addresses.
 
 import '../src/cards/index.js'; // registers every card
@@ -68,7 +68,7 @@ export function newsFeed(base) {
   if (cache?.base === base) return cache.data;
   const poll = POLLS[CURRENT_POLL];
   const data = {
-    game: 'Shattered Realms',
+    game: 'Shattered TCG',
     factions: Object.entries(FACTION_INFO).map(([name, f]) => ({ name, summary: f.summary ?? null, strengths: f.strengths ?? [],
       weaknesses: f.weaknesses ?? [], hero: abs(base, heroArtOf(name)) })),
     cardCount: allCards().filter((c) => !c.custom && !c.fusion && !c.heroSpell && !c.token).length,

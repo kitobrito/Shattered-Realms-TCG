@@ -51,7 +51,7 @@ const endTurn = (a) => a.type === 'endTurn';
 // title / text: what the player reads. at: one thing to point at. from + to: an arrow (drag
 // this onto that). next: an info step ("Next" to go on). allow: the one move this step teaches.
 const STEPS = [
-  { wait: myTurn(1), title: 'Welcome to Shattered Realms!', text: 'This tutorial plays a real match with you, one step at a time. Just follow the big arrows.', next: true },
+  { wait: myTurn(1), title: 'Welcome to Shattered TCG!', text: 'This tutorial plays a real match with you, one step at a time. Just follow the big arrows.', next: true },
   { wait: myTurn(1), title: 'This is you', text: 'Your Hero, at the bottom. The red number is your Health: 30. If it reaches 0, you lose.', at: el.myHero, next: true },
   { wait: myTurn(1), title: 'This is your enemy', text: "Bring the enemy Hero's Health down to 0 and you win. (Today they start on 12.)", at: el.foeHero, next: true },
   { wait: myTurn(1), title: 'Your hand', text: 'These are your cards. Tap or hover over any card to read what it does.', at: el.hand, next: true },

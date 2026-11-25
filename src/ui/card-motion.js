@@ -1,4 +1,4 @@
-// Tactile placement and direct combat, shared by Shattered Realms and Anime Clash.
+// Tactile placement and direct combat, shared by Shattered TCG and Anime Clash.
 // Pointer hit testing only considers targets supplied by the engine.
 import {animate,ghost,layer,screenShake,wait} from './fx.js';
 const center=r=>({x:r.left+r.width/2,y:r.top+r.height/2});
