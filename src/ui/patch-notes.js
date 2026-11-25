@@ -43,6 +43,18 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-25-synergy-back',
+    date: 'November 25',
+    title: 'Faction synergy is back on the Play screen',
+    tag: 'Quality of life',
+    intro: 'Picking two realms shows how well they work together again.',
+    blocks: [
+      { cat: 'qol', h: 'Synergy', list: [
+        { cards: [], text: 'Pick two realms on the Play screen and their synergy shows under the Fusion button: one to five stars, a word (Clashing to Perfect) and why. Tap it to open the realm guide and that pair\'s full deck guide.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-25-ghouls',
     date: 'November 25',
     title: 'Ghouls: the 24th realm',
