@@ -117,7 +117,7 @@
 .rx-tabbar { display: none !important; }
 
 /* Upright phones: logo and wallet on top, the hub, the news, and a tab bar instead of the sidebar. */
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-home { height: auto; min-height: 100dvh; overflow: visible; display: flex; flex-direction: column; gap: 10px; padding: 8px 10px calc(78px + env(safe-area-inset-bottom)); }
   .rx-top { flex-direction: column; gap: 6px; padding-top: 6px; }
   .rx-logo { position: static; transform: none; height: 64px; }
@@ -211,7 +211,7 @@
 .rx-drag-ghost img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
 .rx-slots-phone { display: none; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-slots-main { display: none; }
   .rx-slots-phone { display: flex; position: sticky; top: 0; z-index: 6; margin: 0 -0.3em 0.6em; padding: 0.55em 0.3em 0.5em; background: linear-gradient(180deg, rgba(14, 9, 30, 0.97) 80%, rgba(14, 9, 30, 0)); }
   .rx-slots-phone .rx-slot { width: 38%; flex-direction: row; justify-content: flex-start; gap: 0.45em; padding: 1.15em 0.5em 0.45em; }
@@ -258,7 +258,7 @@ body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
 .rx .rx-confirm { grid-area: confirm; align-self: center; justify-self: stretch; height: 64%; font-size: 1.25em !important; }
 .rx-play .rx-tabbar { display: none; }
 
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-play { height: auto; min-height: 100dvh; display: flex; flex-direction: column; padding: 0 10px calc(84px + env(safe-area-inset-bottom)); gap: 10px; font-size: 13px; }
   .rx-head { padding: 8px 0; grid-template-columns: auto 1fr auto; } .rx-title { font-size: 1.5em; justify-self: center; } .rx-backhome span { display: none; }
   .rx-steps { padding: 8px; gap: 6px; } .rx-steps li span { font-size: 0.8em; } .rx-steps .rx-step-arrow { display: none; }
@@ -310,7 +310,7 @@ body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
 .rx-cmain .book-page { flex: 1; min-height: 0; display: flex; flex-direction: column; background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
 .rx-cmain .book-page::before, .rx-cmain .book-page::after { display: none !important; }
 .rx-cmain .search-page .page-title { display: none; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-coll { height: auto; min-height: 100dvh; display: flex; flex-direction: column; padding: 0 10px 20px; gap: 10px; font-size: 13px; }
   .rx-ctabs { align-self: stretch; justify-content: space-between; } .rx .rx-ctabs button { padding: 0.5em 0.8em !important; font-size: 0.8em !important; }
   .rx-cside { padding: 8px; } .rx-crealms { flex-direction: row; overflow-x: auto; overflow-y: hidden; } .rx .rx-crealm { flex: none; } .rx-crealm b { display: none; }
@@ -352,12 +352,12 @@ body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
 .rx-signin { padding: 1.4em; text-align: center; } .rx-signin p { color: #e6dbef; }
 .rx-sbody .sh-packs { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important; gap: 0.8em !important; }
 .rx-sbody .sh-pack { background: rgba(22, 14, 44, 0.85) !important; border: 1px solid rgba(185, 138, 58, 0.55) !important; border-radius: 10px !important; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-store { padding: 0 10px 20px; font-size: 13px; }
   .rx-feature { grid-template-columns: 1fr; } .rx-feat-main { flex-direction: column; text-align: center; padding: 1em; } .rx-feat-info { align-items: center; } .rx-feat-art { height: 46vw; }
   .rx-stabs { align-self: stretch; overflow-x: auto; } .rx .rx-stabs button { padding: 0.5em 0.9em !important; white-space: nowrap; }
 }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-head { grid-template-columns: auto 1fr auto !important; gap: 6px; }
   .rx-title { font-size: 1.35em !important; justify-self: center; } .rx-title .rx-ico { display: none; }
   .rx-head .rx-wallet { font-size: 11px; gap: 4px; } .rx-head .rx-pill b { min-width: 0; font-size: 0.85em; }
@@ -365,8 +365,8 @@ body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
   .rx-play .rx-heroarea { order: -1; } .rx-play .rx-fpanel { order: 0; } .rx-play .rx-mpanel, .rx-play .rx-deckbar { order: 1; }
   .rx-play .rx-heroframe { width: 52vw; }
 }
-@media (orientation: portrait), (max-width: 760px) { .rx-play .rx-head { order: -3; } .rx-play .rx-steps { order: -2; } .rx-play .rx-heroframe { width: 46vw; } }
-@media (orientation: portrait), (max-width: 760px) { .rx-play .rx-heroframe { flex: none !important; width: 50vw !important; height: 50vw !important; } }
+@media (orientation: portrait), (max-width: 560px) { .rx-play .rx-head { order: -3; } .rx-play .rx-steps { order: -2; } .rx-play .rx-heroframe { width: 46vw; } }
+@media (orientation: portrait), (max-width: 560px) { .rx-play .rx-heroframe { flex: none !important; width: 50vw !important; height: 50vw !important; } }
 
 /* Islands keep their place when pressed or hovered (a general ".rx button:hover" rule used to reset
    their centring transform, so a tap made the label jump off its island). */
@@ -461,7 +461,7 @@ body.rx-drag-on, body.rx-drag-on * { cursor: grabbing !important; }
 .cine-card-cols li { margin: 0.1em 0; }
 /* Phones: the last poster tapped shows its card above the wall. */
 .cine-inline { display: none; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-cinema .rx-fgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7em 0.5em; }
   .rx .rx-ftile.cine-poster .cine-name { font-size: 0.68em; }
   .cine-inline { position: relative; display: grid; grid-template-columns: 30% 1fr; gap: 0.7em; margin: 0 0 0.7em; padding: 0.6em; border-radius: 10px; font-size: 12px;
@@ -556,7 +556,7 @@ body.reduced-motion .cine-marquee::before, body.reduced-motion .cine-marquee::af
 .rx-logo-gem { background: linear-gradient(90deg, transparent, #ffd38a 30%, #fff 50%, #ffd38a 70%, transparent) !important; box-shadow: 0 0 10px #ffb84a !important; }
 
 /* Phones: the tab bar is a row of tickets. */
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx .rx-tabbar { background: linear-gradient(180deg, #3a0710, #1a0408) !important; border-top: 2px solid var(--th-brass) !important; }
   .mbg-curtain { width: 18px; }
 }
@@ -571,7 +571,7 @@ body.reduced-motion .cine-marquee::before, body.reduced-motion .cine-marquee::af
   .mbg-curtain, .mbg-spot, .mbg-grain, .rx-head .rx-title::before, .settings-panel h2::after { animation: none !important; }
 }
 body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-motion .mbg-grain, body.reduced-motion .rx-head .rx-title::before { animation: none !important; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-head .rx-title { font-size: 1em !important; padding: 0.95em 0.85em 0.9em; }
   .rx-head .rx-title::before { background-size: 12px 6px, 12px 6px, auto; }
 }
@@ -601,7 +601,7 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 6px rgba(255, 120, 90, 0.35) !important; filter: none !important; letter-spacing: 0.14em !important; }
 .rx-isle-play .rx-plaque small { color: #5a1a10 !important; text-shadow: none !important; font-weight: 800 !important; }
 .rx-isle::after { border-radius: 14px !important; background: radial-gradient(ellipse, rgba(255, 200, 110, 0.3), transparent 70%) !important; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-hub .rx-isle:not(.rx-isle-play) .rx-plaque { font-size: max(10px, calc(var(--S) * 0.021)); }
 }
 .rx-isle-play .rx-plaque { line-height: 0.95 !important; }
@@ -673,7 +673,7 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 .rx-logo-gem { display: none !important; }
 .ts-logo-sheen { display: none !important; }
 .ts-logo img, .title-screen .ts-logo img { filter: drop-shadow(0 0 24px rgba(255, 170, 70, 0.35)) !important; }
-@media (orientation: portrait), (max-width: 760px) { .rx-logo { height: auto !important; } .rx-logo img { width: min(78vw, 420px); height: auto; } }
+@media (orientation: portrait), (max-width: 560px) { .rx-logo { height: auto !important; } .rx-logo img { width: min(78vw, 420px); height: auto; } }
 
 /* A poster picked out by a first click (or the arrow keys): lit and lifted, with a hint for the second click. */
 .rx .rx-ftile.cine-poster.previewing { transform: translateY(-4px) scale(1.05) !important; z-index: 3; }
@@ -715,7 +715,7 @@ body.reduced-motion .mbg-curtain, body.reduced-motion .mbg-spot, body.reduced-mo
 .cine-screen-title.dim { color: #8c7a63; text-shadow: none; font-size: clamp(15px, 1.5vw, 24px); }
 .cine-screen .cine-screen-clear { position: absolute !important; top: 0.7em !important; right: 0.7em !important; bottom: auto !important; }
 .cine-slot-thumb { border-radius: 4px !important; aspect-ratio: 687 / 1024; width: auto !important; }
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .rx-play .rx-heroframe.cine-screen { width: 92vw !important; height: auto !important; padding: 16px 12px 22px; gap: 12px; }
   .cine-screen-title { font-size: 20px; }
 }

@@ -43,6 +43,18 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-25-landscape-phones',
+    date: 'November 25',
+    title: 'Fits on smaller phones held sideways',
+    tag: 'Phones',
+    intro: 'On smaller phones turned sideways, the menus were squeezed into the upright phone layout and piled on top of each other. They now use the side-by-side layout and fit the screen.',
+    blocks: [
+      { cat: 'fix', h: 'Phones held sideways', list: [
+        { cards: [], text: 'The Play screen, Home, Collection, Build and Store now fit on small phones held sideways: the poster wall, the big screen and the game modes sit side by side, and Confirm & Play is always on screen.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-24-the-big-screen',
     date: 'November 24',
     title: 'The big screen and film endings',

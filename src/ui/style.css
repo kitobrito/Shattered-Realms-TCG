@@ -5185,7 +5185,7 @@ body:has(#preview.show) #guide-layer .guide-panel { pointer-events: none; }
 .sel-actions .ts-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 
 /* Upright phones: the stage and Play first, then the realms as two columns of slabs. */
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .menu.tavern.select-screen { grid-template-columns: 1fr 1fr; grid-template-areas: 'c c' 'l r'; gap: 14px 10px; padding: 12px 12px 40px; height: auto; }
   .sel-center { grid-area: c; }
   .sel-left { grid-area: l; } .sel-right { grid-area: r; }
@@ -5414,7 +5414,7 @@ body:not(.classic-cards) .arena .minion.shardm .atk, body:not(.classic-cards) .a
 .m2 .journey-line { font-size: clamp(11px, 1.5vh, 14px); }
 
 /* Phones (upright): one column, the hero first, medallion strips, a tab bar with Play. */
-@media (orientation: portrait), (max-width: 760px) {
+@media (orientation: portrait), (max-width: 560px) {
   .menu.tavern.select-screen.m2 { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; width: 100%; box-sizing: border-box; grid-template-areas: 'top' 'stage' 'info' 'strips' 'bar';
     gap: 12px; padding: 10px 12px calc(96px + env(safe-area-inset-bottom)); height: auto !important; overflow: visible !important; }
   #app.fit-screen > .select-screen.m2 { height: auto; overflow: visible; }
