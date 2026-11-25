@@ -2842,12 +2842,38 @@ function renderHome() {
   if (pnPost) fitAllText(pnPost);
 }
 
+// Tapping a poster redraws the Play screen, and on phones the poster's lobby card opens above the wall.
+// Put the tapped poster back where it was under your finger, and never behind the bars at the bottom,
+// so the second tap lands on it.
+function keepPosterInPlace(f, oldTop) {
+  afterRender.push(() => {
+    const el = app.querySelector(`.cine-poster[data-faction="${CSS.escape(f)}"]`);
+    if (!el) return;
+    const shift = el.getBoundingClientRect().top - oldTop;
+    if (Math.abs(shift) > 1 && app.scrollHeight > app.clientHeight) app.scrollTop += shift;
+    // How much of the bottom of the screen the fixed bars (Confirm & Play, the tab bar) cover.
+    let limit = innerHeight;
+    for (const b of document.querySelectorAll('#app *, body > *')) {
+      const pos = getComputedStyle(b).position;
+      if (pos !== 'fixed' && pos !== 'sticky') continue;
+      const r = b.getBoundingClientRect();
+      if (r.height && r.top > innerHeight * 0.5 && r.width > innerWidth * 0.5 && !b.contains(el)) limit = Math.min(limit, r.top);
+    }
+    el.style.scrollMarginBottom = `${Math.max(0, innerHeight - limit) + 10}px`;
+    el.style.scrollMarginTop = '10px';
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+}
+
 function renderMenu() {
   applyJourney();
   // Signed in: connect once so the menu can show your name, rank, points and daily missions.
   if (BUILD.online && srv.token() && !srv.user && !menuConnectTried) { menuConnectTried = true; setTimeout(connectServer, 0); }
   // Picking a realm redraws the menu: keep the realm list where it was scrolled.
   const listScroll = app.querySelector('.m2-list')?.scrollTop ?? 0;
+  // ...and the poster wall too (on phones it scrolls), so a tapped poster stays under your finger.
+  const wallScroll = app.querySelector('.rx-fgrid')?.scrollTop ?? 0;
+  const wallLeft = app.querySelector('.rx-fgrid')?.scrollLeft ?? 0;
   const patchScroll = patch.keepScroll ? app.querySelector('.pn-post')?.scrollTop ?? 0 : 0;
   // The faction vote, front and centre: the first time the menu shows in a session, a player who hasn't
   // voted yet sees it open (not over a brand-new player's first pick or a match being set up).
@@ -3003,6 +3029,8 @@ function renderMenu() {
     ${matchSetup && !needsFirstPick() ? matchSetupHTML() : ''}`;
   const listEl = app.querySelector('.m2-list');
   if (listEl) listEl.scrollTop = listScroll;
+  const wallEl = app.querySelector('.rx-fgrid');
+  if (wallEl) { wallEl.scrollTop = wallScroll; wallEl.scrollLeft = wallLeft; }
   // Opening a card from the notes and closing it again leaves the notes where you were reading.
   const pnPost = app.querySelector('.pn-post');
   if (pnPost) { pnPost.scrollTop = patchScroll; fitAllText(pnPost); setTimeout(() => pnPost.isConnected && fitAllText(pnPost), 400); }
@@ -4376,6 +4404,7 @@ app.addEventListener('click', (e) => {
   const chip = e.target.closest('[data-faction]');
   if (chip && (screen === 'menu' || (screen === 'online' && lobbyEditable()))) {
     const f = chip.dataset.faction;
+    if (chip.classList.contains('cine-poster')) keepPosterInPlace(f, chip.getBoundingClientRect().top);
     // Posters: the first click only picks one out; a second click on the same poster adds (or removes) it.
     if (tapped && previewFaction !== f) {
       sound.play('click');
