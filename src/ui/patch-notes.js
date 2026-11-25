@@ -51,6 +51,7 @@ export const PATCH_NOTES = [
     blocks: [
       { cat: 'qol', h: 'New name', list: [
         { cards: [], text: 'Shattered Realms is now called Shattered TCG, in the game, the Android app and on comic-arena.net. Same game, same realms, same account.' },
+        { cards: [], text: 'A new marquee logo to go with it, up in lights on the loading screen and Home, and a new Android app icon: a gold marquee S shattering on the theatre curtain.' },
       ] },
     ],
   },
