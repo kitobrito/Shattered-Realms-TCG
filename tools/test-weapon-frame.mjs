@@ -4,11 +4,14 @@ import fs from 'node:fs';
 import '../src/cards/index.js';
 import {allCards} from '../src/engine/registry.js';
 import {weaponStatsForCard} from '../src/cards/weapon-template.js';
-import {bigCardHTML,cardHTML,WEAPON_FRAME_SRC} from '../src/ui/shared.js';
+import {bigCardHTML,cardHTML,OWN_WEAPON_FRAMES,WEAPON_FRAME_SRC} from '../src/ui/shared.js';
+// The one exception: a Legendary weapon whose realm painted its own frame (OWN_WEAPON_FRAMES, e.g. Requiem) wears that.
 test('all equipment spells, Wands, relics and Legendary weapons use the shared frame and stat sockets',()=>{
  const weapons=allCards().filter(c=>weaponStatsForCard(c));assert.ok(weapons.length>=50);
- for(const c of weapons){const stats=weaponStatsForCard(c),html=bigCardHTML(c);assert.ok(html.includes(WEAPON_FRAME_SRC),c.name);assert.ok(html.includes('universal-weapon'));assert.ok(html.includes(`aria-label="${stats.attack} Attack"`));assert.ok(html.includes(`aria-label="${stats.durability} Durability"`));assert.ok(!html.includes('bc-weapon-stats'));assert.ok(cardHTML(c,{uid:7,playable:true}).includes('data-hand="7"'));}
+ for(const c of weapons){const stats=weaponStatsForCard(c),html=bigCardHTML(c);const own=c.legendary&&OWN_WEAPON_FRAMES.has(c.frameArt);assert.ok(html.includes(own?c.frameArt:WEAPON_FRAME_SRC),c.name);assert.ok(html.includes('universal-weapon'));assert.ok(html.includes(`aria-label="${stats.attack} Attack"`));assert.ok(html.includes(`aria-label="${stats.durability} Durability"`));assert.ok(!html.includes('bc-weapon-stats'));assert.ok(cardHTML(c,{uid:7,playable:true}).includes('data-hand="7"'));}
  assert.ok(fs.existsSync(new URL('../'+WEAPON_FRAME_SRC,import.meta.url)));
+ for(const f of OWN_WEAPON_FRAMES) assert.ok(fs.existsSync(new URL('../'+f,import.meta.url)),f);
+ assert.ok(allCards().some(c=>c.legendary&&OWN_WEAPON_FRAMES.has(c.frameArt)),'Requiem wears its own frame');
 });
 test('classic appearance cannot bypass the weapon frame; normal minions and spells retain their frames',()=>{
  const weapon=allCards().find(c=>weaponStatsForCard(c));

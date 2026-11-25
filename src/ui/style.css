@@ -6488,3 +6488,46 @@ body.calm-board .arena .minion:hover .icons, body.calm-board .arena .minion.targ
 /* Just summoned: no floating Zzz, the minion is simply a little greyed out until it can attack. */
 body.calm-board .arena .minion .m-zzz { display: none !important; }
 body.calm-board .arena .minion.asleep .m-art { filter: brightness(0.8) saturate(0.6); }
+
+/* Ghouls (Hunter or Hunted): choose the Hero, a Ghoul by Kagune or an Investigator by Quinque. */
+.hero-picker { margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(224, 18, 46, 0.45); border-radius: 12px;
+  background: linear-gradient(180deg, rgba(40, 6, 12, 0.92), rgba(18, 6, 10, 0.92)); color: #f4e6e8; }
+.hero-picker > header { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin: 0 0 10px; }
+.hero-picker > header b { font-size: 17px; letter-spacing: 0.02em; }
+.hero-picker > header span { font-size: 13px; opacity: 0.85; }
+.hc-group + .hc-group { margin-top: 10px !important; }
+.hc-head { display: flex !important; flex-wrap: wrap !important; gap: 2px 10px !important; align-items: baseline !important; margin: 0 0 6px !important; }
+.hc-head b { font-size: 14px !important; color: #ff6b7f !important; }
+.hc-head span { font-size: 12px !important; opacity: 0.8 !important; }
+.hc-row { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
+.hero-picker .hero-choice { display: grid !important; grid-template-columns: 44px 1fr auto !important; grid-template-rows: auto auto !important; gap: 2px 8px !important; align-items: center !important;
+  padding: 7px 9px !important; text-align: left !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; border-radius: 9px !important; cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.05) !important; color: #f4e6e8 !important; font: 13px/1.3 system-ui, sans-serif !important; text-transform: none !important; letter-spacing: 0 !important;
+  text-shadow: none !important; min-height: 58px !important; width: 100% !important; margin: 0 !important; filter: none !important; transform: none !important; }
+.hero-picker .hero-choice:hover { border-color: rgba(255, 107, 127, 0.7) !important; }
+.hero-picker .hero-choice.on { border-color: #ff2d4a !important; background: rgba(224, 18, 46, 0.34) !important; box-shadow: 0 0 0 2px rgba(255, 45, 74, 0.35) inset !important; }
+.hc-art { grid-row: 1 / 3 !important; width: 44px !important; height: 44px !important; border-radius: 7px !important; background-size: cover !important; background-position: center !important; }
+.hc-name { font-weight: 700 !important; font-size: 14px !important; }
+.hc-stats { font-size: 12px !important; font-weight: 700 !important; color: #ffd36b !important; }
+.hc-blurb { grid-column: 2 / 4 !important; font-size: 12px !important; line-height: 1.3 !important; opacity: 0.85 !important; }
+.hero-picker .hero-choice.on .hc-name::after { content: ' ✓' !important; color: #ff6b7f !important; }
+@media (max-width: 900px) { .hc-row { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (max-width: 520px) {
+  .hero-picker { padding: 10px; }
+  .hero-picker .hero-choice { grid-template-columns: 34px 1fr !important; min-height: 0 !important; padding: 6px 7px !important; }
+  .hc-art { width: 34px !important; height: 34px !important; grid-row: 1 / 3 !important; }
+  .hc-stats { grid-column: 2 !important; }
+  .hc-blurb { display: none !important; }
+}
+
+/* A Legendary weapon in its realm's own painted frame (shared.js OWN_WEAPON_FRAMES): the round art window is
+   measured (--win-*), and the frame has no Attack/Durability sockets, so the numbers sit in crimson gems. */
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-art{left:var(--win-l)!important;top:var(--win-t)!important;width:var(--win-w)!important;height:var(--win-h)!important;border-radius:50%!important}
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-banner{left:10%!important;top:52.6%!important;width:80%!important;height:6.4%!important}
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-text{left:15%!important;top:64.3%!important;width:70%!important;height:18.8%!important}
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-text span,body .big-card.shard.universal-weapon.own-weapon-frame .bc-text span *{color:#f4e6e8!important;text-shadow:0 .06em .12em #000}
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-cost{left:3.6%!important;top:1.4%!important;width:17%!important;height:16%!important}
+body .big-card.shard.universal-weapon.own-weapon-frame :is(.bc-atk,.bc-dur){top:85%!important;width:15%!important;height:10.6%!important;border-radius:50%!important;
+  background:radial-gradient(circle at 38% 32%,#ff5a6e,#a0101f 55%,#3a0409)!important;border:.14em solid #c9c3c6!important;box-shadow:0 .1em .3em #000c,inset 0 0 .3em #0008!important}
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-atk{left:4%!important}
+body .big-card.shard.universal-weapon.own-weapon-frame .bc-dur{left:81%!important;border-radius:22% 22% 50% 50%!important}

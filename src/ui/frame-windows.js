@@ -86,6 +86,13 @@ export const FRAME_WINDOWS = {
     "h": 39.55,
     "round": true
   },
+  "art/frames/legendary-minion-ghouls.webp": {
+    "l": 13.6,
+    "t": 11.04,
+    "w": 69.92,
+    "h": 33.59,
+    "round": true
+  },
   "art/frames/legendary-minion-harvest-moon.webp": {
     "l": 12.64,
     "t": 10.94,
@@ -259,6 +266,13 @@ export const FRAME_WINDOWS = {
     "t": 19.63,
     "w": 30.22,
     "h": 21.48,
+    "round": true
+  },
+  "art/frames/legendary-weapon-ghouls.png": {
+    "l": 20.74,
+    "t": 6.64,
+    "w": 56.18,
+    "h": 41.11,
     "round": true
   },
   "art/frames/legendary-weapon-vampires.png": {

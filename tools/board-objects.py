@@ -47,6 +47,8 @@ HINTS = {
     **{f'{k}/{i}': {'method': 'grabcut'} for k, ids in {
         'fruit-ninjas-land': ['bonsai', 'dummy', 'koi', 'press'], 'fruit-ninjas-portrait': ['bonsai', 'dummy', 'koi', 'press'],
         'fruit-ninjas-night-land': ['dragon', 'banners'], 'fruit-ninjas-night-portrait': ['dragon']}.items() for i in ids},
+    # Ghouls rooftops: the crows on the antenna are dark shapes against the sky (cut by colour).
+    'ghouls-land/crows': {'method': 'grabcut'},
     # Sundown Street: the noose's shadow is a soft dark loop on the sand (no edge for the model to find).
     'mh-sundown-street-land/hand': {'method': 'hsv', 'hsv': [[0, 180, 0, 110, 140, 255]], 'keep': [[853, 445, 884, 486]], 'close': 2, 'expand': 0},
     'mh-sundown-street-land/posterV': {'keep': [[819, 24, 862, 81]]},

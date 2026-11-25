@@ -36,13 +36,15 @@ import { MONSTER_HUNTER_CARDS, MONSTER_HUNTER_EXPANSION } from './monster-hunter
 import { applyWeaponCardTemplate } from './weapon-template.js';
 import { ARSENAL_CARDS } from './arsenal.js';
 import { FRUIT_NINJA_CARDS } from './fruit-ninjas.js';
+import { GHOUL_CARDS } from './ghouls.js';
 
-registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...DIVINE_ARMORY, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...MONSTER_HUNTER_EXPANSION, ...ARSENAL_CARDS, ...FRUIT_NINJA_CARDS, ...FUSION_CARDS]);
+registerCards([...NEUTRAL_CARDS, ...VAMPIRE_CARDS, ...ALIEN_CARDS, ...DINOSAUR_CARDS, ...PLANT_CARDS, ...FUNGUS_CARDS, ...ZOMBIE_CARDS, ...DRAGON_CARDS, ...DEMON_CARDS, ...DIVINE_CARDS, ...DIVINE_ARMORY, ...ROBOT_CARDS, ...RADIOACTIVE_CARDS, ...BEE_CARDS, ...GHOST_CARDS, ...ULTRATERRESTRIAL_CARDS, ...SHARK_CARDS, ...ACIDIC_CARDS, ...LYCANTHROPE_CARDS, ...VOID_CARDS, ...ICE_AGE_CARDS, ...EEL_CARDS, ...WITCH_CARDS, ...MONSTER_HUNTER_CARDS, ...MONSTER_HUNTER_EXPANSION, ...ARSENAL_CARDS, ...FRUIT_NINJA_CARDS, ...GHOUL_CARDS, ...FUSION_CARDS]);
 applyWeaponCardTemplate(allCards());
 
 // Legendary: the named, one-of-a-kind characters (each set's headliners). They wear the
 // gold legendary frame (shared.js). A Lycanthrope's Beast Form is legendary with it.
 export const LEGENDARY = new Set([
+  'mukuro_the_thousand_mouthed', 'ren_takamori_arata_vanguard', 'aiko_sendo_frameless', 'requiem',
   'the_crimson_king',
   'queen_of_the_red_veil',
   'overmind_xalat',
@@ -137,6 +139,9 @@ export const LEGENDARY = new Set([
   'hidden_hand_cannon',
   'xenomorph_trophy',
   // Fruit Ninjas: five Legendary Shinobi and five Legendary Weapons.
+  // Ghouls: the Carrion King and the CCG's Executioner.
+  'goro_mikazuki_the_carrion_king',
+  'reika_fushimi_the_executioner',
   'kenzaru_the_thousand_slice_master',
   'miyori_the_blossom_blade',
   'raiketsu_the_citrus_thunder',

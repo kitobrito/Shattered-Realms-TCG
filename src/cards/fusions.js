@@ -912,3 +912,60 @@ FUSION_CARDS.push(
   fnH('Zombies', 'rotten_harvest', 'Rotten Harvest', '🧟', 'Summon a random Fruit. It gets "Exit: Summon a 1/2 Zombie."',
     [{ op: 'grantTrigger', target: 'summoned', trigger: { on: 'deathrattle', effects: [{ op: 'summon', cardId: 'zombie', health: 2 }] } }]),
 );
+
+// ---- Ghouls (feed, regenerate, hunt) ----
+const GH_ENEMY_MINION = { type: 'minion', side: 'enemy' };
+const GH_FRIENDLY_MINION = { type: 'minion', side: 'friendly' };
+const GH_FRIENDLY_CHARACTER = { type: 'character', side: 'friendly' };
+const ghFeed = (count, effects, otherwise = []) => ({ op: 'consumeCorpses', count, effects, otherwise });
+const gh = (partner, id, name, art, cost, text, effects, extra = {}) => ({
+  ...F(...[partner, 'Ghouls'].sort()), id, name, art, cost, text, effects, ...extra,
+});
+FUSION_CARDS.push(
+  gh('Acidic', 'acid_gut', 'Acid Gut', '🧪', 2, 'Deal 2 damage to an enemy minion. Consume a Corpse to deal 4 instead.',
+    [ghFeed(1, [{ op: 'damage', target: 'chosen', amount: 4 }], [{ op: 'damage', target: 'chosen', amount: 2 }])], { target: GH_ENEMY_MINION }),
+  gh('Aliens', 'kakuhou_transplant', 'Kakuhou Transplant', '🧬', 2, 'Give a friendly minion +2/+2. If it is a Ghoul, it also gains Rush.',
+    [{ op: 'buff', target: 'chosen', attack: 2, health: 2 }, { op: 'buff', target: 'chosen', keywords: ['Rush'], if: { subject: 'chosen', tribe: 'Ghoul' } }], { target: GH_FRIENDLY_MINION }),
+  gh('Bees', 'swarm_of_wings', 'Swarm of Wings', '🐝', 2, 'Summon two 1/1 Worker Bees with Rush.',
+    [{ op: 'summon', cardId: 'worker_bee' }, { op: 'buff', target: 'summoned', keywords: ['Rush'] }, { op: 'summon', cardId: 'worker_bee' }, { op: 'buff', target: 'summoned', keywords: ['Rush'] }], { needsBoardSpace: true }),
+  gh('Demons', 'hellish_hunger', 'Hellish Hunger', '😈', 2, 'Pay 2 Health. Give a friendly minion +3/+3.',
+    [pay(2), { op: 'buff', target: 'chosen', attack: 3, health: 3 }], { target: GH_FRIENDLY_MINION }),
+  gh('Dinosaurs', 'primal_kakuja', 'Primal Kakuja', '🦖', 3, 'Give a friendly minion +3/+3 and Rage.',
+    [{ op: 'buff', target: 'chosen', attack: 3, health: 3, keywords: ['Rage'] }], { target: GH_FRIENDLY_MINION }),
+  gh('Divine', 'holy_regeneration', 'Holy Regeneration', '✨', 2, 'Restore 5 Health to a friendly character and give it Evade.',
+    [{ op: 'heal', target: 'chosen', amount: 5 }, { op: 'buff', target: 'chosen', keywords: ['Evade'] }], { target: GH_FRIENDLY_CHARACTER }),
+  gh('Dragons', 'ember_kagune', 'Ember Kagune', '🐉', 2, 'Burn 2 on an enemy minion. Consume a Corpse to Burn 4 instead.',
+    [ghFeed(1, [burn('chosen', 4)], [burn('chosen', 2)])], { target: GH_ENEMY_MINION }),
+  gh('Eels', 'volt_kagune', 'Volt Kagune', '⚡', 3, 'Deal 1 damage to all enemy minions. Gain 2 Armor.',
+    [{ op: 'damage', target: ENEMY_MINIONS, amount: 1 }, { op: 'gainArmor', amount: 2 }]),
+  gh('Fruit Ninjas', 'forbidden_feast', 'Forbidden Feast', '🍎', 2, 'Summon a random Fruit. Restore 3 Health to your Hero.',
+    [{ op: 'summon', pool: FRUIT_IDS }, { op: 'heal', target: 'friendlyHero', amount: 3 }], { needsBoardSpace: true }),
+  gh('Fungus', 'rotting_bloom', 'Rotting Bloom', '🍄', 2, 'Place 1 random Mushroom onto the enemy deck. Consume a Corpse to place 3 instead.',
+    [ghFeed(1, [mushrooms(3)], [mushrooms(1)])]),
+  gh('Ghosts', 'masked_specter', 'Masked Specter', '👻', 2, 'Summon a 2/2 Masked Ghoul with Stealth. It has Reborn.',
+    [{ op: 'summon', cardId: 'masked_ghoul' }, { op: 'buff', target: 'summoned', keywords: ['Reborn'] }], { needsBoardSpace: true }),
+  gh('Ice Age', 'frozen_hunt', 'Frozen Hunt', '🧊', 2, 'Freeze an enemy minion and deal 2 damage to it.',
+    [{ op: 'buff', target: 'chosen', keywords: ['Frozen'] }, { op: 'damage', target: 'chosen', amount: 2 }], { target: GH_ENEMY_MINION }),
+  gh('Lycanthropes', 'kakuja_beast', 'Kakuja Beast', '🐺', 2, 'Give a friendly minion +2/+2 and Rush.',
+    [{ op: 'buff', target: 'chosen', attack: 2, health: 2, keywords: ['Rush'] }], { target: GH_FRIENDLY_MINION }),
+  gh('Monster Hunter', 'quinque_forge', 'Quinque Forge', '⚒️', 2, 'Equip a 2/2 Quinque Blade.',
+    [{ op: 'equipHeroWeapon', name: 'Quinque Blade', attack: 2, durability: 2 }]),
+  gh('Plants', 'flesh_garden', 'Flesh Garden', '🌱', 2, 'Summon two Seedlings. Gain 2 Armor.',
+    [seedling({ count: 2 }), { op: 'gainArmor', amount: 2 }], { needsBoardSpace: true }),
+  gh('Radioactive', 'mutated_rc_cells', 'Mutated RC Cells', '☢️', 2, 'Give a friendly minion +3/+3 and Burned.',
+    [{ op: 'buff', target: 'chosen', attack: 3, health: 3, keywords: ['Burned'] }], { target: GH_FRIENDLY_MINION }),
+  gh('Robots', 'arata_upgrade', 'Arata Upgrade', '🤖', 2, 'Gain 4 Armor. Your Hero has +2 Attack this turn.',
+    [{ op: 'gainArmor', amount: 4 }, { op: 'buff', target: 'friendlyHero', attack: 2, temporary: true }]),
+  gh('Sharks', 'scent_of_blood', 'Scent of Blood', '🦈', 2, 'Deal 3 damage to a damaged enemy minion.',
+    [{ op: 'damage', target: 'chosen', amount: 3 }], { target: { ...GH_ENEMY_MINION, damaged: true } }),
+  gh('Ultraterrestrials', 'one_eyed_rift', 'One-Eyed Rift', '👁️', 2, 'Give a friendly minion +1/+1. Draw a card.',
+    [{ op: 'buff', target: 'chosen', attack: 1, health: 1 }, { op: 'draw', count: 1 }], { target: GH_FRIENDLY_MINION }),
+  gh('Vampires', 'shared_hunger', 'Shared Hunger', '🦇', 2, 'Give a friendly minion +2 Attack and Lifesteal.',
+    [{ op: 'buff', target: 'chosen', attack: 2, keywords: ['Lifesteal'] }], { target: GH_FRIENDLY_MINION }),
+  gh('Void', 'abyssal_bite', 'Abyssal Bite', '🕳️', 2, 'Deal 3 damage to an enemy minion.',
+    [{ op: 'damage', target: 'chosen', amount: 3 }], { target: GH_ENEMY_MINION }),
+  gh('Witches', 'hex_of_hunger', 'Hex of Hunger', '🪄', 2, 'Permanently Silence an enemy minion. Gain 2 Armor.',
+    [hush('chosen'), { op: 'gainArmor', amount: 2 }], { target: GH_ENEMY_MINION }),
+  gh('Zombies', 'ghoul_horde', 'Ghoul Horde', '🧟', 2, 'Summon a 2/2 Masked Ghoul with Stealth. Leave 2 Corpses on your side.',
+    [{ op: 'summon', cardId: 'masked_ghoul' }, { op: 'addCorpses', count: 2 }], { needsBoardSpace: true }),
+);

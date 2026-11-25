@@ -4,7 +4,7 @@
 import { ART, CLICKER_ART, FUSION_HERO_ART, HERO_ART, RAGE_RUNNER_ART } from '../cards/art-manifest.js';
 import { validateCard } from '../cards/validate.js';
 import { weaponStatsForCard } from '../cards/weapon-template.js';
-import { getCard } from '../engine/registry.js';
+import { allCards, getCard } from '../engine/registry.js';
 import { artSrc } from './art-packs.js';
 import { FRAME_WINDOWS } from './frame-windows.js';
 import { FACTION_TAGS, KEYWORD_TEXT } from '../engine/rules.js';
@@ -61,28 +61,39 @@ export const artOf = (card) => { const path = ART[card.id] ?? (card.artFrom ? AR
 const LOOK_ART = { rage_runner: RAGE_RUNNER_ART, clicker: CLICKER_ART };
 export const minionArtOf = (m, card) => (m.borrowedHide ? artOf(getCard(m.borrowedHide)) : LOOK_ART[card.id]?.[m.lookFaction] ? artSrc(LOOK_ART[card.id][m.lookFaction]) : artOf(card));
 
+// Ghouls (Hunter or Hunted): a player who chose an Investigator shows the Investigator portraits
+// (HERO_ART['Ghouls Investigator'], FUSION_HERO_ART 'ghouls-investigator-<partner>'), else the Ghoul ones.
+// `choice` is the player's heroChoice (engine state pl.heroChoice, or the deck builder's pick).
+const investigator = (choice) => !!choice && allCards().find((c) => c.heroChoices?.[choice])?.heroChoices[choice].side === 'Investigator';
+const heroPath = (faction, choice) => (investigator(choice) && HERO_ART?.[`${faction} Investigator`]) || HERO_ART?.[faction];
 // Hero portrait for a faction (designer-provided art), if there is one yet.
-export const heroArtOf = (faction) => HERO_ART?.[faction] && artSrc(HERO_ART[faction]);
+export const heroArtOf = (faction, choice) => { const p = heroPath(faction, choice); return p && artSrc(p); };
 // Art path of the fused hero for a two-faction deck (either order), if there is one.
-export const fusionHeroPath = (factions) => {
+export const fusionHeroPath = (factions, choice) => {
   if (factions?.length !== 2) return undefined;
   const [a, b] = factions.map(fslug);
-  return FUSION_HERO_ART[`${a}-${b}`] ?? FUSION_HERO_ART[`${b}-${a}`];
+  const look = (x, y) => FUSION_HERO_ART[`${x}-${y}`] ?? FUSION_HERO_ART[`${y}-${x}`];
+  if (investigator(choice)) {
+    const inv = (f) => (f === 'ghouls' ? 'ghouls-investigator' : f);
+    const p = look(inv(a), inv(b));
+    if (p) return p;
+  }
+  return look(a, b);
 };
 // The portrait path a player shows: their pair's fused hero, else their first faction's hero.
-export const playerHeroPath = (factions) => fusionHeroPath(factions) ?? HERO_ART?.[factions[0]];
-export const playerHeroArt = (factions) => { const p = playerHeroPath(factions); return p && artSrc(p); };
+export const playerHeroPath = (factions, choice) => fusionHeroPath(factions, choice) ?? heroPath(factions[0], choice);
+export const playerHeroArt = (factions, choice) => { const p = playerHeroPath(factions, choice); return p && artSrc(p); };
 // A fused hero's portrait, a still picture that fills its box.
 export const livingPortraitHTML = (src) => `<span class="living"><img class="lv-scene" src="${src}" alt="" draggable="false"></span>`;
 // A player's portrait as an <img>, or alive when it is their pair's fused hero.
-export const playerPortraitHTML = (factions) => {
-  const src = playerHeroArt(factions);
+export const playerPortraitHTML = (factions, choice) => {
+  const src = playerHeroArt(factions, choice);
   if (!src) return '';
-  return fusionHeroPath(factions) ? livingPortraitHTML(src) : `<img src="${src}" alt="">`;
+  return fusionHeroPath(factions, choice) ? livingPortraitHTML(src) : `<img src="${src}" alt="">`;
 };
 
 // Card back for a faction (a player's back matches their first faction).
-const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter', 'Fruit Ninjas'];
+const BACKS = ['Aliens', 'Demons', 'Dinosaurs', 'Divine', 'Dragons', 'Fungus', 'Plants', 'Radioactive', 'Robots', 'Vampires', 'Zombies', 'Bees', 'Ghosts', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Lycanthropes', 'Void', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter', 'Fruit Ninjas', 'Ghouls'];
 export const backArtOf = (faction) => (BACKS.includes(faction) ? artSrc(`art/backs/${fslug(faction)}.jpg`) : undefined);
 // A two-faction deck's backs are half and half: the first faction's back, with the second's
 // over its right half past a slanted gold seam (CSS: --back and --back2).
@@ -193,11 +204,17 @@ export function bigCardHTML(card, { attack, health, maxHealth, cost, costClass =
 // Equipment spells, Wands, relics and Legendary weapons all use the same
 // supplied frame, in every card view and in both appearance settings.
 export const WEAPON_FRAME_SRC = 'art/frames/weapon-universal.webp';
+// A Legendary weapon can wear its realm's own painted frame (card.frameArt, e.g. Requiem): the art sits in
+// that frame's measured window, and Attack and Durability get gems of their own (the frame has no sockets).
+export const OWN_WEAPON_FRAMES = new Set(['art/frames/legendary-weapon-ghouls.png']);
 function weaponCardHTML(card, {weaponStats, cost, costClass, extra, small, faction, incomplete, artOver}) {
   const picture=artOver??artOf(card);
-  return `<div class="big-card shard universal-weapon t-${card.type} f-${faction} ${incomplete.length?'is-pending':''} ${card.legendary?'legend':''}" aria-label="${esc(card.name)} — Weapon">
+  const own=card.legendary&&OWN_WEAPON_FRAMES.has(card.frameArt)?card.frameArt:null;
+  const win=own?FRAME_WINDOWS[own]:null;
+  const fit=win?` style="--win-l:${(win.l-0.6).toFixed(2)}%;--win-t:${(win.t-0.45).toFixed(2)}%;--win-w:${(win.w+1.2).toFixed(2)}%;--win-h:${(win.h+0.9).toFixed(2)}%"`:'';
+  return `<div class="big-card shard universal-weapon ${own?'own-weapon-frame':''} t-${card.type} f-${faction} ${incomplete.length?'is-pending':''} ${card.legendary?'legend':''}" aria-label="${esc(card.name)} — Weapon"${fit}>
     <div class="bc-art">${picture?`<img src="${picture}" alt="${esc(card.name)}"${artFocus(card)} ${small?'loading="lazy"':''} draggable="false">`:`<span>${card.art??'⚔'}</span>`}</div>
-    <img class="bc-frame" src="${WEAPON_FRAME_SRC}" alt="" draggable="false">
+    <img class="bc-frame" src="${own??WEAPON_FRAME_SRC}" alt="" draggable="false">
     <span class="bc-gem bc-cost ${costClass} ${String(cost??card.cost).length>1?'two-digit':''}">${cost??card.cost}</span>
     <div class="bc-banner"><span>${esc(card.name)}</span></div>
     <div class="bc-text"><span>${richText(card.text)||'<i>No card text.</i>'}${extra}</span></div>
@@ -224,7 +241,7 @@ function sigilHTML(card) {
 // painted-<type>-glow.png, a soft inner glow around the picture window filled with the faction colour.
 // Colours: grey stone for minions, blue for spells, lighter blue for Quick Plays, red for traps.
 const LEGEND_FRAMES = new Set(['Acidic', 'Aliens', 'Bees', 'Demons', 'Dinosaurs', 'Divine', 'Fungus', 'Ghosts', 'Lycanthropes', 'Monster Hunter',
-  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels', 'Fruit Ninjas']);
+  'Plants', 'Radioactive', 'Robots', 'Sharks', 'Ultraterrestrials', 'Vampires', 'Void', 'Zombies', 'Ice Age', 'Eels', 'Fruit Ninjas', 'Ghouls']);
 // Realms whose Legendary spells (and Legendary Weapons) wear their own painted frame.
 const LEGEND_SPELL_FRAMES = new Set(['Witches', 'Fruit Ninjas']);
 function shardCardHTML(card, { attack, health, cost, costClass, extra, small, hpClass, label, faction, incomplete, artOver = null }) {

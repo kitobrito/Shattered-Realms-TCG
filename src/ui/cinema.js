@@ -20,6 +20,7 @@ export const MOVIE_TITLES = {
   Dragons: 'Wings of Inferno',
   Eels: 'Terror at 10,000 Volts',
   'Fruit Ninjas': 'Attack of the Forbidden Fruit',
+  Ghouls: 'Night of the Masked Ghouls',
   Fungus: 'The Spore That Ate the World',
   Ghosts: 'The Dead Walk at Midnight',
   'Ice Age': 'She Came from the Frozen Past',

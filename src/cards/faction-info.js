@@ -1,6 +1,13 @@
 // Short faction guides shown on the main menu under your matchup.
 // Designer: rewrite freely. Keep `strengths` and `weaknesses` to 3 short points each.
 export const FACTION_INFO = {
+  Ghouls: {
+    summary: 'Flesh-eating ghouls, the CCG investigators who hunt them, and the Quinx caught in between.',
+    strengths: ['Regeneration, Lifesteal and Devour: hard to wear down', 'Quinques: Hero Weapons that remove minions', 'Corpses power up spells and the Carrion King'],
+    weaknesses: ['Few cheap minions to start the game', 'Big effects need Corpses on your side', 'Arata Armor and Frame Release cost you Health'],
+    mechanic: 'Feed (2 Mana): give a friendly minion +1/+1 and Lifesteal this turn. Consume a Corpse to give it +2/+2 instead. Your minions leave Corpses when they die.',
+    style: 'Midrange · Sustain',
+  },
   'Fruit Ninjas': {
     summary: 'Shinobi of the enchanted orchard: grow magic Fruits, slice them open, and unleash their power.',
     strengths: ['Every Slice is a free spell: damage, buffs, Taunts or healing', 'Flexible: Harvest a new Fruit every turn', 'Stealth and Combo tricks that are hard to pin down'],
@@ -377,6 +384,29 @@ export const SYNERGY = {
 };
 
 Object.assign(SYNERGY, {
+  'Acidic+Ghouls': [3, 'Corrosion damages enemies so Reika and the Venomous hunters can finish them.'],
+  'Aliens+Ghouls': [3, 'Keyword tricks stack well on Kagune-buffed minions.'],
+  'Bees+Ghouls': [2, 'Bees go wide; Ghouls want a few strong minions.'],
+  'Demons+Ghouls': [4, 'Demons pay Health; Ghoul regeneration pays it back.'],
+  'Dinosaurs+Ghouls': [3, 'Kagune buffs on huge Dinosaurs make them hard to trade with.'],
+  'Divine+Ghouls': [4, 'Healing, Taunts, Evade and Armor: very hard to kill.'],
+  'Dragons+Ghouls': [3, 'Burn damages minions so Reika can execute them.'],
+  'Eels+Ghouls': [3, 'Chain damage sets up Reika and the Quinques.'],
+  'Fruit Ninjas+Ghouls': [4, 'Every sliced Fruit is a Corpse for Goro and the Ghoul spells.'],
+  'Fungus+Ghouls': [3, 'Both feed on Corpses; share the pile wisely.'],
+  'Ghosts+Ghouls': [4, 'Minions keep dying and returning: a steady supply of Corpses.'],
+  'Ghouls+Ice Age': [3, 'Two freezing realms lock the enemy down.'],
+  'Ghouls+Lycanthropes': [3, 'Rage and transforms grow monsters that are hard to trade with.'],
+  'Ghouls+Monster Hunter': [5, 'The weapon pair: Quinques, Kenta and Hunter gear.'],
+  'Ghouls+Plants': [2, 'Seedlings grow slowly; Ghouls want to fight.'],
+  'Ghouls+Radioactive': [2, 'Radiation stops your Ghouls from healing.'],
+  'Ghouls+Robots': [3, 'Upgraded bodies plus Quinques and Arata armour.'],
+  'Ghouls+Sharks': [4, 'Both hunt wounded minions; Reika and Sharks finish them.'],
+  'Ghouls+Ultraterrestrials': [3, 'Displace the blocker, then hunt what is left.'],
+  'Ghouls+Vampires': [4, 'Lifesteal and regeneration: a very hungry pair.'],
+  'Ghouls+Void': [2, 'Ghouls need bodies; the Void wants an empty hand.'],
+  'Ghouls+Witches': [4, 'Silence and Quinques answer every threat.'],
+  'Ghouls+Zombies': [5, 'Zombies keep dying: endless Corpses for the Carrion King.'],
   'Acidic+Fruit Ninjas': [3, 'Corrosion shrinks the enemy while Slices pick off what is left.'],
   'Aliens+Fruit Ninjas': [3, 'Keywords and bounces open the board for Slice damage.'],
   'Bees+Fruit Ninjas': [3, 'The Hive holds the line while Fruits are grown and sliced behind it.'],
@@ -428,7 +458,7 @@ export const synergyFor = (factions) => SYNERGY[[...factions].sort().join('+')] 
 export const DECK_TYPES = [
   { name: 'Aggro', blurb: 'Hit hard, hit fast, end it early.', factions: ['Demons', 'Sharks', 'Void', 'Monster Hunter'] },
   { name: 'Swarm', blurb: 'Flood the board with many small minions.', factions: ['Zombies', 'Plants', 'Bees'] },
-  { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs'] },
+  { name: 'Midrange', blurb: 'Sturdy minions that grow into threats.', factions: ['Vampires', 'Robots', 'Dinosaurs', 'Ghouls'] },
   { name: 'Tempo', blurb: 'Tricks and disruption to stay a step ahead.', factions: ['Aliens', 'Ultraterrestrials', 'Lycanthropes', 'Fruit Ninjas'] },
   { name: 'Control', blurb: 'Answer everything, win the long game.', factions: ['Dragons', 'Radioactive', 'Ghosts', 'Eels', 'Witches'] },
   { name: 'Attrition', blurb: 'Protect, outlast and wear them down.', factions: ['Divine', 'Fungus', 'Acidic', 'Ice Age'] },
@@ -439,5 +469,5 @@ export const EXPANSION_NAMES = {
   Vampires: 'Second Bloodline', Aliens: 'Hive Brood', Dinosaurs: 'Babies, Eggs & Evolution', Plants: 'Carnivorous Garden',
   Fungus: 'Rot & Renewal', Zombies: 'The Rage Outbreak', Dragons: 'Frost Dragons', Demons: 'Kings of Hell',
   Divine: 'The Holy Pyre', Acidic: 'The Half-Digested', Robots: 'Arsenal Protocol', Ghosts: 'The Cursed Armory', Radioactive: 'Second Fallout', Bees: 'The Hidden Nest', Ultraterrestrials: 'Hyperspace',
-  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time', Eels: 'Storm Season', Witches: 'Spellbound', 'Monster Hunter': 'The Final Hunt', 'Fruit Ninjas': 'Shadow Orchard',
+  Sharks: 'Sand Sharks', Lycanthropes: 'Wild Pack', Void: 'Singularity', 'Ice Age': 'Frozen in Time', Eels: 'Storm Season', Witches: 'Spellbound', 'Monster Hunter': 'The Final Hunt', 'Fruit Ninjas': 'Shadow Orchard', Ghouls: 'Kakuja Nights',
 };

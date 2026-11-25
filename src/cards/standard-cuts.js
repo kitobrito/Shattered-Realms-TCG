@@ -148,12 +148,22 @@ export const STANDARD_CUTS = {
     'cherryblade_scout', 'citrus_runner', 'orchard_lookout', 'coconut_ironfist', 'grand_orchard_sensei',
     'frost_grape_cluster', 'titan_watermelon', 'counter_slice', 'the_thousand_cuts', 'murakiri_the_forbidden_edge',
   ],
+  // Keeps: the Corpse feeders, the Quinx wall, two Quinques and the Carrion King.
+  Ghouls: [
+    'daigo_iwamine_iron_coffin', 'itsuki_shidara_chimera', 'toma_arakida_the_hound', 'yuzuki_kurobane_black_lotus', 'bikaku_kagune',
+    'thunderclap', 'gravebreaker', 'arata_prototype', 'hidden_predator', 'emergency_frame_release',
+  ],
 };
 
 // One-faction format: the 10 cards played twice unless the player picks their
 // own. A faction missing here uses the 10 cheapest cards that aren't in its
 // standard cut (see standardDuplicates in index.js). Designer: edit freely.
 export const STANDARD_DUPLICATES = {
+  // Ghouls: the fair workhorses doubled, not the Quinques, Venomous killers or Frame Release.
+  Ghouls: [
+    'mio_kisaragi_needlepoint', 'haruka_minase_the_shield', 'akane_shimizu_the_puppeteer', 'masato_kirihara_thunderclap', 'kenta_obayashi_the_undertaker',
+    'ukaku_kagune', 'koukaku_kagune', 'rc_cell_regeneration', 'cannibalistic_evolution', 'renji_kurose_the_butcher',
+  ],
   // Vampires: their aggressive core doubled, but not their best top end
   // (doubling the strongest 10 overshot to 60% solo; this set ≈ 55%).
   Vampires: [

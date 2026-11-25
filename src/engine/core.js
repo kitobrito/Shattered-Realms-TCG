@@ -821,5 +821,5 @@ export function summonMinion(state, p, cardId, opts = {}) {
 }
 
 // Corpses: every minion that dies leaves one, but only Zombies and Fungus cards use them.
-export const CORPSE_FACTIONS = ['Zombies', 'Fungus'];
+export const CORPSE_FACTIONS = ['Zombies', 'Fungus', 'Ghouls'];
 export const usesCorpses = (pl) => (pl?.factions ?? []).some((f) => CORPSE_FACTIONS.includes(f));
