@@ -6,7 +6,7 @@ export const FACTIONS = [
   'Plants', 'Ghosts', 'Undead', 'Zombies', 'Supers', 'Ninjas', 'Pirates', 'Mages', 'Knights', 'Fungus',
   'Mythical', 'Dragons', 'Lycanthropes', 'Aquatic', 'Radioactive', 'Old Gods',
   'Other Ones', 'Ultraterrestrials', 'Sharks', 'Acidic', 'Ice Age', 'Eels', 'Witches', 'Monster Hunter',
-  'Fruit Ninjas',
+  'Fruit Ninjas', 'Ghouls',
 ];
 
 // Cards that belong to no faction (e.g. the Mana Potion).

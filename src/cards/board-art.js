@@ -25,6 +25,7 @@ export const BOARD_ART = {
   Witches: 'art/boards-v2/witches.jpg',
   'Fruit Ninjas': 'art/boards-v2/fruit-ninjas.jpg',
   'Monster Hunter': 'art/boards-v2/mh-sundown-street.jpg',
+  Ghouls: 'art/boards-v2/ghouls.jpg',
   // Unlockable alternate boards (ALT_BOARDS below): keyed by the board's own name.
   'Harvest Moon': 'art/boards-v2/harvest-moon.jpg',
   'The Rage Outbreak': 'art/boards-v2/rage-outbreak.jpg',
@@ -49,6 +50,7 @@ export const BOARD_ART = {
   'The Siege of Heaven': 'art/boards-v2/demons-heaven-siege.jpg',
   'The Xeno Hive': 'art/boards-v2/aliens.jpg',
   'The Sewage Works': 'art/boards-v2/acidic-sewer.jpg',
+  'The Quinque Laboratory': 'art/boards-v2/ghouls-lab.jpg',
   // Not a realm: the plain board players can pick in Settings ("Basic board").
   Basic: 'art/boards-v2/basic.jpg',
 };
@@ -95,6 +97,7 @@ export const ALT_BOARDS = {
   Divine: [{ id: 'The Consecrated Graveyard', expansion: true, blurb: "A moonlit graveyard where holy light smites the restless dead." }],
   Demons: [{ id: 'The Siege of Heaven', expansion: true, blurb: "Heaven's golden gates, as hellfire and a demon legion storm the clouds." }],
   Fungus: [{ id: 'Cordyceps Bloom', set: 'Cordyceps Bloom', blurb: 'A ruined greenhouse, alive with glowing mycelium.' }],
+  Ghouls: [{ id: 'The Quinque Laboratory', expansion: true, blurb: 'The investigators\' lab, where ghoul organs become weapons.' }],
 };
 
 // A realm board's file name ('ice-age'), which also names its living effects (board-fx-defs.js).
@@ -171,6 +174,9 @@ export const PORTRAIT_BOARDS = {
   'The Split Realm': { src: 'art/boards-portrait/ultra-split-dimensions.jpg', opp: [178, 40, 281, 159, 'arch'], me: [170, 854, 288, 972, 'circle'], field: [169, 852], props: [] },
   // Fruit Ninjas: the orchard dojo's wooden mat by day; the cloud dojo by night. No painted hero frames.
   'Fruit Ninjas': { src: 'art/boards-portrait/fruit-ninjas.jpg', opp: [201, 160, 259, 228, 'arch'], me: [198, 815, 261, 885, 'circle'], field: [238, 800], frame: 'silverwood', props: [] },
+  // Ghouls: a rain-soaked rooftop under a red moon; the lab where Quinques are forged. No painted frames.
+  Ghouls: { src: 'art/boards-portrait/ghouls.jpg', opp: [196, 150, 263, 220, 'arch'], me: [196, 870, 263, 940, 'circle'], field: [236, 858], frame: 'iron', props: [] },
+  'The Quinque Laboratory': { src: 'art/boards-portrait/ghouls-lab.jpg', opp: [196, 140, 263, 210, 'arch'], me: [196, 832, 263, 902, 'circle'], field: [226, 818], frame: 'iron', props: [] },
   'The Moonlit Dojo': { src: 'art/boards-portrait/fruit-ninjas-night.jpg', opp: [201, 186, 259, 254, 'arch'], me: [198, 772, 261, 842, 'circle'], field: [268, 745], frame: 'astral', props: [] },
   'The Live Wire': { src: 'art/boards-portrait/eels-power-line-river.jpg', opp: [188, 13, 270, 106, 'circle'], me: [189, 903, 271, 985, 'circle'], field: [120, 892], props: [] },
   'Monster Hunter': { src: 'art/boards-portrait/mh-sundown-street.jpg', opp: [181, 76, 279, 174, 'circle'], me: [190, 892, 271, 973, 'circle'], field: [292, 850], props: [] },
@@ -225,6 +231,8 @@ export const LANDSCAPE_BOARDS = {
   'The White Hole': { src: 'art/boards-v2/void-white-hole.jpg', opp: [460, 21, 563, 141, 'circle'], me: [460, 427, 570, 543], field: [150, 147, 880, 413], props: [] },
   'The Split Realm': { src: 'art/boards-v2/ultra-split-dimensions.jpg', opp: [450, 24, 565, 125], me: [459, 435, 563, 542, 'circle'], field: [150, 137, 880, 424], props: [] },
   'Fruit Ninjas': { src: 'art/boards-v2/fruit-ninjas.jpg', opp: [471, 34, 553, 128], me: [468, 450, 556, 548], field: [195, 150, 835, 440], frame: 'silverwood', props: [] },
+  Ghouls: { src: 'art/boards-v2/ghouls.jpg', opp: [471, 96, 553, 186], me: [468, 456, 556, 552], field: [190, 196, 860, 446], frame: 'iron', props: [] },
+  'The Quinque Laboratory': { src: 'art/boards-v2/ghouls-lab.jpg', opp: [471, 100, 553, 192], me: [468, 452, 556, 550], field: [200, 208, 840, 432], frame: 'iron', props: [] },
   'The Moonlit Dojo': { src: 'art/boards-v2/fruit-ninjas-night.jpg', opp: [471, 52, 553, 146], me: [468, 444, 556, 542], field: [210, 172, 825, 425], frame: 'astral', props: [] },
   'The Live Wire': { src: 'art/boards-v2/eels-power-line-river.jpg', opp: [458, 15, 565, 134, 'circle'], me: [460, 443, 562, 544, 'circle'], field: [150, 144, 880, 430], props: [] },
   'Monster Hunter': { src: 'art/boards-v2/mh-sundown-street.jpg', opp: [466, 13, 559, 104, 'circle'], me: [472, 441, 553, 523, 'circle'], field: [110, 210, 910, 436], props: [] },

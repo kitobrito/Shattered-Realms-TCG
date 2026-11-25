@@ -2926,6 +2926,130 @@ export const BOARD_FX = {
     reactions: { slice: { kick: ['matRunes', 'portal', 'ringGlow', 'dragonCrystal'], burst: [{ layer: 'shuriken', n: 4 }] } },
   },
 
+  // ---- Ghouls: the 13th Ward rooftops, rain under a blood-red moon. Neon flickers, vents steam,
+  // the door spills warm light, crows shift on the antenna, kagune writhe round the air-conditioner. ----
+  'ghouls-land': {
+    wind: null,
+    layers: [
+      { id: 'moon', type: 'glow', points: [[522, 22, 70]], color: [255, 60, 70], anim: 'pulse', period: 9, alpha: [0.1, 0.3], kickDur: 2.5 },
+      { id: 'neon', type: 'glow', points: [[326, 133, 16], [433, 150, 9], [679, 125, 16], [617, 162, 9], [238, 92, 7]], color: [255, 70, 130], anim: 'flicker', speed: 3.6, alpha: [0.15, 0.6], kickDur: 1.5 },
+      { id: 'mat', type: 'glow', points: [[520, 320, 260]], color: [200, 40, 70], anim: 'pulse', period: 10, alpha: [0.02, 0.06], kickDur: 2 },
+      // Top-left: the white mask hanging from the water tower swings when you tap it.
+      { id: 'mask', type: 'echo', box: [133, 118, 168, 166], feather: 4, motion: { kind: 'rock', amp: 0.6, kickAmp: 6, period: 3.2, pivot: [150, 120] } },
+      { id: 'maskEyes', type: 'glow', points: [[150, 140, 9]], color: [255, 40, 50], anim: 'pulse', period: 5, alpha: [0, 0.25], kickDur: 2 },
+      // Vents breathe steam.
+      { id: 'steam', type: 'particles', kind: 'smoke', from: [[318, 172, 8], [736, 162, 8], [944, 280, 8], [200, 350, 8]], rate: 1.6, max: 18, color: [210, 210, 220], size: [6, 12], life: [2, 3.4], alpha: 0.16 },
+      // Top-right: crows shift on the antenna; now and then one flaps across the skyline.
+      { id: 'crows', type: 'echo', box: [850, 28, 1000, 100], feather: 6, motion: { kind: 'bob', amp: 0.8, period: 3.4, kickAmp: 3 } },
+      { type: 'flyers', area: [560, 0, 1000, 70], every: [8, 15], speed: [40, 70], size: [5, 8], color: [20, 16, 24], flap: 6 },
+      { id: 'feathers', type: 'particles', kind: 'petal', from: [[925, 60, 40]], rate: 0, max: 8, color: [30, 26, 34], size: [2, 3.5], life: [1.5, 2.5], speed: 0.8 },
+      // Bottom-left: warm light from the open door; the coat on the railing stirs.
+      { id: 'door', type: 'glow', points: [[92, 420, 56], [110, 520, 40]], color: [255, 200, 120], anim: 'flicker', speed: 1.2, alpha: [0.15, 0.4], kickDur: 2 },
+      { id: 'coat', type: 'echo', box: [238, 385, 322, 492], feather: 6, motion: { kind: 'rock', amp: 0.8, period: 4.5, kickAmp: 4, pivot: [280, 392] } },
+      // Bottom-right: crimson kagune writhe round the air-conditioner; the masks catch the light.
+      { id: 'kagune', type: 'echo', box: [752, 350, 1012, 502], feather: 8, motion: { kind: 'breathe', amp: 1.2, period: 3.6, kickAmp: 4 } },
+      { id: 'kaguneGlow', type: 'glow', points: [[800, 400, 24], [960, 370, 22], [790, 470, 20]], color: [255, 30, 50], anim: 'pulse', period: 3.6, alpha: [0.08, 0.32], kickDur: 2 },
+      { id: 'blood', type: 'particles', kind: 'drip', from: [[800, 410, 10], [950, 380, 10]], rate: 0, max: 8, color: [190, 10, 30], size: [1.2, 2], life: [0.7, 1.1], fall: 18, splash: true },
+      // Rain over everything, ripples in the puddles, a red sheen on the wet concrete.
+      { id: 'rain', type: 'particles', kind: 'rain', area: [-60, -20, 1084, 560], rate: 34, max: 120, color: [190, 200, 220], size: [1, 1], life: [0.9, 1.4], wind: -60, floor: null },
+      { id: 'ripples', type: 'particles', kind: 'ripple', from: [[350, 222, 30, 6], [690, 230, 40, 6], [560, 380, 30, 6], [330, 382, 30, 6], [880, 320, 20, 5]], rate: 1.2, max: 8, color: [220, 120, 150], size: [4, 9], life: [1, 1.6], alpha: 0.25 },
+      { id: 'wet', type: 'particles', kind: 'glint', area: [190, 200, 860, 450], rate: 1.2, max: 6, color: [255, 120, 150], size: [1, 1.8], life: [0.4, 0.9] },
+      { type: 'fog', area: [-120, 430, 1144, 600], count: 10, size: [100, 170], speed: 4, color: [120, 90, 110], alpha: 0.1 },
+    ],
+    pokes: [
+      { area: [100, 90, 200, 190], sound: 'rattle', kick: ['mask', 'maskEyes'], flare: [255, 40, 50], glyph: '🎭' },
+      { area: [840, 20, 1010, 160], sound: 'flutter', kick: ['crows'], flare: [200, 200, 220], glyph: '🐦‍⬛', burst: { layer: 'feathers', n: 6, spread: 40 } },
+      { area: [30, 320, 180, 540], sound: 'creak', kick: ['door'], flare: [255, 200, 120], glyph: '🚪' },
+      { area: [230, 380, 330, 500], sound: 'rustle', kick: ['coat'], flare: [200, 180, 200], glyph: '🧥' },
+      { area: [750, 340, 1020, 560], sound: 'squelch', kick: ['kagune', 'kaguneGlow'], flare: [255, 30, 50], glyph: '🩸', burst: { layer: 'blood', n: 6, spread: 30 } },
+      { area: [440, 0, 600, 70], sound: 'rumble', kick: ['moon', 'neon'], flare: [255, 60, 70], glyph: '🌕' },
+    ],
+  },
+  'ghouls-portrait': {
+    wind: null,
+    layers: [
+      { id: 'moon', type: 'glow', points: [[222, 38, 56]], color: [255, 60, 70], anim: 'pulse', period: 9, alpha: [0.1, 0.3], kickDur: 2.5 },
+      { id: 'neon', type: 'glow', points: [[76, 132, 12], [164, 160, 8], [372, 130, 12], [336, 186, 8]], color: [255, 70, 130], anim: 'flicker', speed: 3.6, alpha: [0.15, 0.6], kickDur: 1.5 },
+      { id: 'mat', type: 'glow', points: [[230, 540, 220]], color: [200, 40, 70], anim: 'pulse', period: 10, alpha: [0.02, 0.06], kickDur: 2 },
+      { id: 'mask', type: 'echo', box: [10, 160, 38, 196], feather: 4, motion: { kind: 'rock', amp: 0.6, kickAmp: 6, period: 3.2, pivot: [24, 162] } },
+      { id: 'steam', type: 'particles', kind: 'smoke', from: [[105, 258, 7], [356, 248, 7], [40, 722, 7]], rate: 1.3, max: 14, color: [210, 210, 220], size: [5, 10], life: [2, 3.4], alpha: 0.16 },
+      { type: 'flyers', area: [250, 0, 459, 70], every: [9, 16], speed: [30, 50], size: [4, 7], color: [20, 16, 24], flap: 6 },
+      { id: 'door', type: 'glow', points: [[14, 900, 46]], color: [255, 200, 120], anim: 'flicker', speed: 1.2, alpha: [0.15, 0.4], kickDur: 2 },
+      { id: 'coat', type: 'echo', box: [68, 862, 136, 932], feather: 5, motion: { kind: 'rock', amp: 0.8, period: 4.5, kickAmp: 4, pivot: [102, 866] } },
+      { id: 'kagune', type: 'echo', box: [362, 848, 459, 962], feather: 6, motion: { kind: 'breathe', amp: 1.2, period: 3.6, kickAmp: 4 } },
+      { id: 'kaguneGlow', type: 'glow', points: [[400, 885, 20], [380, 935, 16]], color: [255, 30, 50], anim: 'pulse', period: 3.6, alpha: [0.08, 0.32], kickDur: 2 },
+      { id: 'blood', type: 'particles', kind: 'drip', from: [[395, 890, 8]], rate: 0, max: 8, color: [190, 10, 30], size: [1.2, 2], life: [0.7, 1.1], fall: 16, splash: true },
+      { id: 'rain', type: 'particles', kind: 'rain', area: [-40, -20, 499, 1010], rate: 30, max: 110, color: [190, 200, 220], size: [1, 1], life: [1.4, 2], wind: -50 },
+      { id: 'ripples', type: 'particles', kind: 'ripple', from: [[290, 280, 25, 5], [330, 310, 20, 5], [110, 780, 30, 6], [380, 760, 25, 5], [230, 500, 30, 6]], rate: 1, max: 7, color: [220, 120, 150], size: [4, 8], life: [1, 1.6], alpha: 0.25 },
+      { id: 'wet', type: 'particles', kind: 'glint', area: [40, 240, 420, 850], rate: 1, max: 5, color: [255, 120, 150], size: [1, 1.8], life: [0.4, 0.9] },
+      { type: 'fog', area: [-100, 860, 560, 1024], count: 8, size: [90, 150], speed: 4, color: [120, 90, 110], alpha: 0.1 },
+    ],
+    pokes: [
+      { area: [0, 140, 70, 220], sound: 'rattle', kick: ['mask'], flare: [255, 40, 50], glyph: '🎭' },
+      { area: [0, 820, 60, 1024], sound: 'creak', kick: ['door'], flare: [255, 200, 120], glyph: '🚪' },
+      { area: [60, 850, 150, 950], sound: 'rustle', kick: ['coat'], flare: [200, 180, 200], glyph: '🧥' },
+      { area: [340, 830, 459, 1024], sound: 'squelch', kick: ['kagune', 'kaguneGlow'], flare: [255, 30, 50], glyph: '🩸', burst: { layer: 'blood', n: 6, spread: 24 } },
+      { area: [160, 0, 290, 90], sound: 'rumble', kick: ['moon', 'neon'], flare: [255, 60, 70], glyph: '🌕' },
+    ],
+  },
+  // ---- Ghouls (unlockable): The Quinque Laboratory. Organ tanks bubble, monitors flicker, the vault
+  // light pulses, the forge throws sparks as the robot arm hammers, the lamp hums over the table. ----
+  'ghouls-lab-land': {
+    wind: null,
+    layers: [
+      { id: 'tanks', type: 'glow', points: [[44, 180, 36], [140, 138, 34], [206, 140, 24], [232, 112, 20]], color: [255, 40, 60], anim: 'pulse', period: 3.4, alpha: [0.12, 0.42], kickDur: 2 },
+      { id: 'bubbles', type: 'particles', kind: 'bubble', from: [[44, 230, 18], [140, 180, 18], [206, 170, 12]], rate: 3, max: 24, color: [255, 120, 130], size: [1.2, 2.6], life: [1.2, 2.2], speed: 0.6 },
+      { id: 'monitors', type: 'glow', points: [[340, 72, 18], [410, 72, 16], [365, 125, 12], [420, 125, 12], [482, 30, 18], [560, 30, 14], [612, 76, 18], [680, 76, 18], [650, 30, 16], [625, 125, 10]], color: [255, 50, 60], anim: 'flicker', speed: 2.2, alpha: [0.1, 0.45], kickDur: 1.5 },
+      { id: 'vault', type: 'glow', points: [[512, 122, 12]], color: [255, 40, 40], anim: 'pulse', period: 2.2, alpha: [0.2, 0.7], kickDur: 2 },
+      { id: 'ceiling', type: 'glow', points: [[112, 28, 40], [880, 30, 36]], color: [220, 240, 255], anim: 'flicker', speed: 0.6, alpha: [0.05, 0.2], kickDur: 1 },
+      { id: 'shelf', type: 'particles', kind: 'glint', area: [760, 50, 970, 270], rate: 1, max: 4, color: [255, 180, 190], size: [1, 2], life: [0.4, 0.9] },
+      { id: 'quinques', type: 'glow', points: [[862, 150, 16], [925, 185, 14], [790, 140, 12], [910, 245, 12]], color: [255, 50, 60], anim: 'pulse', period: 4, alpha: [0.06, 0.3], kickDur: 2 },
+      // Bottom-left: the lamp hums over the surgical table.
+      { id: 'lamp', type: 'glow', points: [[118, 292, 34], [180, 400, 70]], color: [235, 245, 255], anim: 'flicker', speed: 0.9, alpha: [0.08, 0.28], kickDur: 2 },
+      { type: 'rays', beams: [[112, 290, -32, 230, 120]], color: [235, 245, 255], alpha: [0.03, 0.09], period: 7 },
+      // Bottom-right: the robot arm hammers the blade; sparks fly off the forge.
+      { id: 'arm', type: 'echo', box: [838, 348, 944, 452], feather: 6, autoKick: [2.5, 4.5], motion: { kind: 'rock', amp: 0, kickAmp: 3, period: 0.35, pivot: [915, 440] } },
+      { id: 'forge', type: 'glow', points: [[805, 456, 34], [770, 480, 22]], color: [255, 110, 50], anim: 'flicker', speed: 4, alpha: [0.2, 0.6], kickDur: 1.5 },
+      { id: 'sparks', type: 'particles', kind: 'spark', from: [[810, 448, 12]], rate: 4, max: 30, color: [255, 190, 90], size: [1, 2], life: [0.3, 0.7], speed: 1.4 },
+      { id: 'sparkBurst', type: 'particles', kind: 'spark', from: [[810, 448, 16]], rate: 0, max: 24, color: [255, 210, 120], size: [1, 2.4], life: [0.4, 0.9], speed: 1.8 },
+      { id: 'coat', type: 'echo', box: [958, 352, 1016, 522], feather: 5, motion: { kind: 'rock', amp: 0.4, period: 5, kickAmp: 3, pivot: [990, 356] } },
+      { id: 'floor', type: 'particles', kind: 'mote', area: [200, 200, 840, 440], rate: 0.6, max: 8, color: [255, 200, 210], size: [0.8, 1.4], life: [3, 5], speed: 0.2 },
+    ],
+    pokes: [
+      { area: [0, 60, 260, 270], sound: 'bloop', kick: ['tanks'], flare: [255, 40, 60], glyph: '🧪', burst: { layer: 'bubbles', n: 10, spread: 40 } },
+      { area: [300, 0, 730, 170], sound: 'beep', kick: ['monitors', 'vault'], flare: [255, 50, 60], glyph: '🖥️' },
+      { area: [750, 30, 980, 280], sound: 'clink', kick: ['quinques'], flare: [255, 50, 60], glyph: '💼', burst: { layer: 'shelf', n: 4, spread: 60 } },
+      { area: [0, 260, 260, 560], sound: 'zap', kick: ['lamp'], flare: [235, 245, 255], glyph: '💡' },
+      { area: [680, 340, 950, 572], sound: 'clink', kick: ['arm', 'forge'], flare: [255, 140, 60], glyph: '⚒️', burst: { layer: 'sparkBurst', n: 14, spread: 20 } },
+      { area: [950, 340, 1024, 540], sound: 'rustle', kick: ['coat'], flare: [235, 240, 245], glyph: '🥼' },
+    ],
+  },
+  'ghouls-lab-portrait': {
+    wind: null,
+    layers: [
+      { id: 'tanks', type: 'glow', points: [[30, 160, 28], [72, 128, 24], [40, 260, 20]], color: [255, 40, 60], anim: 'pulse', period: 3.4, alpha: [0.12, 0.42], kickDur: 2 },
+      { id: 'bubbles', type: 'particles', kind: 'bubble', from: [[30, 230, 14], [72, 200, 14]], rate: 2.4, max: 18, color: [255, 120, 130], size: [1.2, 2.4], life: [1.2, 2.2], speed: 0.6 },
+      { id: 'monitors', type: 'glow', points: [[130, 72, 14], [130, 112, 10], [200, 60, 12], [268, 60, 12], [332, 72, 14], [335, 112, 10], [140, 170, 8], [325, 170, 8]], color: [255, 50, 60], anim: 'flicker', speed: 2.2, alpha: [0.1, 0.45], kickDur: 1.5 },
+      { id: 'vault', type: 'glow', points: [[236, 178, 10]], color: [255, 40, 40], anim: 'pulse', period: 2.2, alpha: [0.2, 0.7], kickDur: 2 },
+      { id: 'ceiling', type: 'glow', points: [[234, 18, 40]], color: [220, 240, 255], anim: 'flicker', speed: 0.6, alpha: [0.05, 0.2], kickDur: 1 },
+      { id: 'quinques', type: 'glow', points: [[400, 100, 12], [410, 190, 12], [420, 280, 12]], color: [255, 50, 60], anim: 'pulse', period: 4, alpha: [0.06, 0.3], kickDur: 2 },
+      { id: 'shelf', type: 'particles', kind: 'glint', area: [370, 40, 459, 330], rate: 0.8, max: 3, color: [255, 180, 190], size: [1, 2], life: [0.4, 0.9] },
+      { id: 'lamp', type: 'glow', points: [[66, 712, 24], [110, 800, 50]], color: [235, 245, 255], anim: 'flicker', speed: 0.9, alpha: [0.08, 0.28], kickDur: 2 },
+      { id: 'arm', type: 'echo', box: [272, 762, 452, 842], feather: 6, autoKick: [2.5, 4.5], motion: { kind: 'rock', amp: 0, kickAmp: 2.5, period: 0.35, pivot: [430, 830] } },
+      { id: 'forge', type: 'glow', points: [[356, 812, 28]], color: [255, 110, 50], anim: 'flicker', speed: 4, alpha: [0.2, 0.6], kickDur: 1.5 },
+      { id: 'sparks', type: 'particles', kind: 'spark', from: [[356, 808, 10]], rate: 3.5, max: 26, color: [255, 190, 90], size: [1, 2], life: [0.3, 0.7], speed: 1.3 },
+      { id: 'sparkBurst', type: 'particles', kind: 'spark', from: [[356, 808, 14]], rate: 0, max: 22, color: [255, 210, 120], size: [1, 2.2], life: [0.4, 0.9], speed: 1.6 },
+      { id: 'floor', type: 'particles', kind: 'mote', area: [60, 230, 400, 800], rate: 0.5, max: 7, color: [255, 200, 210], size: [0.8, 1.4], life: [3, 5], speed: 0.2 },
+    ],
+    pokes: [
+      { area: [0, 20, 110, 330], sound: 'bloop', kick: ['tanks'], flare: [255, 40, 60], glyph: '🧪', burst: { layer: 'bubbles', n: 8, spread: 30 } },
+      { area: [100, 30, 370, 220], sound: 'beep', kick: ['monitors', 'vault'], flare: [255, 50, 60], glyph: '🖥️' },
+      { area: [370, 40, 459, 340], sound: 'clink', kick: ['quinques'], flare: [255, 50, 60], glyph: '💼', burst: { layer: 'shelf', n: 3, spread: 40 } },
+      { area: [0, 690, 160, 1000], sound: 'zap', kick: ['lamp'], flare: [235, 245, 255], glyph: '💡' },
+      { area: [260, 750, 459, 1000], sound: 'clink', kick: ['arm', 'forge'], flare: [255, 140, 60], glyph: '⚒️', burst: { layer: 'sparkBurst', n: 12, spread: 18 } },
+    ],
+  },
+
   // ==== The Circles of Hell (Demons' Descent), rebuilt for the new paintings ====================
   // ---- I · Limbo: a grey ashen plain, ruins in the mist, lost souls wandering. ----
   'circle1-land': {

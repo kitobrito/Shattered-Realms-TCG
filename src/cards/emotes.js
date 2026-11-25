@@ -69,6 +69,14 @@ export const EMOTES = {
     oops: "Oops. Wrong end of the wand.",
     threaten: "Say your spell. I'll unsay it.",
   },
+  Ghouls: {
+    greetings: "I'll be dining in tonight.",
+    wellPlayed: 'Well played. You hunt like one of us.',
+    thanks: 'Thank you. I was starving.',
+    wow: 'Now THAT was a feast!',
+    oops: 'Oops. My mask slipped.',
+    threaten: 'One thousand minus seven... how long can you last?',
+  },
   'Fruit Ninjas': {
     greetings: "Greetings from the orchard.",
     wellPlayed: "Well played. A clean cut.",

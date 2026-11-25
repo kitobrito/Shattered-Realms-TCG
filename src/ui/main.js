@@ -236,6 +236,15 @@ function setFormat(next) {
   picked = otherPick[format] ?? picked.slice(0, pickNeeded());
   try { localStorage.setItem(FORMAT_KEY, format); } catch { /* storage unavailable */ }
 }
+// Ghouls (Hunter or Hunted): the Hero picked in the deck builder, per faction (engine createGame
+// equips its Kagune or Quinque). Only sent for factions that offer a choice.
+const heroChoiceCard = (factions) => factions.map((f) => allCards().find((c) => c.faction === f && c.heroChoices)).find(Boolean) ?? null;
+const heroChoiceFor = (factions) => {
+  const c = heroChoiceCard(factions);
+  if (!c) return undefined;
+  const k = (getSettings().heroChoices ?? {})[c.faction];
+  return c.heroChoices[k] ? k : Object.keys(c.heroChoices)[0];
+};
 const deckFor = (factions, mine) => (starterMode() && factions.length === 1 ? starterDeck(factions[0])
   : mine ? pairDeckFor(factions) : format === 'single' ? buildSingleDeck(factions[0]) : buildDeck(factions));
 
@@ -326,7 +335,7 @@ function startGame(mode, factions = picked, rivalFactions = randomPick()) {
   if (factions.length !== pickNeeded()) return flash(pickNeeded() === 1 ? 'Pick a faction.' : `Pick ${pickNeeded()} factions.`);
   // The coin flip: the human takes seat 0 (goes first) or seat 1 (goes second, gets the Mana Potion).
   const human = Math.random() < 0.5 ? 0 : 1;
-  const you = { name: mode === 'ai' ? 'You' : 'Player 1', factions, deck: deckFor(factions, true) };
+  const you = { name: mode === 'ai' ? 'You' : 'Player 1', factions, deck: deckFor(factions, true), heroChoice: heroChoiceFor(factions) };
   const rival = { name: mode === 'ai' ? 'Rival' : 'Player 2', factions: rivalFactions, deck: deckFor(rivalFactions, false) };
   const state = createGame({
     seed: (Math.random() * 2 ** 31) | 0,
@@ -402,16 +411,16 @@ const humanSeat = () => game?.human ?? 0;
 // `behind`: the match loader, still up; it goes once this scene covers it (or is handed on).
 async function fuseHeroes(behind = null) {
   const pl = game.state.players[humanSeat()];
-  const fused = playerHeroArt(pl.factions);
+  const fused = playerHeroArt(pl.factions, pl.heroChoice);
   const [fa, fb] = pl.factions;
-  if (pl.factions.length !== 2 || !fusionHeroPath(pl.factions) || !heroArtOf(fa) || !heroArtOf(fb)) return behind;
+  if (pl.factions.length !== 2 || !fusionHeroPath(pl.factions, pl.heroChoice) || !heroArtOf(fa) || !heroArtOf(fb)) return behind;
   const ca = fx.factionColor(fa), cb = fx.factionColor(fb);
   const first = revealHero(pl.factions); // the menu shows "?" until now
   const el = document.createElement('div');
   el.className = `hero-fuse ${first ? 'first' : ''}`;
   el.style.setProperty('--ca', ca);
   el.style.setProperty('--cb', cb);
-  const hero = (f, cls) => `<div class="hf-hero ${cls}"><span class="hf-face"><img src="${heroArtOf(f)}" alt=""></span><b>${esc(f)}</b></div>`;
+  const hero = (f, cls) => `<div class="hf-hero ${cls}"><span class="hf-face"><img src="${heroArtOf(f, pl.heroChoice)}" alt=""></span><b>${esc(f)}</b></div>`;
   el.innerHTML = `<div class="hf-veil"></div><div class="hf-rays"></div><div class="hf-core"></div>
     <svg class="hf-arcs" aria-hidden="true"><polyline class="a"/><polyline class="b"/><polyline class="c"/></svg>
     ${hero(fa, 'a')}${hero(fb, 'b')}
@@ -546,9 +555,9 @@ async function playIntro(behind = null) {
   const s = game.state;
   const hs = humanSeat();
   const side = (pl, cls) => {
-    const art = playerHeroArt(pl.factions);
+    const art = playerHeroArt(pl.factions, pl.heroChoice);
     return `<div class="intro-side ${cls}">
-      <div class="intro-portrait">${art ? playerPortraitHTML(pl.factions) : `<span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span>`}</div>
+      <div class="intro-portrait">${art ? playerPortraitHTML(pl.factions, pl.heroChoice) : `<span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span>`}</div>
       <b>${esc(pl.name)}</b><small>${pl.factions.map(esc).join(' · ')}</small></div>`;
   };
   const text = game.mode !== 'hotseat'
@@ -1748,7 +1757,7 @@ async function showLoader() {
   fx.layer().appendChild(el);
   const urls = new Set();
   for (const pl of s.players) {
-    const hero = playerHeroPath(pl.factions);
+    const hero = playerHeroPath(pl.factions, pl.heroChoice);
     if (hero) urls.add(hero);
     for (const c of [...pl.deck, ...pl.hand]) if (ART[c.cardId]) urls.add(ART[c.cardId]);
   }
@@ -2080,7 +2089,7 @@ function netHandlers(role) {
   net.on({
     code: (code) => { lobby = { status: 'hosting', code }; if (screen === 'online') render(); },
     open: () => {
-      if (role === 'guest') net.send({ t: 'hello', v: PROTOCOL, format, factions: picked, deck: deckFor(picked, true) });
+      if (role === 'guest') net.send({ t: 'hello', v: PROTOCOL, format, factions: picked, deck: deckFor(picked, true), heroChoice: heroChoiceFor(picked) });
     },
     data: (msg) => onNetMessage(role, msg),
     close: () => {
@@ -2144,8 +2153,8 @@ function onNetMessage(role, msg) {
       if (entry.error) { net.send({ t: 'reject', msg: "The host couldn't load your deck. Reset it to the standard deck and try again." }); return; }
       // The host builds the game (including the coin flip) and sends it once.
       const hostSeat = Math.random() < 0.5 ? 0 : 1;
-      const me = { name: 'Host', factions: picked, deck: deckFor(picked, true) };
-      const them = { name: 'Guest', factions: entry.factions, deck: entry.deck };
+      const me = { name: 'Host', factions: picked, deck: deckFor(picked, true), heroChoice: heroChoiceFor(picked) };
+      const them = { name: 'Guest', factions: entry.factions, deck: entry.deck, heroChoice: typeof msg.heroChoice === 'string' ? msg.heroChoice : undefined };
       let state;
       try {
         state = createGame({ seed: (Math.random() * 2 ** 31) | 0, players: hostSeat === 0 ? [me, them] : [them, me] });
@@ -2236,7 +2245,7 @@ function queueMatch(mode) {
   const friend = mode === 'private' ? app.querySelector('#friend-input')?.value.trim() : undefined;
   if (mode === 'private' && !friend) return flash("Type your friend's name.");
   link = srv;
-  srv.send({ t: 'queue', mode, friend, format, factions: picked, deck: missionDeck ?? deckFor(picked, true) });
+  srv.send({ t: 'queue', mode, friend, format, factions: picked, deck: missionDeck ?? deckFor(picked, true), heroChoice: heroChoiceFor(picked) });
   missionDeck = null;
 }
 
@@ -2918,12 +2927,12 @@ function renderMenu() {
   let portrait;
   if (format === 'single' && picked.length === 1) {
     portrait = `<div class="stage-img">${heroArtOf(picked[0]) ? `<img src="${heroArtOf(picked[0])}" alt="">` : ''}</div>${mini(picked[0], 'l')}`;
-  } else if (ready && fusionHeroPath(picked) && heroRevealed(picked)) {
-    portrait = `<div class="stage-img fused">${livingPortraitHTML(artSrc(fusionHeroPath(picked)))}</div>${mini(picked[0], 'l')}${mini(picked[1], 'r')}`;
+  } else if (ready && fusionHeroPath(picked, heroChoiceFor(picked)) && heroRevealed(picked)) {
+    portrait = `<div class="stage-img fused">${livingPortraitHTML(artSrc(fusionHeroPath(picked, heroChoiceFor(picked))))}</div>${mini(picked[0], 'l')}${mini(picked[1], 'r')}`;
   } else {
     // Not met yet: the fused hero shows as a blacked-out silhouette (no features) until you play the pair.
-    const shadow = ready && fusionHeroPath(picked);
-    portrait = `<div class="stage-img mystery ${ready ? 'ready' : ''} ${shadow ? 'silhouette' : ''}">${shadow ? `<img src="${artSrc(fusionHeroPath(picked).replace('fusion-heroes/', 'fusion-silhouettes/').replace(/\.jpg$/, '.png'))}" alt="" draggable="false">` : '<i>?</i>'}<small>${ready ? 'Play a match to reveal your hero' : `Pick ${pickNeeded() - picked.length} more`}</small></div>${picked[0] ? mini(picked[0], 'l') : ''}${picked[1] ? mini(picked[1], 'r') : ''}`;
+    const shadow = ready && fusionHeroPath(picked, heroChoiceFor(picked));
+    portrait = `<div class="stage-img mystery ${ready ? 'ready' : ''} ${shadow ? 'silhouette' : ''}">${shadow ? `<img src="${artSrc(fusionHeroPath(picked, heroChoiceFor(picked)).replace('fusion-heroes/', 'fusion-silhouettes/').replace(/\.jpg$/, '.png'))}" alt="" draggable="false">` : '<i>?</i>'}<small>${ready ? 'Play a match to reveal your hero' : `Pick ${pickNeeded() - picked.length} more`}</small></div>${picked[0] ? mini(picked[0], 'l') : ''}${picked[1] ? mini(picked[1], 'r') : ''}`;
   }
   const title = picked.length ? picked.map(esc).join(' <i>+</i> ') : `Choose your ${pickNeeded() === 1 ? 'realm' : 'realms'}`;
   const sets = picked.map((f) => EXPANSION_NAMES[f]).filter(Boolean);
@@ -3125,6 +3134,25 @@ function renderSwapBuilder() {
   app.scrollTop = scrollY;
 }
 
+// Ghouls (Hunter or Hunted): choose the Hero this deck plays, a Ghoul (by Kagune) or an Investigator
+// (by Quinque). It starts every match holding that weapon.
+function heroPickerHTML(factions) {
+  const hs = heroChoiceCard(factions);
+  if (!hs) return '';
+  const now = heroChoiceFor(factions);
+  const opt = ([k, c]) => {
+    const w = c.weapon, art = artOf(getCard(w.cardId));
+    return `<button class="hero-choice ${k === now ? 'on' : ''}" data-herochoice="${esc(k)}" aria-pressed="${k === now}">
+      ${art ? `<i class="hc-art" style="background-image:url('${art}')"></i>` : ''}
+      <span class="hc-name">${esc(c.label)}</span><span class="hc-stats">${w.attack} / ${w.durability}</span><span class="hc-blurb">${esc(c.blurb)}</span></button>`;
+  };
+  const group = (side, title, note) => `<div class="hc-group"><div class="hc-head"><b>${title}</b><span>${note}</span></div>
+      <div class="hc-row">${Object.entries(hs.heroChoices).filter(([, c]) => c.side === side).map(opt).join('')}</div></div>`;
+  return `<section class="hero-picker f-${fslug(hs.faction)}"><header><b>Choose your Hero</b><span>${esc(hs.name)}: you start every match holding this weapon.</span></header>
+    ${group('Ghoul', 'Ghoul · pick a Kagune', 'Regains 1 Durability each turn, even after it breaks')}
+    ${group('Investigator', 'Investigator · pick a Quinque', 'Stronger, but gone for good once it breaks')}</section>`;
+}
+
 function renderBuilder() {
   if (builderMode === 'swap') return renderSwapBuilder();
   const single = picked.length === 1;
@@ -3178,6 +3206,7 @@ function renderBuilder() {
         </div>
       </div>
       ${problem && n ? `<p class="builder-hint">${esc(problem)}</p>` : ''}
+      ${heroPickerHTML(picked)}
       <div class="deck-slots">
         <span class="ds-label">Premade:</span>
         ${premadeDecks(picked).map((d, i) => { const lk = lockedIn(d.deck).length; return `<span class="ds-chip ${sameDeck(d.deck, deck) ? 'on' : ''}"><button class="ghost" data-premade="${i}" title="${esc(d.blurb)}${lk ? ` ${lk} of its cards are locked.` : ''}">${esc(d.name)}${lk ? ` 🔒${lk}` : ''}</button></span>`; }).join('')}
@@ -4360,6 +4389,12 @@ app.addEventListener('click', (e) => {
   const setBtn = e.target.closest('[data-bookset]');
   if (setBtn && screen === 'gallery') { bookSet = setBtn.dataset.bookset; sound.play('draw'); afterRender.push(() => mfx.dealIn(app.querySelector('.pager'))); return render(); }
   const btab = e.target.closest('[data-btab]');
+  const hcBtn = e.target.closest('[data-herochoice]');
+  if (hcBtn && screen === 'builder') {
+    const hs = heroChoiceCard(picked);
+    if (hs) { setSetting({ heroChoices: { ...(getSettings().heroChoices ?? {}), [hs.faction]: hcBtn.dataset.herochoice } }); sound.play('click'); }
+    return render();
+  }
   if (btab && screen === 'builder') {
     if (builderMode === 'swap') swapTab = btab.dataset.btab; else builderTab = btab.dataset.btab;
     sound.play('draw');

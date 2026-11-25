@@ -101,6 +101,14 @@ export function createGame({ players, seed = Date.now(), rules = {} }) {
     if (cfg.factions.includes('Monster Hunter')) { pl.hero.dualWield = true; pl.hero.auraKeywords = []; }
     shuffle(state, pl.deck);
     state.players.push(pl);
+    // Ghouls (Hunter or Hunted): the Hero chosen in the deck builder starts holding its Kagune or
+    // Quinque. No (or an unknown) choice, e.g. the AI's: one is picked at random.
+    for (const hs of heroSpells.filter((c) => c.heroChoices)) {
+      const keys = Object.keys(hs.heroChoices);
+      const choice = keys.includes(cfg.heroChoice) ? cfg.heroChoice : pickRandom(state, keys);
+      pl.heroChoice = choice;
+      EFFECT_OPS.equipHeroWeapon(state, { ...hs.heroChoices[choice].weapon }, { controller: p, cardId: hs.heroChoices[choice].weapon.cardId });
+    }
     // Bees: the game starts with The Living Hive on the board.
     if (cfg.factions.includes('Bees')) {
       const hive = summonMinion(state, p, 'the_hive', { silent: true });
@@ -1271,6 +1279,19 @@ const STEPS = {
     }
     pl.hero.attacksThisTurn = 0;
     pl.hero.dualWieldStrikeUsed = false;
+    // Ghouls: a Kagune grows back gradually. Each of your turns it regains 1 Durability (up to full),
+    // and one that broke comes back at 1 Durability (once the Hero's hands are free).
+    const kagune = pl.hero.weapon;
+    if (kagune?.regrow && kagune.durability < kagune.maxDurability) {
+      kagune.durability += 1;
+      log(state, `🩸 ${pl.name}'s ${kagune.name} regrows (${kagune.durability}/${kagune.maxDurability}).`);
+    } else if (pl.regrow && !pl.hero.weapon) {
+      const spec = pl.regrow.spec;
+      pl.regrow = null;
+      EFFECT_OPS.equipHeroWeapon(state, { ...spec, durability: 1 }, { controller: p, cardId: spec.cardId });
+      if (pl.hero.weapon) { pl.hero.weapon.maxDurability = spec.durability; pl.hero.weapon.spec = spec; }
+      log(state, `🩸 ${pl.name}'s ${spec.name} starts to grow back.`);
+    }
     for (const hs of pl.heroSpells) { hs.uses = 0; if (hs.cooldown > 0 && pl.turnsTaken > 1) hs.cooldown -= 1; }
     // Passive Hero Spells (Extinction Cycle, The Living Hive) can't be used, so each
     // such faction charges the Fusion by 1 every other turn instead.

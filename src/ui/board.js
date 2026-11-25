@@ -229,8 +229,8 @@ export function minionHTML(m, s, cls = '', shift = false) {
 // split down a slanted seam (first faction on the left, second on the right), so you can
 // tell at a glance which pair, and so which Fusion, each player has.
 function portraitHTML(pl) {
-  const art = playerHeroArt(pl.factions);
-  const second = pl.factions[1] && art === heroArtOf(pl.factions[0]) ? heroArtOf(pl.factions[1]) : null;
+  const art = playerHeroArt(pl.factions, pl.heroChoice);
+  const second = pl.factions[1] && art === heroArtOf(pl.factions[0], pl.heroChoice) ? heroArtOf(pl.factions[1], pl.heroChoice) : null;
   if (!art) return `<div class="portrait-placeholder f-${fslug(pl.factions[0])}"><span>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</span></div>`;
   // A still picture: hero portraits don't move.
   const layers = (src, cls = '') => `<img class="portrait-img ${cls}" src="${src}" alt="" draggable="false">`;
@@ -477,7 +477,7 @@ function deckHTML(pl, mine) {
 
 // The enemy's nameplate (top-left): avatar, name and deck size, then Health and Mana pills.
 function oppPlateHTML(pl) {
-  const art = playerHeroArt(pl.factions);
+  const art = playerHeroArt(pl.factions, pl.heroChoice);
   const h = pl.hero;
   return `<div class="opp-plate">
     <span class="op-avatar">${art ? `<img src="${art}" alt="" draggable="false">` : `<b>${FACTION_ICONS[pl.factions[0]] ?? '✦'}</b>`}</span>
@@ -648,7 +648,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
     return `<div class="go-row" style="--i:${i++}"><span class="go-n ${x > y ? 'lead' : ''}" data-count="${x}">${x}</span><span class="go-label">${label}</span><span class="go-n ${y > x ? 'lead' : ''}" data-count="${y}">${y}</span></div>`;
   };
   const best = st.bestPlay ? `<div class="go-best" style="--i:${i + 1}"><span>Best play</span><b>${esc(st.bestPlay.text)}</b></div>` : '';
-  const art = playerHeroArt(mp.factions);
+  const art = playerHeroArt(mp.factions, mp.heroChoice);
   const won = ctx.unlocked?.length ?? 0;
   const rewards = outcome === 'win' && won
     ? `<div class="go-reward" style="--i:${i + 2}"><img src="art/ui/icon-unlocks.png" alt=""><span><b>${won} new card${won === 1 ? '' : 's'} unlocked</b><small>Add them with Build my deck on the menu.</small></span></div>`
@@ -658,7 +658,7 @@ function gameOverHTML(s, me, stats, ctx = {}) {
   return `<div class="overlay game-over ${outcome} ${ctx.fresh ? 'fresh' : ''}">
     ${outcome === 'win' ? '<div class="go-rays"></div>' : ''}${ash}
     <div class="panel summary">
-      ${art ? `<div class="go-medal">${playerPortraitHTML(mp.factions)}</div>` : ''}
+      ${art ? `<div class="go-medal">${playerPortraitHTML(mp.factions, mp.heroChoice)}</div>` : ''}
       <h2 class="go-title ${film ? `go-film go-film-${film}` : ''}">${titleHTML}</h2>
       <p class="go-sub">${s.winner == null ? 'Nobody wins' : esc(youText(`${s.players[s.winner].name} wins`))} · ${rounds} round${rounds === 1 ? '' : 's'}</p>
       <div class="go-stats">

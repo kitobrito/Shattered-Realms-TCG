@@ -43,6 +43,39 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-25-ghouls',
+    date: 'November 25',
+    title: 'Ghouls: the 24th realm',
+    tag: 'New faction + boards',
+    intro: 'Hunter or hunted? Ghouls arrive: man-eating predators with living Kagune weapons, and the Investigators who hunt them with Quinques forged from Ghoul organs. Pick your side when you build your deck. Two living boards, six Legendaries and 23 new Fusion Hero Spells come with them.',
+    blocks: [
+      { cat: 'faction', h: 'Ghouls', cards: [
+        { title: 'Ghouls', faction: 'Ghouls', blurb: 'Regeneration, Lifesteal and Corpse-eating Ghouls, Quinque-wielding Investigators, and the Quinx in between. 30 cards plus the 4-card Kakuja Nights expansion.' },
+      ] },
+      { cat: 'keyword', h: 'Hunter or Hunted', list: [
+        { cards: ['hunter_or_hunted'], text: 'The Ghouls Hero Spell is a choice you make in the deck builder: a Ghoul with a Kagune, or an Investigator with a Quinque. Your Hero starts every match holding that weapon.' },
+        { cards: ['rinkaku_kagune', 'ukaku_kagune', 'koukaku_kagune', 'bikaku_kagune'], text: 'Kagune (Ghoul): Rinkaku heals with Lifesteal, Ukaku fires from range, Koukaku gains Armor, Bikaku hits twice. A Kagune regrows 1 Durability every turn, and comes back the turn after it breaks.' },
+        { cards: ['guillotine', 'thunderclap', 'marionette', 'gravebreaker'], text: 'Quinque (Investigator): hits harder (executes damaged minions, fires from afar, Freezes, or hits every enemy minion), but once it breaks it is gone for good.' },
+      ] },
+      { cat: 'legendary', h: 'New Legendaries', cards: [
+        { title: 'Ghouls', legendaryOf: { factions: ['Ghouls'] } },
+      ] },
+      { cat: 'board', h: 'New boards', boards: [
+        { name: 'Ghouls', title: 'The 13th Ward Rooftops', realm: 'Ghouls', unlock: 'Ghouls\' board: a rain-soaked rooftop under a blood-red moon, with flickering neon, steaming vents, crows, and Kagune coiled round the air-conditioner. Tap the corners.' },
+        { name: 'The Quinque Laboratory', realm: 'Ghouls', unlock: 'Unlocks with the Kakuja Nights cards: the Investigators\' lab, with bubbling organ tanks, flickering monitors and a robot arm forging a Quinque.' },
+      ] },
+      { cat: 'gameplay', h: 'Every realm', list: [
+        { cards: ['scent_of_blood', 'quinque_forge'], text: 'A Fusion Hero Spell for Ghouls with each of the 23 other realms, a two-realm deck guide for every pairing, and a Ghoul and an Investigator fused hero for each.' },
+        { cards: ['xeno_ghoul'], text: 'The Xeno Ghoul bursts out of Ghouls minions, and the Rage Runner and Clicker have Ghouls looks.' },
+      ] },
+    ],
+    details: [
+      'Balance: in simulated games against every realm, Ghouls win about half (53%).',
+      'Ghouls leave Corpses when they die, like Zombies and Fungus, for Devour and the Corpse-eating cards.',
+      'Investigator players see the Investigator portraits (plain and fused); Ghoul players see the Ghoul ones.',
+    ],
+  },
+  {
     id: '2026-11-25-shattered-tcg',
     date: 'November 25',
     title: 'Shattered Realms is now Shattered TCG',

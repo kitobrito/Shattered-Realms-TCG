@@ -221,7 +221,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     }
     leaveQueue(acc.key);
     const botAt = botCfg.enabled && mode !== 'private' ? Date.now() + (botCfg.waitMin + Math.random() * (botCfg.waitMax - botCfg.waitMin)) * 1000 : null;
-    queue.push({ key: acc.key, conn, mode, friend, friendKey: friend?.toLowerCase() ?? null, ...entry, rating: acc.rating, since: Date.now(), botAt });
+    queue.push({ key: acc.key, conn, mode, friend, friendKey: friend?.toLowerCase() ?? null, ...entry, heroChoice: typeof msg.heroChoice === 'string' ? msg.heroChoice.slice(0, 32) : undefined, rating: acc.rating, since: Date.now(), botAt });
     send(conn, { t: 'queued', mode, friend });
     await matchmake();
   }
@@ -275,7 +275,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
     const seatAccs = flip ? accs : [accs[1], accs[0]];
     const state = createGame({
       seed: crypto.randomInt(2 ** 31),
-      players: seats.map((q, i) => ({ name: seatAccs[i].name, factions: q.factions, deck: q.deck })),
+      players: seats.map((q, i) => ({ name: seatAccs[i].name, factions: q.factions, deck: q.deck, heroChoice: q.heroChoice })),
     });
     const game = {
       id: crypto.randomBytes(6).toString('hex'), mode: a.mode, format: a.format, state,

@@ -282,7 +282,7 @@ export const XENO_FORMS = {
   Vampires: 'xeno_nosferatu', Aliens: 'xeno_warrior', Dinosaurs: 'xeno_raptor', Plants: 'xeno_thornback',
   Fungus: 'spore_xeno', Zombies: 'xeno_revenant', Sharks: 'deep_xeno', Dragons: 'xeno_drake', Demons: 'xeno_fiend',
   Divine: 'xeno_seraph', Robots: 'xeno_mech', Radioactive: 'glowing_xeno', Bees: 'xeno_hornet', Ghosts: 'phantom_xeno',
-  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno', Eels: 'xeno_voltwyrm', Witches: 'xeno_hexmorph', 'Fruit Ninjas': 'xeno_shinobi',
+  Ultraterrestrials: 'void_xeno', Acidic: 'acid_xeno', Lycanthropes: 'xeno_lycan', Void: 'umbral_xeno', 'Ice Age': 'woolly_xeno', Eels: 'xeno_voltwyrm', Witches: 'xeno_hexmorph', 'Fruit Ninjas': 'xeno_shinobi', Ghouls: 'xeno_ghoul',
 };
 const controls = (state, p, flag) => state.players[p].board.some((x) => getCard(x.cardId)[flag] && x.health > 0 && !x.destroyed);
 export const evolveTurnsFor = (state, p) => Math.max(1, EVOLVE_TURNS - (controls(state, p, 'fasterEvolve') ? 1 : 0));
@@ -556,6 +556,7 @@ export function checkCondition(state, cond, ctx) {
     if (cond.attackAtLeast != null && effectiveAttack(c) < cond.attackAtLeast) return false;
     if (cond.attackAtMost != null && effectiveAttack(c) > cond.attackAtMost) return false;
     if (cond.healthAtMost != null && c.health > cond.healthAtMost) return false;
+    if (cond.damaged != null && (c.health < c.maxHealth) !== cond.damaged) return false; // Ghouls (Guillotine)
     if (cond.infected != null && (c.infected != null) !== cond.infected) return false;
     if (cond.keyword && !hasKeyword(c, cond.keyword)) return false;
     if (cond.notKeyword && hasKeyword(c, cond.notKeyword)) return false;
@@ -2914,7 +2915,9 @@ export const EFFECT_OPS = {
       ...(e.preyTribe ? { preyTribe: e.preyTribe, preyBonus: e.preyBonus ?? 0 } : {}), ...(e.preyTag ? { preyTag: e.preyTag, preyBonus: e.preyBonus ?? 0 } : {}),
       ...(twoHanded ? { twoHanded: true } : {}), ...(e.attacksPerTurn ? { attacksPerTurn: e.attacksPerTurn } : {}), ...(e.sunShot ? { sunShot: e.sunShot } : {}), ...(e.killHeal ? { killHeal: e.killHeal, killHealFaction: e.killHealFaction } : {}),
       // Witches: a Wand fires from afar (engine combat: the Hero takes no damage back); keywords the Hero has while holding it.
-      ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}) };
+      ...(e.wand ?? wcard?.wand ? { wand: true } : {}), ...(e.keywords ? { keywords: [...e.keywords] } : {}),
+      // Ghouls: a Kagune remembers itself so it can grow back after it breaks (dropHeroWeapon).
+      ...(e.regrow ? { regrow: true, spec: e.spec ?? JSON.parse(JSON.stringify(e)) } : {}) };
     // Witches (Spellbound): Rune Slots (Apprentice 1, most Wands 2, legendary 3), a built-in enchantment,
     // and runes carried over from the last Wand once the Spellbook is half written.
     if (weapon.wand) {
@@ -3439,6 +3442,7 @@ export function dropHeroWeapon(state, hero, how = 'breaks') {
   hero.weapon = null;
   syncDualWield(hero);
   if (how === 'moves') return;
+  if (w.regrow && state.players[hero.controller]) state.players[hero.controller].regrow = { spec: w.spec };
   log(state, how === 'breaks' ? `${nameOf(state, hero)}'s ${w.name} breaks.` : how === 'melts' ? `🧪 ${nameOf(state, hero)}'s ${w.name} melts away.` : `${nameOf(state, hero)} drops the ${w.name}.`);
   // A Relic's last gasp when it breaks (Soulforge Relic).
   if (how === 'breaks') for (const x of getCard(w.cardId)?.relic?.hero?.onBreak ?? []) resolveEffect(state, x, { self: hero.uid, controller: hero.controller });
