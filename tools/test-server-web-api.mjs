@@ -1,4 +1,4 @@
-// The website API (comic-arena.net's Shattered Realms pages): news, leaderboard, register / login /
+// The website API (comic-arena.net's Shattered TCG pages): news, leaderboard, register / login /
 // me / logout over plain HTTP, and signing in on the site never throws a game connection out.
 //   node tools/test-server-web-api.mjs   (needs npm install, like tools/test-server.mjs)
 import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';

@@ -1,6 +1,6 @@
 # Card placement and attack input
 
-Battle input shares the same `drag.js` controller and `card-motion.js` helpers in Shattered Realms and Anime Clash.
+Battle input shares the same `drag.js` controller and `card-motion.js` helpers in Shattered TCG and Anime Clash.
 
 - Played minions travel from the held card into the selected board slot, then settle with a short bounce, shadow, impact ring and landing sound. Spells, traps and equipment have a short put-down before resolving.
 - Drag an attacking minion or Hero directly onto a legal enemy. The character follows the pointer, the target highlights, and release produces a quick impact and return. Tap the attacker then the target still works. Targeted spells retain their aiming arrow.

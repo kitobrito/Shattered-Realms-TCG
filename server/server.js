@@ -1,4 +1,4 @@
-// The Shattered Realms server: accounts, Quick / Ranked / Private matchmaking, and the referee
+// The Shattered TCG server: accounts, Quick / Ranked / Private matchmaking, and the referee
 // for online games. It also serves the game itself, so the same address works in a browser.
 //
 //   node server/server.js            (PORT, DATABASE_URL, DATA_DIR from the environment)
@@ -693,7 +693,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   }
 
 
-  // ---- Website API (comic-arena.net's Shattered Realms pages). Signing in here hands out a token
+  // ---- Website API (comic-arena.net's Shattered TCG pages). Signing in here hands out a token
   // like the game's own sign-in, but never touches a game connection: a player in a match on one
   // device can check their stats on the site without being thrown out. Plain-text JSON bodies
   // (no preflight); tokens travel in the body, never in cookies, so allowing any origin is safe.
@@ -837,7 +837,7 @@ export async function startServer({ port = Number(process.env.PORT) || 8080, sto
   }, 30e3);
 
   await new Promise((resolve) => server.listen(port, resolve));
-  log(`Shattered Realms server on port ${server.address().port}`);
+  log(`Shattered TCG server on port ${server.address().port}`);
   return {
     port: server.address().port,
     async close() {

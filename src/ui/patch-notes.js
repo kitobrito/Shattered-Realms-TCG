@@ -43,6 +43,18 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-25-shattered-tcg',
+    date: 'November 25',
+    title: 'Shattered Realms is now Shattered TCG',
+    tag: 'New name',
+    intro: 'The game has a new name: Shattered TCG. Nothing else changes: your account, cards, decks, rank and progress are all exactly where you left them.',
+    blocks: [
+      { cat: 'qol', h: 'New name', list: [
+        { cards: [], text: 'Shattered Realms is now called Shattered TCG, in the game, the Android app and on comic-arena.net. Same game, same realms, same account.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-25-landscape-phones',
     date: 'November 25',
     title: 'Fits on smaller phones, and the poster wall stays put',
@@ -77,7 +89,7 @@ export const PATCH_NOTES = [
     date: 'November 24',
     title: 'Roll the film',
     tag: 'New match intro + logo',
-    intro: 'Every match now starts like a night at the pictures, and Shattered Realms has a new marquee logo.',
+    intro: 'Every match now starts like a night at the pictures, and Shattered TCG has a new marquee logo.',
     blocks: [
       { cat: 'qol', h: 'The opening reel', list: [
         { cards: [], text: 'As a match begins, an old film leader counts down 3, 2, 1 with a sweeping hand and a scratchy flicker.' },
@@ -85,7 +97,7 @@ export const PATCH_NOTES = [
         { cards: [], text: 'Tap anywhere to skip straight to the curtains. With Reduce motion on it is just a short title card.' },
       ] },
       { cat: 'qol', h: 'New logo', list: [
-        { cards: [], text: 'The Shattered Realms logo is now a cracked B-movie title on a lit marquee, with a dragon, a flying saucer, a giant ant and a bat looking on.' },
+        { cards: [], text: 'The Shattered TCG logo is now a cracked B-movie title on a lit marquee, with a dragon, a flying saucer, a giant ant and a bat looking on.' },
       ] },
     ],
   },
@@ -97,7 +109,7 @@ export const PATCH_NOTES = [
     intro: 'The cinema lobby was just the start: every menu is now dressed as an old picture palace.',
     blocks: [
       { cat: 'qol', h: 'The whole picture palace', list: [
-        { cards: [], text: 'Home is now the Shattered Realms picture palace: PLAY is up in lights on the marquee, Build is the projection booth, Collection the poster case, Factions the poster wall, and Realms the searchlights.' },
+        { cards: [], text: 'Home is now the Shattered TCG picture palace: PLAY is up in lights on the marquee, Build is the projection booth, Collection the poster case, Factions the poster wall, and Realms the searchlights.' },
         { cards: [], text: 'Behind every menu you are sitting in the auditorium: the house lights are down, red velvet curtains frame the screen, two spotlights sweep the stage, and screen titles hang in lit-up marquee signs.' },
         { cards: [], text: 'Panels are velvet with brass trim, buttons are gold admission tickets, tabs are ticket stubs, the Play steps run along a strip of film, and News is now the Newsreel.' },
       ] },
@@ -470,10 +482,10 @@ export const PATCH_NOTES = [
     date: 'November 12',
     title: 'The Playerbase',
     tag: 'Website',
-    intro: 'The Shattered Realms section of comic-arena.net now has a Playerbase page and a public profile for every player.',
+    intro: 'The Shattered TCG section of comic-arena.net now has a Playerbase page and a public profile for every player.',
     blocks: [
       { cat: 'qol', h: 'Playerbase and profiles', list: [
-        { cards: [], text: 'The new Playerbase page (Playerbase in the Shattered Realms menu on comic-arena.net) lists every registered player with their rank, ladder place, record, win rate, join date, and whether they are online or in a match right now. Search it, filter it to players who are online or on the ladder, and sort by newest, rank, wins or games.' },
+        { cards: [], text: 'The new Playerbase page (Playerbase in the Shattered TCG menu on comic-arena.net) lists every registered player with their rank, ladder place, record, win rate, join date, and whether they are online or in a match right now. Search it, filter it to players who are online or on the ladder, and sort by newest, rank, wins or games.' },
         { cards: [], text: 'Every player has a profile page with their rank, RP, promotion series and full record. Names on the ladder link straight to them.' },
       ] },
     ],

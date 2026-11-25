@@ -1,4 +1,4 @@
-# Render Blueprint for the Shattered Realms server (accounts, Quick Match, Ranked).
+# Render Blueprint for the Shattered TCG server (accounts, Quick Match, Ranked).
 # In Render: New + → Blueprint → pick this repository. See server/README.md.
 #
 # An always-on server (Starter: no sleeping) and Render's own Postgres for accounts and ranks,

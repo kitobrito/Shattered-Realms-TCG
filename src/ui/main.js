@@ -1739,7 +1739,7 @@ async function showLoader() {
   const tips = tipsFor([...new Set(s.players.flatMap((pl) => pl.factions))]);
   const crest = (f) => (backArtOf(f) ? `<i class="crest" style="background-image:url('${backArtOf(f)}')"></i>` : '<i class="crest crest-fusion"></i>');
   el.innerHTML = `<div class="loader-box">
-      <img class="loader-logo" src="art/ui/logo-theatre.webp" alt="Shattered Realms">
+      <img class="loader-logo" src="art/ui/logo-theatre.webp" alt="Shattered TCG">
       <div class="loader-realms">${mineF.map((f) => `<span>${crest(f)}<b>${esc(f)}</b></span>`).join('<i class="loader-plus">+</i>')}</div>
       <div class="loader-sigil"><i></i><i></i></div>
       <div class="loader-tipbox"><span class="loader-tiphead">Tip</span><p class="loader-tip">${esc(tips[0] ?? '')}</p></div>
@@ -1954,7 +1954,7 @@ function renderSignIn() {
     <div class="menu tavern title-screen signin">
       <header class="ts-title">
         <div class="ts-runes"></div>
-        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo-theatre.webp" alt="Shattered Realms" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
+        <h1 class="ts-logo"><span class="ts-logo-wrap"><img src="art/ui/logo-theatre.webp" alt="Shattered TCG" draggable="false"><i class="ts-logo-sheen"></i></span></h1>
         <p class="ts-tag">${reg ? 'Create your account to begin.' : 'Welcome back. Sign in to play.'}</p>
       </header>
       <section class="ts-panel signin-panel">
@@ -3082,7 +3082,7 @@ function milestoneHTML(m) {
   } else {
     body = `<h2>New realms open</h2><img class="ui-divider" src="art/ui/divider.png" alt="">
       <div class="ms-realms">${m.realms.map(realm).join('')}</div>
-      <p class="sub">${m.all ? 'Every realm is open. The Shattered Realms are yours.' : 'Two more open after every match.'}</p>`;
+      <p class="sub">${m.all ? 'Every realm is open. The shattered realms are yours.' : 'Two more open after every match.'}</p>`;
   }
   return `<div class="overlay milestone-overlay"><div class="milestone-panel ms-${m.kind}">${body}
     <button data-act="milestoneOk">${m.kind === 'fusion' ? 'Choose two realms' : 'Continue'}</button></div></div>`;

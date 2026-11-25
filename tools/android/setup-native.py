@@ -33,7 +33,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
-// Shattered Realms runs full screen like a game: no status or navigation bar (swipe from an
+// Shattered TCG runs full screen like a game: no status or navigation bar (swipe from an
 // edge to peek at them), the screen stays on while it is open, and card text keeps its size
 // whatever the phone's font-size setting.
 public class MainActivity extends BridgeActivity {
