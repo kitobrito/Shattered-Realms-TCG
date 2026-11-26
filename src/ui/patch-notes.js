@@ -43,6 +43,18 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-26-zoom-panel-fit',
+    date: 'November 26',
+    title: 'The full-size card view fits every screen again',
+    tag: 'Fix',
+    intro: 'The keyword panel beside a full-size card no longer runs off the edge of the screen.',
+    blocks: [
+      { cat: 'fix', h: 'Card view', list: [
+        { cards: [], text: 'Opening a card in the Collection or the deck builder on a screen only a little wider than it is tall (such as the game inside the website on a phone) pushed the keyword panel and the Next arrow past the right edge. The card now shrinks just enough that the card, the panel and both arrows all fit, centred.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-25-synergy-back',
     date: 'November 25',
     title: 'Faction synergy is back on the Play screen',
