@@ -264,7 +264,7 @@ body:not(.touch-ui) .my-hand .card:hover { z-index: 6; }
   gap: 10px; padding: 16px; cursor: zoom-out; }
 .art-view img { max-width: 100%; max-height: calc(100% - 48px); object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px #000; }
 .art-view-cap { font-family: var(--font-title); font-weight: 700; text-align: center; }
-.zoom-wrap { display: flex; align-items: center; gap: 18px; cursor: default; max-width: 100%; }
+.zoom-wrap { display: flex; align-items: center; justify-content: center; gap: 18px; cursor: default; max-width: 100%; }
 
 /* The card is sized from one length (--h); everything inside scales with it via em. */
 .big-card {
@@ -367,6 +367,11 @@ body:not(.touch-ui) .my-hand .card:hover { z-index: 6; }
 .zoom-arrow { font-size: 40px; line-height: 1; padding: 6px 14px 12px; background: #0008; border-color: var(--line); flex: none; }
 .zoom-arrow:hover:not(:disabled) { background: #1b0f15; }
 
+/* Side by side, the big card is sized by the height but must also leave room for the arrows and the
+   keyword panel, or on a screen only a little wider than tall the panel runs off the right edge. */
+@media (min-width: 861px) {
+  .zoom-overlay .big-card { --h: min(88vh, calc((100vw - 470px) / 0.72)); }
+}
 @media (max-width: 860px) {
   .zoom-wrap { flex-direction: column; gap: 10px; }
   .big-card { --h: min(78vh, 125vw); }
@@ -4639,7 +4644,7 @@ body:not(.in-game) #app.fit-screen > .lobby-fit { zoom: 1; }
 body:not(.in-game) #app > .zoom-overlay { zoom: 1; }
 @media (max-height: 560px) and (orientation: landscape) {
   .zoom-overlay { padding: 1.5vh 12px; }
-  .zoom-overlay .big-card { --h: 94vh; }
+  .zoom-overlay .big-card { --h: min(94vh, calc((100vw - 480px) / 0.72)); }
   .zoom-side { max-height: 94vh; width: 260px; font-size: 13px; }
 }
 
