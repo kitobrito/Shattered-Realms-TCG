@@ -43,6 +43,18 @@ export const PATCH_KINDS = {
 
 export const PATCH_NOTES = [
   {
+    id: '2026-11-28-hero-choice-details',
+    date: 'November 28',
+    title: 'Hold a Ghoul Hero weapon to read what it does',
+    tag: 'Quality of life',
+    intro: 'In the deck builder, every Kagune and Quinque now shows its full details when you hold it.',
+    blocks: [
+      { cat: 'qol', h: 'Deck builder', list: [
+        { cards: [], text: 'Choose your Hero (Ghouls): hold any Kagune or Quinque to see its Attack, Durability, what it does, how it breaks or grows back, and what its keywords mean. Let go to close it; holding does not change your pick, and a quick tap still picks it. With a mouse, just hover over one.' },
+      ] },
+    ],
+  },
+  {
     id: '2026-11-26-zoom-panel-fit',
     date: 'November 26',
     title: 'The full-size card view fits every screen again',
