@@ -3162,10 +3162,79 @@ function heroPickerHTML(factions) {
   };
   const group = (side, title, note) => `<div class="hc-group"><div class="hc-head"><b>${title}</b><span>${note}</span></div>
       <div class="hc-row">${Object.entries(hs.heroChoices).filter(([, c]) => c.side === side).map(opt).join('')}</div></div>`;
-  return `<section class="hero-picker f-${fslug(hs.faction)}"><header><b>Choose your Hero</b><span>${esc(hs.name)}: you start every match holding this weapon.</span></header>
+  return `<section class="hero-picker f-${fslug(hs.faction)}"><header><b>Choose your Hero</b><span>${esc(hs.name)}: you start every match holding this weapon. Hold one to read exactly what it does.</span></header>
     ${group('Ghoul', 'Ghoul · pick a Kagune', 'Regains 1 Durability each turn, even after it breaks')}
     ${group('Investigator', 'Investigator · pick a Quinque', 'Stronger, but gone for good once it breaks')}</section>`;
 }
+
+// Hold a hero choice (or hover it with a mouse) to read everything that weapon does.
+function heroChoiceDetailHTML(k) {
+  const hs = heroChoiceCard(picked);
+  const c = hs?.heroChoices?.[k];
+  if (!c) return '';
+  const w = c.weapon, art = artOf(getCard(w.cardId));
+  const ghoul = c.side === 'Ghoul';
+  const lines = [
+    c.blurb,
+    ghoul ? 'Kagune: regains 1 Durability at the start of each of your turns. When it breaks, it starts growing back the next turn.'
+      : 'Quinque: hits harder than a Kagune, but once it breaks it is gone for the rest of the match.',
+    w.attacksPerTurn > 1 ? `Your Hero can attack ${w.attacksPerTurn} times each turn with it.` : '',
+    (w.ranged || w.wand) && !/no damage back/.test(c.blurb) ? 'Your Hero takes no damage back when attacking with it.' : '',
+  ].filter(Boolean);
+  const kws = [...(w.keywords ?? []), ...(/Frozen|Freezes/.test(c.blurb) ? ['Frozen'] : [])].filter((t) => KEYWORD_TEXT[t]);
+  return `<div class="hc-detail-card f-${fslug(hs.faction)}">
+    <div class="hcd-top">${art ? `<i class="hcd-art" style="background-image:url('${art}')"></i>` : ''}
+      <div><b class="hcd-name">${esc(w.name)}</b><span class="hcd-side">${ghoul ? 'Ghoul Hero · Kagune' : 'Investigator Hero · Quinque'}</span>
+      <span class="hcd-stats"><b>${w.attack}</b> Attack · <b>${w.durability}</b> Durability</span></div></div>
+    <ul class="hcd-lines">${lines.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+    ${kws.map((t) => `<p class="hcd-kw"><b>${esc(t)}:</b> ${esc(KEYWORD_TEXT[t])}</p>`).join('')}
+    <p class="hcd-foot">You start every match holding this weapon.</p></div>`;
+}
+const hcDetailEl = () => document.getElementById('hc-detail') ?? Object.assign(document.body.appendChild(document.createElement('div')), { id: 'hc-detail' });
+function showHeroChoiceDetail(btn) {
+  const html = heroChoiceDetailHTML(btn.dataset.herochoice);
+  if (!html) return;
+  const el = hcDetailEl();
+  el.innerHTML = html;
+  el.classList.add('show');
+}
+function hideHeroChoiceDetail() { document.getElementById('hc-detail')?.classList.remove('show'); }
+let hcHold = null;
+document.addEventListener('pointerdown', (e) => {
+  const btn = screen === 'builder' && e.target.closest?.('[data-herochoice]');
+  if (!btn) return;
+  clearTimeout(hcHold?.timer);
+  hcHold = { x: e.clientX, y: e.clientY, shown: false, timer: setTimeout(() => {
+    if (!btn.isConnected || !hcHold) return;
+    showHeroChoiceDetail(btn);
+    hcHold.shown = true;
+  }, 420) };
+});
+document.addEventListener('pointermove', (e) => {
+  if (hcHold && !hcHold.shown && Math.hypot(e.clientX - hcHold.x, e.clientY - hcHold.y) > 10) { clearTimeout(hcHold.timer); hcHold = null; }
+});
+const endHcHold = (e) => {
+  if (!hcHold) return;
+  clearTimeout(hcHold.timer);
+  if (hcHold.shown) {
+    hideHeroChoiceDetail();
+    // Letting go after reading doesn't also pick that Hero.
+    const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    document.addEventListener('click', swallow, { capture: true, once: true });
+    setTimeout(() => document.removeEventListener('click', swallow, { capture: true }), 400);
+  }
+  hcHold = null;
+};
+document.addEventListener('pointerup', endHcHold);
+document.addEventListener('pointercancel', endHcHold);
+// Phones: holding a button can open the browser's own menu; a held hero choice shows its details instead.
+document.addEventListener('contextmenu', (e) => { if (e.target.closest?.('[data-herochoice]')) e.preventDefault(); });
+// Mouse: hovering shows the same details.
+document.addEventListener('pointerover', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  const btn = screen === 'builder' && e.target.closest?.('[data-herochoice]');
+  if (btn) showHeroChoiceDetail(btn); else if (!e.target.closest?.('#hc-detail')) hideHeroChoiceDetail();
+});
 
 function renderBuilder() {
   if (builderMode === 'swap') return renderSwapBuilder();
